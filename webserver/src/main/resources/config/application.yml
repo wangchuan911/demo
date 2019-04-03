@@ -1,0 +1,16 @@
+################### HTTP Configuration   ##########################
+server:
+  port: 8088
+  https-enable: false
+spring:
+  profiles:
+    active: [wechat,atomSrv]
+
+################### Vert.x Configuration ##########################
+vertx:
+  worker:
+    pool:
+      size: 60
+  springWorker:
+    instances: 30
+  clusterMode: hazelcastXX
