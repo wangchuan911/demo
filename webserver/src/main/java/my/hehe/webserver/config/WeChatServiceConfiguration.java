@@ -12,6 +12,8 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.serviceproxy.ServiceBinder;
+import io.vertx.serviceproxy.ServiceProxyBuilder;
 import my.hehe.webserver.common.JAXBUtils;
 import my.hehe.webserver.common.encrypt.AesException;
 import my.hehe.webserver.common.encrypt.WXBizMsgCrypt;
@@ -19,6 +21,7 @@ import my.hehe.webserver.entity.wechat.messeage.MesseageTypeValue;
 import my.hehe.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import my.hehe.webserver.entity.wechat.messeage.response.ResponseMesseage;
 import my.hehe.webserver.service.WeChatService;
+import my.hehe.webserver.service.wechat.WeChatAsynService;
 import my.hehe.webserver.vertx.verticle.StandaredVerticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +64,8 @@ public class WeChatServiceConfiguration {
     private long TAKEN_UPDATE_TIME;
 
     private Long wechatAliveTimerId = null;
+
+    WeChatAsynService weChatAsynService;
 
     @Bean
     public WXBizMsgCrypt getWXBizMsgCrypt(
@@ -139,6 +144,10 @@ public class WeChatServiceConfiguration {
     }
 
     private void wechatInterfaceInit() {
+        standaredVerticle.registeredHandler(Vertx.class,vertx -> {
+            weChatAsynService=WeChatAsynService.createProxy(vertx);
+        });
+
         standaredVerticle.registeredHandler(Router.class, router -> {
             router.get("/wx").handler(routingContext -> {
                 HttpServerRequest httpServerRequest = routingContext.request();
@@ -169,10 +178,9 @@ public class WeChatServiceConfiguration {
                     String timeStamp = httpServerRequest.getParam(MesseageTypeValue.MSG_PARM_TIMESTAMP);
                     String nonce = httpServerRequest.getParam(MesseageTypeValue.MSG_PARM_NONCE);
 
-                    /*if (StringUtils.isEmpty(timeStamp) && StringUtils.isEmpty(nonce)) {
-                        routingContext.response().end("interl server error");
+                    if (StringUtils.isEmpty(timeStamp) && StringUtils.isEmpty(nonce)) {
                         return;
-                    }*/
+                    }
 
                     Buffer requestbuffer = routingContext.getBody();
                     requestbuffer = Buffer.buffer(wxBizMsgCrypt.decryptMsg(signature, timeStamp, nonce, requestbuffer.toString()));
@@ -185,7 +193,7 @@ public class WeChatServiceConfiguration {
                 }
             }).handler(routingContext -> {
                 Buffer requestbuffer = routingContext.getBody();
-                try {
+                /*try {
                     //报文转对象
                     RequestMesseageBody requestMesseageBody = JAXBUtils.fromXML(requestbuffer.toString(), RequestMesseageBody.class);
                     //处理数据
@@ -198,7 +206,19 @@ public class WeChatServiceConfiguration {
                     e.printStackTrace();
                     routingContext.response().end(MesseageTypeValue.MSG_REPLY);
                     return;
-                }
+                }*/
+
+                weChatAsynService.receive(requestbuffer.toString(), stringAsyncResult -> {
+                    if (stringAsyncResult.succeeded()) {
+                        Buffer buffer = Buffer.buffer(stringAsyncResult.result());
+                        routingContext.setBody(buffer);
+                        routingContext.next();
+                    } else {
+                        stringAsyncResult.cause().printStackTrace();
+                        routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+                    }
+                });
+
             }).handler(routingContext -> {
                 Buffer requestbuffer = routingContext.getBody();
                 try {

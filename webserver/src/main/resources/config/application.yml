@@ -11,6 +11,6 @@ vertx:
   worker:
     pool:
       size: 60
-  springWorker:
+  workerVerticle:
     instances: 30
   clusterMode: hazelcastXX

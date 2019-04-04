@@ -21,7 +21,7 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * 获取applicationContext
      * @return
      */
-    public ApplicationContext getApplicationContext() {
+    public static ApplicationContext getApplicationContext() {
         return applicationContext;
     }
 
@@ -30,7 +30,7 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @param name
      * @return
      */
-    public Object getBean(String name){
+    public static Object getBean(String name){
         return getApplicationContext().getBean(name);
     }
 
@@ -40,7 +40,7 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @param <T>
      * @return
      */
-    public <T> T getBean(Class<T> clazz){
+    public static <T> T getBean(Class<T> clazz){
         return getApplicationContext().getBean(clazz);
     }
 
@@ -51,7 +51,7 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @param <T>
      * @return
      */
-    public <T> T getBean(String name,Class<T> clazz){
+    public  static <T> T getBean(String name,Class<T> clazz){
         return getApplicationContext().getBean(name, clazz);
     }
 }

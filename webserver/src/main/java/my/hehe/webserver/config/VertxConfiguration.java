@@ -1,19 +1,12 @@
 package my.hehe.webserver.config;
 
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.MemberAttributeEvent;
-import com.hazelcast.core.MembershipEvent;
-import com.hazelcast.core.MembershipListener;
-import io.vertx.core.Handler;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
-import io.vertx.core.spi.cluster.ClusterManager;
-import io.vertx.spi.cluster.hazelcast.ConfigUtil;
-import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
-import my.hehe.webserver.common.ApplicationContextProvider;
 import my.hehe.webserver.vertx.SpringVerticleFactory;
 import my.hehe.webserver.vertx.verticle.StandaredVerticle;
+import my.hehe.webserver.vertx.verticle.WorkerVerticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +31,18 @@ public class VertxConfiguration {
     private SpringVerticleFactory verticleFactory;
 
     /**
-     * The Vert.x worker pool size, configured in the {@code application.yml} file.
+     * The Vert.x worker pool size, configured in the {@code application.properties} file.
      * <p>
-     * Make sure this is greater than {@link #springWorkerInstances}.
+     * Make sure this is greater than {@link #workerInstancesMax}.
      */
     @Value("${vertx.worker.pool.size}")
     int workerPoolSize;
+
+    /**
+     * The number of {@link WorkerVerticle} instances to deploy, configured in the {@code application.properties} file.
+     */
+    @Value("${vertx.workerVerticle.instances}")
+    int workerInstancesMax;
 
     @Autowired
     ClusterConfiguration clusterConfiguration;
@@ -113,6 +112,23 @@ public class VertxConfiguration {
                 vertx.deployVerticle(verticleName, ar -> {
                     if (ar.failed()) {
                         logger.error("Failed to deploy book verticle", ar.cause());
+                        //如果failed的值是false则置为true
+                        failed.compareAndSet(false, true);
+                    }
+                    //发布成功计数减1
+                    deployLatch.countDown();
+                });
+            }
+            {
+                DeploymentOptions workerDeploymentOptions = new DeploymentOptions()
+                        .setWorker(true)
+                        // As worker verticles are never executed concurrently by Vert.x by more than one thread,
+                        // deploy multiple instances to avoid serializing requests.
+                        .setInstances(workerInstancesMax);
+                String workerVerticleName = verticleFactory.prefix() + ":" + WorkerVerticle.class.getName();
+                vertx.deployVerticle(workerVerticleName, workerDeploymentOptions, ar -> {
+                    if (ar.failed()) {
+                        logger.error("Failed to deploy verticle", ar.cause());
                         //如果failed的值是false则置为true
                         failed.compareAndSet(false, true);
                     }
