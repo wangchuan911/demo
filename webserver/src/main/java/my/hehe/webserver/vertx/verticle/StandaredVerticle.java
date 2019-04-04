@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 import java.util.Set;
 
 @Component("standaredVerticle")
-public class StandaredVerticle extends AbstractVerticle {
+public class StandaredVerticle extends AbstractCustomVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(StandaredVerticle.class);
 
@@ -27,9 +27,6 @@ public class StandaredVerticle extends AbstractVerticle {
     private int SERVER_PORT;
     @Value("${server.https-enable}")
     private boolean IS_HTTPS;
-    /**/
-    private Set<Handler<Vertx>> VERTX_HANDLERS = null;
-    private Set<Handler<Router>> ROUTER_HANDLERS = null;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -42,7 +39,7 @@ public class StandaredVerticle extends AbstractVerticle {
                     .setTrustOptions(certificate.trustOptions());
         }
 
-        Router router = Router.router(vertx);
+        router = Router.router(vertx);
         router.route().handler(BodyHandler.create());
         logger.info("create router");
         this.registeredHandler(Vertx.class, null);
@@ -52,23 +49,19 @@ public class StandaredVerticle extends AbstractVerticle {
             });
         });
 
-        for (Handler<Vertx> vertxHandler : VERTX_HANDLERS) {
-            vertxHandler.handle(vertx);
+        this.startRegister();
+        if (router != null) {
+            vertx.createHttpServer(httpServerOptions)
+                    .requestHandler(router)
+                    .listen(SERVER_PORT, httpServerAsyncResult -> {
+                        if (httpServerAsyncResult.succeeded()) {
+                            startFuture.complete();
+                            logger.info("HTTP server started on http" + (IS_HTTPS ? "s" : "") + "://localhost:" + SERVER_PORT);
+                        } else {
+                            startFuture.fail(httpServerAsyncResult.cause());
+                        }
+                    });
         }
-        for (Handler<Router> routerHandler : ROUTER_HANDLERS) {
-            routerHandler.handle(router);
-        }
-
-        vertx.createHttpServer(httpServerOptions)
-                .requestHandler(router)
-                .listen(SERVER_PORT, httpServerAsyncResult -> {
-                    if (httpServerAsyncResult.succeeded()) {
-                        startFuture.complete();
-                        logger.info("HTTP server started on http" + (IS_HTTPS ? "s" : "") + "://localhost:" + SERVER_PORT);
-                    } else {
-                        startFuture.fail(httpServerAsyncResult.cause());
-                    }
-                });
     }
 
     @Override
@@ -77,50 +70,6 @@ public class StandaredVerticle extends AbstractVerticle {
     }
 
 
-    public void setClusterPeriodic(long time, String uniqeKey, Handler<Long> handler) {
-        this.registeredHandler(Vertx.class, vertx1 -> {
-            vertx1.setPeriodic(time, aLong -> {
-                SharedData sharedData = vertx1.sharedData();
-                sharedData.getLock("LOCK_" + uniqeKey, lockAsyncResult -> {
-                    if (lockAsyncResult.succeeded()) {
-                        try {
-                            handler.handle(aLong);
-                        } finally {
-                            Lock lock = lockAsyncResult.result();
-                            vertx1.setTimer(5000, aLong1 -> {
-                                lock.release();
-                            });
-                        }
-                    } else {
-                        logger.info(lockAsyncResult.cause().getMessage());
-                    }
-                });
-            });
-        });
-    }
-
-    @SuppressWarnings("unchecked")
-    public synchronized <T> void registeredHandler(Class<T> t, Handler<T> handler) {
-        if (Vertx.class.getName().equals(t.getName())) {
-            if (VERTX_HANDLERS == null) {
-                VERTX_HANDLERS = new ConcurrentHashSet<>(4);
-            }
-            if (handler == null) return;
-            VERTX_HANDLERS.add((Handler<Vertx>) handler);
-        } else if (Router.class.getName().equals(t.getName())) {
-            if (ROUTER_HANDLERS == null) {
-                ROUTER_HANDLERS = new ConcurrentHashSet<>(4);
-            }
-            if (handler == null) return;
-            ROUTER_HANDLERS.add((Handler<Router>) handler);
-        } else {
-            throw new RuntimeException("Error Object Type!");
-        }
-        {
-            StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-            logger.info("registered Handler Router->" + stackTraceElement.getMethodName() + "[" + stackTraceElement.getLineNumber() + "]");
-        }
-    }
 
     /*public synchronized void registerdHandler(Handler<Router> handler) throws RuntimeException {
         if (registeredRouterHandlers == null) {

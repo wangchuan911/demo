@@ -22,7 +22,9 @@ import my.hehe.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import my.hehe.webserver.entity.wechat.messeage.response.ResponseMesseage;
 import my.hehe.webserver.service.WeChatService;
 import my.hehe.webserver.service.wechat.WeChatAsynService;
+import my.hehe.webserver.vertx.verticle.AbstractCustomVerticle;
 import my.hehe.webserver.vertx.verticle.StandaredVerticle;
+import my.hehe.webserver.vertx.verticle.WorkerVerticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,7 +137,7 @@ public class WeChatServiceConfiguration {
                 } else {
                     logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
                 }
-                if (wechatAliveTimerId != null && vertx1.cancelTimer(wechatAliveTimerId)) {
+                if (wechatAliveTimerId == null || vertx1.cancelTimer(wechatAliveTimerId)) {
                     wechatAliveTimerId = vertx1.setTimer(TAKEN_UPDATE_TIME * 1000, longHandler);
                 }
             });
@@ -144,8 +146,12 @@ public class WeChatServiceConfiguration {
     }
 
     private void wechatInterfaceInit() {
-        standaredVerticle.registeredHandler(Vertx.class,vertx -> {
-            weChatAsynService=WeChatAsynService.createProxy(vertx);
+        AbstractCustomVerticle.registeredHandler(WorkerVerticle.class, Vertx.class, vertx1 -> {
+            WeChatAsynService.create(vertx1);
+        });
+
+        standaredVerticle.registeredHandler(Vertx.class, vertx -> {
+            weChatAsynService = WeChatAsynService.createProxy(vertx);
         });
 
         standaredVerticle.registeredHandler(Router.class, router -> {
