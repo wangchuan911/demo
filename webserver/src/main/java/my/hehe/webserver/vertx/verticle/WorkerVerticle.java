@@ -19,20 +19,14 @@ import java.util.Set;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class WorkerVerticle extends AbstractCustomVerticle {
 
-    static Set<Handler<Vertx>> VERTX_HANDLERS = null;
 
     @Override
-    public void start(Future<Void> startFuture) throws Exception {
-        try {
-
-            for (Handler<Vertx> vertxHandler : VERTX_HANDLERS) {
-                vertxHandler.handle(vertx);
-            }
-
-            startFuture.complete();
-        } catch (Exception e) {
-            startFuture.fail(e);
-        }
+    void registedBefore(Future future) {
+        future.complete();
     }
 
+    @Override
+    void registedAfter(Future future) {
+        future.complete();
+    }
 }

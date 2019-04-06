@@ -22,6 +22,8 @@ import my.hehe.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import my.hehe.webserver.entity.wechat.messeage.response.ResponseMesseage;
 import my.hehe.webserver.service.WeChatService;
 import my.hehe.webserver.service.wechat.WeChatAsynService;
+import my.hehe.webserver.vertx.annotation.VertxConfiguration;
+import my.hehe.webserver.vertx.annotation.VertxRegister;
 import my.hehe.webserver.vertx.verticle.AbstractCustomVerticle;
 import my.hehe.webserver.vertx.verticle.StandaredVerticle;
 import my.hehe.webserver.vertx.verticle.WorkerVerticle;
@@ -36,8 +38,10 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Configuration
+@VertxConfiguration
 public class WeChatServiceConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(WeChatServiceConfiguration.class);
     @Autowired
@@ -80,23 +84,26 @@ public class WeChatServiceConfiguration {
     @Autowired
     private WXBizMsgCrypt wxBizMsgCrypt;
 
-    @PostConstruct
-    public void weChatServiceInital() {
-        //与微信接口初始化
-        this.wechatInterfaceInit();
-        this.wechatAliveKeySchedulingInit();
+    @VertxRegister(WorkerVerticle.class)
+    public Consumer<Vertx> createAsyncService() {
+        Consumer<Vertx> vertxConsumer = vertx1 -> {
+            WeChatAsynService.create(vertx1);
+        };
+        return vertxConsumer;
     }
 
-    /*
-     * update key
-     * */
-    public void wechatAliveKeySchedulingInit() {
-        final String key = "WX.TOKEN";
-        final String URL_TOCKEN_LOCK = key + ".LOCK";
-        final String URL_TOCKEN_UPDATE = key + ".UPDATE";
-        final String URL_REQUSET = WX_URL + WX_TOKEN_URL;
+    @VertxRegister(StandaredVerticle.class)
+    public Consumer<Vertx> createAsyncServiceProxy() {
+        Consumer<Vertx> vertxConsumer = vertx1 -> {
+            weChatAsynService = WeChatAsynService.createProxy(vertx1);
 
-        standaredVerticle.registeredHandler(Vertx.class, vertx1 -> {
+
+            final String key = "WX.TOKEN";
+            final String URL_TOCKEN_LOCK = key + ".LOCK";
+            final String URL_TOCKEN_UPDATE = key + ".UPDATE";
+            final String URL_REQUSET = WX_URL + WX_TOKEN_URL;
+
+
             EventBus eventBus = vertx1.eventBus();
             WebClient webClient = WebClient.create(vertx1);
             SharedData sharedData = vertx1.sharedData();
@@ -142,19 +149,13 @@ public class WeChatServiceConfiguration {
                 }
             });
             longHandler.handle(null);
-        });
+        };
+        return vertxConsumer;
     }
 
-    private void wechatInterfaceInit() {
-        AbstractCustomVerticle.registeredHandler(WorkerVerticle.class, Vertx.class, vertx1 -> {
-            WeChatAsynService.create(vertx1);
-        });
-
-        standaredVerticle.registeredHandler(Vertx.class, vertx -> {
-            weChatAsynService = WeChatAsynService.createProxy(vertx);
-        });
-
-        standaredVerticle.registeredHandler(Router.class, router -> {
+    @VertxRegister(StandaredVerticle.class)
+    public Consumer<Router> routeMapping() {
+        Consumer<Router> routerConsumer = router -> {
             router.get("/wx").handler(routingContext -> {
                 HttpServerRequest httpServerRequest = routingContext.request();
                 String signature = httpServerRequest.getParam("signature");
@@ -247,10 +248,10 @@ public class WeChatServiceConfiguration {
             }).failureHandler(routingContext -> {
                 routingContext.response().end(MesseageTypeValue.MSG_REPLY);
             });
-
             logger.info("inital request mapping: /wx");
-        });
-
+        };
+        return routerConsumer;
     }
 
 }
+

@@ -28,21 +28,15 @@ public class StandaredVerticle extends AbstractCustomVerticle {
     @Value("${server.https-enable}")
     private boolean IS_HTTPS;
 
-    @Override
-    public void start(Future<Void> startFuture) throws Exception {
-        HttpServerOptions httpServerOptions = new HttpServerOptions();
-        //开启https
-        if (IS_HTTPS) {
-            SelfSignedCertificate certificate = SelfSignedCertificate.create();
-            httpServerOptions.setSsl(true)
-                    .setKeyCertOptions(certificate.keyCertOptions())
-                    .setTrustOptions(certificate.trustOptions());
-        }
+    Router router;
 
+    @Override
+    void registedBefore(Future startFuture) {
         router = Router.router(vertx);
         router.route().handler(BodyHandler.create());
         logger.info("create router");
-        this.registeredHandler(Vertx.class, null);
+        startFuture.complete();
+        /*this.registeredHandler(Vertx.class, null);
         this.registeredHandler(Router.class, router1 -> {
             router1.get("/").handler(routingContext -> {
                 routingContext.response().end("hello world!");
@@ -61,22 +55,33 @@ public class StandaredVerticle extends AbstractCustomVerticle {
                             startFuture.fail(httpServerAsyncResult.cause());
                         }
                     });
-        }
+        }*/
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
-        super.stop(stopFuture);
+    void registedAfter(Future startFuture) {
+        if (router != null) {
+            //开启https
+            HttpServerOptions httpServerOptions = new HttpServerOptions();
+            if (IS_HTTPS) {
+                SelfSignedCertificate certificate = SelfSignedCertificate.create();
+                httpServerOptions.setSsl(true)
+                        .setKeyCertOptions(certificate.keyCertOptions())
+                        .setTrustOptions(certificate.trustOptions());
+            }
+            vertx.createHttpServer(httpServerOptions)
+                    .requestHandler(router)
+                    .listen(SERVER_PORT, httpServerAsyncResult -> {
+                        if (httpServerAsyncResult.succeeded()) {
+                            startFuture.complete();
+                            logger.info("HTTP server started on http" + (IS_HTTPS ? "s" : "") + "://localhost:" + SERVER_PORT);
+                        } else {
+                            startFuture.fail(httpServerAsyncResult.cause());
+                        }
+                    });
+        }
     }
 
-
-
-    /*public synchronized void registerdHandler(Handler<Router> handler) throws RuntimeException {
-        if (registeredRouterHandlers == null) {
-            registeredRouterHandlers = new ConcurrentHashSet<>(4);
-        }
-        registeredRouterHandlers.add(handler);
-    }*/
 }
 
 
