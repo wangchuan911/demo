@@ -150,7 +150,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>my.hehe.webserver.WebserverApplication</mainClass>
+                    <mainClass>pers.welisdoon.webserver.WebserverApplication</mainClass>
                     <classifier>exec</classifier>
                 </configuration>
             </plugin>
@@ -162,7 +162,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>my.hehe.webserver.WebserverApplication</mainClass>
+                            <mainClass>pers.welisdoon.webserver.WebserverApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
