@@ -49,6 +49,13 @@ public class VertxConfiguration {
     @Autowired
     ClusterConfiguration clusterConfiguration;
 
+    @Value("${vertx.dns.enable}")
+    boolean dnsEnable;
+    @Value("${vertx.dns.ip}")
+    String[] dnsIp;
+    @Value("${vertx.dns.maxQueries}")
+    Integer dnsMaxQueries;
+
     /**
      * Verticles deploy after  springboot ready
      */
@@ -94,11 +101,18 @@ public class VertxConfiguration {
     }
 
     private void dnsManger(VertxOptions vertxOptions) {
-        vertxOptions.setAddressResolverOptions(
-                new AddressResolverOptions()
-                        .addServer("134.192.232.18")
-                        .addServer("134.192.232.17")
-                        .setMaxQueries(10));
+        AddressResolverOptions options = new AddressResolverOptions();
+        if (dnsEnable) {
+            if (dnsIp != null) {
+                for (int i = 0; i < dnsIp.length; i++) {
+                    options.addServer(dnsIp[i]);
+                }
+            }
+            if (dnsMaxQueries > 0) {
+                options.setMaxQueries(10);
+            }
+        }
+        vertxOptions.setAddressResolverOptions(options);
     }
 
     private Consumer<Vertx> deployVerticles() {

@@ -40,7 +40,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     final private static Map<Class<? extends AbstractCustomVerticle>, Map<Type, Set<?>>> HANDLES = new HashMap<>(4);
 
     @Value("${vertx.scanPath}")
-    private String scanPath;
+    private String[] scanPath;
 
 
     @Override
@@ -139,7 +139,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     final void scanRegister() {
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
         {
-            String[] paths = scanPath.split(",");
+            String[] paths = scanPath;
             Collection<URL> CollectUrl = null;
             for (int i = 0; i < paths.length; i++) {
                 String path=paths[i];
@@ -224,7 +224,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
     @PostConstruct
     final void AbstractCustomVerticleInital() {
-        System.out.println(scanPath);
         if (CollectionUtils.isEmpty(HANDLES)) {
             synchronized (HANDLES) {
                 if (CollectionUtils.isEmpty(HANDLES)) {

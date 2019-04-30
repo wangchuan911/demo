@@ -15,3 +15,7 @@ vertx:
     instances: 2
   clusterMode: hazelcast
   scanPath: pers.welisdoon.webserver
+  dns:
+    enable: true
+    ip: 134.192.232.18,134.192.232.17
+    maxQueries: 10
