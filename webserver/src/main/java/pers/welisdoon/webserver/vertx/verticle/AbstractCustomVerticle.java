@@ -3,6 +3,13 @@ package pers.welisdoon.webserver.vertx.verticle;
 import io.vertx.core.*;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.ext.web.Router;
+import org.reflections.scanners.FieldAnnotationsScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.StringUtils;
 import pers.welisdoon.webserver.WebserverApplication;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
@@ -15,12 +22,11 @@ import org.springframework.util.CollectionUtils;
 import pers.welisdoon.webserver.WebserverApplication;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
 
+import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.net.URL;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -31,7 +37,11 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     /*Router router;
     Set<Handler<Vertx>> VERTX_HANDLERS = null;
     Set<Handler<Router>> ROUTER_HANDLERS = null;*/
-    static Map<Class<? extends AbstractCustomVerticle>, Map<Type, Set<?>>> HANDLES = new HashMap<>(4);
+    final private static Map<Class<? extends AbstractCustomVerticle>, Map<Type, Set<?>>> HANDLES = new HashMap<>(4);
+
+    @Value("${vertx.scanPath}")
+    private String scanPath;
+
 
     @Override
     final public void start(Future<Void> startFuture) throws Exception {
@@ -126,8 +136,26 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         }
     }
 
-    static void scanRegister() {
-        Reflections reflections = new Reflections(WebserverApplication.class.getPackageName());
+    final void scanRegister() {
+        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+        {
+            String[] paths = scanPath.split(",");
+            Collection<URL> CollectUrl = null;
+            for (int i = 0; i < paths.length; i++) {
+                String path=paths[i];
+                switch (i) {
+                    case 0:
+                        CollectUrl = ClasspathHelper.forPackage(path);
+                        break;
+                    default:
+                        CollectUrl.addAll(ClasspathHelper.forPackage(path));
+                        break;
+                }
+            }
+            CollectUrl = CollectionUtils.isEmpty(CollectUrl) ? ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()) : CollectUrl;
+            configurationBuilder.setUrls(CollectUrl);
+        }
+        Reflections reflections = new Reflections(configurationBuilder);
         Set<Class<?>> classes = reflections.getTypesAnnotatedWith(VertxConfiguration.class);
         classes.forEach(aClass -> {
             Set<Method> methods = ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class));
@@ -160,7 +188,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         });
     }
 
-    private void handleRegist() {
+    final private void handleRegist() {
         Class clazz = this.getClass();
         HANDLES.forEach((aClass, typeSetMap) -> {
             if (aClass == clazz) {
@@ -194,8 +222,16 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         });
     }
 
-    static {
-        scanRegister();
+    @PostConstruct
+    final void AbstractCustomVerticleInital() {
+        System.out.println(scanPath);
+        if (CollectionUtils.isEmpty(HANDLES)) {
+            synchronized (HANDLES) {
+                if (CollectionUtils.isEmpty(HANDLES)) {
+                    scanRegister();
+                }
+            }
+        }
     }
 }
 

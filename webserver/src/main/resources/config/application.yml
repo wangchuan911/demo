@@ -13,4 +13,5 @@ vertx:
       size: 4
   workerVerticle:
     instances: 2
-  clusterMode: hazelcastXX
+  clusterMode: hazelcast
+  scanPath: pers.welisdoon.webserver
