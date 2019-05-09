@@ -11,6 +11,7 @@
 
     <modules>
         <module>webserver</module>
+        <module>view</module>
     </modules>
 
     <properties>

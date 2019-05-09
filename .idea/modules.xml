@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/micro-server-demo.iml" filepath="$PROJECT_DIR$/micro-server-demo.iml" />
-      <module fileurl="file://$PROJECT_DIR$/vue-test/vue-test.iml" filepath="$PROJECT_DIR$/vue-test/vue-test.iml" />
     </modules>
   </component>
 </project>
