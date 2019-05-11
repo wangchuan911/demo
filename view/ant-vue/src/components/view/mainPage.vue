@@ -6,9 +6,9 @@
                       collapsible
                       v-model="collapsed"
       >
-        <a-row type="flex" justify="center" align="middle" style="height: 7%">
+        <a-row type="flex" justify="center" align="middle" style="height: 8%">
           <a-col :xs="16" :sm="16" :md="8" :lg="8" :xl="8" >
-            <img class="ant-col-24" src="../../assets/logo.png"  style="height: 100%"/>
+            <img class="ant-col-24" src="../../assets/logo.png" style="height: 100%;margin: 8px 0px 8px 0px;"/>
           </a-col>
         </a-row>
         <sider-menu class="sider-height"  :menus="menus" theme="dark" @click="handleClick"></sider-menu>
@@ -60,7 +60,7 @@
 
 import ALayoutSider from 'ant-design-vue/es/layout/Sider'
 import ACol from 'ant-design-vue/es/grid/Col'
-import Affix from 'ant-design-vue/lib/affix/index.js'
+import Affix from 'ant-design-vue/lib/affix'
 import ATabs from 'ant-design-vue/es/tabs/tabs'
 import SiderMenu from './siderMenu'
 import ARow from 'ant-design-vue/es/grid/Row'

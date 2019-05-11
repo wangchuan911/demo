@@ -5,6 +5,7 @@ import App from './App'
 import router from './router'
 import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
+import axios from 'axios'
 
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
@@ -41,6 +42,8 @@ requireComponent.keys().forEach(fileName => {
 })
 
 Vue.config.productionTip = false
+Vue.prototype.$http = axios
+
 Vue.use(Antd)
 
 /* eslint-disable */
