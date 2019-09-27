@@ -1,7 +1,7 @@
 ################### HTTP Configuration   ##########################
 server:
-  port: 8088
-  https-enable: false
+  port: 443
+  https-enable: true
 spring:
   profiles:
     active: [wechat,atomSrv]
@@ -16,6 +16,6 @@ vertx:
   clusterMode: hazelcast
   scanPath: pers.welisdoon.webserver
   dns:
-    enable: true
+    enable: false
     ip: 134.192.232.18,134.192.232.17
     maxQueries: 10

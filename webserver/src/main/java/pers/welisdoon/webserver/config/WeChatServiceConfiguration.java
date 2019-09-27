@@ -4,7 +4,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Lock;
@@ -12,34 +11,22 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.serviceproxy.ServiceBinder;
-import io.vertx.serviceproxy.ServiceProxyBuilder;
-import pers.welisdoon.webserver.common.JAXBUtils;
 import pers.welisdoon.webserver.common.encrypt.AesException;
 import pers.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import pers.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
-import pers.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
-import pers.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
-import pers.welisdoon.webserver.service.WeChatService;
-import pers.welisdoon.webserver.service.wechat.WeChatAsynService;
+import pers.welisdoon.webserver.service.common.CommonAsynService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
-import pers.welisdoon.webserver.vertx.verticle.AbstractCustomVerticle;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import pers.welisdoon.webserver.vertx.verticle.WorkerVerticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
-import pers.welisdoon.webserver.service.wechat.WeChatAsynService;
-import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 
-import javax.annotation.PostConstruct;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @Configuration
@@ -67,7 +54,7 @@ public class WeChatServiceConfiguration {
 
     private Long wechatAliveTimerId = null;
 
-    WeChatAsynService weChatAsynService;
+    CommonAsynService commonAsynService;
 
     @Bean
     public WXBizMsgCrypt getWXBizMsgCrypt(
@@ -83,7 +70,7 @@ public class WeChatServiceConfiguration {
     @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            WeChatAsynService.create(vertx1);
+            CommonAsynService.create(vertx1);
         };
         return vertxConsumer;
     }
@@ -91,7 +78,7 @@ public class WeChatServiceConfiguration {
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            weChatAsynService = WeChatAsynService.createProxy(vertx1);
+            commonAsynService = CommonAsynService.createProxy(vertx1);
 
 
             final String key = "WX.TOKEN";
@@ -200,7 +187,7 @@ public class WeChatServiceConfiguration {
                     //报文转对象
                     RequestMesseageBody requestMesseageBody = JAXBUtils.fromXML(requestbuffer.toString(), RequestMesseageBody.class);
                     //处理数据
-                    ResponseMesseage responseMesseage = weChatService.receive(requestMesseageBody);
+                    ResponseMesseage responseMesseage = weChatService.wechatMsgReceive(requestMesseageBody);
                     //报文转对象
                     requestbuffer = Buffer.buffer(JAXBUtils.toXML(responseMesseage));
                     routingContext.setBody(requestbuffer);
@@ -211,7 +198,7 @@ public class WeChatServiceConfiguration {
                     return;
                 }*/
 
-                weChatAsynService.receive(requestbuffer.toString(), stringAsyncResult -> {
+                commonAsynService.wechatMsgReceive(requestbuffer.toString(), stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         Buffer buffer = Buffer.buffer(stringAsyncResult.result());
                         routingContext.setBody(buffer);
