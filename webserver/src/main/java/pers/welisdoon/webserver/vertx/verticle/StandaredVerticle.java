@@ -3,12 +3,14 @@ package pers.welisdoon.webserver.vertx.verticle;
 import io.vertx.core.*;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.ConcurrentHashSet;
+import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.SelfSignedCertificate;
 import io.vertx.core.shareddata.Counter;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import org.springframework.util.StringUtils;
 import pers.welisdoon.webserver.config.ClusterConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +27,12 @@ public class StandaredVerticle extends AbstractCustomVerticle {
 
     @Value("${server.port}")
     private int SERVER_PORT;
-    @Value("${server.https-enable}")
+    @Value("${server.https.enable}")
     private boolean IS_HTTPS;
+    @Value("${server.https.keyStore}")
+    private String PATH_KEY_STORE;
+    @Value("${server.https.password}")
+    private String KEY_STORE_PASSWORD;
 
     Router router;
 
@@ -64,10 +70,14 @@ public class StandaredVerticle extends AbstractCustomVerticle {
             //开启https
             HttpServerOptions httpServerOptions = new HttpServerOptions();
             if (IS_HTTPS) {
-                SelfSignedCertificate certificate = SelfSignedCertificate.create();
-                httpServerOptions.setSsl(true)
-                        .setKeyCertOptions(certificate.keyCertOptions())
-                        .setTrustOptions(certificate.trustOptions());
+                httpServerOptions.setSsl(true);
+                if (!StringUtils.isEmpty(PATH_KEY_STORE)) {
+                    httpServerOptions.setKeyCertOptions(new JksOptions().setPath(PATH_KEY_STORE).setPassword(KEY_STORE_PASSWORD));
+                } else {
+                    SelfSignedCertificate certificate = SelfSignedCertificate.create();
+                    httpServerOptions.setKeyCertOptions(certificate.keyCertOptions())
+                            .setTrustOptions(certificate.trustOptions());
+                }
             }
             vertx.createHttpServer(httpServerOptions)
                     .requestHandler(router)
