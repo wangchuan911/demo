@@ -1,0 +1,29 @@
+#!/bin/bash
+
+rm -rf /etc/cas/*
+
+GET_IP=$(ifconfig eth0 | grep inet |  awk '{print $2}'| sed -n '1p')
+
+echo $GET_IP
+IP=$GET_IP
+if [ -n $IP ]
+then
+IP=",ip:"$IP
+fi
+
+export CERT_SUBJ_ALT_NAMES=dns:server.cas.com,dns:localhost,ip:127.0.0.1$IP
+
+export DNAME=CN=server.cas.com,OU=CAS,OU=COM,C=US
+
+echo $CERT_SUBJ_ALT_NAMES
+echo $DNAME
+
+./build.sh gencert
+
+keytool -delete -alias caskeystore -keystore /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.201.b09-2.el7_6.x86_64/jre/lib/security/cacerts  -storepass changeit
+
+keytool -import -alias caskeystore -keystore /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.201.b09-2.el7_6.x86_64/jre/lib/security/cacerts -file /etc/cas/cas.cer -trustcacerts   -storepass changeit
+
+#casuser::Mellon
+
+echo "https://server.cas.com:8443/cas/oauth2.0/authorize?response_type=code&client_id=20180901&redirect_uri=http://www.baidu.com"
