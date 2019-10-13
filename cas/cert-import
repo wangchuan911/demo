@@ -25,5 +25,6 @@ keytool -delete -alias caskeystore -keystore /usr/lib/jvm/java-1.8.0-openjdk-1.8
 keytool -import -alias caskeystore -keystore /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.201.b09-2.el7_6.x86_64/jre/lib/security/cacerts -file /etc/cas/cas.cer -trustcacerts   -storepass changeit
 
 #casuser::Mellon
+#Pg.!S45B:6JesXU
 
 echo "https://server.cas.com:8443/cas/oauth2.0/authorize?response_type=code&client_id=20180901&redirect_uri=http://www.baidu.com"
