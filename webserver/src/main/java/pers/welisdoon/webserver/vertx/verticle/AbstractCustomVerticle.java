@@ -3,13 +3,9 @@ package pers.welisdoon.webserver.vertx.verticle;
 import io.vertx.core.*;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.ext.web.Router;
-import org.reflections.scanners.FieldAnnotationsScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.util.StringUtils;
 import pers.welisdoon.webserver.WebserverApplication;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
@@ -19,25 +15,20 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
-import pers.welisdoon.webserver.WebserverApplication;
-import pers.welisdoon.webserver.common.ApplicationContextProvider;
 
 import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractCustomVerticle.class);
 
-    /*Router router;
-    Set<Handler<Vertx>> VERTX_HANDLERS = null;
-    Set<Handler<Router>> ROUTER_HANDLERS = null;*/
-    final private static Map<Class<? extends AbstractCustomVerticle>, Map<Type, Set<?>>> HANDLES = new HashMap<>(4);
+    final private static Map<HandlerEntry, Set<Method>> HANDLES = new HashMap<>(4);
+
 
     @Value("${vertx.scanPath}")
     private String[] scanPath;
@@ -71,41 +62,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     abstract void registedBefore(Future future);
 
     abstract void registedAfter(Future future);
-
-    /*@SuppressWarnings("unchecked")
-    public synchronized <T> void registeredHandler(Class<T> t, Handler<T> handler) {
-        if (Vertx.class.getName().equals(t.getName())) {
-            if (VERTX_HANDLERS == null) {
-                VERTX_HANDLERS = new ConcurrentHashSet<>(4);
-            }
-            if (handler == null) return;
-            VERTX_HANDLERS.add((Handler<Vertx>) handler);
-        } else if (Router.class.getName().equals(t.getName())) {
-            if (ROUTER_HANDLERS == null) {
-                ROUTER_HANDLERS = new ConcurrentHashSet<>(4);
-            }
-            if (handler == null) return;
-            ROUTER_HANDLERS.add((Handler<Router>) handler);
-        } else {
-            throw new RuntimeException("Error Object Type!");
-        }
-        {
-            StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[2];
-            logger.info("registered Handler Router->" + stackTraceElement.getMethodName() + "[" + stackTraceElement.getLineNumber() + "]");
-        }
-    }
-
-    void startRegister() {
-        if (!CollectionUtils.isEmpty(VERTX_HANDLERS))
-            for (Handler<Vertx> vertxHandler : VERTX_HANDLERS) {
-                vertxHandler.handle(vertx);
-            }
-        if (router != null && !CollectionUtils.isEmpty(ROUTER_HANDLERS))
-            for (Handler<Router> routerHandler : ROUTER_HANDLERS) {
-                routerHandler.handle(router);
-            }
-    }*/
-
 
     public static synchronized <T> void registeredHandler(Class<? extends AbstractCustomVerticle> verticle, Class<T> t, Handler<T> handler) {
         try {
@@ -142,7 +98,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
             String[] paths = scanPath;
             Collection<URL> CollectUrl = null;
             for (int i = 0; i < paths.length; i++) {
-                String path=paths[i];
+                String path = paths[i];
                 switch (i) {
                     case 0:
                         CollectUrl = ClasspathHelper.forPackage(path);
@@ -167,19 +123,19 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     Type retunType = (method.getGenericReturnType());
                     Type innertype = ((ParameterizedType) retunType).getActualTypeArguments()[0];
                     if (vertCls == null || vertCls == Verticle.class || retunType == null) return;
-                    Object retrunObJ = method.invoke(ApplicationContextProvider.getBean(aClass), null);
                     synchronized (HANDLES) {
-                        Map<Type, Set<?>> map = HANDLES.get(vertCls);
-                        if (map == null) {
-                            map = new HashMap<>(4);
-                            HANDLES.put(vertCls, map);
+                        {
+                            HandlerEntry handlerEntry = new HandlerEntry();
+                            handlerEntry.verticleClass = vertCls;
+                            handlerEntry.VertxRegisterInnerType = innertype;
+                            handlerEntry.ServiceClass = aClass;
+                            Set set = HANDLES.get(handlerEntry);
+                            if (set == null) {
+                                set = new HashSet<>(4);
+                                HANDLES.put(handlerEntry, set);
+                            }
+                            set.add(method);
                         }
-                        Set set = map.get(innertype);
-                        if (set == null) {
-                            set = new HashSet<>(4);
-                            map.put(innertype, set);
-                        }
-                        set.add(retrunObJ);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -190,32 +146,44 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
     final private void handleRegist() {
         Class clazz = this.getClass();
-        HANDLES.forEach((aClass, typeSetMap) -> {
-            if (aClass == clazz) {
-                typeSetMap.forEach((type, objects) -> {
-                    Object value = null;
-                    if (type == Vertx.class) {
-                        value = vertx;
-                    } else if (type == Router.class) {
-                        Set<Field> fields = ReflectionUtils.getFields(clazz, ReflectionUtils.withType(Router.class));
-                        for (Field field : fields) {
-                            try {
-                                value = field.get(ApplicationContextProvider.getBean(clazz));
-                                break;
-                            } catch (Exception e) {
-                                e.printStackTrace();
+        HANDLES.forEach((handlerEntry, methods) -> {
+            Class<? extends AbstractCustomVerticle> verticleClass = handlerEntry.verticleClass;
+            if (verticleClass == clazz) {
+                Type VertxRegisterInnerType = handlerEntry.VertxRegisterInnerType;
+                Class<?> ServiceClass = handlerEntry.ServiceClass;
+                Object value = null;
+                if (VertxRegisterInnerType == Vertx.class) {
+                    value = vertx;
+                } else if (VertxRegisterInnerType == Router.class) {
+                    value = getSpringBeanFiled(clazz, Router.class).get("router");
+                }
+                if (value == null) {
+                    return;
+                }
+                final Object finalValue = value;
+                methods.forEach(method -> {
+                    try {
+                        Class<?>[] parameterTypesClasses = method.getParameterTypes();
+                        Object[] parameterValue = null;
+                        if (parameterTypesClasses != null && parameterTypesClasses.length > 0) {
+                            parameterValue = new Object[parameterTypesClasses.length];
+                            for (int i = 0; i < parameterTypesClasses.length; i++) {
+                                Class parameterTypeClass = parameterTypesClasses[i];
+                                if (parameterTypeClass == Vertx.class) {
+                                    parameterValue[i] = vertx;
+                                } else if (parameterTypeClass == Router.class) {
+                                    parameterValue[i] = getSpringBeanFiled(clazz, Router.class).get("router");
+                                }
                             }
                         }
-                    }
-                    if (value == null) {
-                        return;
-                    }
-                    for (Object obj : objects) {
+                        Object obj = method.invoke(ApplicationContextProvider.getBean(ServiceClass), parameterValue);
                         if (obj instanceof Consumer) {
-                            ((Consumer) obj).accept(value);
+                            ((Consumer) obj).accept(finalValue);
                         } else if (obj instanceof Handler) {
-                            ((Handler) obj).handle(value);
+                            ((Handler) obj).handle(finalValue);
                         }
+                    } catch (Throwable e) {
+                        e.printStackTrace();
                     }
                 });
             }
@@ -232,7 +200,44 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
             }
         }
     }
+
+    static Map<String, Object> getSpringBeanFiled(Class<?> TargetClass, Class<?> filedClass) {
+        Set<Field> fields = ReflectionUtils.getFields(TargetClass, ReflectionUtils.withType(Router.class));
+        if (CollectionUtils.isEmpty(fields)) return Map.of();
+        Map<String, Object> stringMap = new HashMap<>();
+        for (Field field : fields) {
+            try {
+                stringMap.put(field.getName(), field.get(ApplicationContextProvider.getBean(TargetClass)));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return stringMap;
+    }
+
+    private class HandlerEntry {
+        Class<? extends AbstractCustomVerticle> verticleClass;
+        Type VertxRegisterInnerType;
+        Class<?> ServiceClass;
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof HandlerEntry) {
+                HandlerEntry handlerEntry = (HandlerEntry) obj;
+                return handlerEntry.verticleClass == this.verticleClass
+                        && handlerEntry.VertxRegisterInnerType == this.VertxRegisterInnerType
+                        && handlerEntry.ServiceClass == this.ServiceClass;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return (verticleClass.toString() + VertxRegisterInnerType.toString() + ServiceClass.toString()).hashCode();
+        }
+    }
 }
+
 
 
 

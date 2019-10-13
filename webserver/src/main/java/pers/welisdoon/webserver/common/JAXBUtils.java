@@ -6,10 +6,25 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JAXBUtils {
+    final static Map<Class<?>, JAXBContext> JAXB_CONTEXT_MAP;
+
+    static {
+        JAXB_CONTEXT_MAP = new ConcurrentHashMap<>();
+    }
+
     public static String toXML(Object obj) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(obj.getClass());
+        JAXBContext context;
+        Class<?> clazz=obj.getClass();
+        if(JAXB_CONTEXT_MAP.containsKey(clazz)){
+            context=JAXB_CONTEXT_MAP.get(clazz);
+        }else{
+            context=JAXBContext.newInstance(clazz);
+            JAXB_CONTEXT_MAP.put(clazz,context);
+        }
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");// //编码格式
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);// 是否格式化生成的xml串
@@ -21,15 +36,22 @@ public class JAXBUtils {
     }
 
     /**
-     * @Description XML转化为对象
-     * @param xml 传入的XML报文
+     * @param xml       传入的XML报文
      * @param valueType 需要返回的cls
-     * @throws JAXBException 参数
      * @return T 解析完成对象
+     * @throws JAXBException 参数
+     * @Description XML转化为对象
      */
     @SuppressWarnings("unchecked")
     public static <T> T fromXML(String xml, Class<T> valueType) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(valueType);
+        JAXBContext context;
+        Class<?> clazz=valueType;
+        if(JAXB_CONTEXT_MAP.containsKey(clazz)){
+            context=JAXB_CONTEXT_MAP.get(clazz);
+        }else{
+            context=JAXBContext.newInstance(clazz);
+            JAXB_CONTEXT_MAP.put(clazz,context);
+        }
         Unmarshaller unmarshaller = context.createUnmarshaller();
         return (T) unmarshaller.unmarshal(new StringReader(xml));
     }
