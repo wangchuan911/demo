@@ -35,7 +35,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
 
     @Override
-    final public void start(Future<Void> startFuture) throws Exception {
+    final public void start(Future<Void> startFuture) {
         Future future = Future.future();
         future.setHandler(voidAsyncResult -> {
             handleRegist();

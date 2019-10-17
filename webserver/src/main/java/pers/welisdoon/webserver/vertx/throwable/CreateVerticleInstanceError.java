@@ -7,7 +7,7 @@ public class CreateVerticleInstanceError extends Error {
     }
 
     private static String getCode(int code) {
-        String error = "";
+        String error;
         switch (code) {
             case 0:
                 error = "create instance must single !";
