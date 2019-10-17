@@ -44,21 +44,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         registedBefore(future);
     }
 
-    @Override
-    final public void stop(Future<Void> stopFuture) throws Exception {
-        super.stop(stopFuture);
-    }
-
-    @Override
-    final public void start() throws Exception {
-        super.start();
-    }
-
-    @Override
-    final public void stop() throws Exception {
-        super.stop();
-    }
-
     abstract void registedBefore(Future future);
 
     abstract void registedAfter(Future future);
@@ -155,7 +140,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                 if (VertxRegisterInnerType == Vertx.class) {
                     value = vertx;
                 } else if (VertxRegisterInnerType == Router.class) {
-                    value = getSpringBeanFiled(clazz, Router.class).get("router");
+                    value = getRouter(clazz);
+                    ;
                 }
                 if (value == null) {
                     return;
@@ -172,7 +158,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                                 if (parameterTypeClass == Vertx.class) {
                                     parameterValue[i] = vertx;
                                 } else if (parameterTypeClass == Router.class) {
-                                    parameterValue[i] = getSpringBeanFiled(clazz, Router.class).get("router");
+                                    parameterValue[i] = getRouter(clazz);
                                 }
                             }
                         }
@@ -201,18 +187,26 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         }
     }
 
-    static Map<String, Object> getSpringBeanFiled(Class<?> TargetClass, Class<?> filedClass) {
-        Set<Field> fields = ReflectionUtils.getFields(TargetClass, ReflectionUtils.withType(Router.class));
-        if (CollectionUtils.isEmpty(fields)) return Map.of();
-        Map<String, Object> stringMap = new HashMap<>();
+    static <T> T getFiled(Class<?> TargetClass, Class<T> filedClass) {
+        Set<Field> fields = ReflectionUtils.getFields(TargetClass, ReflectionUtils.withType(filedClass));
         for (Field field : fields) {
             try {
-                stringMap.put(field.getName(), field.get(ApplicationContextProvider.getBean(TargetClass)));
+                field.setAccessible(true);
+                return (T) field.get(ApplicationContextProvider.getBean(TargetClass));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return stringMap;
+        return null;
+    }
+
+    static Router getRouter(Class<?> TargetClass) {
+        if (TargetClass == AbstractWebVerticle.class) {
+            return getFiled(TargetClass, Router.class);
+        } else if ((TargetClass = TargetClass.getSuperclass()) != null) {
+            return getRouter(TargetClass);
+        }
+        return null;
     }
 
     private class HandlerEntry {

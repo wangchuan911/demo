@@ -21,77 +21,11 @@ import org.springframework.stereotype.Component;
 import java.util.Set;
 
 @Component("standaredVerticle")
-public class StandaredVerticle extends AbstractCustomVerticle {
-
-    private static final Logger logger = LoggerFactory.getLogger(StandaredVerticle.class);
-
-    @Value("${server.port}")
-    private int SERVER_PORT;
-    @Value("${server.https.enable}")
-    private boolean IS_HTTPS;
-    @Value("${server.https.keyStore}")
-    private String PATH_KEY_STORE;
-    @Value("${server.https.password}")
-    private String KEY_STORE_PASSWORD;
-
-    Router router;
-
+public class StandaredVerticle extends AbstractWebVerticle  {
     @Override
     void registedBefore(Future startFuture) {
-        router = Router.router(vertx);
-        router.route().handler(BodyHandler.create());
-        logger.info("create router");
-        startFuture.complete();
-        /*this.registeredHandler(Vertx.class, null);
-        this.registeredHandler(Router.class, router1 -> {
-            router1.get("/").handler(routingContext -> {
-                routingContext.response().end("hello world!");
-            });
-        });
-
-        this.startRegister();
-        if (router != null) {
-            vertx.createHttpServer(httpServerOptions)
-                    .requestHandler(router)
-                    .listen(SERVER_PORT, httpServerAsyncResult -> {
-                        if (httpServerAsyncResult.succeeded()) {
-                            startFuture.complete();
-                            logger.info("HTTP server started on http" + (IS_HTTPS ? "s" : "") + "://localhost:" + SERVER_PORT);
-                        } else {
-                            startFuture.fail(httpServerAsyncResult.cause());
-                        }
-                    });
-        }*/
+        super.registedBefore(startFuture);
     }
-
-    @Override
-    void registedAfter(Future startFuture) {
-        if (router != null) {
-            //开启https
-            HttpServerOptions httpServerOptions = new HttpServerOptions();
-            if (IS_HTTPS) {
-                httpServerOptions.setSsl(true);
-                if (!StringUtils.isEmpty(PATH_KEY_STORE)) {
-                    httpServerOptions.setKeyCertOptions(new JksOptions().setPath(PATH_KEY_STORE).setPassword(KEY_STORE_PASSWORD));
-                } else {
-                    SelfSignedCertificate certificate = SelfSignedCertificate.create();
-                    httpServerOptions.setKeyCertOptions(certificate.keyCertOptions())
-                            .setTrustOptions(certificate.trustOptions());
-                }
-            }
-            vertx.createHttpServer(httpServerOptions)
-                    .requestHandler(router)
-                    .listen(SERVER_PORT, httpServerAsyncResult -> {
-                        if (httpServerAsyncResult.succeeded()) {
-                            startFuture.complete();
-                            logger.info("HTTP server started on http" + (IS_HTTPS ? "s" : "") + "://localhost:" + SERVER_PORT);
-                        } else {
-                            startFuture.fail(httpServerAsyncResult.cause());
-                        }
-                    });
-        }
-    }
-
 }
 
 
