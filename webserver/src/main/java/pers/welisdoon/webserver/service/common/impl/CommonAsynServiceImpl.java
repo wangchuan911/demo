@@ -61,7 +61,13 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                     boolean isThisMethod = true;
                     for (int j = 0; j < arg.size(); j++) {
                         Object value = arg.getValue(j);
-                        isThisMethod = isThisMethod && value == null ? true : (classEquals(classes[j], value.getClass()) != null);
+                        if (value == null) {
+                            isThisMethod = true;
+                            classes[j] = typeChange(classes[j]);
+                        } else {
+                            if (!(isThisMethod = ((classes[j] = classEquals(classes[j], value.getClass(), false)) != null)))
+                                break;
+                        }
                         args[j] = value;
                     }
                     if (isThisMethod) {
@@ -79,14 +85,18 @@ public class CommonAsynServiceImpl implements CommonAsynService {
         future.complete(jsonObject.toString());
     }
 
-    private static Class<?> classEquals(Class<?> a, Class<?> b) {
+    private static Class<?> classEquals(Class<?> a, Class<?> b, boolean returnObjClass) {
         if (a == b) {
             return a;
         } else if (typeChange(a) == b) {
-            return a;
+            return returnObjClass ? b : a;
         } else {
             return null;
         }
+    }
+
+    private static Class<?> classEquals(Class<?> a, Class<?> b) {
+        return classEquals(a, b, false);
     }
 
     private static Class<?> typeChange(Class<?> a) {
