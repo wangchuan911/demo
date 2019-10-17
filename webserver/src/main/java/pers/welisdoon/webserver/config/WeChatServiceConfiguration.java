@@ -46,9 +46,6 @@ public class WeChatServiceConfiguration {
     @Value("${wechat.prop.token}")
     private String apptoken;
 
-    @Value("${server.port}")
-    private int SERVER_PORT;
-
     @Value("${wechat.prop.afterUpdateTokenTime}")
     private long TAKEN_UPDATE_TIME;
 

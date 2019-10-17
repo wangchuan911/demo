@@ -8,33 +8,16 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import pers.welisdoon.webserver.vertx.throwable.CreateVerticleInstanceError;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
 
-    final private static AtomicBoolean IS_SINGLE = new AtomicBoolean(true);
-
-    public AbstractWebVerticle() {
-        if (!IS_SINGLE.compareAndSet(true, false)) {
-            throw new CreateVerticleInstanceError(0);
-        }
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(AbstractWebVerticle.class);
 
-    @Value("${server.port}")
-    private int SERVER_PORT;
-    @Value("${server.https.enable}")
-    private boolean IS_HTTPS;
-    @Value("${server.https.keyStore}")
-    private String PATH_KEY_STORE;
-    @Value("${server.https.password}")
-    private String KEY_STORE_PASSWORD;
+    int port;
+    boolean sslEnable;
+    String sslKeyStore;
+    String sslPassword;
 
     private Router router;
 
@@ -52,10 +35,10 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
         if (router != null) {
             //开启https
             HttpServerOptions httpServerOptions = new HttpServerOptions();
-            if (IS_HTTPS) {
+            if (sslEnable) {
                 httpServerOptions.setSsl(true);
-                if (!StringUtils.isEmpty(PATH_KEY_STORE)) {
-                    httpServerOptions.setKeyCertOptions(new JksOptions().setPath(PATH_KEY_STORE).setPassword(KEY_STORE_PASSWORD));
+                if (!StringUtils.isEmpty(sslKeyStore)) {
+                    httpServerOptions.setKeyCertOptions(new JksOptions().setPath(sslKeyStore).setPassword(sslPassword));
                 } else {
                     SelfSignedCertificate certificate = SelfSignedCertificate.create();
                     httpServerOptions.setKeyCertOptions(certificate.keyCertOptions())
@@ -64,10 +47,10 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
             }
             vertx.createHttpServer(httpServerOptions)
                     .requestHandler(router)
-                    .listen(SERVER_PORT, httpServerAsyncResult -> {
+                    .listen(port, httpServerAsyncResult -> {
                         if (httpServerAsyncResult.succeeded()) {
                             startFuture.complete();
-                            logger.info("HTTP server started on http" + (IS_HTTPS ? "s" : "") + "://localhost:" + SERVER_PORT);
+                            logger.info("HTTP server started on http" + (sslEnable ? "s" : "") + "://localhost:" + port);
                         } else {
                             startFuture.fail(httpServerAsyncResult.cause());
                         }
@@ -75,12 +58,37 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
         }
     }
 
-    @Override
-    public void stop() throws Exception {
-        IS_SINGLE.set(true);
+    public int getPort() {
+        return port;
     }
 
+    public void setPort(int port) {
+        this.port = port;
+    }
 
+    public boolean isSslEnable() {
+        return sslEnable;
+    }
+
+    public void setSslEnable(boolean sslEnable) {
+        this.sslEnable = sslEnable;
+    }
+
+    public String getSslKeyStore() {
+        return sslKeyStore;
+    }
+
+    public void setSslKeyStore(String sslKeyStore) {
+        this.sslKeyStore = sslKeyStore;
+    }
+
+    public String getSslPassword() {
+        return sslPassword;
+    }
+
+    public void setSslPassword(String sslPassword) {
+        this.sslPassword = sslPassword;
+    }
 }
 
 

@@ -1,10 +1,10 @@
 ################### HTTP Configuration   ##########################
 server:
-  port: 443
-  https:
-    enable: true
-    keyStore: /opt/wechat/thekeystore
-    password: changeit
+  web:
+    port: 443
+    sslEnable: true
+    sslKeyStore: /opt/wechat/thekeystore
+    sslPassword: changeit
 spring:
   profiles:
     active: [wechat,atomSrv]
