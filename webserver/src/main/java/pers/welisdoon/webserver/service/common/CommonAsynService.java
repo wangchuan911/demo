@@ -11,6 +11,8 @@ import io.vertx.serviceproxy.ServiceBinder;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
 
+import java.util.Map;
+
 @ProxyGen
 @VertxGen
 public interface CommonAsynService {
@@ -30,4 +32,6 @@ public interface CommonAsynService {
     }
 
     void wechatMsgReceive(String inputBody, Handler<AsyncResult<String>> outputBodyHandler);
+
+    void servceCall(String serverName, String method, String inputBody, Handler<AsyncResult<String>> outputBodyHandler);
 }
