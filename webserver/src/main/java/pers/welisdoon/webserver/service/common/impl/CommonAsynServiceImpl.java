@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -46,7 +47,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
     }
 
     @Override
-    public void servceCall(String serverName, String method, String input, Handler<AsyncResult<String>> outputBodyHandler) {
+    public void serviceCall(String serverName, String method, String input, String option, Handler<AsyncResult<String>> outputBodyHandler) {
         Future<String> future = Future.future();
         JsonObject jsonObject = new JsonObject();
         try {
@@ -68,7 +69,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                             if (!(isThisMethod = ((classes[j] = classEquals(classes[j], value.getClass(), false)) != null)))
                                 break;
                         }
-                        args[j] = value;
+                        args[j] = getValue(value);
                     }
                     if (isThisMethod) {
                         reult = methods[i].invoke(sprngService, args);
@@ -89,6 +90,8 @@ public class CommonAsynServiceImpl implements CommonAsynService {
         if (a == b) {
             return a;
         } else if (typeChange(a) == b) {
+            return returnObjClass ? b : a;
+        } else if (a == typeChange(b)) {
             return returnObjClass ? b : a;
         } else {
             return null;
@@ -114,8 +117,22 @@ public class CommonAsynServiceImpl implements CommonAsynService {
             return Double.class;
         } else if (a == boolean.class) {
             return Boolean.class;
+        } else if (a == JsonArray.class) {
+            return List.class;
+        } else if (a == JsonObject.class) {
+            return Map.class;
         } else {
             return a;
+        }
+    }
+
+    private static Object getValue(Object targetValue) {
+        if (targetValue instanceof JsonObject) {
+            return ((JsonObject) targetValue).getMap();
+        } else if (targetValue instanceof JsonArray) {
+            return ((JsonArray) targetValue).getList();
+        } else {
+            return targetValue;
         }
     }
 }
