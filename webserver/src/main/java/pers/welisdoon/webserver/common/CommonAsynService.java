@@ -1,4 +1,4 @@
-package pers.welisdoon.webserver.service.common;
+package pers.welisdoon.webserver.common;
 
 
 import io.vertx.codegen.annotations.ProxyGen;
@@ -9,9 +9,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.serviceproxy.ServiceBinder;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
-import pers.welisdoon.webserver.common.ApplicationContextProvider;
-
-import java.util.Map;
 
 @ProxyGen
 @VertxGen

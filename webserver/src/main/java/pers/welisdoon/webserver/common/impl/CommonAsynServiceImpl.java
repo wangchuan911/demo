@@ -1,4 +1,4 @@
-package pers.welisdoon.webserver.service.common.impl;
+package pers.welisdoon.webserver.common.impl;
 
 
 import io.vertx.core.AsyncResult;
@@ -6,13 +6,12 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.springframework.context.ApplicationContext;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
 import pers.welisdoon.webserver.common.JAXBUtils;
 import pers.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import pers.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
-import pers.welisdoon.webserver.service.WeChatService;
-import pers.welisdoon.webserver.service.common.CommonAsynService;
+import pers.welisdoon.webserver.service.wechat.service.WeChatService;
+import pers.welisdoon.webserver.common.CommonAsynService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +48,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
     @Override
     public void serviceCall(String serverName, String method, String input, String option, Handler<AsyncResult<String>> outputBodyHandler) {
         Future<String> future = Future.future();
+        future.setHandler(outputBodyHandler);
         JsonObject jsonObject = new JsonObject();
         try {
             Object sprngService = ApplicationContextProvider.getBean(serverName);
@@ -73,17 +73,27 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                     }
                     if (isThisMethod) {
                         reult = methods[i].invoke(sprngService, args);
-                        break;
+                        jsonObject.put("result", reult);
+                        future.complete(jsonObject.toString());
+                        return;
                     }
                 }
             }
-            jsonObject.put("result", reult);
-        } catch (Throwable e) {
+            throw new NoSuchMethodError();
+        } catch (Exception e) {
+            e.printStackTrace();
+            jsonObject.put("exception", e.getMessage());
+        } catch (Error e) {
             e.printStackTrace();
             jsonObject.put("error", e.getMessage());
+        } catch (Throwable e) {
+            e.printStackTrace();
+            future.fail(e);
+        } finally {
+            if (!future.isComplete()) {
+                future.complete(jsonObject.toString());
+            }
         }
-        future.setHandler(outputBodyHandler);
-        future.complete(jsonObject.toString());
     }
 
     private static Class<?> classEquals(Class<?> a, Class<?> b, boolean returnObjClass) {

@@ -7,7 +7,7 @@ server:
     sslPassword: changeit
 spring:
   profiles:
-    active: [wechat,atomSrv]
+    active: [wechat,atomSrv,database]
 
 ################### Vert.x Configuration ##########################
 vertx:

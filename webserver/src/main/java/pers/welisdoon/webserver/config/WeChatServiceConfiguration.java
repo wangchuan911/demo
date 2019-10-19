@@ -14,7 +14,7 @@ import io.vertx.ext.web.client.WebClient;
 import pers.welisdoon.webserver.common.encrypt.AesException;
 import pers.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import pers.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
-import pers.welisdoon.webserver.service.common.CommonAsynService;
+import pers.welisdoon.webserver.common.CommonAsynService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
