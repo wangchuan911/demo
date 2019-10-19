@@ -8,4 +8,6 @@ import java.util.Map;
 @Repository
 public interface CustomDao {
     public List<Map<String, Object>> list(Map params);
+
+    public int saveImage(Map params);
 }

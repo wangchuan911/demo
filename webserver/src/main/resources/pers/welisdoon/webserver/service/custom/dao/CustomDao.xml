@@ -4,7 +4,9 @@
 
 <mapper namespace="pers.welisdoon.webserver.service.custom.dao.CustomDao">
 
-    <select id="list" parameterType="map">
-        select 'hehe' from dual
+    <select id="list" parameterType="map" resultType="map">
+        select 'hehe' name from dual
+        union
+        select 'hehe1' name from dual
     </select>
 </mapper>

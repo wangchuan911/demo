@@ -56,7 +56,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
             JsonArray arg = new JsonArray(input);
             Object reult = null;
             for (int i = 0; i < methods.length; i++) {
-                if (methods[i].getParameterCount() == arg.size()) {
+                if (methods[i].getName().equals(method) && methods[i].getParameterCount() == arg.size()) {
                     Object[] args = new Object[arg.size()];
                     Class<?>[] classes = methods[i].getParameterTypes();
                     boolean isThisMethod = true;
