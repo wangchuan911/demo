@@ -1,4 +1,4 @@
-package pers.welisdoon.webserver.common.impl;
+package pers.welisdoon.webserver.common.web.impl;
 
 
 import io.vertx.core.AsyncResult;
@@ -11,7 +11,7 @@ import pers.welisdoon.webserver.common.JAXBUtils;
 import pers.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import pers.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
 import pers.welisdoon.webserver.service.wechat.service.WeChatService;
-import pers.welisdoon.webserver.common.CommonAsynService;
+import pers.welisdoon.webserver.common.web.CommonAsynService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

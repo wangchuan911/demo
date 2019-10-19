@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.welisdoon.webserver.common.CommonAsynService;
+import pers.welisdoon.webserver.common.web.CommonAsynService;
 import pers.welisdoon.webserver.service.custom.dao.CustomDao;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
