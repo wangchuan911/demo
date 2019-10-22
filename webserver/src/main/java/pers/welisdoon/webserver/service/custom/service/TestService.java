@@ -8,6 +8,7 @@ import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.Session;
 
+import org.mybatis.spring.SqlSessionTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,8 @@ import java.util.function.Consumer;
 public class TestService {
     @Autowired
     OrderDao customDao;
+    @Autowired
+    SqlSessionTemplate sqlSessionTemplate;
 
     private static final Logger logger = LoggerFactory.getLogger(TestService.class);
     CommonAsynService commonAsynService;
