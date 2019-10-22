@@ -11,6 +11,7 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import pers.welisdoon.webserver.common.encrypt.AesException;
 import pers.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import pers.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
@@ -19,35 +20,23 @@ import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import pers.welisdoon.webserver.vertx.verticle.WorkerVerticle;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import java.util.function.Consumer;
 
-@Configuration
 @VertxConfiguration
-public class WeChatServiceConfiguration {
+@ConfigurationProperties("wechat")
+@Configuration
+public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(WeChatServiceConfiguration.class);
-
-    @Value("${wechat.url.getToken}")
-    private String WX_TOKEN_URL;
-    @Value("${wechat.url.base}")
-    private String WX_URL;
-
-    @Value("${wechat.prop.appID}")
-    private String appID;
-    @Value("${wechat.prop.appsecret}")
-    private String appsecret;
-    @Value("${wechat.prop.token}")
-    private String apptoken;
-
-    @Value("${wechat.prop.afterUpdateTokenTime}")
-    private long TAKEN_UPDATE_TIME;
 
     private Long wechatAliveTimerId = null;
 
@@ -55,9 +44,9 @@ public class WeChatServiceConfiguration {
 
     @Bean
     public WXBizMsgCrypt getWXBizMsgCrypt(
-            @Value("${wechat.prop.token}") String apptoken,
-            @Value("${wechat.prop.key}") String appsecret,
-            @Value("${wechat.prop.appID}") String appID) throws AesException {
+            @Value("${wechat.token}") String apptoken,
+            @Value("${wechat.key}") String appsecret,
+            @Value("${wechat.appID}") String appID) throws AesException {
         return new WXBizMsgCrypt(apptoken, appsecret, appID);
     }
 
@@ -81,7 +70,7 @@ public class WeChatServiceConfiguration {
             final String key = "WX.TOKEN";
             final String URL_TOCKEN_LOCK = key + ".LOCK";
             final String URL_TOCKEN_UPDATE = key + ".UPDATE";
-            final String URL_REQUSET = WX_URL + WX_TOKEN_URL;
+            final String URL_REQUSET = this.getUrls().get("base").toString() + this.getUrls().get("getToken").toString();
 
 
             EventBus eventBus = vertx1.eventBus();
@@ -93,24 +82,27 @@ public class WeChatServiceConfiguration {
                     if (lockAsyncResult.succeeded()) {
                         webClient.getAbs(URL_REQUSET)
                                 .addQueryParam("grant_type", "client_credential")
-                                .addQueryParam("appid", appID)
-                                .addQueryParam("secret", appsecret)
+                                .addQueryParam("appid", this.getAppID())
+                                .addQueryParam("secret", this.getAppsecret())
                                 .send(httpResponseAsyncResult -> {
                                     try {
                                         if (httpResponseAsyncResult.succeeded()) {
                                             HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
                                             eventBus.publish(URL_TOCKEN_UPDATE, httpResponse.body().toJsonObject());
-                                        } else {
+                                        }
+                                        else {
                                             httpResponseAsyncResult.cause().printStackTrace();
                                         }
-                                    } finally {
+                                    }
+                                    finally {
                                         Lock lock = lockAsyncResult.result();
                                         vertx1.setTimer(30 * 1000, aLong1 -> {
                                             lock.release();
                                         });
                                     }
                                 });
-                    } else {
+                    }
+                    else {
                         logger.info(lockAsyncResult.cause().getMessage());
                     }
                 });
@@ -121,11 +113,12 @@ public class WeChatServiceConfiguration {
                 if (tokenJson.getInteger("errcode") != null) {
                     logger.info("errcode:" + tokenJson.getInteger("errcode"));
                     logger.info("errmsg:" + tokenJson.getString("errmsg"));
-                } else {
+                }
+                else {
                     logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
                 }
                 if (wechatAliveTimerId == null || vertx1.cancelTimer(wechatAliveTimerId)) {
-                    wechatAliveTimerId = vertx1.setTimer(TAKEN_UPDATE_TIME * 1000, longHandler);
+                    wechatAliveTimerId = vertx1.setTimer(this.getAfterUpdateTokenTime() * 1000, longHandler);
                 }
             });
             longHandler.handle(null);
@@ -151,7 +144,8 @@ public class WeChatServiceConfiguration {
                 }
                 try {
                     routingContext.response().end(wxBizMsgCrypt.verifyUrl2(signature, timestamp, nonce, echostr));
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     routingContext.response().end(MesseageTypeValue.MSG_REPLY);
                 }
             });
@@ -173,9 +167,11 @@ public class WeChatServiceConfiguration {
                     requestbuffer = Buffer.buffer(wxBizMsgCrypt.decryptMsg(signature, timeStamp, nonce, requestbuffer.toString()));
                     routingContext.setBody(requestbuffer);
 
-                } catch (AesException e) {
+                }
+                catch (AesException e) {
                     e.printStackTrace();
-                } finally {
+                }
+                finally {
                     routingContext.next();
                 }
             }).handler(routingContext -> {
@@ -200,7 +196,8 @@ public class WeChatServiceConfiguration {
                         Buffer buffer = Buffer.buffer(stringAsyncResult.result());
                         routingContext.setBody(buffer);
                         routingContext.next();
-                    } else {
+                    }
+                    else {
                         stringAsyncResult.cause().printStackTrace();
                         routingContext.response().end(MesseageTypeValue.MSG_REPLY);
                     }
@@ -220,9 +217,11 @@ public class WeChatServiceConfiguration {
                     }
 
                     requestbuffer = Buffer.buffer(wxBizMsgCrypt.encryptMsg(requestbuffer.toString(), timeStamp, nonce));
-                } catch (AesException e) {
+                }
+                catch (AesException e) {
                     e.printStackTrace();
-                } finally {
+                }
+                finally {
                     routingContext.response().end(requestbuffer);
                 }
             }).failureHandler(routingContext -> {

@@ -3,9 +3,12 @@ package pers.welisdoon.webserver.vertx.verticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.JksOptions;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PfxOptions;
 import io.vertx.core.net.SelfSignedCertificate;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -18,6 +21,8 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
     boolean sslEnable;
     String sslKeyStore;
     String sslPassword;
+    String sslKeyType;
+    String sslKeyPath;
 
     private Router router;
 
@@ -37,12 +42,20 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
             HttpServerOptions httpServerOptions = new HttpServerOptions();
             if (sslEnable) {
                 httpServerOptions.setSsl(true);
-                if (!StringUtils.isEmpty(sslKeyStore)) {
-                    httpServerOptions.setKeyCertOptions(new JksOptions().setPath(sslKeyStore).setPassword(sslPassword));
-                } else {
-                    SelfSignedCertificate certificate = SelfSignedCertificate.create();
-                    httpServerOptions.setKeyCertOptions(certificate.keyCertOptions())
-                            .setTrustOptions(certificate.trustOptions());
+                switch (this.sslKeyType.toLowerCase()) {
+                    case "pem":
+                        httpServerOptions.setPemKeyCertOptions(new PemKeyCertOptions().setCertPath(sslKeyStore).setKeyPath(sslKeyPath));
+                        break;
+                    case "jks":
+                        httpServerOptions.setKeyCertOptions(new JksOptions().setPath(sslKeyStore).setPassword(sslPassword));
+                        break;
+                    case "pfx":
+                        httpServerOptions.setPfxKeyCertOptions(new PfxOptions().setPath(sslKeyStore).setPassword(sslPassword));
+                        break;
+                    default:
+                        SelfSignedCertificate certificate = SelfSignedCertificate.create();
+                        httpServerOptions.setKeyCertOptions(certificate.keyCertOptions())
+                                .setTrustOptions(certificate.trustOptions());
                 }
             }
             vertx.createHttpServer(httpServerOptions)
@@ -51,7 +64,8 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                         if (httpServerAsyncResult.succeeded()) {
                             startFuture.complete();
                             logger.info("HTTP server started on http" + (sslEnable ? "s" : "") + "://localhost:" + port);
-                        } else {
+                        }
+                        else {
                             startFuture.fail(httpServerAsyncResult.cause());
                         }
                     });
@@ -88,6 +102,22 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
 
     public void setSslPassword(String sslPassword) {
         this.sslPassword = sslPassword;
+    }
+
+    public String getSslKeyType() {
+        return sslKeyType;
+    }
+
+    public void setSslKeyType(String sslKeyType) {
+        this.sslKeyType = sslKeyType;
+    }
+
+    public String getSslKeyPath() {
+        return sslKeyPath;
+    }
+
+    public void setSslKeyPath(String sslKeyPath) {
+        this.sslKeyPath = sslKeyPath;
     }
 }
 

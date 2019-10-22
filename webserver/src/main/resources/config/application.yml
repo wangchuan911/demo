@@ -3,11 +3,12 @@ server:
   web:
     port: 443
     sslEnable: true
+    sslKeyType: pfx
     sslKeyStore: /opt/wechat/thekeystore
     sslPassword: changeit
 spring:
   profiles:
-    active: [wechat,atomSrv,database]
+    active: [wechat,atomSrv,database,wechat-app]
 
 ################### Vert.x Configuration ##########################
 vertx:
@@ -16,7 +17,7 @@ vertx:
       size: 4
   workerVerticle:
     instances: 2
-  clusterMode: hazelcast
+  clusterMode: hazelcast1
   scanPath: pers.welisdoon.webserver
   dns:
     enable: false

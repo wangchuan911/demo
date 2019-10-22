@@ -154,10 +154,14 @@ public class TestService {
     }
 
     public Object carManger(int mode, Map params) {
-        return null;
+        OrderVO orderVO = JsonObject.mapFrom(params).mapTo(OrderVO.class);
+        List list = customDao.list(orderVO);
+        return Map.of("input",params,"output",list);
     }
 
     public Object userManger(int mode, Map params) {
-        return null;
+        OrderVO orderVO = JsonObject.mapFrom(params).mapTo(OrderVO.class);
+        List list = customDao.list(orderVO);
+        return Map.of("input",params,"output",list);
     }
 }
