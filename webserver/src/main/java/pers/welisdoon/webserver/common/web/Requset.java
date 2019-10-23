@@ -1,15 +1,21 @@
 package pers.welisdoon.webserver.common.web;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import io.vertx.codegen.annotations.DataObject;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Session;
 
 @DataObject
 public class Requset {
     String method;
     String service;
-    JsonArray params;
-    JsonObject extra;
+    Object body;
+    JsonObject session;
+    JsonObject params;
+
 
     public Requset() {
 
@@ -18,15 +24,28 @@ public class Requset {
     public Requset(JsonObject jsonObject) {
         method = jsonObject.getString("method");
         service = jsonObject.getString("service");
-        params = jsonObject.getJsonArray("params");
-        extra = jsonObject.getJsonObject("extra");
+        body = jsonObject.getValue("body");
+        session = jsonObject.getJsonObject("session");
+        params = jsonObject.getJsonObject("params");
     }
 
-    public Requset(JsonArray jsonArray) {
-        method = jsonArray.getString(0);
-        service = jsonArray.getString(1);
-        params = jsonArray.getJsonArray(2);
-        extra = jsonArray.getJsonObject(2);
+    private <T> T putValue(Object o, Class<T> t) {
+        if (o instanceof JsonObject) {
+            if (t == MultiMap.class) {
+                Map map = ((JsonObject) o).getMap();
+                return (T) MultiMap.caseInsensitiveMultiMap().addAll((Map<String, String>) map);
+            }
+            else {
+                return null;
+            }
+        }
+        else {
+            return (T) o;
+        }
+    }
+
+    public JsonObject toJson() {
+        return JsonObject.mapFrom(this);
     }
 
     public String getMethod() {
@@ -47,25 +66,41 @@ public class Requset {
         return this;
     }
 
-    public JsonArray getParams() {
+    public Object getBody() {
+        return body;
+    }
+
+    public Requset setBody(Object body) {
+        this.body = body;
+        return this;
+    }
+
+    public JsonObject getSession() {
+        return session;
+    }
+
+    public Requset setSession(JsonObject session) {
+        this.session = session;
+        return this;
+    }
+
+    public Requset putSession(Session session) {
+        if (session != null)
+            this.session = JsonObject.mapFrom(session.data());
+        return this;
+    }
+
+    public JsonObject getParams() {
         return params;
     }
 
-    public Requset setParams(JsonArray params) {
+    public Requset setParams(JsonObject params) {
         this.params = params;
         return this;
     }
 
-    public JsonObject getExtra() {
-        return extra;
-    }
-
-    public Requset setExtra(JsonObject extra) {
-        this.extra = extra;
+    public Requset putParams(MultiMap params) {
+        this.params = JsonObject.mapFrom(params.entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         return this;
-    }
-
-    public JsonObject toJson() {
-        return JsonObject.mapFrom(this);
     }
 }

@@ -4,6 +4,7 @@ package pers.welisdoon.webserver.common.web.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
@@ -12,7 +13,6 @@ import pers.welisdoon.webserver.common.web.Requset;
 import pers.welisdoon.webserver.common.web.Response;
 import pers.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import pers.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
-import pers.welisdoon.webserver.service.custom.entity.OrderVO;
 import pers.welisdoon.webserver.service.wechat.service.WeChatService;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
 
@@ -22,8 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Parameter;
+import java.util.*;
 
 @Component
 public class CommonAsynServiceImpl implements CommonAsynService {
@@ -115,21 +115,44 @@ public class CommonAsynServiceImpl implements CommonAsynService {
         try {
             Object sprngService = ApplicationContextProvider.getBean(requset.getService());
             Method[] methods = sprngService.getClass().getMethods();
-            JsonArray arg = requset.getParams();
-            Object reult = null;
-            for (int i = 0; i < methods.length; i++) {
-                if (methods[i].getName().equals(requset.getMethod()) && methods[i].getParameterCount() == arg.size()) {
-                    Object[] args = new Object[arg.size()];
-                    Class<?>[] classes = methods[i].getParameterTypes();
-                    boolean isThisMethod = checkArgs(args, classes, arg);
-                    if (isThisMethod) {
-                        reult = methods[i].invoke(sprngService, args);
-                        response.setResult(reult);
-                        future.complete(response);
-                        return;
+            Object body = requset.getBody();
+            if (body instanceof JsonArray) {
+                JsonArray arg = (JsonArray) requset.getBody();
+                Object reult = null;
+                for (int i = 0; i < methods.length; i++) {
+                    if (methods[i].getName().equals(requset.getMethod()) && methods[i].getParameterCount() == arg.size()) {
+                        Object[] args = new Object[arg.size()];
+                        Class<?>[] classes = methods[i].getParameterTypes();
+                        boolean isThisMethod = checkArgs(args, classes, arg);
+                        if (isThisMethod) {
+                            reult = methods[i].invoke(sprngService, args);
+                            response.setResult(reult);
+                            future.complete(response);
+                            return;
+                        }
                     }
                 }
             }
+            else {
+                JsonObject arg = (JsonObject) body;
+                for (int i = 0; i < methods.length; i++) {
+                    if (methods[i].getName().equals(requset.getMethod()) && methods[i].getParameterCount() == 1) {
+                        Object o = null;
+                        try {
+                            o = arg.mapTo(methods[i].getParameters()[0].getClass());
+                            o = methods[i].invoke(sprngService, o);
+                            response.setResult(o);
+                            future.complete(response);
+                            return;
+                        }
+                        catch (Throwable e) {
+                            e.printStackTrace();
+                            continue;
+                        }
+                    }
+                }
+            }
+
             throw new NoSuchMethodError();
         }
         catch (Exception e) {

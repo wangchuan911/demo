@@ -26,6 +26,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
+import pers.welisdoon.webserver.common.web.Requset;
 import pers.welisdoon.webserver.service.custom.service.TestService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
@@ -59,7 +60,7 @@ public class TestConfiguration extends AbstractWechatConfiguration {
                         .add(new JsonArray()
                                 .add(1)
                                 .add(new JsonObject().put("orderId", "1")));
-                this.getPrams(jsonArray, routingContext);
+                jsonArray.add(this.getPrams(routingContext));
                 commonAsynService.serviceCall("testService", jsonArray.getString(0), jsonArray.getJsonArray(1).toString(), jsonArray.getJsonArray(2).toString(), stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result());
@@ -75,10 +76,15 @@ public class TestConfiguration extends AbstractWechatConfiguration {
             router.post("/wxApp").handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 JsonArray jsonArray = routingContext.getBodyAsJsonArray();
-                this.getPrams(jsonArray, routingContext);
-                commonAsynService.serviceCall("testService", jsonArray.getString(0), jsonArray.getJsonArray(1).toString(), jsonArray.getJsonArray(2).toString(), stringAsyncResult -> {
+                Requset requset = new Requset()
+                        .setService("testService")
+                        .setMethod(jsonArray.getString(0))
+                        .setBody(jsonArray.getJsonArray(1))
+                        .putParams(routingContext.request().params())
+                        .putSession(routingContext.session());
+                commonAsynService.requsetCall(requset, stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
-                        routingContext.response().end(stringAsyncResult.result());
+                        routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
                     }
                     else {
                         routingContext.fail(500, stringAsyncResult.cause());
@@ -131,7 +137,7 @@ public class TestConfiguration extends AbstractWechatConfiguration {
         return routerConsumer;
     }
 
-    private void getPrams(JsonArray jsonArray, RoutingContext routingContext) {
+    private JsonArray getPrams(RoutingContext routingContext) {
         {
             JsonArray arg3 = new JsonArray();
             JsonObject jsonObject = new JsonObject();
@@ -148,7 +154,7 @@ public class TestConfiguration extends AbstractWechatConfiguration {
                 Map<String, Object> sessionData = session != null ? session.data() : Map.of();
                 arg3.add(sessionData);
             }
-            jsonArray.add(arg3);
+            return arg3;
         }
     }
 }
