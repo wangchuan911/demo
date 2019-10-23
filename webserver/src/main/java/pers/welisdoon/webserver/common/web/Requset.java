@@ -33,32 +33,36 @@ public class Requset {
         return method;
     }
 
-    public void setMethod(String method) {
+    public Requset setMethod(String method) {
         this.method = method;
+        return this;
     }
 
     public String getService() {
         return service;
     }
 
-    public void setService(String service) {
+    public Requset setService(String service) {
         this.service = service;
+        return this;
     }
 
     public JsonArray getParams() {
         return params;
     }
 
-    public void setParams(JsonArray params) {
+    public Requset setParams(JsonArray params) {
         this.params = params;
+        return this;
     }
 
     public JsonObject getExtra() {
         return extra;
     }
 
-    public void setExtra(JsonObject extra) {
+    public Requset setExtra(JsonObject extra) {
         this.extra = extra;
+        return this;
     }
 
     public JsonObject toJson() {

@@ -24,24 +24,27 @@ public class Response {
         return result;
     }
 
-    public void setResult(Object result) {
+    public Response setResult(Object result) {
         this.result = result;
+        return this;
     }
 
     public Object getException() {
         return exception;
     }
 
-    public void setException(Object exception) {
+    public Response setException(Object exception) {
         this.exception = exception;
+        return this;
     }
 
     public Object getError() {
         return error;
     }
 
-    public void setError(Object error) {
+    public Response setError(Object error) {
         this.error = error;
+        return this;
     }
 
     public JsonObject toJson() {
