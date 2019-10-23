@@ -10,6 +10,7 @@ import io.vertx.core.Vertx;
 import io.vertx.serviceproxy.ServiceBinder;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
+import pers.welisdoon.webserver.service.custom.entity.OrderVO;
 
 @ProxyGen
 @VertxGen
@@ -32,5 +33,7 @@ public interface CommonAsynService {
     void wechatMsgReceive(String inputBody, Handler<AsyncResult<String>> outputBodyHandler);
 
     void serviceCall(String serverName, String method, String inputBody, String option, Handler<AsyncResult<String>> outputBodyHandler);
+
+    void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler);
 
 }

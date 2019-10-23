@@ -8,10 +8,14 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
 import pers.welisdoon.webserver.common.JAXBUtils;
+import pers.welisdoon.webserver.common.web.Requset;
+import pers.welisdoon.webserver.common.web.Response;
 import pers.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import pers.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
+import pers.welisdoon.webserver.service.custom.entity.OrderVO;
 import pers.welisdoon.webserver.service.wechat.service.WeChatService;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +43,8 @@ public class CommonAsynServiceImpl implements CommonAsynService {
             //报文转对象;
             future.setHandler(resultHandler);
             future.complete(JAXBUtils.toXML(responseMesseage));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             future = Future.future();
             future.fail(e);
         }
@@ -59,18 +64,20 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                 if (methods[i].getName().equals(method) && methods[i].getParameterCount() == arg.size()) {
                     Object[] args = new Object[arg.size()];
                     Class<?>[] classes = methods[i].getParameterTypes();
-                    boolean isThisMethod = true;
+                    /*boolean isThisMethod = true;
                     for (int j = 0; j < arg.size(); j++) {
                         Object value = arg.getValue(j);
                         if (value == null) {
                             isThisMethod = true;
                             classes[j] = typeChange(classes[j]);
-                        } else {
+                        }
+                        else {
                             if (!(isThisMethod = ((classes[j] = classEquals(classes[j], value.getClass(), false)) != null)))
                                 break;
                         }
                         args[j] = getValue(value);
-                    }
+                    }*/
+                    boolean isThisMethod = checkArgs(args, classes, arg);
                     if (isThisMethod) {
                         reult = methods[i].invoke(sprngService, args);
                         jsonObject.put("result", reult);
@@ -80,30 +87,98 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                 }
             }
             throw new NoSuchMethodError();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
             jsonObject.put("exception", e.getMessage());
-        } catch (Error e) {
+        }
+        catch (Error e) {
             e.printStackTrace();
             jsonObject.put("error", e.getMessage());
-        } catch (Throwable e) {
+        }
+        catch (Throwable e) {
             e.printStackTrace();
             future.fail(e);
-        } finally {
+        }
+        finally {
             if (!future.isComplete()) {
                 future.complete(jsonObject.toString());
             }
         }
     }
 
+    @Override
+    public void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler) {
+        Future<Response> future = Future.future();
+        future.setHandler(outputBodyHandler);
+        Response response = new Response();
+        try {
+            Object sprngService = ApplicationContextProvider.getBean(requset.getService());
+            Method[] methods = sprngService.getClass().getMethods();
+            JsonArray arg = requset.getParams();
+            Object reult = null;
+            for (int i = 0; i < methods.length; i++) {
+                if (methods[i].getName().equals(requset.getMethod()) && methods[i].getParameterCount() == arg.size()) {
+                    Object[] args = new Object[arg.size()];
+                    Class<?>[] classes = methods[i].getParameterTypes();
+                    boolean isThisMethod = checkArgs(args, classes, arg);
+                    if (isThisMethod) {
+                        reult = methods[i].invoke(sprngService, args);
+                        response.setResult(reult);
+                        future.complete(response);
+                        return;
+                    }
+                }
+            }
+            throw new NoSuchMethodError();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            response.setException(e.getMessage());
+        }
+        catch (Error e) {
+            e.printStackTrace();
+            response.setError(e.getMessage());
+        }
+        catch (Throwable e) {
+            e.printStackTrace();
+            future.fail(e);
+        }
+        finally {
+            if (!future.isComplete()) {
+                future.complete(response);
+            }
+        }
+    }
+
+    private boolean checkArgs(Object[] args, Class<?>[] classes, JsonArray arg) {
+        boolean isThisMethod = true;
+        for (int j = 0; j < arg.size(); j++) {
+            Object value = arg.getValue(j);
+            if (value == null) {
+                isThisMethod = true;
+                classes[j] = typeChange(classes[j]);
+            }
+            else {
+                if (!(isThisMethod = ((classes[j] = classEquals(classes[j], value.getClass(), false)) != null)))
+                    break;
+            }
+            args[j] = getValue(value);
+        }
+        return isThisMethod;
+    }
+
     private static Class<?> classEquals(Class<?> a, Class<?> b, boolean returnObjClass) {
         if (a == b) {
             return a;
-        } else if (typeChange(a) == b) {
+        }
+        else if (typeChange(a) == b) {
             return returnObjClass ? b : a;
-        } else if (a == typeChange(b)) {
+        }
+        else if (a == typeChange(b)) {
             return returnObjClass ? b : a;
-        } else {
+        }
+        else {
             return null;
         }
     }
@@ -115,23 +190,32 @@ public class CommonAsynServiceImpl implements CommonAsynService {
     private static Class<?> typeChange(Class<?> a) {
         if (a == int.class) {
             return Integer.class;
-        } else if (a == char.class) {
+        }
+        else if (a == char.class) {
             return Character.class;
-        } else if (a == byte.class) {
+        }
+        else if (a == byte.class) {
             return Byte.class;
-        } else if (a == long.class) {
+        }
+        else if (a == long.class) {
             return Long.class;
-        } else if (a == float.class) {
+        }
+        else if (a == float.class) {
             return Float.class;
-        } else if (a == double.class) {
+        }
+        else if (a == double.class) {
             return Double.class;
-        } else if (a == boolean.class) {
+        }
+        else if (a == boolean.class) {
             return Boolean.class;
-        } else if (a == JsonArray.class) {
+        }
+        else if (a == JsonArray.class) {
             return List.class;
-        } else if (a == JsonObject.class) {
+        }
+        else if (a == JsonObject.class) {
             return Map.class;
-        } else {
+        }
+        else {
             return a;
         }
     }
@@ -139,9 +223,11 @@ public class CommonAsynServiceImpl implements CommonAsynService {
     private static Object getValue(Object targetValue) {
         if (targetValue instanceof JsonObject) {
             return ((JsonObject) targetValue).getMap();
-        } else if (targetValue instanceof JsonArray) {
+        }
+        else if (targetValue instanceof JsonArray) {
             return ((JsonArray) targetValue).getList();
-        } else {
+        }
+        else {
             return targetValue;
         }
     }
