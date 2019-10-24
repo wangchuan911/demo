@@ -7,7 +7,19 @@ public interface IDao<T> {
 
     List<T> list(T t);
 
-    int put(T t);
+    int add(T t);
 
-    int putAll(List<T> ts);
+    int addAll(List<T> ts);
+
+    int set(T t);
+
+    int setAll(List<T> ts);
+
+    int del(T t);
+
+    int delAll(List<T> ts);
+
+    int num(T t);
+
+    int count();
 }

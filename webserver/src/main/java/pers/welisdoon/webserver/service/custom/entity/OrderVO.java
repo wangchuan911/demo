@@ -13,7 +13,7 @@ public class OrderVO {
     private Integer orderControlPerson;
     private Integer orderAppointPerson;
     private Timestamp orderArrangeDate;
-    private Integer custId;
+    private String custId;
     private String serviceId;
     private String orderNote;
     private double posX;
@@ -99,11 +99,11 @@ public class OrderVO {
         this.orderArrangeDate = orderArrangeDate;
     }
 
-    public Integer getCustId() {
+    public String getCustId() {
         return custId;
     }
 
-    public void setCustId(Integer custId) {
+    public void setCustId(String custId) {
         this.custId = custId;
     }
 
