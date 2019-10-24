@@ -38,6 +38,8 @@ public class TestService {
     public final int DELETE = 1;
     public final int MODIFY = 2;
     public final int GET = 3;
+    /*orderManger*/
+    public final int GET_WORK_NUMBER = 4;
 
     @Autowired
     OrderDao customDao;
@@ -51,35 +53,45 @@ public class TestService {
         OrderVO orderVO;
         switch (mode) {
             case ADD:
-                orderVO = JsonObject.mapFrom(params).mapTo(OrderVO.class);
-                customDao.put(orderVO);
+                orderVO = mapToOrderVO(params);
+                customDao.add(orderVO);
                 resultObj = orderVO;
                 break;
             case DELETE:
                 break;
             case MODIFY:
+                orderVO = mapToOrderVO(params);
+                resultObj = customDao.set(orderVO);
                 break;
             case GET:
-                orderVO = JsonObject.mapFrom(params).mapTo(OrderVO.class);
+                orderVO = mapToOrderVO(params);
                 List list = customDao.list(orderVO);
                 resultObj = list;
+                break;
+            case GET_WORK_NUMBER:
+                orderVO = mapToOrderVO(params);
+                resultObj = customDao.getWorkIngOrderNum(orderVO);
                 break;
             default:
                 break;
 
         }
-        return Map.of("input", params, "output", resultObj);
+        return resultObj;
     }
 
     public Object carManger(int mode, Map params) {
-        OrderVO orderVO = JsonObject.mapFrom(params).mapTo(OrderVO.class);
+        OrderVO orderVO = mapToOrderVO(params);
         List list = customDao.list(orderVO);
         return Map.of("input", params, "output", list);
     }
 
     public Object userManger(int mode, Map params) {
-        OrderVO orderVO = JsonObject.mapFrom(params).mapTo(OrderVO.class);
+        OrderVO orderVO = mapToOrderVO(params);
         List list = customDao.list(orderVO);
         return Map.of("input", params, "output", list);
+    }
+
+    private static OrderVO mapToOrderVO(Map params) {
+        return JsonObject.mapFrom(params).mapTo(OrderVO.class);
     }
 }

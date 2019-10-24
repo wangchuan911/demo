@@ -15,7 +15,7 @@
         <parameter property="orderControlPerson" jdbcType="INTEGER"></parameter>
         <parameter property="orderAppointPerson" jdbcType="INTEGER"></parameter>
         <parameter property="orderArrangeDate" jdbcType="TIMESTAMP"></parameter>
-        <parameter property="custId" jdbcType="INTEGER"></parameter>
+        <parameter property="custId" jdbcType="VARCHAR"></parameter>
         <parameter property="serviceId" jdbcType="VARCHAR"></parameter>
         <parameter property="orderNote" jdbcType="VARCHAR"></parameter>
         <parameter property="posX" jdbcType="DOUBLE"></parameter>
@@ -39,24 +39,9 @@
         <result property="posX" column="pos_x"></result>
         <result property="posY" column="pos_y"></result>
     </resultMap>
-    <insert id="put" parameterMap="OrderVO" useGeneratedKeys="true" keyProperty="orderId">
-        INSERT INTO mysql.car_wash_order
-            (order_id,
-             order_code,
-             car_license_number,
-             car_address,
-             create_date,
-             finish_date,
-             order_state,
-             order_control_person,
-             order_appoint_person,
-             order_arrange_date,
-             cust_id,
-             order_note,
-             service_id,
-             pos_x,
-             pos_y)
-VALUES (#{orderId,jdbcType=VARCHAR},
+    <insert id="add" parameterMap="OrderVO" useGeneratedKeys="true" keyProperty="orderId">
+        <include refid="insertThis"></include>
+        VALUES (#{orderId,jdbcType=VARCHAR},
         #{orderCode,jdbcType=VARCHAR},
         #{carLicenseNumber,jdbcType=VARCHAR},
         #{carAddress,jdbcType=VARCHAR},
@@ -66,14 +51,13 @@ VALUES (#{orderId,jdbcType=VARCHAR},
         #{orderControlPerson,jdbcType=INTEGER},
         #{orderAppointPerson,jdbcType=INTEGER},
         #{orderArrangeDate,jdbcType=TIMESTAMP},
-        #{custId,jdbcType=INTEGER},
+        #{custId,jdbcType=VARCHAR},
         #{orderNote,jdbcType=VARCHAR},
         #{serviceId,jdbcType=VARCHAR},
         #{posX,jdbcType=DOUBLE},
         #{posY,jdbcType=DOUBLE})
     </insert>
-    <sql id="selectThis">
-        select * from mysql.car_wash_order a
+    <sql id="selectCondition">
         where
         <if test="orderId!=null and orderId!=''.toString()">
             order_id= #{orderId,jdbcType=VARCHAR} and
@@ -105,16 +89,129 @@ VALUES (#{orderId,jdbcType=VARCHAR},
         <if test="orderArrangeDate!=null and orderArrangeDate!=''.toString()">
             order_arrange_date= #{orderArrangeDate,jdbcType=VARCHAR} and
         </if>
-        <if test="custId!=null and custId!=0">
-            cust_id= #{custId,jdbcType=INTEGER} and
+        <if test="custId!=null and custId!=''.toString()">
+            cust_id= #{custId,jdbcType=VARCHAR} and
         </if>
     </sql>
+    <sql id="insertThis">
+        INSERT INTO mysql.car_wash_order
+            (order_id,
+             order_code,
+             car_license_number,
+             car_address,
+             create_date,
+             finish_date,
+             order_state,
+             order_control_person,
+             order_appoint_person,
+             order_arrange_date,
+             cust_id,
+             order_note,
+             service_id,
+             pos_x,
+             pos_y)
+    </sql>
     <select id="list" parameterMap="OrderVO" resultMap="OrderVO">
-        <include refid="selectThis"></include>
+        select * from mysql.car_wash_order a
+        <include refid="selectCondition"></include>
         1=1
     </select>
     <select id="get" parameterMap="OrderVO" resultMap="OrderVO">
-        <include refid="selectThis"></include>
+        select * from mysql.car_wash_order a
+        <include refid="selectCondition"></include>
         and rownum=1
+    </select>
+
+    <update id="set" parameterMap="OrderVO">
+      update mysql.car_wash_order
+        set
+          order_code = #{orderCode,jdbcType=VARCHAR},
+          car_license_number = #{carLicenseNumber,jdbcType=VARCHAR},
+          car_address = #{carAddress,jdbcType=VARCHAR},
+          create_date = #{createDate,jdbcType=TIMESTAMP},
+          finish_date = #{finishDate,jdbcType=TIMESTAMP},
+          order_state = #{orderState,jdbcType=VARCHAR},
+          order_control_person = #{orderControlPerson,jdbcType=INTEGER},
+          order_appoint_person = #{orderAppointPerson,jdbcType=INTEGER},
+          order_arrange_date = #{orderArrangeDate,jdbcType=TIMESTAMP},
+          cust_id = #{custId,jdbcType=VARCHAR},
+          order_note = #{orderNote,jdbcType=VARCHAR},
+          service_id = #{serviceId,jdbcType=VARCHAR},
+          pos_x = #{posX,jdbcType=DOUBLE},
+          pos_y = #{posY,jdbcType=DOUBLE}
+        where order_id = #{orderId,jdbcType=VARCHAR}
+    </update>
+    <sql id="mulSelect">
+        select #{orderId,jdbcType=VARCHAR} as orderId,
+        #{vo.orderCode,jdbcType=VARCHAR} as orderCode,
+        #{vo.carLicenseNumber,jdbcType=VARCHAR} as carLicenseNumber,
+        #{vo.carAddress,jdbcType=VARCHAR} as carAddress,
+        #{vo.createDate,jdbcType=TIMESTAMP} as createDate,
+        #{vo.finishDate,jdbcType=TIMESTAMP} as finishDate,
+        #{vo.orderState,jdbcType=VARCHAR} as orderState,
+        #{vo.orderControlPerson,jdbcType=INTEGER} as orderControlPerson,
+        #{vo.orderAppointPerson,jdbcType=INTEGER} as orderAppointPerson,
+        #{vo.orderArrangeDate,jdbcType=TIMESTAMP} as orderArrangeDate,
+        #{vo.custId,jdbcType=VARCHAR} as custId,
+        #{vo.orderNote,jdbcType=VARCHAR} as orderNote,
+        #{vo.serviceId,jdbcType=VARCHAR} as serviceId,
+        #{vo.posX,jdbcType=DOUBLE} as posX,
+        #{vo.posY,jdbcType=DOUBLE} as posY
+        from dual
+    </sql>
+    <insert id="addAll">
+        <include refid="insertThis"></include>
+        select * from (
+        <foreach collection="list" index="index" item="vo" open="(" separator=") union (" close=")">
+            <include refid="mulSelect"></include>
+        </foreach>
+        )
+    </insert>
+
+    <select id="num" resultType="int" parameterMap="OrderVO">
+        select count(order_id) from mysql.car_wash_order a
+        <include refid="selectCondition"></include>
+    </select>
+
+    <select id="count" resultType="int" >
+        select count(order_id) from mysql.car_wash_order a
+    </select>
+
+    <select id="getWorkIngOrderNum" parameterMap="OrderVO" resultType="map">
+        select
+        count(order_id) all_nums,
+        cast(sum(IF(ISNULL(finish_date) ,0 , 1 ))as unsigned int) nums
+        from mysql.car_wash_order a  where
+        <if test="orderId!=null and orderId!=''.toString()">
+            order_id= #{orderId,jdbcType=VARCHAR} and
+        </if>
+        <if test="orderCode!=null and orderCode!=''.toString()">
+            order_code= #{orderCode,jdbcType=VARCHAR} and
+        </if>
+        <if test="carLicenseNumber!=null and carLicenseNumber!=''.toString()">
+            car_license_number=#{carLicenseNumber,jdbcType=VARCHAR} and
+        </if>
+        <if test="carAddress!=null and carAddress!=''.toString()">
+            car_address= #{carAddress,jdbcType=VARCHAR} and
+        </if>
+        <if test="createDate!=null ">
+            create_date= #{createDate,jdbcType=TIMESTAMP} and
+        </if>
+        <if test="orderState!=null and orderState!=''.toString()">
+            order_state= #{orderState,jdbcType=VARCHAR} and
+        </if>
+        <if test="orderControlPerson!=null and orderControlPerson!=0">
+            order_control_person= #{orderControlPerson,jdbcType=INTEGER} and
+        </if>
+        <if test="orderAppointPerson!=null and orderAppointPerson!=0">
+            order_appoint_person= #{orderAppointPerson,jdbcType=INTEGER} and
+        </if>
+        <if test="orderArrangeDate!=null and orderArrangeDate!=''.toString()">
+            order_arrange_date= #{orderArrangeDate,jdbcType=VARCHAR} and
+        </if>
+        <if test="custId!=null and custId!=''.toString()">
+            cust_id= #{custId,jdbcType=VARCHAR} and
+        </if>
+        order_arrange_date between current_date() and CURRENT_DATE()+1
     </select>
 </mapper>

@@ -16,7 +16,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -24,6 +26,9 @@ import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
 import pers.welisdoon.webserver.common.web.Requset;
@@ -52,24 +57,47 @@ public class TestConfiguration extends AbstractWechatConfiguration {
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
+        final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
+        WebClient webClient = WebClient.create(vertx);
         Consumer<Router> routerConsumer = router -> {
             router.get("/wxApp").handler(routingContext -> {
                 routingContext.response().setChunked(true);
-                JsonArray jsonArray = new JsonArray()
-                        .add("orderManger")
-                        .add(new JsonArray()
-                                .add(1)
-                                .add(new JsonObject().put("orderId", "1")));
-                jsonArray.add(this.getPrams(routingContext));
-                commonAsynService.serviceCall("testService", jsonArray.getString(0), jsonArray.getJsonArray(1).toString(), jsonArray.getJsonArray(2).toString(), stringAsyncResult -> {
-                    if (stringAsyncResult.succeeded()) {
-                        routingContext.response().end(stringAsyncResult.result());
-                        System.out.println();
-                    }
-                    else {
-                        routingContext.fail(500, stringAsyncResult.cause());
-                    }
-                });
+                MultiMap multiMap = routingContext.request().params();
+                int code;
+                switch (code = Integer.parseInt(multiMap.get("code"))) {
+                    case -1:
+                        webClient.getAbs(URL_CODE_2_SESSION + multiMap.get("value"))
+                                .send(httpResponseAsyncResult -> {
+                                    if (httpResponseAsyncResult.succeeded()) {
+                                        HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
+                                        JsonObject jsonObject = httpResponse.body().toJsonObject();
+                                        String key = jsonObject.remove("session_key").toString();
+                                        routingContext.response().end(jsonObject.toBuffer());
+                                    }
+                                    else {
+                                        routingContext.fail(httpResponseAsyncResult.cause());
+                                    }
+                                });
+                        break;
+                    default:
+                        JsonArray jsonArray = new JsonArray()
+                                .add("otherManager")
+                                .add(new JsonArray()
+                                        .add(code)
+                                        .add(new JsonArray("value")));
+                        jsonArray.add(this.getPrams(routingContext));
+                        commonAsynService.serviceCall("testService", jsonArray.getString(0), jsonArray.getJsonArray(1).toString(), jsonArray.getJsonArray(2).toString(), stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.response().end(stringAsyncResult.result());
+                                System.out.println();
+                            }
+                            else {
+                                routingContext.fail(500, stringAsyncResult.cause());
+                            }
+                        });
+                        break;
+                }
+
             }).failureHandler(routingContext -> {
                 routingContext.response().end(routingContext.failure().toString());
             });
