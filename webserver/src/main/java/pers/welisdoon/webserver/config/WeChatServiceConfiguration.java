@@ -84,6 +84,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                                 .addQueryParam("grant_type", "client_credential")
                                 .addQueryParam("appid", this.getAppID())
                                 .addQueryParam("secret", this.getAppsecret())
+                                .timeout(20000)
                                 .send(httpResponseAsyncResult -> {
                                     try {
                                         if (httpResponseAsyncResult.succeeded()) {
@@ -117,11 +118,13 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 else {
                     logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
                 }
-                if (wechatAliveTimerId == null || vertx1.cancelTimer(wechatAliveTimerId)) {
-                    wechatAliveTimerId = vertx1.setTimer(this.getAfterUpdateTokenTime() * 1000, longHandler);
+                /*if (wechatAliveTimerId != null) {
+                    vertx1.cancelTimer(wechatAliveTimerId);
                 }
+                wechatAliveTimerId = vertx1.setTimer(this.getAfterUpdateTokenTime() * 1000, longHandler);*/
             });
-            longHandler.handle(null);
+//            longHandler.handle(null);
+            vertx1.setPeriodic(this.getAfterUpdateTokenTime() * 1000, longHandler);
         };
         return vertxConsumer;
     }
