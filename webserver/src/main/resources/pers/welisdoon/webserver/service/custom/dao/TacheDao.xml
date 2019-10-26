@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.welisdoon.webserver.service.custom.dao.TacheDao">
+    <resultMap id="TacheVO_all" type="pers.welisdoon.webserver.service.custom.entity.TacheVO">
+        <result property="tacheId" column="tache_id"></result>
+        <result property="tacheName" column="tache_name"></result>
+        <result property="seq" column="seq"></result>
+        <result property="role" column="tache_limits"></result>
+        <result property="tampalateId" column="template_id"></result>
+        <result property="parantTacheId" column="super_tache_id"></result>
+        <collection property="childTaches"
+                    ofType="TacheVO">
+            <result property="tacheId" column="tache_id_1"></result>
+            <result property="tacheName" column="tache_name_1"></result>
+            <result property="seq" column="seq_1"></result>
+            <result property="role" column="tache_limits_1"></result>
+            <result property="tampalateId" column="template_id_1"></result>
+            <result property="parantTacheId" column="super_tache_id_1"></result>
+
+        </collection>
+    </resultMap>
+    <resultMap id="TacheVO" type="pers.welisdoon.webserver.service.custom.entity.TacheVO">
+        <result property="tacheId" column="tache_id"></result>
+        <result property="tacheName" column="tache_name"></result>
+        <result property="seq" column="seq"></result>
+        <result property="role" column="tache_limits"></result>
+        <result property="tampalateId" column="template_id"></result>
+        <result property="parantTacheId" column="super_tache_id"></result>
+    </resultMap>
+    <parameterMap id="TacheVO" type="pers.welisdoon.webserver.service.custom.entity.TacheVO">
+        <parameter property="tacheId" jdbcType="INTEGER"></parameter>
+        <parameter property="tacheName" jdbcType="VARCHAR"></parameter>
+        <parameter property="seq" jdbcType="REAL"></parameter>
+        <parameter property="role" jdbcType="INTEGER"></parameter>
+        <parameter property="tampalateId" jdbcType="INTEGER"></parameter>
+        <parameter property="parantTacheId" jdbcType="INTEGER"></parameter>
+    </parameterMap>
+
+    <sql id="selectCondition">
+        where
+        <if test="tacheId!=null and tacheId>0">
+            tache_id= #{tacheId,jdbcType=INTEGER} and
+        </if>
+        <if test="tacheName!=null and tacheName!=''.toString()">
+            tache_name= #{tacheName,jdbcType=VARCHAR} and
+        </if>
+        <if test="seq!=null and seq>=0">
+            seq=#{seq,jdbcType=REAL} and
+        </if>
+        <if test="role!=null and role>0">
+            tache_limits= #{role,jdbcType=INTEGER} and
+        </if>
+        <if test="tampalateId!=null and tampalateId>0">
+            template_id= #{tampalateId,jdbcType=INTEGER} and
+        </if>
+        <if test="parantTacheId!=null and parantTacheId>0 ">
+            super_tache_id= #{parantTacheId,jdbcType=INTEGER} and
+        </if>
+    </sql>
+
+    <select id="list" parameterMap="TacheVO"
+            resultMap="TacheVO">
+        select * from mysql.car_tache a
+        <include refid="selectCondition"></include>
+        1=1
+    </select>
+
+    <select id="listAll" parameterMap="TacheVO"
+            resultMap="TacheVO_all">
+        select
+        a.*,
+        b.tache_id tache_id_1,
+        b.tache_name tache_name_1,
+        b.seq seq_1,
+        b.tache_limits tache_limits_1,
+        b.template_id template_id_1,
+        b.super_tache_id super_tache_id_1
+        from mysql.car_tache a
+        left join mysql.car_tache b
+        on
+        <if test="role!=null and role>=0">
+            b.tache_limits= #{role,jdbcType=INTEGER} and
+        </if>
+        b.super_tache_id=a.tache_id
+        where
+        <if test="tacheId!=null and tacheId>=0">
+            a.tache_id= #{tacheId,jdbcType=INTEGER} and
+        </if>
+        <if test="seq!=null and seq>=0 and tampalateId!=null and tampalateId>0">
+            a.seq=#{seq,jdbcType=REAL} and
+            a.template_id= #{tampalateId,jdbcType=INTEGER} and
+        </if>
+        <if test="tampalateId!=null and tampalateId>=0">
+            a.template_id= #{tampalateId,jdbcType=INTEGER} and
+        </if>
+        <if test="parantTacheId!=null and parantTacheId>=0 ">
+            a.super_tache_id= #{parantTacheId,jdbcType=INTEGER} and
+        </if>
+        1=1
+        order by a.template_id,a.seq,b.template_id,b.seq
+    </select>
+    <select id="oneAll" parameterType="int"
+            resultMap="TacheVO_all">
+        select a.*,
+         a.*,
+        b.tache_id		tache_id_1,
+        b.tache_name		tache_name_1,
+        b.seq		seq_1,
+        b.tache_limits		tache_limits_1,
+        b.template_id		template_id_1,
+        b.super_tache_id		super_tache_id_1
+        from mysql.car_tache a
+        left join mysql.car_tache b
+        on a.super_tache_id=b.tache_id
+        where a.tache_id=#{value}
+        order by a.template_id,a.seq,b.template_id,b.seq
+    </select>
+    <select id="getChild" resultMap="TacheVO">
+        select a.* from mysql.car_tache a
+        where a.super_tache_id=#{parantTacheId}
+        and a.tache_limits=#{role}
+    </select>
+    <select id="get" parameterMap="TacheVO"
+            resultMap="TacheVO">
+        select * from mysql.car_tache a
+        <include refid="selectCondition"></include>
+        1=1
+        LIMIT 0, 1
+    </select>
+
+
+    <select id="num" resultType="int" parameterMap="TacheVO">
+        select count(order_id) from mysql.car_tache a
+        <include refid="selectCondition"></include>
+    </select>
+
+    <select id="count" resultType="int">
+        select count(order_id) from mysql.car_tache a
+    </select>
+
+    <select id="getProccess" parameterType="int" resultType="map">
+        select
+          COUNT(1) all_nums,
+          cast(
+            sum(IF(b.seq >= a.seq, 1, 0)) as unsigned int
+          ) nums
+        FROM
+          mysql.car_tache a
+          join mysql.car_tache b
+        WHERE a.template_id = b.template_id
+          and b.tache_id =
+          (select
+            ifnull(c.super_tache_id, c.tache_id)
+          from
+            mysql.car_tache c
+          where c.tache_id = #{value,})
+    </select>
+</mapper>

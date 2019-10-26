@@ -16,6 +16,7 @@ public class OrderVO {
     private String custId;
     private String serviceId;
     private String orderNote;
+    private Integer tacheId;
     private double posX;
     private double posY;
 
@@ -138,4 +139,13 @@ public class OrderVO {
     public void setOrderNote(String orderNote) {
         this.orderNote = orderNote;
     }
+
+    public Integer getTacheId() {
+        return tacheId;
+    }
+
+    public void setTacheId(Integer tacheId) {
+        this.tacheId = tacheId;
+    }
 }
+

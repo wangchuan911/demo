@@ -6,5 +6,5 @@ import pers.welisdoon.webserver.common.dao.IDao;
 import pers.welisdoon.webserver.service.custom.entity.OrderVO;
 
 @Repository
-public interface CustDao extends IDao<CustDao> {
+public interface CustDao extends IDao<CustDao, Integer> {
 }
