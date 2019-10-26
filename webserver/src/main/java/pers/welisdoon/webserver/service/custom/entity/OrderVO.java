@@ -24,128 +24,144 @@ public class OrderVO {
         return orderId;
     }
 
-    public void setOrderId(String orderId) {
+    public OrderVO setOrderId(String orderId) {
         this.orderId = orderId;
+        return this;
     }
 
     public String getOrderCode() {
         return orderCode;
     }
 
-    public void setOrderCode(String orderCode) {
+    public OrderVO setOrderCode(String orderCode) {
         this.orderCode = orderCode;
+        return this;
     }
 
     public String getCarLicenseNumber() {
         return carLicenseNumber;
     }
 
-    public void setCarLicenseNumber(String carLicenseNumber) {
+    public OrderVO setCarLicenseNumber(String carLicenseNumber) {
         this.carLicenseNumber = carLicenseNumber;
+        return this;
     }
 
     public String getCarAddress() {
         return carAddress;
     }
 
-    public void setCarAddress(String carAddress) {
+    public OrderVO setCarAddress(String carAddress) {
         this.carAddress = carAddress;
+        return this;
     }
 
     public Timestamp getCreateDate() {
         return createDate;
     }
 
-    public void setCreateDate(Timestamp createDate) {
+    public OrderVO setCreateDate(Timestamp createDate) {
         this.createDate = createDate;
+        return this;
     }
 
     public Timestamp getFinishDate() {
         return finishDate;
     }
 
-    public void setFinishDate(Timestamp finishDate) {
+    public OrderVO setFinishDate(Timestamp finishDate) {
         this.finishDate = finishDate;
+        return this;
     }
 
     public Integer getOrderState() {
         return orderState;
     }
 
-    public void setOrderState(Integer orderState) {
+    public OrderVO setOrderState(Integer orderState) {
         this.orderState = orderState;
+        return this;
     }
 
     public Integer getOrderControlPerson() {
         return orderControlPerson;
     }
 
-    public void setOrderControlPerson(Integer orderControlPerson) {
+    public OrderVO setOrderControlPerson(Integer orderControlPerson) {
         this.orderControlPerson = orderControlPerson;
+        return this;
     }
 
     public Integer getOrderAppointPerson() {
         return orderAppointPerson;
     }
 
-    public void setOrderAppointPerson(Integer orderAppointPerson) {
+    public OrderVO setOrderAppointPerson(Integer orderAppointPerson) {
         this.orderAppointPerson = orderAppointPerson;
+        return this;
     }
 
     public Timestamp getOrderArrangeDate() {
         return orderArrangeDate;
     }
 
-    public void setOrderArrangeDate(Timestamp orderArrangeDate) {
+    public OrderVO setOrderArrangeDate(Timestamp orderArrangeDate) {
         this.orderArrangeDate = orderArrangeDate;
+        return this;
     }
 
     public String getCustId() {
         return custId;
     }
 
-    public void setCustId(String custId) {
+    public OrderVO setCustId(String custId) {
         this.custId = custId;
+        return this;
     }
 
     public String getServiceId() {
         return serviceId;
     }
 
-    public void setServiceId(String serviceId) {
+    public OrderVO setServiceId(String serviceId) {
         this.serviceId = serviceId;
+        return this;
     }
 
     public double getPosX() {
         return posX;
     }
 
-    public void setPosX(double posX) {
+    public OrderVO setPosX(double posX) {
         this.posX = posX;
+        return this;
     }
 
     public double getPosY() {
         return posY;
     }
 
-    public void setPosY(double posY) {
+    public OrderVO setPosY(double posY) {
         this.posY = posY;
+        return this;
     }
 
     public String getOrderNote() {
         return orderNote;
     }
 
-    public void setOrderNote(String orderNote) {
+    public OrderVO setOrderNote(String orderNote) {
         this.orderNote = orderNote;
+        return this;
     }
 
     public Integer getTacheId() {
         return tacheId;
     }
 
-    public void setTacheId(Integer tacheId) {
+    public OrderVO setTacheId(Integer tacheId) {
         this.tacheId = tacheId;
+        return this;
     }
 }
 
