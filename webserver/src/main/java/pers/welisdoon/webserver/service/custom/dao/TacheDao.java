@@ -10,6 +10,6 @@ import pers.welisdoon.webserver.service.custom.entity.TacheVO;
 
 @Repository
 public interface TacheDao extends IDao<TacheVO, Integer> {
-    Map getProccess(Integer tacheId);
+    Map getProccess(Map param);
 
 }

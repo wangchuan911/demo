@@ -140,7 +140,7 @@
         select count(order_id) from mysql.car_tache a
     </select>
 
-    <select id="getProccess" parameterType="int" resultType="map">
+    <select id="getProccess" parameterType="map" resultType="map">
         select
           COUNT(1) all_nums,
           cast(
@@ -150,11 +150,23 @@
           mysql.car_tache a
           join mysql.car_tache b
         WHERE a.template_id = b.template_id
-          and b.tache_id =
+          and b.tache_id in
           (select
             ifnull(c.super_tache_id, c.tache_id)
           from
             mysql.car_tache c
-          where c.tache_id = #{value,})
+          <where>
+              <if test="tacheId!=null and tacheId>=0">
+                  c.tache_id =#{tacheId,jdbcType=INTEGER} and
+              </if>
+              <if test="tacheId!=null and tacheId!=''.toString()">
+                  c.tache_id in (
+                    select d.tache_id from mysql.car_wash_order d
+                    where d.cust_id=#{userId,jdbcType=VARCHAR}
+                  )
+              </if>
+          </where>
+
+          )
     </select>
 </mapper>

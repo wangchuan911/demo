@@ -1,5 +1,7 @@
 package pers.welisdoon.webserver.vertx.verticle;
 
+import java.io.File;
+
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.JksOptions;
@@ -40,7 +42,10 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
         if (router != null) {
             //开启https
             HttpServerOptions httpServerOptions = new HttpServerOptions();
-            if (sslEnable) {
+            if (!new File(sslKeyStore).exists()) {
+                logger.error("sslKeyStore:" + sslKeyStore + " is not exists!");
+            }
+            else if (sslEnable) {
                 httpServerOptions.setSsl(true);
                 switch (this.sslKeyType.toLowerCase()) {
                     case "pem":

@@ -19,8 +19,10 @@ import io.vertx.ext.web.client.WebClient;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
 import pers.welisdoon.webserver.service.custom.dao.OrderDao;
 import pers.welisdoon.webserver.service.custom.dao.TacheDao;
+import pers.welisdoon.webserver.service.custom.dao.UserDao;
 import pers.welisdoon.webserver.service.custom.entity.OrderVO;
 import pers.welisdoon.webserver.service.custom.entity.TacheVO;
+import pers.welisdoon.webserver.service.custom.entity.UserVO;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
@@ -39,14 +41,14 @@ import javax.annotation.PostConstruct;
 @VertxConfiguration
 public class TestService {
 
-    public final int ADD = 0;
-    public final int DELETE = 1;
-    public final int MODIFY = 2;
-    public final int GET = 3;
-    public final int LIST = 4;
+    public final static int ADD = 0;
+    public final static int DELETE = 1;
+    public final static int MODIFY = 2;
+    public final static int GET = 3;
+    public final static int LIST = 4;
     /*orderManger*/
     /*tacheManager*/
-    public final int GET_WORK_NUMBER = 10;
+    public final static int GET_WORK_NUMBER = 10;
 
     final String KEY = "TEST";
     final String URL_TOCKEN_LOCK = KEY + ".LOCK";
@@ -54,6 +56,8 @@ public class TestService {
     OrderDao orderDao;
     @Autowired
     TacheDao tacheDao;
+    @Autowired
+    UserDao userDao;
     @Autowired
     SqlSessionTemplate sqlSessionTemplate;
     private static final Logger logger = LoggerFactory.getLogger(TestService.class);
@@ -163,9 +167,17 @@ public class TestService {
     }
 
     public Object userManger(int mode, Map params) {
-        OrderVO orderVO = mapToObject(params, OrderVO.class);
-        List list = orderDao.list(orderVO);
-        return Map.of("input", params, "output", list);
+        Object resultObj = null;
+        UserVO userVO = null;
+        switch (mode) {
+            case GET:
+                userVO = mapToObject(params, UserVO.class);
+                userVO = userDao.get(userVO);
+                break;
+            default:
+                break;
+        }
+        return resultObj;
     }
 
     public Object tacheManager(int mode, Map params) {
@@ -182,8 +194,7 @@ public class TestService {
                 resultObj = list;
                 break;
             case GET_WORK_NUMBER:
-                tacheVO = mapToObject(params, TacheVO.class);
-                resultObj = tacheDao.getProccess(tacheVO.getTacheId());
+                resultObj = tacheDao.getProccess(params);
                 break;
             default:
                 break;

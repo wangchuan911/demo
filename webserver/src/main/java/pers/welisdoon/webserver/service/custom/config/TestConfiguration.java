@@ -2,6 +2,7 @@ package pers.welisdoon.webserver.service.custom.config;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -12,16 +13,20 @@ import javax.annotation.PostConstruct;
 import org.apache.ibatis.executor.statement.RoutingStatementHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.User;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -32,6 +37,7 @@ import io.vertx.ext.web.client.WebClient;
 import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
 import pers.welisdoon.webserver.common.web.Requset;
+import pers.welisdoon.webserver.service.custom.entity.UserVO;
 import pers.welisdoon.webserver.service.custom.service.TestService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
@@ -45,6 +51,8 @@ public class TestConfiguration extends AbstractWechatConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(TestService.class);
 
     CommonAsynService commonAsynService;
+    @Autowired
+    TestService testService;
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
@@ -72,6 +80,31 @@ public class TestConfiguration extends AbstractWechatConfiguration {
                                         HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
                                         JsonObject jsonObject = httpResponse.body().toJsonObject();
                                         String key = jsonObject.remove("session_key").toString();
+                                        String userId = jsonObject.getString("openid");
+                                        if (!StringUtils.isEmpty(userId)) {
+                                            Object o = testService.userManger(TestService.GET, Map.of("id", userId));
+                                            UserVO userVO;
+                                            if (o == null) {
+                                                userVO = new UserVO().setId(userId);
+                                                userVO.setRole(0);
+                                                userVO.setName("新用戶");
+                                                jsonObject.put("user", JsonObject.mapFrom(userVO));
+                                            }
+                                            else {
+                                                userVO = (UserVO) o;
+                                                jsonObject.put("user", o);
+                                                switch (userVO.getRole()) {
+                                                    case 0:
+                                                        o = testService.tacheManager(TestService.GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
+                                                        break;
+                                                    default:
+                                                        o = testService.orderManger(TestService.GET_WORK_NUMBER, Map.of("custId", userVO.getId()));
+                                                }
+                                                o=o!=null?JsonObject.mapFrom(o):Map.of("all_nums",0,"nums",0);
+                                                jsonObject.put("work",o);
+                                            }
+
+                                        }
                                         routingContext.response().end(jsonObject.toBuffer());
                                     }
                                     else {

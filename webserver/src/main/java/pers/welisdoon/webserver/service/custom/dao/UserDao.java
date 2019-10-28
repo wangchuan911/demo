@@ -3,8 +3,9 @@ package pers.welisdoon.webserver.service.custom.dao;
 import org.springframework.stereotype.Repository;
 
 import pers.welisdoon.webserver.common.dao.IDao;
-import pers.welisdoon.webserver.service.custom.entity.OrderVO;
+import pers.welisdoon.webserver.service.custom.entity.UserVO;
 
 @Repository
-public interface CustDao extends IDao<CustDao, Integer> {
+public interface UserDao extends IDao<UserVO, Integer> {
+
 }

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.welisdoon.webserver.service.custom.dao.UserDao">
+
+    <resultMap id="UserVO" type="pers.welisdoon.webserver.service.custom.entity.UserVO">
+        <result property="id" column="car_user_id"></result>
+        <result property="name" column="car_user_name"></result>
+        <result property="role" column="car_user_role"></result>
+        <result property="phone" column="car_user_telephone"></result>
+    </resultMap>
+
+    <parameterMap id="UserVO" type="pers.welisdoon.webserver.service.custom.entity.UserVO">
+        <parameter property="id" jdbcType="VARCHAR"></parameter>
+        <parameter property="name" jdbcType="VARCHAR"></parameter>
+        <parameter property="role" jdbcType="INTEGER"></parameter>
+        <parameter property="phone" jdbcType="VARCHAR"></parameter>
+    </parameterMap>
+
+    <select id="get" parameterType="string" resultMap="UserVO">
+        select * from mysql.car_user where car_user_id=#{id,jdbcType=VARCHAR}
+    </select>
+    <update id="set" parameterMap="UserVO">
+        update mysql.car_user
+        <set>
+            <if test="name!=null and name!=''.toString()">
+                car_user_name=#{name,jdbcType=VARCHAR},
+            </if>
+            <if test="role!=null and role>=0">
+                car_user_role=#{role,jdbcType=INTEGER},
+            </if>
+            <if test="phone!=null and phone!=''.toString()">
+                car_user_telephone=#{phone,jdbcType=VARCHAR},
+            </if>
+        </set>
+        <where>
+            car_user_id=#{id,jdbcType=VARCHAR}
+        </where>
+
+    </update>
+    <insert id="add" parameterMap="UserVO">
+        INSERT INTO mysql.car_user
+            (car_user_id,
+             car_user_name,
+             car_user_role,
+             car_user_telephone)
+    VALUES (#{id,jdbcType=VARCHAR},
+            #{name,jdbcType=VARCHAR},
+            #{role,jdbcType=INTEGER},
+            #{phone,jdbcType=VARCHAR})
+    </insert>
+
+
+</mapper>

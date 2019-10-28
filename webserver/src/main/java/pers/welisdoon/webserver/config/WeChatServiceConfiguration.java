@@ -123,7 +123,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 }
                 wechatAliveTimerId = vertx1.setTimer(this.getAfterUpdateTokenTime() * 1000, longHandler);*/
             });
-//            longHandler.handle(null);
+            longHandler.handle(null);
             vertx1.setPeriodic(this.getAfterUpdateTokenTime() * 1000, longHandler);
         };
         return vertxConsumer;
