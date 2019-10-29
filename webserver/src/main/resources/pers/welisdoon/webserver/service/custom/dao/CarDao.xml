@@ -10,6 +10,7 @@
         <result property="lisence" column="car_license"></result>
         <result property="modal" column="car_model"></result>
         <result property="picture" column="car_picture"></result>
+        <result property="defaultSelected" column="def"></result>
     </resultMap>
 
     <parameterMap id="CarVO" type="pers.welisdoon.webserver.service.custom.entity.CarVO">
@@ -19,6 +20,7 @@
         <parameter property="lisence" jdbcType="VARCHAR"></parameter>
         <parameter property="modal" jdbcType="VARCHAR"></parameter>
         <parameter property="picture" jdbcType="BLOB"></parameter>
+        <parameter property="defaultSelected" jdbcType="INTEGER"></parameter>
     </parameterMap>
     <insert id="add" parameterMap="CarVO">
         INSERT INTO mysql.car_team_manager
@@ -27,14 +29,47 @@
              car_colour,
              car_picture,
              cust_id,
-             car_brand)
+             car_brand,
+             def)
         VALUES (#{modal,jdbcType=VARCHAR},
                 #{lisence,jdbcType=VARCHAR},
                 #{color,jdbcType=VARCHAR},
                 #{picture,jdbcType=BLOB},
                 #{userId,jdbcType=VARCHAR},
-                #{brand,jdbcType=VARCHAR})
+                #{brand,jdbcType=VARCHAR},
+                #{defaultSelected,jdbcType=INTEGER}
+                )
     </insert>
+    <update id="set" parameterMap="CarVO">
+        <choose>
+            <when test="userId!=null and userId!=''.toString()">
+                update mysql.car_team_manager
+                set def=if(car_license = #{lisence,jdbcType=VARCHAR},1,0)
+                where cust_id=#{userId,jdbcType=VARCHAR}
+            </when>
+            <otherwise>
+                update mysql.car_team_manager
+                <set>
+                    <if test="modal!=null and modal!=''.toString()">
+                        car_model = #{modal,jdbcType=VARCHAR},
+                    </if>
+                    <if test="color!=null and color!=''.toString()">
+                        car_colour = #{color,jdbcType=VARCHAR},
+                    </if>
+                    <if test="picture!=null and picture!=''.toString()">
+                        car_picture = #{picture,jdbcType=BLOB},
+                    </if>
+                    <if test="brand!=null and brand!=''.toString()">
+                        car_brand = #{brand,jdbcType=VARCHAR},
+                    </if>
+                    <if test="defaultSelected!=null and defaultSelected>=0">
+                        def = #{defaultSelected,jdbcType=INTEGER},
+                    </if>
+                </set>
+                where car_license = #{lisence,jdbcType=VARCHAR}
+            </otherwise>
+        </choose>
+    </update>
     <delete id="del" parameterMap="CarVO">
         delete mysql.car_team_manager
         <where>
@@ -56,6 +91,10 @@
             <if test="userId!=null and userId!=''.toString()">
                 and #{userId,jdbcType=VARCHAR}=cust_id
             </if>
+            <if test="defaultSelected!=null and defaultSelected>=0">
+                and #{defaultSelected,jdbcType=INTEGER}=def
+            </if>
         </where>
     </select>
+
 </mapper>

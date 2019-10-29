@@ -17,9 +17,11 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
+import pers.welisdoon.webserver.service.custom.dao.CarDao;
 import pers.welisdoon.webserver.service.custom.dao.OrderDao;
 import pers.welisdoon.webserver.service.custom.dao.TacheDao;
 import pers.welisdoon.webserver.service.custom.dao.UserDao;
+import pers.welisdoon.webserver.service.custom.entity.CarVO;
 import pers.welisdoon.webserver.service.custom.entity.OrderVO;
 import pers.welisdoon.webserver.service.custom.entity.TacheVO;
 import pers.welisdoon.webserver.service.custom.entity.UserVO;
@@ -58,6 +60,8 @@ public class TestService {
     TacheDao tacheDao;
     @Autowired
     UserDao userDao;
+    @Autowired
+    CarDao carDao;
     @Autowired
     SqlSessionTemplate sqlSessionTemplate;
     private static final Logger logger = LoggerFactory.getLogger(TestService.class);
@@ -161,9 +165,26 @@ public class TestService {
     }
 
     public Object carManger(int mode, Map params) {
-        OrderVO orderVO = mapToObject(params, OrderVO.class);
-        List list = orderDao.list(orderVO);
-        return Map.of("input", params, "output", list);
+        Object resultObj = null;
+        CarVO carVO = null;
+        switch (mode) {
+            case LIST:
+                carVO = mapToObject(params, CarVO.class);
+                resultObj = carDao.list(carVO);
+                break;
+            case ADD:
+                carVO = mapToObject(params, CarVO.class);
+                carDao.add(carVO);
+                resultObj = carVO;
+                break;
+            case MODIFY:
+                carVO = mapToObject(params, CarVO.class);
+                resultObj = carDao.set(carVO);
+                break;
+            default:
+                break;
+        }
+        return resultObj;
     }
 
     public Object userManger(int mode, Map params) {
