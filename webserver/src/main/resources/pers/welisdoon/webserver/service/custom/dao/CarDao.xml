@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pers.welisdoon.webserver.service.custom.dao.CarDao">
+    <resultMap id="CarVO" type="pers.welisdoon.webserver.service.custom.entity.CarVO">
+        <result property="userId" column="cust_id"></result>
+        <result property="brand" column="car_brand"></result>
+        <result property="color" column="car_colour"></result>
+        <result property="lisence" column="car_license"></result>
+        <result property="modal" column="car_model"></result>
+        <result property="picture" column="car_picture"></result>
+    </resultMap>
+
+    <parameterMap id="CarVO" type="pers.welisdoon.webserver.service.custom.entity.CarVO">
+        <parameter property="userId" jdbcType="VARCHAR"></parameter>
+        <parameter property="brand" jdbcType="VARCHAR"></parameter>
+        <parameter property="color" jdbcType="VARCHAR"></parameter>
+        <parameter property="lisence" jdbcType="VARCHAR"></parameter>
+        <parameter property="modal" jdbcType="VARCHAR"></parameter>
+        <parameter property="picture" jdbcType="BLOB"></parameter>
+    </parameterMap>
+    <insert id="add" parameterMap="CarVO">
+        INSERT INTO mysql.car_team_manager
+            (car_model,
+             car_license,
+             car_colour,
+             car_picture,
+             cust_id,
+             car_brand)
+        VALUES (#{modal,jdbcType=VARCHAR},
+                #{lisence,jdbcType=VARCHAR},
+                #{color,jdbcType=VARCHAR},
+                #{picture,jdbcType=BLOB},
+                #{userId,jdbcType=VARCHAR},
+                #{brand,jdbcType=VARCHAR})
+    </insert>
+    <delete id="del" parameterMap="CarVO">
+        delete mysql.car_team_manager
+        <where>
+            <if test="lisence!=null and lisence!=''.toString()">
+                and #{lisence,jdbcType=VARCHAR}=car_license
+            </if>
+            <if test="userId!=null and userId!=''.toString()">
+                and #{userId,jdbcType=VARCHAR}=cust_id
+            </if>
+        </where>
+    </delete>
+
+    <select id="list" parameterMap="CarVO" resultMap="CarVO">
+        select * from mysql.car_team_manager a
+        <where>
+            <if test="lisence!=null and lisence!=''.toString()">
+                and #{lisence,jdbcType=VARCHAR}=car_license
+            </if>
+            <if test="userId!=null and userId!=''.toString()">
+                and #{userId,jdbcType=VARCHAR}=cust_id
+            </if>
+        </where>
+    </select>
+</mapper>

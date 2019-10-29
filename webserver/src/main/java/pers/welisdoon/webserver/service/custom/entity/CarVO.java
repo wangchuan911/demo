@@ -3,9 +3,10 @@ package pers.welisdoon.webserver.service.custom.entity;
 public class CarVO {
     private String userId;
     private String brand;
-    private Integer lisence;
+    private String lisence;
     private String color;
     private String modal;
+    private byte[] picture;
 
     public String getUserId() {
         return userId;
@@ -25,11 +26,11 @@ public class CarVO {
         return this;
     }
 
-    public Integer getLisence() {
+    public String getLisence() {
         return lisence;
     }
 
-    public CarVO setLisence(Integer lisence) {
+    public CarVO setLisence(String lisence) {
         this.lisence = lisence;
         return this;
     }
@@ -49,6 +50,15 @@ public class CarVO {
 
     public CarVO setModal(String modal) {
         this.modal = modal;
+        return this;
+    }
+
+    public byte[] getPicture() {
+        return picture;
+    }
+
+    public CarVO setPicture(byte[] picture) {
+        this.picture = picture;
         return this;
     }
 }

@@ -2,6 +2,8 @@ package pers.welisdoon.webserver.common.dao;
 
 import java.util.List;
 
+import com.github.pagehelper.Page;
+
 
 public interface IDao<T, K> {
     /*select one by key*/
@@ -42,4 +44,10 @@ public interface IDao<T, K> {
 
     /*count all*/
     int count();
+
+    /*select list  by objct of Type T (object T have list,map... field)*/
+    Page<T> pageAll(T t);
+
+    /*select list  by objct of Type T */
+    Page<T> page(T t);
 }

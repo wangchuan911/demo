@@ -40,7 +40,7 @@ import javax.annotation.PostConstruct;
 @Service
 @VertxConfiguration
 public class TestService {
-
+    /*all*/
     public final static int ADD = 0;
     public final static int DELETE = 1;
     public final static int MODIFY = 2;
@@ -172,7 +172,7 @@ public class TestService {
         switch (mode) {
             case GET:
                 userVO = mapToObject(params, UserVO.class);
-                userVO = userDao.get(userVO);
+                resultObj = userDao.get(userVO);
                 break;
             default:
                 break;
@@ -206,3 +206,4 @@ public class TestService {
         return JsonObject.mapFrom(params).mapTo(type);
     }
 }
+
