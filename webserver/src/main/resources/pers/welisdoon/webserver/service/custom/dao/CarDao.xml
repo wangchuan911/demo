@@ -96,5 +96,19 @@
             </if>
         </where>
     </select>
+    <select id="get" parameterMap="CarVO" resultMap="CarVO">
+        select * from mysql.car_team_manager a
+        <where>
+            <if test="lisence!=null and lisence!=''.toString()">
+                and #{lisence,jdbcType=VARCHAR}=car_license
+            </if>
+            <if test="userId!=null and userId!=''.toString()">
+                and #{userId,jdbcType=VARCHAR}=cust_id
+            </if>
+            <if test="defaultSelected!=null and defaultSelected>=0">
+                and #{defaultSelected,jdbcType=INTEGER}=def
+            </if>
+        </where>
+    </select>
 
 </mapper>
