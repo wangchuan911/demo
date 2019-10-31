@@ -81,7 +81,7 @@ public class TestConfiguration extends AbstractWechatConfiguration {
                                         JsonObject jsonObject = httpResponse.body().toJsonObject();
                                         String key = jsonObject.remove("session_key").toString();
                                         String userId = jsonObject.getString("openid");
-                                        if (!StringUtils.isEmpty(userId)) {
+                                        /*if (!StringUtils.isEmpty(userId)) {
                                             Object o = testService.userManger(TestService.GET, Map.of("id", userId));
                                             UserVO userVO;
                                             if (o == null) {
@@ -104,7 +104,8 @@ public class TestConfiguration extends AbstractWechatConfiguration {
                                                 jsonObject.put("work",o);
                                             }
 
-                                        }
+                                        }*/
+                                        jsonObject.mergeIn((JsonObject)testService.login(userId)) ;
                                         routingContext.response().end(jsonObject.toBuffer());
                                     }
                                     else {

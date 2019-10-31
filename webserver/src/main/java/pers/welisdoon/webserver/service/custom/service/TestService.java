@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
@@ -172,6 +173,10 @@ public class TestService {
                 carVO = mapToObject(params, CarVO.class);
                 resultObj = carDao.list(carVO);
                 break;
+            case DELETE:
+                carVO = mapToObject(params, CarVO.class);
+                resultObj = carDao.del(carVO);
+                break;
             case ADD:
                 carVO = mapToObject(params, CarVO.class);
                 carDao.add(carVO);
@@ -221,6 +226,35 @@ public class TestService {
                 break;
         }
         return resultObj;
+    }
+
+    public Object login(String userId) {
+        JsonObject jsonObject = new JsonObject();
+        if (!StringUtils.isEmpty(userId)) {
+            Object o = userManger(GET, Map.of("id", userId));
+            UserVO userVO;
+            if (o == null) {
+                userVO = new UserVO().setId(userId);
+                userVO.setRole(0);
+                userVO.setName("新用戶");
+                jsonObject.put("user", JsonObject.mapFrom(userVO));
+            }
+            else {
+                userVO = (UserVO) o;
+                jsonObject.put("user", JsonObject.mapFrom(o));
+                switch (userVO.getRole()) {
+                    case 0:
+                        o = tacheManager(GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
+                        break;
+                    default:
+                        o = orderManger(GET_WORK_NUMBER, Map.of("custId", userVO.getId()));
+                }
+                o = o != null ? JsonObject.mapFrom(o) : Map.of("all_nums", 0, "nums", 0);
+                jsonObject.put("work", o);
+                jsonObject.put("cars", carDao.list(new CarVO().setUserId(userId).setDefaultSelected(1)));
+            }
+        }
+        return jsonObject;
     }
 
     private static <T> T mapToObject(Map params, Class<T> type) {
