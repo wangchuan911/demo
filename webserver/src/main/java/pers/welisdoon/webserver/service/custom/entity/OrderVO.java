@@ -10,8 +10,8 @@ public class OrderVO {
     private Timestamp createDate;
     private Timestamp finishDate;
     private Integer orderState;
-    private Integer orderControlPerson;
-    private Integer orderAppointPerson;
+    private String orderControlPerson;
+    private String orderAppointPerson;
     private Timestamp orderArrangeDate;
     private String custId;
     private String serviceId;
@@ -83,20 +83,20 @@ public class OrderVO {
         return this;
     }
 
-    public Integer getOrderControlPerson() {
+    public String getOrderControlPerson() {
         return orderControlPerson;
     }
 
-    public OrderVO setOrderControlPerson(Integer orderControlPerson) {
+    public OrderVO setOrderControlPerson(String orderControlPerson) {
         this.orderControlPerson = orderControlPerson;
         return this;
     }
 
-    public Integer getOrderAppointPerson() {
+    public String getOrderAppointPerson() {
         return orderAppointPerson;
     }
 
-    public OrderVO setOrderAppointPerson(Integer orderAppointPerson) {
+    public OrderVO setOrderAppointPerson(String orderAppointPerson) {
         this.orderAppointPerson = orderAppointPerson;
         return this;
     }

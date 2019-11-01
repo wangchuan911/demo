@@ -12,8 +12,8 @@
         <parameter property="createDate" jdbcType="TIMESTAMP"></parameter>
         <parameter property="finishDate" jdbcType="TIMESTAMP"></parameter>
         <parameter property="orderState" jdbcType="VARCHAR"></parameter>
-        <parameter property="orderControlPerson" jdbcType="INTEGER"></parameter>
-        <parameter property="orderAppointPerson" jdbcType="INTEGER"></parameter>
+        <parameter property="orderControlPerson" jdbcType="VARCHAR"></parameter>
+        <parameter property="orderAppointPerson" jdbcType="VARCHAR"></parameter>
         <parameter property="orderArrangeDate" jdbcType="TIMESTAMP"></parameter>
         <parameter property="custId" jdbcType="VARCHAR"></parameter>
         <parameter property="serviceId" jdbcType="VARCHAR"></parameter>
@@ -50,8 +50,8 @@
         #{createDate,jdbcType=TIMESTAMP},
         #{finishDate,jdbcType=TIMESTAMP},
         #{orderState,jdbcType=VARCHAR},
-        #{orderControlPerson,jdbcType=INTEGER},
-        #{orderAppointPerson,jdbcType=INTEGER},
+        #{orderControlPerson,jdbcType=VARCHAR},
+        #{orderAppointPerson,jdbcType=VARCHAR},
         #{orderArrangeDate,jdbcType=TIMESTAMP},
         #{custId,jdbcType=VARCHAR},
         #{orderNote,jdbcType=VARCHAR},
@@ -83,11 +83,11 @@
             <if test="orderState!=null and orderState!=''.toString()">
                 and order_state= #{orderState,jdbcType=VARCHAR}
             </if>
-            <if test="orderControlPerson!=null and orderControlPerson!=0">
-                and order_control_person= #{orderControlPerson,jdbcType=INTEGER}
+            <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
+                and order_control_person= #{orderControlPerson,jdbcType=VARCHAR}
             </if>
-            <if test="orderAppointPerson!=null and orderAppointPerson!=0">
-                and order_appoint_person= #{orderAppointPerson,jdbcType=INTEGER}
+            <if test="orderAppointPerson!=null and orderAppointPerson!=''.toString()">
+                and order_appoint_person= #{orderAppointPerson,jdbcType=VARCHAR}
             </if>
             <if test="orderArrangeDate!=null and orderArrangeDate!=''.toString()">
                 and order_arrange_date= #{orderArrangeDate,jdbcType=VARCHAR}
@@ -138,8 +138,8 @@
           create_date = #{createDate,jdbcType=TIMESTAMP},
           finish_date = #{finishDate,jdbcType=TIMESTAMP},
           order_state = #{orderState,jdbcType=VARCHAR},
-          order_control_person = #{orderControlPerson,jdbcType=INTEGER},
-          order_appoint_person = #{orderAppointPerson,jdbcType=INTEGER},
+          order_control_person = #{orderControlPerson,jdbcType=VARCHAR},
+          order_appoint_person = #{orderAppointPerson,jdbcType=VARCHAR},
           order_arrange_date = #{orderArrangeDate,jdbcType=TIMESTAMP},
           cust_id = #{custId,jdbcType=VARCHAR},
           order_note = #{orderNote,jdbcType=VARCHAR},
@@ -157,8 +157,8 @@
         #{vo.createDate,jdbcType=TIMESTAMP} as createDate,
         #{vo.finishDate,jdbcType=TIMESTAMP} as finishDate,
         #{vo.orderState,jdbcType=VARCHAR} as orderState,
-        #{vo.orderControlPerson,jdbcType=INTEGER} as orderControlPerson,
-        #{vo.orderAppointPerson,jdbcType=INTEGER} as orderAppointPerson,
+        #{vo.orderControlPerson,jdbcType=VARCHAR} as orderControlPerson,
+        #{vo.orderAppointPerson,jdbcType=VARCHAR} as orderAppointPerson,
         #{vo.orderArrangeDate,jdbcType=TIMESTAMP} as orderArrangeDate,
         #{vo.custId,jdbcType=VARCHAR} as custId,
         #{vo.orderNote,jdbcType=VARCHAR} as orderNote,
@@ -209,11 +209,11 @@
         <if test="orderState!=null and orderState!=''.toString()">
             order_state= #{orderState,jdbcType=VARCHAR} and
         </if>
-        <if test="orderControlPerson!=null and orderControlPerson!=0">
-            order_control_person= #{orderControlPerson,jdbcType=INTEGER} and
+        <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
+            order_control_person= #{orderControlPerson,jdbcType=VARCHAR} and
         </if>
-        <if test="orderAppointPerson!=null and orderAppointPerson!=0">
-            order_appoint_person= #{orderAppointPerson,jdbcType=INTEGER} and
+        <if test="orderAppointPerson!=null and orderAppointPerson!=''.toString()">
+            order_appoint_person= #{orderAppointPerson,jdbcType=VARCHAR} and
         </if>
         <if test="orderArrangeDate!=null and orderArrangeDate!=''.toString()">
             order_arrange_date= #{orderArrangeDate,jdbcType=VARCHAR} and
@@ -246,11 +246,11 @@
                 <if test="vo.orderState!=null and vo.orderState>=0">
                     order_state= #{vo.orderState,jdbcType=INTEGER} ,
                 </if>
-                <if test="vo.orderControlPerson!=null and vo.orderControlPerson!=0">
-                    order_control_person= #{vo.orderControlPerson,jdbcType=INTEGER} ,
+                <if test="vo.orderControlPerson!=null and vo.orderControlPerson!=''.toString()">
+                    order_control_person= #{vo.orderControlPerson,jdbcType=VARCHAR} ,
                 </if>
-                <if test="vo.orderAppointPerson!=null and vo.orderAppointPerson!=0">
-                    order_appoint_person= #{vo.orderAppointPerson,jdbcType=INTEGER} ,
+                <if test="vo.orderAppointPerson!=null and vo.orderAppointPerson!=''.toString()">
+                    order_appoint_person= #{vo.orderAppointPerson,jdbcType=VARCHAR} ,
                 </if>
                 <if test="vo.orderArrangeDate!=null and vo.orderArrangeDate!=''.toString()">
                     order_arrange_date= #{vo.orderArrangeDate,jdbcType=VARCHAR} ,
