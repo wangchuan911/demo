@@ -257,6 +257,74 @@ public class TestService {
         return jsonObject;
     }
 
+    public Object toBeContinue(Map map) {
+        Object returnObj = null;
+        String orderId = MapUtils.getString(map, "orderId", null);
+        Integer tacheId = MapUtils.getInteger(map, "tacheId", null);
+        String userId = MapUtils.getString(map, "userId", null);
+        if (StringUtils.isEmpty(orderId)
+                || tacheId == null
+                || StringUtils.isEmpty(userId)) {
+            return returnObj;
+        }
+
+        UserVO userVO = userDao.get(new UserVO().setId(userId));
+        OrderVO orderVO = orderDao.get(new OrderVO().setOrderId(orderId));
+        TacheVO tacheVO = new TacheVO().setTacheId(tacheId);
+
+        for (TacheVO vo : TACHE_VO_LIST) {
+            if (vo.getTacheId() == orderVO.getTacheId()) {
+                if (tacheId == vo.getTacheId()) {
+                    tacheVO = vo;
+                    break;
+                }
+                else if (!CollectionUtils.isEmpty(vo.getChildTaches())
+                        && (tacheVO = this.findTache(tacheVO, vo.getChildTaches())) != null) {
+                    break;
+                }
+                else {
+                    tacheVO = null;
+                }
+            }
+        }
+        if (tacheVO == null) return null;
+        /*流程有权限限制*/
+        if (tacheVO.getRole() != null && tacheVO.getRole() == userVO.getRole()) {
+            returnObj = orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(1));
+        }
+        /*流程无限制*/
+        else if (tacheVO.getRole() == null) {
+            returnObj = orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(1));
+        }
+        return returnObj;
+    }
+
+    private static TacheVO findTache(TacheVO tacheVO, List<TacheVO> tacheVOList) {
+        if (tacheVO == null
+                || tacheVO.getTacheId() == null
+                || tacheVO.getTacheId() < 0) {
+            return null;
+        }
+
+        Iterator<TacheVO> tacheVOIterator = tacheVOList.iterator();
+        TacheVO targetTacheVo = null;
+        while (tacheVOIterator.hasNext()) {
+            targetTacheVo = tacheVOIterator.next();
+            if (tacheVO.getTacheId() == targetTacheVo.getTacheId()) {
+                break;
+            }
+            else if (!CollectionUtils.isEmpty(targetTacheVo.getChildTaches())
+                    && (targetTacheVo = findTache(tacheVO, targetTacheVo.getChildTaches())) != null) {
+                break;
+            }
+            else {
+                targetTacheVo = null;
+                continue;
+            }
+        }
+        return targetTacheVo;
+    }
+
     private static <T> T mapToObject(Map params, Class<T> type) {
         return JsonObject.mapFrom(params).mapTo(type);
     }
