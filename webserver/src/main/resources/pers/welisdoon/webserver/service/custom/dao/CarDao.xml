@@ -71,7 +71,7 @@
         </choose>
     </update>
     <delete id="del" parameterMap="CarVO">
-        delete mysql.car_team_manager
+        delete FROM mysql.car_team_manager
         <where>
             <if test="lisence!=null and lisence!=''.toString()">
                 and #{lisence,jdbcType=VARCHAR}=car_license

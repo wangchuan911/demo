@@ -8,10 +8,17 @@ public class TacheVO {
     private Integer tacheId;
     private String tacheName;
     private Float seq;
-    private List<TacheVO> childTaches;
-    private Integer role;
     private Integer tampalateId;
-    private Integer parantTacheId;
+    private List<TacheRela> tacheRelas;
+    private String code;
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
 
     public Integer getTacheId() {
         return tacheId;
@@ -41,24 +48,6 @@ public class TacheVO {
     }
 
 
-    public Integer getRole() {
-        return role;
-    }
-
-    public TacheVO setRole(Integer role) {
-        this.role = role;
-        return this;
-    }
-
-    public List<TacheVO> getChildTaches() {
-        return childTaches;
-    }
-
-    public TacheVO setChildTaches(List<TacheVO> childTaches) {
-        this.childTaches = childTaches;
-        return this;
-    }
-
     public Integer getTampalateId() {
         return tampalateId;
     }
@@ -68,12 +57,37 @@ public class TacheVO {
         return this;
     }
 
-    public Integer getParantTacheId() {
-        return parantTacheId;
+
+    public List<TacheRela> getTacheRelas() {
+        return tacheRelas;
     }
 
-    public TacheVO setParantTacheId(Integer parantTacheId) {
-        this.parantTacheId = parantTacheId;
-        return this;
+    public void setTacheRelas(List<TacheRela> tacheRelas) {
+        this.tacheRelas = tacheRelas;
+    }
+
+    public static class TacheRela {
+
+        private Integer role;
+
+        private List<TacheVO> childTaches;
+
+        public Integer getRole() {
+            return role;
+        }
+
+        public TacheRela setRole(Integer role) {
+            this.role = role;
+            return this;
+        }
+
+        public List<TacheVO> getChildTaches() {
+            return childTaches;
+        }
+
+        public TacheRela setChildTaches(List<TacheVO> childTaches) {
+            this.childTaches = childTaches;
+            return this;
+        }
     }
 }
