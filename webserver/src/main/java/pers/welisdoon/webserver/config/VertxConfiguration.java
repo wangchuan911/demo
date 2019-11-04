@@ -5,8 +5,10 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
 import pers.welisdoon.webserver.vertx.SpringVerticleFactory;
+import pers.welisdoon.webserver.vertx.verticle.AbstractCustomVerticle;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import pers.welisdoon.webserver.vertx.verticle.WorkerVerticle;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+
 import pers.welisdoon.webserver.vertx.SpringVerticleFactory;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 
@@ -45,6 +48,9 @@ public class VertxConfiguration {
      */
     @Value("${vertx.workerVerticle.instances}")
     int workerInstancesMax;
+
+    @Value("${vertx.scanPath}")
+    private String[] scanPath;
 
     @Autowired
     ClusterConfiguration clusterConfiguration;
@@ -116,6 +122,7 @@ public class VertxConfiguration {
     }
 
     private Consumer<Vertx> deployVerticles() {
+        AbstractCustomVerticle.scanRegister(scanPath);
         Consumer<Vertx> runner = vertx -> {
             // The verticle factory is registered manually because it is created by the Spring container
             vertx.registerVerticleFactory(verticleFactory);

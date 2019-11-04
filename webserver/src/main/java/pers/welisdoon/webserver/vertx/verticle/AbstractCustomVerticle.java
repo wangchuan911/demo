@@ -3,13 +3,16 @@ package pers.welisdoon.webserver.vertx.verticle;
 import io.vertx.core.*;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.ext.web.Router;
+
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Value;
+
 import pers.welisdoon.webserver.WebserverApplication;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
+
 import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -17,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.net.URL;
@@ -28,10 +32,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(AbstractCustomVerticle.class);
 
     final private static Map<HandlerEntry, Set<Method>> HANDLES = new HashMap<>(4);
-
-
-    @Value("${vertx.scanPath}")
-    private String[] scanPath;
 
 
     @Override
@@ -77,10 +77,10 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         }
     }
 
-    final void scanRegister() {
+    final public static void scanRegister(String[] paths) {
+        if (HANDLES.size() != 0) return;
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
         {
-            String[] paths = scanPath;
             Collection<URL> CollectUrl = null;
             for (int i = 0; i < paths.length; i++) {
                 String path = paths[i];
@@ -176,17 +176,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         });
     }
 
-    @PostConstruct
-    final void AbstractCustomVerticleInital() {
-        if (CollectionUtils.isEmpty(HANDLES)) {
-            synchronized (HANDLES) {
-                if (CollectionUtils.isEmpty(HANDLES)) {
-                    scanRegister();
-                }
-            }
-        }
-    }
-
     static <T> T getFiled(Class<?> TargetClass, Class<T> filedClass) {
         Set<Field> fields = ReflectionUtils.getFields(TargetClass, ReflectionUtils.withType(filedClass));
         for (Field field : fields) {
@@ -209,7 +198,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         return null;
     }
 
-    private class HandlerEntry {
+    private static class HandlerEntry {
         Class<? extends AbstractCustomVerticle> verticleClass;
         Type VertxRegisterInnerType;
         Class<?> ServiceClass;
