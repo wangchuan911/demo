@@ -29,5 +29,11 @@ public class TestConst {
         public final static int WOCKER = 1;
         public final static int DISTRIBUTOR = 2;
     }
+
+    public static class FUNCTION {
+        public final static String DISTRIBUTE = "distribute";
+        public final static String PAYMENT = "payment";
+        public final static String FINISH = "finish";
+    }
 }
 

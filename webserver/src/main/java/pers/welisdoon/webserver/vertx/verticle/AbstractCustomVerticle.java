@@ -35,18 +35,19 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
 
     @Override
-    final public void start(Future<Void> startFuture) {
-        Future future = Future.future();
-        future.setHandler(voidAsyncResult -> {
-            handleRegist();
-            registedAfter(startFuture);
+    final public void start(Promise<Void> startPromise) {
+        Future future = Future.future(objectPromise -> {
+            registedBefore(objectPromise);
         });
-        registedBefore(future);
+        CompositeFuture.all(Arrays.asList(future)).setHandler(compositeFutureAsyncResult -> {
+            handleRegist();
+            registedAfter(startPromise);
+        });
     }
 
-    abstract void registedBefore(Future future);
+    abstract void registedBefore(Promise future);
 
-    abstract void registedAfter(Future future);
+    abstract void registedAfter(Promise future);
 
     public static synchronized <T> void registeredHandler(Class<? extends AbstractCustomVerticle> verticle, Class<T> t, Handler<T> handler) {
         try {

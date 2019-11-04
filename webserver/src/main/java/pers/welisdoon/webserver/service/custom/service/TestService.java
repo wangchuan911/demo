@@ -16,10 +16,7 @@ import org.springframework.util.StringUtils;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import pers.welisdoon.webserver.service.custom.config.TestConst;
-import pers.welisdoon.webserver.service.custom.dao.CarDao;
-import pers.welisdoon.webserver.service.custom.dao.OrderDao;
-import pers.welisdoon.webserver.service.custom.dao.TacheDao;
-import pers.welisdoon.webserver.service.custom.dao.UserDao;
+import pers.welisdoon.webserver.service.custom.dao.*;
 import pers.welisdoon.webserver.service.custom.entity.CarVO;
 import pers.welisdoon.webserver.service.custom.entity.OrderVO;
 import pers.welisdoon.webserver.service.custom.entity.TacheVO;
@@ -43,8 +40,6 @@ import javax.annotation.PostConstruct;
 @VertxConfiguration
 public class TestService {
 
-    final String KEY = "TEST";
-    final String URL_TOCKEN_LOCK = KEY + ".LOCK";
     @Autowired
     OrderDao orderDao;
     @Autowired
@@ -53,6 +48,8 @@ public class TestService {
     UserDao userDao;
     @Autowired
     CarDao carDao;
+    @Autowired
+    OperationDao operationDao;
     @Autowired
     SqlSessionTemplate sqlSessionTemplate;
     private static final Logger logger = LoggerFactory.getLogger(TestService.class);
@@ -70,12 +67,16 @@ public class TestService {
                                 , UserVO.RoleConfig::getLevel));
     }
 
+    /*定時任務*/
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createOrdderTimer() {
         final OrderVO nextOrderVO = new OrderVO().setOrderState(1);
+        final String KEY = this.getClass().getName().toUpperCase();
+        final String URL_TOCKEN_LOCK = KEY + ".LOCK";
         Consumer<Vertx> vertxConsumer = vertx1 -> {
             SharedData sharedData = vertx1.sharedData();
             Handler<Long> longHandler = aLong -> {
+                /*集群锁，防止重复处理和锁表*/
                 sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
                     if (lockAsyncResult.succeeded()) {
                         try {
@@ -120,11 +121,13 @@ public class TestService {
                     }
                 });
             };
+            /*5s*/
             vertx1.setPeriodic(5 * 1000, longHandler);
         };
         return vertxConsumer;
     }
 
+    /*工单管理*/
     public Object orderManger(int mode, Map params) {
         Object resultObj = null;
         OrderVO orderVO;
@@ -159,6 +162,7 @@ public class TestService {
         return resultObj;
     }
 
+    /*车辆管理*/
     public Object carManger(int mode, Map params) {
         Object resultObj = null;
         CarVO carVO = null;
@@ -186,6 +190,7 @@ public class TestService {
         return resultObj;
     }
 
+    /*用户管理*/
     public Object userManger(int mode, Map params) {
         Object resultObj = null;
         UserVO userVO = null;
@@ -200,6 +205,7 @@ public class TestService {
         return resultObj;
     }
 
+    /*环节管理*/
     public Object tacheManager(int mode, Map params) {
         Object resultObj = null;
         TacheVO tacheVO;
@@ -222,6 +228,7 @@ public class TestService {
         return resultObj;
     }
 
+    /*登陆初始化*/
     public Object login(String userId) {
         JsonObject jsonObject = new JsonObject();
         if (!StringUtils.isEmpty(userId)) {
@@ -237,11 +244,16 @@ public class TestService {
                 userVO = (UserVO) o;
                 jsonObject.put("user", JsonObject.mapFrom(o));
                 switch (userVO.getRole()) {
-                    case 0:
+                    case TestConst.ROLE.CUSTOMER:
                         o = tacheManager(TestConst.TACHE.GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
                         break;
-                    default:
-                        o = orderManger(TestConst.ORDER.GET_WORK_NUMBER, Map.of("custId", userVO.getId()));
+                    case TestConst.ROLE.WOCKER:
+                        o = orderManger(TestConst.ORDER.GET_WORK_NUMBER, Map.of("orderAppointPerson", userVO.getId()));
+                        break;
+                    case TestConst.ROLE.DISTRIBUTOR:
+                        o = orderManger(TestConst.ORDER.GET_WORK_NUMBER, Map.of("orderControlPerson", userVO.getId()));
+                        break;
+
                 }
                 o = o != null ? JsonObject.mapFrom(o) : Map.of("all_nums", 0, "nums", 0);
                 jsonObject.put("work", o);
@@ -251,6 +263,7 @@ public class TestService {
         return jsonObject;
     }
 
+    /*下一步*/
     public Object toBeContinue(Map map) {
         Object returnObj = 0;
         String orderId = MapUtils.getString(map, "orderId", null);

@@ -3,6 +3,7 @@ package pers.welisdoon.webserver.vertx.verticle;
 import java.io.File;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemKeyCertOptions;
@@ -29,7 +30,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
     private Router router;
 
     @Override
-    void registedBefore(Future startFuture) {
+    void registedBefore(Promise startFuture) {
         router = Router.router(vertx);
         router.route().handler(BodyHandler.create());
         logger.info("create router");
@@ -38,7 +39,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
     }
 
     @Override
-    void registedAfter(Future startFuture) {
+    void registedAfter(Promise startFuture) {
         if (router != null) {
             //开启https
             HttpServerOptions httpServerOptions = new HttpServerOptions();

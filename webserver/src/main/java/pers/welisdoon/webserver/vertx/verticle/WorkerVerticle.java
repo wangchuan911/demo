@@ -1,6 +1,8 @@
 package pers.welisdoon.webserver.vertx.verticle;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
+
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -11,12 +13,12 @@ public class WorkerVerticle extends AbstractCustomVerticle {
 
 
     @Override
-    void registedBefore(Future future) {
+    void registedBefore(Promise future) {
         future.complete();
     }
 
     @Override
-    void registedAfter(Future future) {
+    void registedAfter(Promise future) {
         future.complete();
     }
 }
