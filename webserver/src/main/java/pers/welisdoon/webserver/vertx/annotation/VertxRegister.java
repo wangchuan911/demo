@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface VertxRegister {
-    @AliasFor("VerticleClass")
+    @AliasFor("verticleClass")
     Class<? extends Verticle> value() default Verticle.class;
 
     @AliasFor("value")
