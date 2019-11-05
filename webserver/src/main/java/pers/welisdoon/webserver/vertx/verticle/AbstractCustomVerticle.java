@@ -36,13 +36,12 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
     @Override
     final public void start(Promise<Void> startPromise) {
-        Future future = Future.future(objectPromise -> {
-            registedBefore(objectPromise);
-        });
-        CompositeFuture.all(Arrays.asList(future)).setHandler(compositeFutureAsyncResult -> {
+        Promise<Void> promise = Promise.promise();
+        promise.future().setHandler(voidAsyncResult -> {
             handleRegist();
             registedAfter(startPromise);
         });
+        registedBefore(promise);
     }
 
     abstract void registedBefore(Promise future);
@@ -73,7 +72,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     }
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             logger.error("注册执行器失败", e);
         }
     }
@@ -123,7 +123,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                             set.add(method);
                         }
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     e.printStackTrace();
                 }
             });
@@ -140,7 +141,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                 Object value = null;
                 if (VertxRegisterInnerType == Vertx.class) {
                     value = vertx;
-                } else if (VertxRegisterInnerType == Router.class) {
+                }
+                else if (VertxRegisterInnerType == Router.class) {
                     value = getRouter(clazz);
                     ;
                 }
@@ -158,7 +160,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                                 Class parameterTypeClass = parameterTypesClasses[i];
                                 if (parameterTypeClass == Vertx.class) {
                                     parameterValue[i] = vertx;
-                                } else if (parameterTypeClass == Router.class) {
+                                }
+                                else if (parameterTypeClass == Router.class) {
                                     parameterValue[i] = getRouter(clazz);
                                 }
                             }
@@ -166,10 +169,12 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                         Object obj = method.invoke(ApplicationContextProvider.getBean(ServiceClass), parameterValue);
                         if (obj instanceof Consumer) {
                             ((Consumer) obj).accept(finalValue);
-                        } else if (obj instanceof Handler) {
+                        }
+                        else if (obj instanceof Handler) {
                             ((Handler) obj).handle(finalValue);
                         }
-                    } catch (Throwable e) {
+                    }
+                    catch (Throwable e) {
                         e.printStackTrace();
                     }
                 });
@@ -183,7 +188,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
             try {
                 field.setAccessible(true);
                 return (T) field.get(ApplicationContextProvider.getBean(TargetClass));
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -193,7 +199,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     static Router getRouter(Class<?> TargetClass) {
         if (TargetClass == AbstractWebVerticle.class) {
             return getFiled(TargetClass, Router.class);
-        } else if ((TargetClass = TargetClass.getSuperclass()) != null) {
+        }
+        else if ((TargetClass = TargetClass.getSuperclass()) != null) {
             return getRouter(TargetClass);
         }
         return null;

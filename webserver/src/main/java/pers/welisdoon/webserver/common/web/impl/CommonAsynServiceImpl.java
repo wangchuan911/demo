@@ -4,6 +4,7 @@ package pers.welisdoon.webserver.common.web.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -34,26 +35,25 @@ public class CommonAsynServiceImpl implements CommonAsynService {
 
     @Override
     public void wechatMsgReceive(String message, Handler<AsyncResult<String>> resultHandler) {
-        Future<String> future = Future.future();
+        Promise<String> promise = Promise.promise();
+        promise.future().setHandler(resultHandler);
         try {
             //报文转对象
             RequestMesseageBody requestMesseageBody = JAXBUtils.fromXML(message, RequestMesseageBody.class);
             //处理数据
             ResponseMesseage responseMesseage = weChatService.receive(requestMesseageBody);
             //报文转对象;
-            future.setHandler(resultHandler);
-            future.complete(JAXBUtils.toXML(responseMesseage));
+            promise.complete(JAXBUtils.toXML(responseMesseage));
         }
         catch (Exception e) {
-            future = Future.future();
-            future.fail(e);
+            promise.fail(e);
         }
     }
 
     @Override
     public void serviceCall(String serverName, String method, String input, String option, Handler<AsyncResult<String>> outputBodyHandler) {
-        Future<String> future = Future.future();
-        future.setHandler(outputBodyHandler);
+        Promise<String> promise = Promise.promise();
+        promise.future().setHandler(outputBodyHandler);
         JsonObject jsonObject = new JsonObject();
         try {
             Object sprngService = ApplicationContextProvider.getBean(serverName);
@@ -81,7 +81,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                     if (isThisMethod) {
                         reult = methods[i].invoke(sprngService, args);
                         jsonObject.put("result", reult);
-                        future.complete(jsonObject.toString());
+                        promise.complete(jsonObject.toString());
                         return;
                     }
                 }
@@ -98,19 +98,19 @@ public class CommonAsynServiceImpl implements CommonAsynService {
         }
         catch (Throwable e) {
             e.printStackTrace();
-            future.fail(e);
+            promise.fail(e);
         }
         finally {
-            if (!future.isComplete()) {
-                future.complete(jsonObject.toString());
+            if (!promise.future().isComplete()) {
+                promise.complete(jsonObject.toString());
             }
         }
     }
 
     @Override
     public void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler) {
-        Future<Response> future = Future.future();
-        future.setHandler(outputBodyHandler);
+        Promise<Response> promise = Promise.promise();
+        promise.future().setHandler(outputBodyHandler);
         Response response = new Response();
         try {
             Object sprngService = ApplicationContextProvider.getBean(requset.getService());
@@ -127,7 +127,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                         if (isThisMethod) {
                             reult = methods[i].invoke(sprngService, args);
                             response.setResult(reult);
-                            future.complete(response);
+                            promise.complete(response);
                             return;
                         }
                     }
@@ -142,7 +142,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                             o = arg.mapTo(methods[i].getParameters()[0].getClass());
                             o = methods[i].invoke(sprngService, o);
                             response.setResult(o);
-                            future.complete(response);
+                            promise.complete(response);
                             return;
                         }
                         catch (Throwable e) {
@@ -165,11 +165,11 @@ public class CommonAsynServiceImpl implements CommonAsynService {
         }
         catch (Throwable e) {
             e.printStackTrace();
-            future.fail(e);
+            promise.fail(e);
         }
         finally {
-            if (!future.isComplete()) {
-                future.complete(response);
+            if (!promise.future().isComplete()) {
+                promise.complete(response);
             }
         }
     }

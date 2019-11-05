@@ -3,10 +3,7 @@ package pers.welisdoon.webserver.common.web;
 
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.serviceproxy.ServiceBinder;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
@@ -20,7 +17,7 @@ public interface CommonAsynService {
         CommonAsynService commonAsynService = ApplicationContextProvider.getBean(CommonAsynService.class);
         new ServiceBinder(vertx).setAddress(CommonAsynService.class.getName())
                 .register(CommonAsynService.class, commonAsynService)
-                .completionHandler(Future.future());
+                .completionHandler(Promise.promise());
         return commonAsynService;
     }
 
