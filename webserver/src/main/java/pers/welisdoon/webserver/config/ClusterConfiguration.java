@@ -129,7 +129,7 @@ public class ClusterConfiguration {
             }
         }
         if (mgr != null) {
-            options.setClusterManager(mgr).setClustered(true);
+            options.setClusterManager(mgr);
         }
     }
 }

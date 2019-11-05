@@ -73,7 +73,7 @@ public class VertxConfiguration {
         this.optionManager(vertxOptions);
 
 
-        if (vertxOptions.isClustered()) {
+        if (vertxOptions.getClusterManager()!=null) {
             Vertx.clusteredVertx(
                     vertxOptions,
                     result -> {
