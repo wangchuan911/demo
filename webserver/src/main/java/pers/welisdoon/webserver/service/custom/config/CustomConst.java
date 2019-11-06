@@ -1,6 +1,6 @@
 package pers.welisdoon.webserver.service.custom.config;
 
-public class TestConst {
+public class CustomConst {
 
     /*all*/
     public final static int ADD = 0;

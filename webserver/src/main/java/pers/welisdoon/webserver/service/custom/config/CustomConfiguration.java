@@ -2,43 +2,33 @@ package pers.welisdoon.webserver.service.custom.config;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import javax.annotation.PostConstruct;
-
-import org.apache.ibatis.executor.statement.RoutingStatementHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
 
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.User;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
-import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
 import pers.welisdoon.webserver.common.web.Requset;
-import pers.welisdoon.webserver.service.custom.entity.UserVO;
-import pers.welisdoon.webserver.service.custom.service.TestService;
+import pers.welisdoon.webserver.service.custom.service.RequestService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
@@ -46,13 +36,13 @@ import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 @Configuration
 @ConfigurationProperties("wechat-app")
 @VertxConfiguration
-public class TestConfiguration extends AbstractWechatConfiguration {
-
-    private static final Logger logger = LoggerFactory.getLogger(TestService.class);
+public class CustomConfiguration extends AbstractWechatConfiguration {
+    final static String REQUEST_NAME="requestService";
+    private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
 
     CommonAsynService commonAsynService;
     @Autowired
-    TestService testService;
+    RequestService requestService;
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
@@ -105,7 +95,7 @@ public class TestConfiguration extends AbstractWechatConfiguration {
                                             }
 
                                         }*/
-                                        jsonObject.mergeIn((JsonObject)testService.login(userId)) ;
+                                        jsonObject.mergeIn((JsonObject) requestService.login(userId)) ;
                                         routingContext.response().end(jsonObject.toBuffer());
                                     }
                                     else {
@@ -120,7 +110,7 @@ public class TestConfiguration extends AbstractWechatConfiguration {
                                         .add(code)
                                         .add(new JsonArray("value")));
                         jsonArray.add(this.getPrams(routingContext));
-                        commonAsynService.serviceCall("testService", jsonArray.getString(0), jsonArray.getJsonArray(1).toString(), jsonArray.getJsonArray(2).toString(), stringAsyncResult -> {
+                        commonAsynService.serviceCall(REQUEST_NAME, jsonArray.getString(0), jsonArray.getJsonArray(1).toString(), jsonArray.getJsonArray(2).toString(), stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
                                 routingContext.response().end(stringAsyncResult.result());
                                 System.out.println();
@@ -139,7 +129,7 @@ public class TestConfiguration extends AbstractWechatConfiguration {
                 routingContext.response().setChunked(true);
                 JsonArray jsonArray = routingContext.getBodyAsJsonArray();
                 Requset requset = new Requset()
-                        .setService("testService")
+                        .setService(REQUEST_NAME)
                         .setMethod(jsonArray.getString(0))
                         .setBody(jsonArray.getJsonArray(1))
                         .putParams(routingContext.request().params())

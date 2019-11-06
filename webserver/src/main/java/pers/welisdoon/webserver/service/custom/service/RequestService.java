@@ -15,12 +15,9 @@ import org.springframework.util.StringUtils;
 
 import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
-import pers.welisdoon.webserver.service.custom.config.TestConst;
+import pers.welisdoon.webserver.service.custom.config.CustomConst;
 import pers.welisdoon.webserver.service.custom.dao.*;
-import pers.welisdoon.webserver.service.custom.entity.CarVO;
-import pers.welisdoon.webserver.service.custom.entity.OrderVO;
-import pers.welisdoon.webserver.service.custom.entity.TacheVO;
-import pers.welisdoon.webserver.service.custom.entity.UserVO;
+import pers.welisdoon.webserver.service.custom.entity.*;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
@@ -31,14 +28,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
 @Service
 @VertxConfiguration
-public class TestService {
+public class RequestService {
 
     @Autowired
     OrderDao orderDao;
@@ -52,7 +48,7 @@ public class TestService {
     OperationDao operationDao;
     @Autowired
     SqlSessionTemplate sqlSessionTemplate;
-    private static final Logger logger = LoggerFactory.getLogger(TestService.class);
+    private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
 
     private static List<TacheVO> TACHE_VO_LIST;
     private static Map<Integer, Integer> ROLE_MAP;
@@ -87,6 +83,7 @@ public class TestService {
                                 TacheVO tacheVO = null;
                                 while (iterator.hasNext()) {
                                     if ((tacheVO = iterator.next()).getTacheId() == orderVO.getTacheId()) {
+
                                         tacheVO = iterator.hasNext() ? iterator.next() : null;
                                         break;
                                     }
@@ -132,7 +129,7 @@ public class TestService {
         Object resultObj = null;
         OrderVO orderVO;
         switch (mode) {
-            case TestConst.ADD:
+            case CustomConst.ADD:
                 orderVO = mapToObject(params, OrderVO.class);
                 orderVO.setTacheId(TACHE_VO_LIST.get(0).getTacheId());
                 orderVO.setOrderState(1);
@@ -140,18 +137,18 @@ public class TestService {
                 orderDao.add(orderVO);
                 resultObj = orderVO;
                 break;
-            case TestConst.DELETE:
+            case CustomConst.DELETE:
                 break;
-            case TestConst.MODIFY:
+            case CustomConst.MODIFY:
                 orderVO = mapToObject(params, OrderVO.class);
                 resultObj = orderDao.set(orderVO);
                 break;
-            case TestConst.GET:
+            case CustomConst.GET:
                 orderVO = mapToObject(params, OrderVO.class);
                 List list = orderDao.list(orderVO);
                 resultObj = list;
                 break;
-            case TestConst.ORDER.GET_WORK_NUMBER:
+            case CustomConst.ORDER.GET_WORK_NUMBER:
                 orderVO = mapToObject(params, OrderVO.class);
                 resultObj = orderDao.getWorkIngOrderNum(orderVO);
                 break;
@@ -167,20 +164,20 @@ public class TestService {
         Object resultObj = null;
         CarVO carVO = null;
         switch (mode) {
-            case TestConst.LIST:
+            case CustomConst.LIST:
                 carVO = mapToObject(params, CarVO.class);
                 resultObj = carDao.list(carVO);
                 break;
-            case TestConst.DELETE:
+            case CustomConst.DELETE:
                 carVO = mapToObject(params, CarVO.class);
                 resultObj = carDao.del(carVO);
                 break;
-            case TestConst.ADD:
+            case CustomConst.ADD:
                 carVO = mapToObject(params, CarVO.class);
                 carDao.add(carVO);
                 resultObj = carVO;
                 break;
-            case TestConst.MODIFY:
+            case CustomConst.MODIFY:
                 carVO = mapToObject(params, CarVO.class);
                 resultObj = carDao.set(carVO);
                 break;
@@ -195,7 +192,7 @@ public class TestService {
         Object resultObj = null;
         UserVO userVO = null;
         switch (mode) {
-            case TestConst.GET:
+            case CustomConst.GET:
                 userVO = mapToObject(params, UserVO.class);
                 resultObj = userDao.get(userVO);
                 break;
@@ -210,17 +207,59 @@ public class TestService {
         Object resultObj = null;
         TacheVO tacheVO;
         switch (mode) {
-            case TestConst.GET:
+            case CustomConst.GET:
                 tacheVO = mapToObject(params, TacheVO.class);
                 resultObj = tacheDao.list(tacheVO);
                 break;
-            case TestConst.LIST:
+            case CustomConst.LIST:
                 tacheVO = mapToObject(params, TacheVO.class);
                 List list = tacheDao.listAll(tacheVO);
                 resultObj = list;
                 break;
-            case TestConst.TACHE.GET_WORK_NUMBER:
+            case CustomConst.TACHE.GET_WORK_NUMBER:
                 resultObj = tacheDao.getProccess(params);
+                break;
+            default:
+                break;
+        }
+        return resultObj;
+    }
+
+    /*环节 操作 管理*/
+    public Object operationManager(int mode, Map params) {
+        Object resultObj = null;
+        OperationVO operationVO;
+        switch (mode) {
+            case CustomConst.GET:
+                operationVO = mapToObject(params, OperationVO.class);
+                resultObj = operationDao.list(operationVO);
+                break;
+            case CustomConst.LIST:
+                operationVO = mapToObject(params, OperationVO.class);
+                List list = operationDao.listAll(operationVO);
+                resultObj = list;
+                break;
+            default:
+                break;
+        }
+        return resultObj;
+    }
+
+    /*环节 操作 内部 管理*/
+    Object operationManager(int mode, OperationVO operationVO) {
+        Object resultObj = null;
+        switch (mode) {
+            case CustomConst.ADD:
+                operationDao.set(new OperationVO()
+                        .setActive(true)
+                        .setFinishTime(new Timestamp(System.currentTimeMillis()))
+                        .setOrderId(operationVO.getOrderId())
+                        .setOprMan(operationVO.getOprMan()));
+                resultObj = operationDao.add(operationVO);
+                break;
+            case CustomConst.GET:
+                List list = operationDao.list(operationVO);
+                resultObj = list;
                 break;
             default:
                 break;
@@ -232,7 +271,7 @@ public class TestService {
     public Object login(String userId) {
         JsonObject jsonObject = new JsonObject();
         if (!StringUtils.isEmpty(userId)) {
-            Object o = userManger(TestConst.GET, Map.of("id", userId));
+            Object o = userManger(CustomConst.GET, Map.of("id", userId));
             UserVO userVO;
             if (o == null) {
                 userVO = new UserVO().setId(userId);
@@ -244,14 +283,14 @@ public class TestService {
                 userVO = (UserVO) o;
                 jsonObject.put("user", JsonObject.mapFrom(o));
                 switch (userVO.getRole()) {
-                    case TestConst.ROLE.CUSTOMER:
-                        o = tacheManager(TestConst.TACHE.GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
+                    case CustomConst.ROLE.CUSTOMER:
+                        o = tacheManager(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
                         break;
-                    case TestConst.ROLE.WOCKER:
-                        o = orderManger(TestConst.ORDER.GET_WORK_NUMBER, Map.of("orderAppointPerson", userVO.getId()));
+                    case CustomConst.ROLE.WOCKER:
+                        o = orderManger(CustomConst.ORDER.GET_WORK_NUMBER, Map.of("orderAppointPerson", userVO.getId()));
                         break;
-                    case TestConst.ROLE.DISTRIBUTOR:
-                        o = orderManger(TestConst.ORDER.GET_WORK_NUMBER, Map.of("orderControlPerson", userVO.getId()));
+                    case CustomConst.ROLE.DISTRIBUTOR:
+                        o = orderManger(CustomConst.ORDER.GET_WORK_NUMBER, Map.of("orderControlPerson", userVO.getId()));
                         break;
 
                 }
