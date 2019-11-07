@@ -70,19 +70,23 @@
              info)
         VALUES (#{orderId},
                 #{tacheId},
-                #{oprMan})
+                #{oprMan},
+                #{info})
     </insert>
     <update id="set" parameterMap="OperationVO">
         UPDATE mysql.tache_operation a
         <set>
-            <if test="finishTime!=null and finishTime>=0">
-                and a.finish_time = #{finishTime}
+            <if test="finishTime!=null">
+                 a.finish_time = #{finishTime},
             </if>
             <if test="active!=null">
-                and a.is_active = #{active}
+                 a.is_active = #{active},
             </if>
             <if test="oprMan!=null and oprMan!=''.toString()">
-                and a.opr_man = #{oprMan}
+                 a.opr_man = #{oprMan},
+            </if>
+            <if test="info!=null and info!=''.toString()">
+                a.info = #{info},
             </if>
         </set>
         <where>
@@ -95,6 +99,7 @@
             <if test="tacheId>=0">
                 and a.tache_id = #{tacheId}
             </if>
+            and a.is_active = 1
         </where>
     </update>
 </mapper>

@@ -3,7 +3,7 @@ package pers.welisdoon.webserver.service.custom.entity;
 import java.sql.Timestamp;
 
 public class OrderVO {
-    private String orderId;
+    private Integer orderId;
     private String orderCode;
     private String carLicenseNumber;
     private String carAddress;
@@ -20,11 +20,11 @@ public class OrderVO {
     private double posX;
     private double posY;
 
-    public String getOrderId() {
+    public Integer getOrderId() {
         return orderId;
     }
 
-    public OrderVO setOrderId(String orderId) {
+    public OrderVO setOrderId(Integer orderId) {
         this.orderId = orderId;
         return this;
     }

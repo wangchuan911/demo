@@ -15,10 +15,20 @@ public class CustomConst {
 
     public static class ORDER {
         public final static int GET_WORK_NUMBER = 10;
+
+        public static class STATE {
+            public final static int RUNNING = 0;
+            public final static int WAIT_NEXT = 1;
+            public final static int END = 2;
+        }
     }
 
     public static class TACHE {
         public final static int GET_WORK_NUMBER = 10;
+
+        public static class STATE {
+            public final static int END = -2;
+        }
     }
 
     public static class CAR {

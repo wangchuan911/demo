@@ -2,8 +2,6 @@ package pers.welisdoon.webserver.service.custom.entity;
 
 import java.util.List;
 
-import org.apache.ibatis.type.Alias;
-
 public class TacheVO {
     private Integer tacheId;
     private String tacheName;
@@ -11,6 +9,7 @@ public class TacheVO {
     private Integer tampalateId;
     private List<TacheRela> tacheRelas;
     private String code;
+    private TacheVO nextTache;
 
     public String getCode() {
         return code;
@@ -89,5 +88,13 @@ public class TacheVO {
             this.childTaches = childTaches;
             return this;
         }
+    }
+
+    public TacheVO getNextTache() {
+        return nextTache;
+    }
+
+    public void setNextTache(TacheVO nextTache) {
+        this.nextTache = nextTache;
     }
 }

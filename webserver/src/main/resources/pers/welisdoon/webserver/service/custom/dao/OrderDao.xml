@@ -5,13 +5,13 @@
 <mapper namespace="pers.welisdoon.webserver.service.custom.dao.OrderDao">
 
     <parameterMap id="OrderVO" type="pers.welisdoon.webserver.service.custom.entity.OrderVO">
-        <parameter property="orderId" jdbcType="VARCHAR"></parameter>
+        <parameter property="orderId" jdbcType="INTEGER"></parameter>
         <parameter property="orderCode" jdbcType="VARCHAR"></parameter>
         <parameter property="carLicenseNumber" jdbcType="VARCHAR"></parameter>
         <parameter property="carAddress" jdbcType="VARCHAR"></parameter>
         <parameter property="createDate" jdbcType="TIMESTAMP"></parameter>
         <parameter property="finishDate" jdbcType="TIMESTAMP"></parameter>
-        <parameter property="orderState" jdbcType="VARCHAR"></parameter>
+        <parameter property="orderState" jdbcType="INTEGER"></parameter>
         <parameter property="orderControlPerson" jdbcType="VARCHAR"></parameter>
         <parameter property="orderAppointPerson" jdbcType="VARCHAR"></parameter>
         <parameter property="orderArrangeDate" jdbcType="TIMESTAMP"></parameter>
@@ -43,13 +43,13 @@
     </resultMap>
     <insert id="add" parameterMap="OrderVO" useGeneratedKeys="true" keyProperty="orderId">
         <include refid="insertThis"></include>
-        VALUES (#{orderId,jdbcType=VARCHAR},
+        VALUES (#{orderId,jdbcType=INTEGER},
         #{orderCode,jdbcType=VARCHAR},
         #{carLicenseNumber,jdbcType=VARCHAR},
         #{carAddress,jdbcType=VARCHAR},
         #{createDate,jdbcType=TIMESTAMP},
         #{finishDate,jdbcType=TIMESTAMP},
-        #{orderState,jdbcType=VARCHAR},
+        #{orderState,jdbcType=INTEGER},
         #{orderControlPerson,jdbcType=VARCHAR},
         #{orderAppointPerson,jdbcType=VARCHAR},
         #{orderArrangeDate,jdbcType=TIMESTAMP},
@@ -63,7 +63,7 @@
     <sql id="selectCondition">
         <where>
             <if test="orderId!=null and orderId!=''.toString()">
-                and order_id= #{orderId,jdbcType=VARCHAR}
+                and order_id= #{orderId,jdbcType=INTEGER}
             </if>
             <if test="orderCode!=null and orderCode!=''.toString()">
                 and order_code= #{orderCode,jdbcType=VARCHAR}
@@ -80,8 +80,8 @@
             <if test="finishDate!=null ">
                 and finish_date= #{finishDate,jdbcType=TIMESTAMP}
             </if>
-            <if test="orderState!=null and orderState!=''.toString()">
-                and order_state= #{orderState,jdbcType=VARCHAR}
+            <if test="orderState!=null ">
+                and order_state= #{orderState,jdbcType=INTEGER}
             </if>
             <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
                 and order_control_person= #{orderControlPerson,jdbcType=VARCHAR}
@@ -130,33 +130,64 @@
     </select>
 
     <update id="set" parameterMap="OrderVO">
-      update mysql.car_wash_order
-        set
-          order_code = #{orderCode,jdbcType=VARCHAR},
-          car_license_number = #{carLicenseNumber,jdbcType=VARCHAR},
-          car_address = #{carAddress,jdbcType=VARCHAR},
-          create_date = #{createDate,jdbcType=TIMESTAMP},
-          finish_date = #{finishDate,jdbcType=TIMESTAMP},
-          order_state = #{orderState,jdbcType=VARCHAR},
-          order_control_person = #{orderControlPerson,jdbcType=VARCHAR},
-          order_appoint_person = #{orderAppointPerson,jdbcType=VARCHAR},
-          order_arrange_date = #{orderArrangeDate,jdbcType=TIMESTAMP},
-          cust_id = #{custId,jdbcType=VARCHAR},
-          order_note = #{orderNote,jdbcType=VARCHAR},
-          service_id = #{serviceId,jdbcType=VARCHAR},
-          pos_x = #{posX,jdbcType=DOUBLE},
-          pos_y = #{posY,jdbcType=DOUBLE},
-          tache_id=#{tacheId,jdbcType=INTEGER}
-        where order_id = #{orderId,jdbcType=VARCHAR}
+        update mysql.car_wash_order
+        <set>
+            <if test="orderCode!=null and orderCode!=''.toString()">
+                order_code = #{orderCode,jdbcType=VARCHAR},
+            </if>
+            <if test="orderCode!=null and orderCode!=''.toString()">
+                car_license_number = #{carLicenseNumber,jdbcType=VARCHAR},
+            </if>
+            <if test="carAddress!=null and carAddress!=''.toString()">
+                car_address = #{carAddress,jdbcType=VARCHAR},
+            </if>
+            <if test="createDate!=null">
+                create_date = #{createDate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="finishDate!=null">
+                finish_date = #{finishDate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="orderState!=null ">
+                order_state = #{orderState,jdbcType=INTEGER},
+            </if>
+            <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
+                order_control_person = #{orderControlPerson,jdbcType=VARCHAR},
+            </if>
+            <if test="orderAppointPerson!=null and orderAppointPerson!=''.toString()">
+                order_appoint_person = #{orderAppointPerson,jdbcType=VARCHAR},
+            </if>
+            <if test="orderArrangeDate!=null">
+                order_arrange_date = #{orderArrangeDate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="custId!=null and custId!=''.toString()">
+                cust_id = #{custId,jdbcType=VARCHAR},
+            </if>
+            <if test="orderNote!=null and orderNote!=''.toString()">
+                order_note = #{orderNote,jdbcType=VARCHAR},
+            </if>
+            <if test="serviceId!=null and serviceId!=''.toString()">
+                service_id = #{serviceId,jdbcType=VARCHAR},
+            </if>
+            <if test="posX!=null">
+                pos_x = #{posX,jdbcType=DOUBLE},
+            </if>
+            <if test="posY!=null">
+                pos_y = #{posY,jdbcType=DOUBLE},
+            </if>
+            <if test="tacheId!=null and tacheId>=0">
+                tache_id=#{tacheId,jdbcType=INTEGER},
+            </if>
+        </set>
+        where order_id = #{orderId,jdbcType=INTEGER}
     </update>
     <sql id="mulSelect">
-        select #{orderId,jdbcType=VARCHAR} as orderId,
+        select #{orderId,jdbcType=INTEGER} as orderId,
         #{vo.orderCode,jdbcType=VARCHAR} as orderCode,
         #{vo.carLicenseNumber,jdbcType=VARCHAR} as carLicenseNumber,
         #{vo.carAddress,jdbcType=VARCHAR} as carAddress,
         #{vo.createDate,jdbcType=TIMESTAMP} as createDate,
         #{vo.finishDate,jdbcType=TIMESTAMP} as finishDate,
-        #{vo.orderState,jdbcType=VARCHAR} as orderState,
+        #{vo.orderState,jdbcType=INTEGER} as orderState,
         #{vo.orderControlPerson,jdbcType=VARCHAR} as orderControlPerson,
         #{vo.orderAppointPerson,jdbcType=VARCHAR} as orderAppointPerson,
         #{vo.orderArrangeDate,jdbcType=TIMESTAMP} as orderArrangeDate,
@@ -192,7 +223,7 @@
         cast(sum(IF(ISNULL(finish_date) ,0 , 1 ))as unsigned int) nums
         from mysql.car_wash_order a where
         <if test="orderId!=null and orderId!=''.toString()">
-            order_id= #{orderId,jdbcType=VARCHAR} and
+            order_id= #{orderId,jdbcType=INTEGER} and
         </if>
         <if test="orderCode!=null and orderCode!=''.toString()">
             order_code= #{orderCode,jdbcType=VARCHAR} and
@@ -206,8 +237,8 @@
         <if test="createDate!=null ">
             create_date= #{createDate,jdbcType=TIMESTAMP} and
         </if>
-        <if test="orderState!=null and orderState!=''.toString()">
-            order_state= #{orderState,jdbcType=VARCHAR} and
+        <if test="orderState!=null ">
+            order_state= #{orderState,jdbcType=INTEGER} and
         </if>
         <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
             order_control_person= #{orderControlPerson,jdbcType=VARCHAR} and
@@ -264,7 +295,7 @@
             </set>
             <where>
                 <if test="vo.orderId!=null and vo.orderId!=''.toString()">
-                    and order_id= #{vo.orderId,jdbcType=VARCHAR}
+                    and order_id= #{vo.orderId,jdbcType=INTEGER}
                 </if>
             </where>
         </foreach>

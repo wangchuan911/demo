@@ -25,6 +25,7 @@ import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -61,67 +62,61 @@ public class RequestService {
                 .collect(Collectors
                         .toMap(UserVO.RoleConfig::getRoleId
                                 , UserVO.RoleConfig::getLevel));
+
     }
 
-    /*定時任務*/
-    @VertxRegister(StandaredVerticle.class)
-    public Consumer<Vertx> createOrdderTimer() {
-        final OrderVO nextOrderVO = new OrderVO().setOrderState(1);
-        final String KEY = this.getClass().getName().toUpperCase();
-        final String URL_TOCKEN_LOCK = KEY + ".LOCK";
-        Consumer<Vertx> vertxConsumer = vertx1 -> {
-            SharedData sharedData = vertx1.sharedData();
-            Handler<Long> longHandler = aLong -> {
-                /*集群锁，防止重复处理和锁表*/
-                sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
-                    if (lockAsyncResult.succeeded()) {
-                        try {
-                            List<OrderVO> orderVOS = orderDao.list(nextOrderVO).stream().map(orderVO -> {
-                                OrderVO newOrderVO = new OrderVO()
-                                        .setOrderId(orderVO.getOrderId());
-                                Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
-                                TacheVO tacheVO = null;
-                                while (iterator.hasNext()) {
-                                    if ((tacheVO = iterator.next()).getTacheId() == orderVO.getTacheId()) {
-
-                                        tacheVO = iterator.hasNext() ? iterator.next() : null;
-                                        break;
-                                    }
-                                    else {
-                                        tacheVO = null;
-                                        continue;
-                                    }
-                                }
-                                if (tacheVO != null) {
-                                    newOrderVO.setTacheId(tacheVO.getTacheId());
-                                    newOrderVO.setOrderState(0);
-                                }
-                                else {
-                                    newOrderVO.setFinishDate(Timestamp.valueOf(LocalDateTime.now()));
-                                    newOrderVO.setOrderState(2);
-                                }
-                                return newOrderVO;
-                            }).collect(Collectors.toList());
-                            if (orderVOS.size() > 0) {
-                                orderDao.setAll(orderVOS);
-                            }
-                        }
-                        finally {
-                            Lock lock = lockAsyncResult.result();
-                            vertx1.setTimer(3 * 1000, aLong1 -> {
-                                lock.release();
-                            });
-                        }
+    /*扫单调用*/
+    public void toBeContinue() {
+        final OrderVO nextOrderVO = new OrderVO().setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
+        orderDao.list(nextOrderVO).stream().forEach(orderVO -> {
+            OrderVO newOrderVO = new OrderVO()
+                    .setOrderId(orderVO.getOrderId());
+            Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
+            TacheVO tacheVO = null;
+            while (iterator.hasNext()) {
+                if ((tacheVO = iterator.next()).getTacheId() == orderVO.getTacheId()) {
+                    if (tacheVO.getNextTache() == null) {
+                        tacheVO.setNextTache(iterator.hasNext() ?
+                                iterator.next() : new TacheVO().setTacheId(CustomConst.TACHE.STATE.END));
                     }
-                    else {
-                        logger.info(lockAsyncResult.cause().getMessage());
-                    }
-                });
-            };
-            /*5s*/
-            vertx1.setPeriodic(5 * 1000, longHandler);
-        };
-        return vertxConsumer;
+                    tacheVO = tacheVO.getNextTache();
+                    break;
+                }
+                else {
+                    tacheVO = null;
+                    continue;
+                }
+            }
+            if (tacheVO != null && tacheVO.getTacheId() >= 0) {
+                newOrderVO.setTacheId(tacheVO.getTacheId());
+                newOrderVO.setOrderState(CustomConst.ORDER.STATE.RUNNING);
+                orderDao.set(newOrderVO);
+                if (!CollectionUtils.isEmpty(tacheVO.getTacheRelas())) {
+                    tacheVO.getTacheRelas().stream().forEach(tacheRela -> {
+                        OperationVO operationVO = new OperationVO()
+                                .setOrderId(orderVO.getOrderId())
+                                .setTacheId(tacheRela.getChildTaches().get(0).getTacheId());
+                        switch (tacheRela.getRole()) {
+                            case CustomConst.ROLE.CUSTOMER:
+                                operationVO.setOprMan(orderVO.getCustId());
+                                break;
+                            case CustomConst.ROLE.DISTRIBUTOR:
+                                operationVO.setOprMan(orderVO.getOrderAppointPerson());
+                                break;
+                            case CustomConst.ROLE.WOCKER:
+                                operationVO.setOprMan(orderVO.getOrderControlPerson());
+                                break;
+                        }
+                        operationManager(CustomConst.ADD, operationVO);
+                    });
+                }
+            }
+            else {
+                newOrderVO.setFinishDate(Timestamp.valueOf(LocalDateTime.now()));
+                newOrderVO.setOrderState(CustomConst.ORDER.STATE.END);
+                orderDao.set(newOrderVO);
+            }
+        });
     }
 
     /*工单管理*/
@@ -132,7 +127,7 @@ public class RequestService {
             case CustomConst.ADD:
                 orderVO = mapToObject(params, OrderVO.class);
                 orderVO.setTacheId(TACHE_VO_LIST.get(0).getTacheId());
-                orderVO.setOrderState(1);
+                orderVO.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
                 orderVO.setOrderCode("");
                 orderDao.add(orderVO);
                 resultObj = orderVO;
@@ -251,11 +246,11 @@ public class RequestService {
         switch (mode) {
             case CustomConst.ADD:
                 operationDao.set(new OperationVO()
-                        .setActive(true)
+                        .setActive(false)
                         .setFinishTime(new Timestamp(System.currentTimeMillis()))
-                        .setOrderId(operationVO.getOrderId())
-                        .setOprMan(operationVO.getOprMan()));
-                resultObj = operationDao.add(operationVO);
+                        .setOprMan(operationVO.getOprMan())
+                        .setOrderId(operationVO.getOrderId()));
+                resultObj = operationDao.add(operationVO.setActive(true));
                 break;
             case CustomConst.GET:
                 List list = operationDao.list(operationVO);
@@ -275,7 +270,7 @@ public class RequestService {
             UserVO userVO;
             if (o == null) {
                 userVO = new UserVO().setId(userId);
-                userVO.setRole(0);
+                userVO.setRole(CustomConst.ROLE.CUSTOMER);
                 userVO.setName("新用戶");
                 jsonObject.put("user", JsonObject.mapFrom(userVO));
             }
@@ -305,7 +300,7 @@ public class RequestService {
     /*下一步*/
     public Object toBeContinue(Map map) {
         Object returnObj = 0;
-        String orderId = MapUtils.getString(map, "orderId", null);
+        Integer orderId = MapUtils.getInteger(map, "orderId", null);
         Integer tacheId = MapUtils.getInteger(map, "tacheId", null);
         String userId = MapUtils.getString(map, "userId", null);
         if (StringUtils.isEmpty(orderId)
@@ -317,11 +312,18 @@ public class RequestService {
         UserVO userInfo = userDao.get(new UserVO().setId(userId));
         OrderVO orderVO = orderDao.get(new OrderVO().setOrderId(orderId));
         TacheVO queryTacheVo = new TacheVO().setTacheId(tacheId);
-
-        for (TacheVO iteratorTempVo : TACHE_VO_LIST) {
+        Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
+        TacheVO orderTache = null;
+        while (iterator.hasNext()) {
+            TacheVO iteratorTempVo = iterator.next();
             if (iteratorTempVo.getTacheId() == orderVO.getTacheId()) {
+                orderTache = iteratorTempVo;
                 if (tacheId == iteratorTempVo.getTacheId()) {
                     queryTacheVo = iteratorTempVo;
+                    if (queryTacheVo.getNextTache() == null) {
+                        queryTacheVo.setNextTache(iterator.hasNext() ?
+                                iterator.next() : new TacheVO().setTacheId(CustomConst.TACHE.STATE.END));
+                    }
                     break;
                 }
                 else if (!CollectionUtils.isEmpty(iteratorTempVo.getTacheRelas())) {
@@ -334,10 +336,41 @@ public class RequestService {
             }
         }
         if (queryTacheVo == null) return null;
+
         /*流程有权限限制*/
-        TacheVO.TacheRela a = new TacheVO.TacheRela();
-        {
-            returnObj = orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(1));
+
+        boolean nextOrder = false;
+        boolean nextOperation = false;
+        /*为主环节，该环节没有关联环节,则让他往下走*/
+        if ((orderTache == queryTacheVo && orderTache.getTacheRelas().size() <= 0)) {
+            nextOrder = true;
+        }
+        /*不为主环节，且环节走到尽头*/
+        else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null && queryTacheVo.getNextTache().getTacheId() < 0)) {
+            //没有下一环节
+            nextOrder = true;
+            returnObj = new OperationVO().setOrderId(orderId).setTacheId(CustomConst.TACHE.STATE.END);
+        }
+        /*不管是不是主环节 有子环节都要处理*/
+        else {
+            nextOperation = true;
+        }
+        /*走工单*/
+        if (nextOrder) {
+            orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+        }
+        /*走工单子流程*/
+        if (nextOperation) {
+            OperationVO operationVO = operationDao.get(new OperationVO()
+                    .setOrderId(orderId)
+                    .setOprMan(userId).setTacheId(tacheId).setActive(true));
+            if (operationVO != null) {
+                operationManager(CustomConst.ADD, operationVO.setTacheId(queryTacheVo.getNextTache().getTacheId()));
+                if (CustomConst.TACHE.STATE.END == queryTacheVo.getNextTache().getTacheId()) {
+                    orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+                }
+                returnObj = operationVO;
+            }
         }
         return returnObj;
     }
@@ -356,6 +389,10 @@ public class RequestService {
             iteratorTempVo = tacheVOIterator.next();
             if (queryTache.getTacheId() == iteratorTempVo.getTacheId()) {
                 targetTacheVo = iteratorTempVo;
+                if (targetTacheVo.getNextTache() == null) {
+                    targetTacheVo.setNextTache(tacheVOIterator.hasNext() ?
+                            tacheVOIterator.next() : new TacheVO().setTacheId(CustomConst.TACHE.STATE.END));
+                }
                 break;
             }
             else if (!CollectionUtils.isEmpty(iteratorTempVo.getTacheRelas())) {
