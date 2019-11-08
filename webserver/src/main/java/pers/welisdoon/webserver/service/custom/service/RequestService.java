@@ -1,7 +1,5 @@
 package pers.welisdoon.webserver.service.custom.service;
 
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -13,23 +11,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import io.vertx.core.shareddata.Lock;
-import io.vertx.core.shareddata.SharedData;
 import pers.welisdoon.webserver.service.custom.config.CustomConst;
 import pers.welisdoon.webserver.service.custom.dao.*;
 import pers.welisdoon.webserver.service.custom.entity.*;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
-import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
-import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -51,17 +42,17 @@ public class RequestService {
     SqlSessionTemplate sqlSessionTemplate;
     private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
 
-    private static List<TacheVO> TACHE_VO_LIST;
-    private static Map<Integer, Integer> ROLE_MAP;
+    /*private static List<TacheVO> TACHE_VO_LIST;
+    private static Map<Integer, Integer> ROLE_MAP;*/
 
     @PostConstruct
     void init() {
-        TACHE_VO_LIST = tacheDao.listAll(new TacheVO().setTampalateId(1));
+        /*TACHE_VO_LIST = tacheDao.listAll(new TacheVO().setTampalateId(1));
         ROLE_MAP = userDao.listRoles()
                 .stream()
                 .collect(Collectors
                         .toMap(UserVO.RoleConfig::getRoleId
-                                , UserVO.RoleConfig::getLevel));
+                                , UserVO.RoleConfig::getLevel));*/
 
     }
 
@@ -71,8 +62,8 @@ public class RequestService {
         orderDao.list(nextOrderVO).stream().forEach(orderVO -> {
             OrderVO newOrderVO = new OrderVO()
                     .setOrderId(orderVO.getOrderId());
-            Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
             TacheVO tacheVO = null;
+            /*Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
             while (iterator.hasNext()) {
                 if ((tacheVO = iterator.next()).getTacheId() == orderVO.getTacheId()) {
                     if (tacheVO.getNextTache() == null) {
@@ -86,7 +77,8 @@ public class RequestService {
                     tacheVO = null;
                     continue;
                 }
-            }
+            }*/
+            tacheVO = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
             if (tacheVO != null && tacheVO.getTacheId() >= 0) {
                 newOrderVO.setTacheId(tacheVO.getTacheId());
                 newOrderVO.setOrderState(CustomConst.ORDER.STATE.RUNNING);
@@ -106,12 +98,13 @@ public class RequestService {
                             case CustomConst.ROLE.WOCKER:
                                 operationVO.setOprMan(orderVO.getOrderControlPerson());
                                 break;
+                            default:
+                                return;
                         }
                         operationManager(CustomConst.ADD, operationVO);
                     });
                 }
-            }
-            else {
+            } else {
                 newOrderVO.setFinishDate(Timestamp.valueOf(LocalDateTime.now()));
                 newOrderVO.setOrderState(CustomConst.ORDER.STATE.END);
                 orderDao.set(newOrderVO);
@@ -126,7 +119,8 @@ public class RequestService {
         switch (mode) {
             case CustomConst.ADD:
                 orderVO = mapToObject(params, OrderVO.class);
-                orderVO.setTacheId(TACHE_VO_LIST.get(0).getTacheId());
+                /* orderVO.setTacheId(TACHE_VO_LIST.get(0).getTacheId());*/
+                orderVO.setTacheId(CustomConst.TACHE.FIRST_TACHE.getTacheId());
                 orderVO.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
                 orderVO.setOrderCode("");
                 orderDao.add(orderVO);
@@ -225,6 +219,8 @@ public class RequestService {
         Object resultObj = null;
         OperationVO operationVO;
         switch (mode) {
+            case CustomConst.ADD:
+                break;
             case CustomConst.GET:
                 operationVO = mapToObject(params, OperationVO.class);
                 resultObj = operationDao.list(operationVO);
@@ -235,6 +231,8 @@ public class RequestService {
                 resultObj = list;
                 break;
             default:
+                operationVO = mapToObject(params, OperationVO.class);
+                resultObj = operationManager(mode, operationVO);
                 break;
         }
         return resultObj;
@@ -273,8 +271,7 @@ public class RequestService {
                 userVO.setRole(CustomConst.ROLE.CUSTOMER);
                 userVO.setName("新用戶");
                 jsonObject.put("user", JsonObject.mapFrom(userVO));
-            }
-            else {
+            } else {
                 userVO = (UserVO) o;
                 jsonObject.put("user", JsonObject.mapFrom(o));
                 switch (userVO.getRole()) {
@@ -312,8 +309,8 @@ public class RequestService {
         UserVO userInfo = userDao.get(new UserVO().setId(userId));
         OrderVO orderVO = orderDao.get(new OrderVO().setOrderId(orderId));
         TacheVO queryTacheVo = new TacheVO().setTacheId(tacheId);
-        Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
         TacheVO orderTache = null;
+        /*Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
         while (iterator.hasNext()) {
             TacheVO iteratorTempVo = iterator.next();
             if (iteratorTempVo.getTacheId() == orderVO.getTacheId()) {
@@ -334,7 +331,10 @@ public class RequestService {
                     queryTacheVo = null;
                 }
             }
-        }
+        }*/
+        orderTache = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId());
+        queryTacheVo = CustomConst.TACHE.TACHE_MAP.get(tacheId);
+
         if (queryTacheVo == null) return null;
 
         /*流程有权限限制*/
@@ -375,7 +375,7 @@ public class RequestService {
         return returnObj;
     }
 
-    private static TacheVO findTache(TacheVO queryTache, List<TacheVO> fullTaches, UserVO userinfo) {
+    /*private static TacheVO findTache(TacheVO queryTache, List<TacheVO> fullTaches, UserVO userinfo) {
         if (queryTache == null
                 || queryTache.getTacheId() == null
                 || queryTache.getTacheId() < 0) {
@@ -396,7 +396,7 @@ public class RequestService {
                 break;
             }
             else if (!CollectionUtils.isEmpty(iteratorTempVo.getTacheRelas())) {
-                /*for (TacheVO.TacheRela tmepRela : tmepVo.getTacheRelas()) {
+                *//*for (TacheVO.TacheRela tmepRela : tmepVo.getTacheRelas()) {
                     if (ROLE_MAP.get(tmepRela.getRole()) >= userinfo.getLevel()) {
                         tmepVo = findTache(queryTache, tmepRela.getChildTaches(), userinfo);
                         if (tmepVo != null) {
@@ -404,7 +404,7 @@ public class RequestService {
                             break;
                         }
                     }
-                }*/
+                }*//*
                 targetTacheVo = findTache(queryTache, iteratorTempVo, userinfo);
                 if (targetTacheVo != null) break;
             }
@@ -415,7 +415,7 @@ public class RequestService {
     private static TacheVO findTache(TacheVO queryTache, TacheVO iteratorTempVo, UserVO userinfo) {
         TacheVO targetTacheVo = null;
         for (TacheVO.TacheRela tmepRela : iteratorTempVo.getTacheRelas()) {
-            if (ROLE_MAP.get(tmepRela.getRole()) >= userinfo.getLevel()) {
+            if (CustomConst.ROLE.ROLE_MAP.get(tmepRela.getRole()) >= userinfo.getLevel()) {
                 iteratorTempVo = findTache(queryTache, tmepRela.getChildTaches(), userinfo);
                 if (iteratorTempVo != null) {
                     targetTacheVo = iteratorTempVo;
@@ -424,7 +424,7 @@ public class RequestService {
             }
         }
         return targetTacheVo;
-    }
+    }*/
 
     private static <T> T mapToObject(Map params, Class<T> type) {
         return JsonObject.mapFrom(params).mapTo(type);

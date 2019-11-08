@@ -17,8 +17,8 @@ public class OrderVO {
     private String serviceId;
     private String orderNote;
     private Integer tacheId;
-    private double posX;
-    private double posY;
+    private Double posX;
+    private Double posY;
 
     public Integer getOrderId() {
         return orderId;
@@ -128,20 +128,20 @@ public class OrderVO {
         return this;
     }
 
-    public double getPosX() {
+    public Double getPosX() {
         return posX;
     }
 
-    public OrderVO setPosX(double posX) {
+    public OrderVO setPosX(Double posX) {
         this.posX = posX;
         return this;
     }
 
-    public double getPosY() {
+    public Double getPosY() {
         return posY;
     }
 
-    public OrderVO setPosY(double posY) {
+    public OrderVO setPosY(Double posY) {
         this.posY = posY;
         return this;
     }
