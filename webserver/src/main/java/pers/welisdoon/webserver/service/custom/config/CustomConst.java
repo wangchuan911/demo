@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.util.CollectionUtils;
-
 import pers.welisdoon.webserver.service.custom.entity.TacheVO;
 import pers.welisdoon.webserver.service.custom.entity.UserVO;
 
@@ -61,7 +59,7 @@ public class CustomConst {
                 if (pre != null) {
                     pre.setNextTache(cur);
                 }
-                if (!CollectionUtils.isEmpty(cur.getTacheRelas())) {
+                if (cur.getTacheRelas() != null && cur.getTacheRelas().size() > 0) {
                     cur.getTacheRelas().forEach(tacheRela -> {
                         ergodic(tacheRela.getChildTaches());
                     });
