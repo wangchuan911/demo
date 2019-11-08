@@ -3,9 +3,13 @@ package pers.welisdoon.webserver.service.custom.config;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +32,14 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import pers.welisdoon.webserver.common.ApplicationContextProvider;
 import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
 import pers.welisdoon.webserver.common.web.Requset;
+import pers.welisdoon.webserver.service.custom.dao.TacheDao;
+import pers.welisdoon.webserver.service.custom.dao.UserDao;
+import pers.welisdoon.webserver.service.custom.entity.TacheVO;
+import pers.welisdoon.webserver.service.custom.entity.UserVO;
 import pers.welisdoon.webserver.service.custom.service.RequestService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
@@ -54,6 +63,18 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             System.out.println(commonAsynService);
         };
         return vertxConsumer;
+    }
+
+    @PostConstruct
+    void initValue() {
+
+        TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
+        UserDao userDao = ApplicationContextProvider.getBean(UserDao.class);
+        CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
+        CustomConst.ROLE.initRoleMapValue(userDao.listRoles());
+
+
+
     }
 
     /*定時任務*/
