@@ -11,6 +11,7 @@ public class OperationVO {
     private Boolean active;
     private String oprMan;
     private String info;
+    private TacheVO tacheVO;
 
     public Integer getOperationId() {
         return operationId;
@@ -81,6 +82,15 @@ public class OperationVO {
 
     public OperationVO setInfo(String info) {
         this.info = info;
+        return this;
+    }
+
+    public TacheVO getTacheVO() {
+        return tacheVO;
+    }
+
+    public OperationVO setTacheVO(TacheVO tacheVO) {
+        this.tacheVO = tacheVO;
         return this;
     }
 }

@@ -23,6 +23,21 @@
         <result column="opr_man" property="oprMan"></result>
         <result column="info" property="info"></result>
     </resultMap>
+    <resultMap id="OperationVO_ALL" type="pers.welisdoon.webserver.service.custom.entity.OperationVO">
+        <result column="operation_id" property="operationId"></result>
+        <result column="order_id" property="orderId"></result>
+        <result column="tache_id" property="tacheId"></result>
+        <result column="start_time" property="startTime"></result>
+        <result column="finish_time" property="finishTime"></result>
+        <result column="is_active" property="active"></result>
+        <result column="opr_man" property="oprMan"></result>
+        <result column="info" property="info"></result>
+        <association property="tacheVO"
+                     select="pers.welisdoon.webserver.service.custom.dao.TacheDao.get" column="tacheId=tache_id"
+                     javaType="pers.welisdoon.webserver.service.custom.entity.TacheVO">
+        </association>
+    </resultMap>
+
     <sql id="whereOperationVO">
         <where>
             <if test="operationId!=null and operationId>=0">
@@ -58,6 +73,10 @@
         select * from mysql.tache_operation a
         <include refid="whereOperationVO"></include>
     </select>
+    <select id="listAll" parameterMap="OperationVO" resultMap="OperationVO_ALL">
+        select * from mysql.tache_operation a
+        <include refid="whereOperationVO"></include>
+    </select>
 
     <insert id="add" parameterMap="OperationVO">
         INSERT INTO mysql.tache_operation
@@ -74,13 +93,13 @@
         UPDATE mysql.tache_operation a
         <set>
             <if test="finishTime!=null">
-                 a.finish_time = #{finishTime},
+                a.finish_time = #{finishTime},
             </if>
             <if test="active!=null">
-                 a.is_active = #{active},
+                a.is_active = #{active},
             </if>
             <if test="oprMan!=null and oprMan!=''.toString()">
-                 a.opr_man = #{oprMan},
+                a.opr_man = #{oprMan},
             </if>
             <if test="info!=null and info!=''.toString()">
                 a.info = #{info},
@@ -99,4 +118,9 @@
             and a.is_active = 1
         </where>
     </update>
+
+    <select id="num" resultType="int" parameterMap="OperationVO">
+        select count(operation_id) from mysql.tache_operation a
+        <include refid="whereOperationVO"></include>
+    </select>
 </mapper>

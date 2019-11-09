@@ -37,6 +37,7 @@ public class CustomConst {
 
         public static class STATE {
             public final static int END = -2;
+            public final static int WAIT = -1;
         }
 
         public static Map<Integer, TacheVO> TACHE_MAP = new HashMap<>();
