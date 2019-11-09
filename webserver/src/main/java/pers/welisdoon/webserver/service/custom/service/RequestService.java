@@ -109,11 +109,11 @@ public class RequestService {
                 newOrderVO.setOrderState(CustomConst.ORDER.STATE.END);
                 orderDao.set(newOrderVO);
             }*/
-            this.toBeContinue(orderVO);
+            this.toBeContinue(orderVO, null);
         });
     }
 
-    void toBeContinue(OrderVO orderVO) {
+    void toBeContinue(OrderVO orderVO, Integer role) {
         OrderVO newOrderVO = new OrderVO()
                 .setOrderId(orderVO.getOrderId());
         TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
@@ -138,10 +138,32 @@ public class RequestService {
                             operationVO.setOprMan(orderVO.getOrderControlPerson());
                             break;
                         default:
-                            return;
+                            continue;
                     }
                     operationManager(CustomConst.ADD, operationVO);
                 }
+            } else if (role != null) {
+                OperationVO operationVO = new OperationVO()
+                        .setTacheId(tacheVO.getTacheId())
+                        .setOrderId(orderVO.getOrderId());
+                switch (role) {
+                    case CustomConst.ROLE.CUSTOMER:
+                        operationVO.setOprMan(orderVO.getCustId());
+                        break;
+                    case CustomConst.ROLE.DISTRIBUTOR:
+                        operationVO.setOprMan(orderVO.getOrderAppointPerson());
+                        break;
+                    case CustomConst.ROLE.WOCKER:
+                        operationVO.setOprMan(orderVO.getOrderControlPerson());
+                        break;
+                }
+                if (!StringUtils.isEmpty(operationVO.getOprMan()))
+                    operationManager(CustomConst.ADD, operationVO);
+            } else {
+                operationDao.set(new OperationVO()
+                        .setActive(false)
+                        .setFinishTime(new Timestamp(System.currentTimeMillis()))
+                        .setOrderId(orderVO.getOrderId()));
             }
         } else {
             newOrderVO.setFinishDate(Timestamp.valueOf(LocalDateTime.now()));
@@ -170,10 +192,14 @@ public class RequestService {
                 orderVO = mapToObject(params, OrderVO.class);
                 resultObj = orderDao.set(orderVO);
                 break;
-            case CustomConst.GET:
+            case CustomConst.LIST:
                 orderVO = mapToObject(params, OrderVO.class);
                 List list = orderDao.list(orderVO);
                 resultObj = list;
+                break;
+            case CustomConst.GET:
+                orderVO = mapToObject(params, OrderVO.class);
+                resultObj = orderDao.get(orderVO);
                 break;
             case CustomConst.ORDER.GET_WORK_NUMBER:
                 orderVO = mapToObject(params, OrderVO.class);
@@ -334,7 +360,7 @@ public class RequestService {
 
     /*下一步*/
     public Object toBeContinue(Map map) {
-        Object returnObj = 0;
+        Object returnObj = null;
         Integer orderId = MapUtils.getInteger(map, "orderId", null);
         Integer tacheId = MapUtils.getInteger(map, "tacheId", null);
         String userId = MapUtils.getString(map, "userId", null);
@@ -389,7 +415,6 @@ public class RequestService {
         else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null && queryTacheVo.getNextTache().getTacheId() < 0)) {
             //没有下一环节
             nextOrder = true;
-            returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.END);
         }
         /*不管是不是主环节 有子环节都要处理*/
         else {
@@ -397,10 +422,16 @@ public class RequestService {
         }
         /*走工单*/
         if (nextOrder) {
-            orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
-        }
-        /*走工单子流程*/
-        if (nextOperation) {
+            if (doNext) {
+                /*直接触发过单*/
+                this.toBeContinue(orderVO, userInfo.getRole());
+                returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.END);
+            } else {
+                orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+                returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.WAIT);
+            }
+        } else if (nextOperation) {
+            /*走工单子流程*/
             OperationVO operationVO = operationDao.get(new OperationVO()
                     .setOrderId(orderVO.getOrderId())
                     .setOprMan(userInfo.getId()).setTacheId(tacheId).setActive(true));
@@ -413,7 +444,7 @@ public class RequestService {
                         operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
                     } else if (doNext) {
                         /*直接触发过单*/
-                        this.toBeContinue(orderVO);
+                        this.toBeContinue(orderVO, userInfo.getRole());
                     } else
                         /*提交到扫单触发过单*/
                         orderDao.set(new OrderVO()
