@@ -78,7 +78,10 @@
                 and create_date= #{createDate,jdbcType=TIMESTAMP}
             </if>
             <if test="finishDate!=null ">
-                and finish_date= #{finishDate,jdbcType=TIMESTAMP}
+                and finish_date is not null
+            </if>
+            <if test="finishDate==null ">
+                and finish_date  is null
             </if>
             <if test="orderState!=null ">
                 and order_state= #{orderState,jdbcType=INTEGER}
@@ -122,6 +125,7 @@
     <select id="list" parameterMap="OrderVO" resultMap="OrderVO">
         select * from mysql.car_wash_order a
         <include refid="selectCondition"></include>
+        order by a.create_date desc
     </select>
     <select id="get" parameterMap="OrderVO" resultMap="OrderVO">
         select * from mysql.car_wash_order a
