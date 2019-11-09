@@ -9,7 +9,7 @@
         <parameter property="tacheId" jdbcType="INTEGER"></parameter>
         <parameter property="startTime" jdbcType="TIMESTAMP"></parameter>
         <parameter property="finishTime" jdbcType="TIMESTAMP"></parameter>
-        <parameter property="active" jdbcType="BOOLEAN"></parameter>
+        <parameter property="active" jdbcType="BIT"></parameter>
         <parameter property="oprMan" jdbcType="VARCHAR"></parameter>
         <parameter property="info" jdbcType="VARCHAR"></parameter>
     </parameterMap>
@@ -25,39 +25,36 @@
     </resultMap>
     <sql id="whereOperationVO">
         <where>
-            <if test="operationId>=0">
-                and a.operation_id = #{operationId}
+            <if test="operationId!=null and operationId>=0">
+                and a.operation_id = #{operationId,jdbcType=INTEGER}
             </if>
-            <if test="orderId>=0">
-                and a.order_id = #{orderId}
+            <if test="orderId!=null and orderId>=0">
+                and a.order_id = #{orderId,jdbcType=INTEGER}
             </if>
-            <if test="tacheId>=0">
-                and a.tache_id = #{tacheId}
+            <if test="tacheId!=null and tacheId>=0">
+                and a.tache_id = #{tacheId,jdbcType=INTEGER}
             </if>
             <if test="startTime!=null and startTime>=0">
-                and a.start_time = #{startTime}
+                and a.start_time = #{startTime,jdbcType=TIMESTAMP}
             </if>
             <if test="finishTime!=null and finishTime>=0">
-                and a.finish_time = #{finishTime}
+                and a.finish_time = #{finishTime,jdbcType=TIMESTAMP}
             </if>
             <if test="active!=null">
-                and a.is_active = #{active}
-            </if>
-            <if test="active==null">
-                and a.is_active = 1
+                and a.is_active = #{active,jdbcType=BOOLEAN}
             </if>
             <if test="oprMan!=null and oprMan!=''.toString()">
-                and a.opr_man = #{oprMan}
+                and a.opr_man = #{oprMan,jdbcType=VARCHAR}
             </if>
         </where>
     </sql>
 
-    <select id="get" parameterMap="OperationVO" resultType="OperationVO">
+    <select id="get" parameterMap="OperationVO" resultMap="OperationVO">
         select * from mysql.tache_operation a
         <include refid="whereOperationVO"></include>
     </select>
 
-    <select id="list" parameterMap="OperationVO" resultType="OperationVO">
+    <select id="list" parameterMap="OperationVO" resultMap="OperationVO">
         select * from mysql.tache_operation a
         <include refid="whereOperationVO"></include>
     </select>
@@ -90,13 +87,13 @@
             </if>
         </set>
         <where>
-            <if test="operationId>=0">
+            <if test="operationId!=null and operationId>=0">
                 and a.operation_id = #{operationId}
             </if>
-            <if test="orderId>=0">
+            <if test="orderId!=null and orderId>=0">
                 and a.order_id = #{orderId}
             </if>
-            <if test="tacheId>=0">
+            <if test="tacheId!=null and tacheId>=0">
                 and a.tache_id = #{tacheId}
             </if>
             and a.is_active = 1

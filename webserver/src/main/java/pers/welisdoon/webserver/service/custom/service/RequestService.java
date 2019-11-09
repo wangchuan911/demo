@@ -308,9 +308,9 @@ public class RequestService {
 
         UserVO userInfo = userDao.get(new UserVO().setId(userId));
         OrderVO orderVO = orderDao.get(new OrderVO().setOrderId(orderId));
-        TacheVO queryTacheVo = new TacheVO().setTacheId(tacheId);
+        /*TacheVO queryTacheVo = new TacheVO().setTacheId(tacheId);
         TacheVO orderTache = null;
-        /*Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
+        Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
         while (iterator.hasNext()) {
             TacheVO iteratorTempVo = iterator.next();
             if (iteratorTempVo.getTacheId() == orderVO.getTacheId()) {
@@ -332,8 +332,8 @@ public class RequestService {
                 }
             }
         }*/
-        orderTache = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId());
-        queryTacheVo = CustomConst.TACHE.TACHE_MAP.get(tacheId);
+        TacheVO orderTache = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId());
+        TacheVO queryTacheVo = CustomConst.TACHE.TACHE_MAP.get(tacheId);
 
         if (queryTacheVo == null) return null;
 
@@ -349,7 +349,7 @@ public class RequestService {
         else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null && queryTacheVo.getNextTache().getTacheId() < 0)) {
             //没有下一环节
             nextOrder = true;
-            returnObj = new OperationVO().setOrderId(orderId).setTacheId(CustomConst.TACHE.STATE.END);
+            returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.END);
         }
         /*不管是不是主环节 有子环节都要处理*/
         else {
@@ -362,12 +362,14 @@ public class RequestService {
         /*走工单子流程*/
         if (nextOperation) {
             OperationVO operationVO = operationDao.get(new OperationVO()
-                    .setOrderId(orderId)
-                    .setOprMan(userId).setTacheId(tacheId).setActive(true));
+                    .setOrderId(orderVO.getOrderId())
+                    .setOprMan(userInfo.getId()).setTacheId(tacheId).setActive(true));
             if (operationVO != null) {
                 operationManager(CustomConst.ADD, operationVO.setTacheId(queryTacheVo.getNextTache().getTacheId()));
                 if (CustomConst.TACHE.STATE.END == queryTacheVo.getNextTache().getTacheId()) {
-                    orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+                    orderDao.set(new OrderVO()
+                            .setOrderId(orderVO.getOrderId())
+                            .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
                 }
                 returnObj = operationVO;
             }
