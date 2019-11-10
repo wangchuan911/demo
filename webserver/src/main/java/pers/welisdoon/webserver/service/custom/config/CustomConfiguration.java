@@ -1,9 +1,6 @@
 package pers.welisdoon.webserver.service.custom.config;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -11,6 +8,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,6 @@ import pers.welisdoon.webserver.common.web.Requset;
 import pers.welisdoon.webserver.service.custom.dao.TacheDao;
 import pers.welisdoon.webserver.service.custom.dao.UserDao;
 import pers.welisdoon.webserver.service.custom.entity.TacheVO;
-import pers.welisdoon.webserver.service.custom.entity.UserVO;
 import pers.welisdoon.webserver.service.custom.service.RequestService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
@@ -74,7 +72,6 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         CustomConst.ROLE.initRoleMapValue(userDao.listRoles());
 
 
-
     }
 
     /*定時任務*/
@@ -90,15 +87,13 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                     if (lockAsyncResult.succeeded()) {
                         try {
                             requestService.toBeContinue();
-                        }
-                        finally {
+                        } finally {
                             Lock lock = lockAsyncResult.result();
                             vertx1.setTimer(3 * 1000, aLong1 -> {
                                 lock.release();
                             });
                         }
-                    }
-                    else {
+                    } else {
                         logger.info(lockAsyncResult.cause().getMessage());
                     }
                 });
@@ -111,10 +106,12 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
+        final String PATH_WX_APP = "/wxApp";
+        final String PATH_WX_APP_UPLOAD = "/imgUpd";
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
         WebClient webClient = WebClient.create(vertx);
         Consumer<Router> routerConsumer = router -> {
-            router.get("/wxApp").handler(routingContext -> {
+            router.get(PATH_WX_APP).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 MultiMap multiMap = routingContext.request().params();
                 int code;
@@ -153,8 +150,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                         }*/
                                         jsonObject.mergeIn((JsonObject) requestService.login(userId));
                                         routingContext.response().end(jsonObject.toBuffer());
-                                    }
-                                    else {
+                                    } else {
                                         routingContext.fail(httpResponseAsyncResult.cause());
                                     }
                                 });
@@ -170,8 +166,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                             if (stringAsyncResult.succeeded()) {
                                 routingContext.response().end(stringAsyncResult.result());
                                 System.out.println();
-                            }
-                            else {
+                            } else {
                                 routingContext.fail(500, stringAsyncResult.cause());
                             }
                         });
@@ -181,7 +176,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             }).failureHandler(routingContext -> {
                 routingContext.response().end(routingContext.failure().toString());
             });
-            router.post("/wxApp").handler(routingContext -> {
+            router.post(PATH_WX_APP).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 JsonArray jsonArray = routingContext.getBodyAsJsonArray();
                 Requset requset = new Requset()
@@ -193,8 +188,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 commonAsynService.requsetCall(requset, stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
-                    }
-                    else {
+                    } else {
                         routingContext.fail(500, stringAsyncResult.cause());
                     }
                 });
@@ -202,45 +196,58 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             }).failureHandler(routingContext -> {
                 routingContext.response().end(routingContext.failure().toString());
             });
-            {
-                Router subRouter = Router.router(vertx);
-                subRouter.post("/imgUpd").blockingHandler(routingContext -> {
+
+            logger.info("inital request mapping: " + PATH_WX_APP);
+
+            router.post(PATH_WX_APP_UPLOAD).blockingHandler(routingContext -> {
+                try {
                     HttpServerRequest httpServerRequest = routingContext.request();
+                    HttpServerResponse httpServerResponse = routingContext.response();
                     Set<FileUpload> fileUploads = routingContext.fileUploads();
-                    Iterator<FileUpload> iterator = fileUploads.iterator();
-                    FileUpload fileUpload = null;
-                    while (iterator.hasNext()) {
-                        fileUpload = iterator.next();
-                        break;
+                    if (fileUploads == null || fileUploads.size() != 1) {
+                        httpServerResponse.setStatusCode(404).end();
+                        return;
                     }
-                    File file = null;
-                    if (fileUpload != null && (file = new File(fileUpload.uploadedFileName())).exists()) {
-                        try {
-                            byte[] bytes = new FileInputStream(file).readAllBytes();
-                            String id = httpServerRequest.params().get("id");
-                            String relaId = httpServerRequest.params().get("relaId");
-                            String typeId = httpServerRequest.params().get("typeId");
-                            /*customDao.saveImage(Map.of("picture_id", id,
-                                    "picture_name", fileUpload.fileName(),
-                                    "picture_storage", bytes,
-                                    "related_id", relaId,
-                                    "related_type_id", typeId));*/
-
+                    FileUpload fileUpload = fileUploads.iterator().next();
+                    Requset requset = new Requset()
+                            .setService(REQUEST_NAME)
+                            .setMethod("uploadFile")
+                            .setBody(new JsonArray()
+                                    .add(new JsonObject()
+                                            .put("uploadedFileName", fileUpload.uploadedFileName())
+                                            .put("name", fileUpload.name())
+                                            .put("charSet", fileUpload.charSet())
+                                            .put("contentType", fileUpload.contentType())
+                                            .put("size", fileUpload.size())
+                                            .put("fileName", fileUpload.fileName())
+                                            .put("contentTransferEncoding", fileUpload.contentTransferEncoding()))
+                                    .add(JsonObject.mapFrom(httpServerRequest.formAttributes().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))))
+                            .putParams(httpServerRequest.params())
+                            .putSession(routingContext.session());
+                    commonAsynService.requsetCall(requset, stringAsyncResult -> {
+                        if (stringAsyncResult.succeeded()) {
+                            httpServerResponse.end(stringAsyncResult.result().toJson().toBuffer());
+                        } else {
+                            routingContext.fail(500, stringAsyncResult.cause());
                         }
-                        catch (Throwable e) {
-                            e.printStackTrace();
-                        }
-                    }
+                        vertx.fileSystem().delete(fileUpload.uploadedFileName(), voidAsyncResult -> {
+                        });
+                    });
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    routingContext.fail(500, e);
+                }
 
-                });
-                subRouter.post("/imgDl/:picType/:picId").handler(routingContext -> {
-                    String picType = routingContext.request().getParam("picType");
-                    String picId = routingContext.request().getParam("picId");
-                    routingContext.response().sendFile("");
-                });
-                router.mountSubRouter("/wxApp", subRouter);
-            }
-            logger.info("inital request mapping: /wxApp");
+            });
+
+            logger.info("inital request mapping: " + PATH_WX_APP_UPLOAD);
+
+            router.get("/imgDl/:picType/:picId").handler(routingContext -> {
+                String picType = routingContext.request().getParam("picType");
+                String picId = routingContext.request().getParam("picId");
+                routingContext.response().sendFile("");
+            });
+
         };
         return routerConsumer;
     }

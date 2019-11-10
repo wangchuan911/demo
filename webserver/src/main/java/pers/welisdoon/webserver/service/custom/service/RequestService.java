@@ -1,5 +1,6 @@
 package pers.welisdoon.webserver.service.custom.service;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -11,14 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import pers.welisdoon.webserver.common.StreamUtils;
 import pers.welisdoon.webserver.service.custom.config.CustomConst;
 import pers.welisdoon.webserver.service.custom.dao.*;
 import pers.welisdoon.webserver.service.custom.entity.*;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 
+import java.io.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +40,8 @@ public class RequestService {
     CarDao carDao;
     @Autowired
     OperationDao operationDao;
+    @Autowired
+    PictureDao pictureDao;
     @Autowired
     SqlSessionTemplate sqlSessionTemplate;
     private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
@@ -142,14 +146,13 @@ public class RequestService {
                     }
                     operationManager(CustomConst.ADD, operationVO);
                 }
-            } else if (operation != null) {
+            } else if (operation != null && !StringUtils.isEmpty(operation.getOprMan())) {
                 OperationVO operationVO = new OperationVO()
                         .setTacheId(tacheVO.getTacheId())
                         .setOrderId(orderVO.getOrderId())
                         .setOprMan(operation.getOprMan())
                         .setInfo(operation.getInfo());
-                if (!StringUtils.isEmpty(operationVO.getOprMan()))
-                    operationManager(CustomConst.ADD, operationVO);
+                operationManager(CustomConst.ADD, operationVO);
             } else {
                 operationDao.set(new OperationVO()
                         .setActive(false)
@@ -453,6 +456,33 @@ public class RequestService {
                 returnObj = operationVO;
             }
         }
+        return returnObj;
+    }
+
+    public Object uploadFile(Map fileUpload, Map map) {
+        InputStream inputStream = null;
+        ByteArrayOutputStream outputStream = null;
+        Object returnObj = null;
+        try {
+            inputStream = new FileInputStream(new File(MapUtils.getString(fileUpload, "uploadedFileName")));
+            outputStream = new ByteArrayOutputStream();
+            StreamUtils.writeStream(inputStream, outputStream);
+            byte[] bytes = outputStream.toByteArray();
+            PictureVO pictureVO = new PictureVO()
+                    .setData(bytes)
+                    .setName(MapUtils.getString(fileUpload, "fileName"))
+                    .setOrderId(MapUtils.getInteger(map, "orderId"))
+                    .setTacheId(MapUtils.getInteger(map, "tacheId"));
+            pictureDao.add(pictureVO);
+            returnObj = pictureVO.setData(null);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        } finally {
+            StreamUtils.close(inputStream);
+            StreamUtils.close(outputStream);
+        }
+
+
         return returnObj;
     }
 
