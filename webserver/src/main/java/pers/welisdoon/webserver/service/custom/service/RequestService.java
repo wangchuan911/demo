@@ -113,7 +113,7 @@ public class RequestService {
         });
     }
 
-    void toBeContinue(OrderVO orderVO, Integer role) {
+    void toBeContinue(OrderVO orderVO, OperationVO operation) {
         OrderVO newOrderVO = new OrderVO()
                 .setOrderId(orderVO.getOrderId());
         TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
@@ -142,21 +142,12 @@ public class RequestService {
                     }
                     operationManager(CustomConst.ADD, operationVO);
                 }
-            } else if (role != null) {
+            } else if (operation != null) {
                 OperationVO operationVO = new OperationVO()
                         .setTacheId(tacheVO.getTacheId())
-                        .setOrderId(orderVO.getOrderId());
-                switch (role) {
-                    case CustomConst.ROLE.CUSTOMER:
-                        operationVO.setOprMan(orderVO.getCustId());
-                        break;
-                    case CustomConst.ROLE.DISTRIBUTOR:
-                        operationVO.setOprMan(orderVO.getOrderAppointPerson());
-                        break;
-                    case CustomConst.ROLE.WOCKER:
-                        operationVO.setOprMan(orderVO.getOrderControlPerson());
-                        break;
-                }
+                        .setOrderId(orderVO.getOrderId())
+                        .setOprMan(operation.getOprMan())
+                        .setInfo(operation.getInfo());
                 if (!StringUtils.isEmpty(operationVO.getOprMan()))
                     operationManager(CustomConst.ADD, operationVO);
             } else {
@@ -364,6 +355,7 @@ public class RequestService {
         Integer orderId = MapUtils.getInteger(map, "orderId", null);
         Integer tacheId = MapUtils.getInteger(map, "tacheId", null);
         String userId = MapUtils.getString(map, "userId", null);
+        String info = MapUtils.getString(map, "info", null);
         /*下个环节还是自己操作时，能直接让工单执行*/
         boolean doNext = MapUtils.getBoolean(map, "doNext", false);
         if (StringUtils.isEmpty(orderId)
@@ -424,8 +416,12 @@ public class RequestService {
         if (nextOrder) {
             if (doNext) {
                 /*直接触发过单*/
-                this.toBeContinue(orderVO, userInfo.getRole());
-                returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.END);
+                returnObj = new OperationVO()
+                        .setOrderId(orderVO.getOrderId())
+                        .setTacheId(CustomConst.TACHE.STATE.END)
+                        .setOprMan(userId)
+                        .setInfo(info);
+                this.toBeContinue(orderVO, (OperationVO) returnObj);
             } else {
                 orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
                 returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.WAIT);
@@ -444,7 +440,8 @@ public class RequestService {
                         operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
                     } else if (doNext) {
                         /*直接触发过单*/
-                        this.toBeContinue(orderVO, userInfo.getRole());
+                        this.toBeContinue(orderVO, operationVO
+                                .setInfo(info));
                     } else
                         /*提交到扫单触发过单*/
                         orderDao.set(new OrderVO()
