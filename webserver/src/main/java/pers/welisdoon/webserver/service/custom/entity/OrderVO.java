@@ -14,7 +14,7 @@ public class OrderVO {
     private String orderAppointPerson;
     private Timestamp orderArrangeDate;
     private String custId;
-    private String serviceId;
+    private String passTache;
     private String orderNote;
     private Integer tacheId;
     private Double posX;
@@ -119,12 +119,12 @@ public class OrderVO {
         return this;
     }
 
-    public String getServiceId() {
-        return serviceId;
+    public String getPassTache() {
+        return passTache;
     }
 
-    public OrderVO setServiceId(String serviceId) {
-        this.serviceId = serviceId;
+    public OrderVO setPassTache(String passTache) {
+        this.passTache = passTache;
         return this;
     }
 
