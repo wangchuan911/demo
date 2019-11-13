@@ -462,10 +462,17 @@ public class RequestService {
                 TacheVO nextTache = queryTacheVo.getNextTache();
                 if (CustomConst.TACHE.STATE.END == nextTache.getTacheId()
                         || CustomConst.TACHE.STATE.END == (nextTache = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), nextTache)).getTacheId()) {
-                    /*存在两个以上operationVO 证明有其他人也在处理*/
-                    if (operationDao.num(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true)) > 1) {
+                    /*存在非用户operationVO 证明有其他人也在处理*/
+                    if (operationDao.list(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true))
+                            .stream().anyMatch(operationVO1 -> !operationVO1.getOprMan().equals(operationVO.getOprMan()))) {
                         /*让当前人员等待*/
                         operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
+                        /*结束自己的操作*/
+                        operationDao.set(new OperationVO()
+                                .setActive(false)
+                                .setFinishTime(new Timestamp(System.currentTimeMillis()))
+                                .setOprMan(operationVO.getOprMan())
+                                .setOrderId(operationVO.getOrderId()));
                     } else if (doNext) {
                         /*直接触发过单*/
                         this.toBeContinue(orderVO, operationVO
