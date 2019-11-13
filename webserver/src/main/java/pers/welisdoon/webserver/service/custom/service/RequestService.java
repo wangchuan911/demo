@@ -115,11 +115,11 @@ public class RequestService {
                 newOrderVO.setOrderState(CustomConst.ORDER.STATE.END);
                 orderDao.set(newOrderVO);
             }*/
-            this.toBeContinue(orderVO, null);
+            this.toBeContinue(orderVO);
         });
     }
 
-    void toBeContinue(OrderVO orderVO, OperationVO operation) {
+    void toBeContinue(OrderVO orderVO/*, OperationVO operation*/) {
         OrderVO newOrderVO = new OrderVO()
                 .setOrderId(orderVO.getOrderId());
         TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
@@ -153,14 +153,14 @@ public class RequestService {
                     }
                     operationManager(CustomConst.ADD, operationVO);
                 }
-            } else if (operation != null && !StringUtils.isEmpty(operation.getOprMan())) {
+            } /*else if (operation != null && !StringUtils.isEmpty(operation.getOprMan())) {
                 OperationVO operationVO = new OperationVO()
                         .setTacheId(tacheVO.getTacheId())
                         .setOrderId(orderVO.getOrderId())
                         .setOprMan(operation.getOprMan())
                         .setInfo(operation.getInfo());
                 operationManager(CustomConst.ADD, operationVO);
-            } else {
+            }*/ else {
                 operationDao.set(new OperationVO()
                         .setActive(false)
                         .setFinishTime(new Timestamp(System.currentTimeMillis()))
@@ -445,8 +445,8 @@ public class RequestService {
                         .setOrderId(orderVO.getOrderId())
                         .setTacheId(CustomConst.TACHE.STATE.END)
                         .setOprMan(userId)
-                        .setInfo(info);
-                this.toBeContinue(orderVO, (OperationVO) returnObj);
+                        /*.setInfo(info)*/;
+                this.toBeContinue(orderVO/*, (OperationVO) returnObj*/);
             } else {
                 orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
                 returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.WAIT);
@@ -457,6 +457,7 @@ public class RequestService {
                     .setOrderId(orderVO.getOrderId())
                     .setOprMan(userInfo.getId()).setTacheId(tacheId).setActive(true));
             if (operationVO != null) {
+                operationDao.set(operationVO.setInfo(info));
                 /*没有下一环节了*/
                 /*或者因为跳过没有下一环节了*/
                 TacheVO nextTache = queryTacheVo.getNextTache();
@@ -475,8 +476,8 @@ public class RequestService {
                                 .setOrderId(operationVO.getOrderId()));
                     } else if (doNext) {
                         /*直接触发过单*/
-                        this.toBeContinue(orderVO, operationVO
-                                .setInfo(info));
+                        this.toBeContinue(orderVO/*, operationVO
+                                .setInfo(info)*/);
                     } else
                         /*提交到扫单触发过单*/
                         orderDao.set(new OrderVO()
