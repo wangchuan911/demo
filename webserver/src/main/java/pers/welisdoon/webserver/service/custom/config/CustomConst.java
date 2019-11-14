@@ -58,7 +58,7 @@ public class CustomConst {
                     TACHE_MAP.put(cur.getTacheId(), cur);
                 }
                 if (pre != null) {
-                    pre.setNextTache(cur);
+                    pre.setNextTache(cur.getTacheId());
                 }
                 if (cur.getTacheRelas() != null && cur.getTacheRelas().size() > 0) {
                     cur.getTacheRelas().forEach(tacheRela -> {
@@ -68,7 +68,7 @@ public class CustomConst {
                 pre = cur;
             }
             if (cur != null) {
-                cur.setNextTache(new TacheVO().setTacheId(STATE.END));
+                cur.setNextTache(STATE.END);
             }
         }
 

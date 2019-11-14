@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
@@ -122,22 +123,22 @@ public class RequestService {
     void toBeContinue(OrderVO orderVO/*, OperationVO operation*/) {
         OrderVO newOrderVO = new OrderVO()
                 .setOrderId(orderVO.getOrderId());
-        TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
-        if (tacheVO != null && tacheVO.getTacheId() >= 0) {
+        Integer tacheId = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
+        if (tacheId != null && tacheId >= 0) {
+            TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(tacheId);
             newOrderVO.setTacheId(tacheVO.getTacheId());
             newOrderVO.setOrderState(CustomConst.ORDER.STATE.RUNNING);
             orderDao.set(newOrderVO);
             if (!CollectionUtils.isEmpty(tacheVO.getTacheRelas())) {
                 for (TacheVO.TacheRela tacheRela :
                         tacheVO.getTacheRelas()) {
-                    TacheVO newTacheVo = tacheRela.getChildTaches().get(0);
-                    newTacheVo = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), newTacheVo);
-                    if (newTacheVo.getTacheId() < 0) {
+                    Integer newTacheId = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), tacheRela.getChildTaches().get(0));
+                    if (newTacheId < 0) {
                         continue;
                     }
                     OperationVO operationVO = new OperationVO()
                             .setOrderId(orderVO.getOrderId())
-                            .setTacheId(newTacheVo.getTacheId());
+                            .setTacheId(newTacheId);
                     switch (tacheRela.getRole()) {
                         case CustomConst.ROLE.CUSTOMER:
                             operationVO.setOprMan(orderVO.getCustId());
@@ -173,18 +174,18 @@ public class RequestService {
         }
     }
 
-    TacheVO getOptionTache(List<String> tacheIds, final TacheVO newTacheVo) {
+    Integer getOptionTache(List<String> tacheIds, final TacheVO newTacheVo) {
         if (tacheIds.stream().anyMatch(s ->
                 s != null ?
                         s.trim().equals(newTacheVo.getTacheId().toString().trim())
                         : false
         )) {
-            if (newTacheVo.getNextTache().getTacheId() >= 0)
-                return getOptionTache(tacheIds, newTacheVo.getNextTache());
+            if (newTacheVo.getNextTache() >= 0)
+                return getOptionTache(tacheIds, CustomConst.TACHE.TACHE_MAP.get(newTacheVo.getNextTache()));
             else
                 return newTacheVo.getNextTache();
         } else {
-            return newTacheVo;
+            return newTacheVo.getTacheId();
         }
     }
 
@@ -429,7 +430,7 @@ public class RequestService {
             nextOrder = true;
         }
         /*不为主环节，且环节走到尽头*/
-        else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null && queryTacheVo.getNextTache().getTacheId() < 0)) {
+        else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null && queryTacheVo.getNextTache()/*.getTacheId()*/ < 0)) {
             //没有下一环节
             nextOrder = true;
         }
@@ -445,7 +446,7 @@ public class RequestService {
                         .setOrderId(orderVO.getOrderId())
                         .setTacheId(CustomConst.TACHE.STATE.END)
                         .setOprMan(userId)
-                        /*.setInfo(info)*/;
+                /*.setInfo(info)*/;
                 this.toBeContinue(orderVO/*, (OperationVO) returnObj*/);
             } else {
                 orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
@@ -460,12 +461,11 @@ public class RequestService {
                 operationDao.set(operationVO.setInfo(info));
                 /*没有下一环节了*/
                 /*或者因为跳过没有下一环节了*/
-                TacheVO nextTache = queryTacheVo.getNextTache();
-                if (CustomConst.TACHE.STATE.END == nextTache.getTacheId()
-                        || CustomConst.TACHE.STATE.END == (nextTache = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), nextTache)).getTacheId()) {
+                Integer nextTache = queryTacheVo.getNextTache();
+                if (CustomConst.TACHE.STATE.END == nextTache
+                        || CustomConst.TACHE.STATE.END == (nextTache = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), CustomConst.TACHE.TACHE_MAP.get(nextTache)))) {
                     /*存在非用户operationVO 证明有其他人也在处理*/
-                    if (operationDao.list(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true))
-                            .stream().anyMatch(operationVO1 -> !operationVO1.getOprMan().equals(operationVO.getOprMan()))) {
+                    if (this.waitOtherOperation(operationDao.list(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true)), operationVO)) {
                         /*让当前人员等待*/
                         operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
                         /*结束自己的操作*/
@@ -473,7 +473,8 @@ public class RequestService {
                                 .setActive(false)
                                 .setFinishTime(new Timestamp(System.currentTimeMillis()))
                                 .setOprMan(operationVO.getOprMan())
-                                .setOrderId(operationVO.getOrderId()));
+                                .setOrderId(operationVO.getOrderId())
+                                .setTacheId(operationVO.getTacheId()));
                     } else if (doNext) {
                         /*直接触发过单*/
                         this.toBeContinue(orderVO/*, operationVO
@@ -484,12 +485,19 @@ public class RequestService {
                                 .setOrderId(orderVO.getOrderId())
                                 .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
                 } else {
-                    operationManager(CustomConst.ADD, operationVO.setTacheId(nextTache.getTacheId()));
+                    operationManager(CustomConst.ADD, operationVO.setTacheId(nextTache));
                 }
                 returnObj = operationVO;
             }
         }
         return returnObj;
+    }
+
+    private boolean waitOtherOperation(List<OperationVO> operationVOList, OperationVO operationVO) {
+        Stream<OperationVO> stream = operationVOList.stream();
+        long all = stream.count();
+        long orther = stream.filter(operationVO1 -> !operationVO1.getOprMan().equals(operationVO.getOprMan())).count();
+        return orther > 1 || (all - orther > 0);
     }
 
     public Object uploadFile(Map fileUpload, Map map) {

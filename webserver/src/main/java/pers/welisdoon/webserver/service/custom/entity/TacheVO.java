@@ -9,7 +9,8 @@ public class TacheVO {
     private Integer tampalateId;
     private List<TacheRela> tacheRelas;
     private String code;
-    private TacheVO nextTache;
+    private Integer nextTache;
+    private Integer superTache;
 
     public String getCode() {
         return code;
@@ -90,11 +91,19 @@ public class TacheVO {
         }
     }
 
-    public TacheVO getNextTache() {
+    public Integer getNextTache() {
         return nextTache;
     }
 
-    public void setNextTache(TacheVO nextTache) {
+    public void setNextTache(Integer nextTache) {
         this.nextTache = nextTache;
+    }
+
+    public Integer getSuperTache() {
+        return superTache;
+    }
+
+    public void setSuperTache(Integer superTache) {
+        this.superTache = superTache;
     }
 }
