@@ -64,4 +64,24 @@
         SELECT * FROM role_config
     </select>
 
+    <select id="list" parameterMap="UserVO" resultMap="UserVO">
+        select a.*,b.role_level from mysql.car_user a
+        join role_config b
+        on b.role_id=a.car_user_role
+        <where>
+            <if test="role!=null and role>=0">
+                car_user_role=#{role,jdbcType=INTEGER}
+            </if>
+            <if test="name!=null and name!=''.toString()">
+                car_user_name=#{name,jdbcType=VARCHAR}
+            </if>
+            <if test="id!=null and id>=0">
+                car_user_id=#{id,jdbcType=INTEGER}
+            </if>
+            <if test="phone!=null and phone!=''.toString()">
+                car_user_telephone=#{phone,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
 </mapper>

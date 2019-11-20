@@ -99,7 +99,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 });
             };
             /*5s*/
-//            vertx1.setPeriodic(100 * 1000, longHandler);
+            vertx1.setPeriodic(10 * 1000, longHandler);
         };
         return vertxConsumer;
     }

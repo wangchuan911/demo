@@ -1,9 +1,6 @@
 package pers.welisdoon.webserver.service.custom.config;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import pers.welisdoon.webserver.service.custom.entity.TacheVO;
@@ -19,11 +16,12 @@ public class CustomConst {
     public final static int LIST = 4;
 
     public static class USER {
-
+        public final static int GET_WORKERS = 100;
     }
 
     public static class ORDER {
-        public final static int GET_WORK_NUMBER = 10;
+        public final static int GET_WORK_NUMBER = 100;
+        public final static int APPIONT_WORKER = 101;
 
         public static class STATE {
             public final static int RUNNING = 0;
@@ -33,22 +31,25 @@ public class CustomConst {
     }
 
     public static class TACHE {
-        public final static int GET_WORK_NUMBER = 10;
+        public final static int GET_WORK_NUMBER = 100;
 
         public static class STATE {
             public final static int END = -2;
             public final static int WAIT = -1;
         }
 
-        public static Map<Integer, TacheVO> TACHE_MAP = new HashMap<>();
+        public static final Map<Integer, TacheVO> TACHE_MAP = new HashMap<>();
+        public static final List<TacheVO> TACHE_LIST = new LinkedList<>();
         public static TacheVO FIRST_TACHE;
 
         static void initTacheMapValue(List<TacheVO> tacheVOList) {
+            TACHE_LIST.clear();
+            TACHE_LIST.addAll(tacheVOList);
             FIRST_TACHE = tacheVOList.get(0);
-            ergodic(tacheVOList);
+            ergodic(tacheVOList, null);
         }
 
-        private static void ergodic(List<TacheVO> tacheVOList) {
+        private static void ergodic(List<TacheVO> tacheVOList, TacheVO superTache) {
             Iterator<TacheVO> iterator = tacheVOList.iterator();
             TacheVO pre = null;
             TacheVO cur = null;
@@ -60,10 +61,14 @@ public class CustomConst {
                 if (pre != null) {
                     pre.setNextTache(cur.getTacheId());
                 }
+                TacheVO currnet = cur;
                 if (cur.getTacheRelas() != null && cur.getTacheRelas().size() > 0) {
                     cur.getTacheRelas().forEach(tacheRela -> {
-                        ergodic(tacheRela.getChildTaches());
+                        ergodic(tacheRela.getChildTaches(), currnet);
                     });
+                }
+                if (superTache != null) {
+                    cur.setSuperTache(superTache.getTacheId());
                 }
                 pre = cur;
             }
@@ -79,6 +84,8 @@ public class CustomConst {
     }
 
     public static class ROLE {
+
+        public final static int GUEST = -1;
         public final static int CUSTOMER = 0;
         public final static int WOCKER = 1;
         public final static int DISTRIBUTOR = 2;

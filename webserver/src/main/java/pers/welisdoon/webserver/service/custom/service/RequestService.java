@@ -120,14 +120,38 @@ public class RequestService {
         });
     }
 
+    void test(OrderVO orderVO, Integer tacheId) {
+        switch (tacheId) {
+            case 2:
+                orderVO.setOrderAppointPerson(orderVO.getCustId());
+                userDao.set(new UserVO().setRole(CustomConst.ROLE.DISTRIBUTOR).setId(orderVO.getCustId()));
+                break;
+            case 3:
+                orderVO.setOrderAppointPerson(orderVO.getCustId());
+                userDao.set(new UserVO().setRole(CustomConst.ROLE.WOCKER).setId(orderVO.getCustId()));
+                break;
+            case CustomConst.TACHE.STATE.END:
+                userDao.set(new UserVO().setRole(CustomConst.ROLE.CUSTOMER).setId(orderVO.getCustId()));
+                break;
+            default:
+                return;
+        }
+    }
+
     void toBeContinue(OrderVO orderVO/*, OperationVO operation*/) {
         OrderVO newOrderVO = new OrderVO()
                 .setOrderId(orderVO.getOrderId());
         Integer tacheId = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
+        //测试用 目前自己授权给自己
+        {
+            newOrderVO.setCustId(orderVO.getCustId());
+            test(newOrderVO, tacheId);
+        }
         if (tacheId != null && tacheId >= 0) {
             TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(tacheId);
             newOrderVO.setTacheId(tacheVO.getTacheId());
             newOrderVO.setOrderState(CustomConst.ORDER.STATE.RUNNING);
+
             orderDao.set(newOrderVO);
             if (!CollectionUtils.isEmpty(tacheVO.getTacheRelas())) {
                 for (TacheVO.TacheRela tacheRela :
@@ -144,10 +168,10 @@ public class RequestService {
                             operationVO.setOprMan(orderVO.getCustId());
                             break;
                         case CustomConst.ROLE.DISTRIBUTOR:
-                            operationVO.setOprMan(orderVO.getOrderAppointPerson());
+                            operationVO.setOprMan(orderVO.getOrderControlPerson());
                             break;
                         case CustomConst.ROLE.WOCKER:
-                            operationVO.setOprMan(orderVO.getOrderControlPerson());
+                            operationVO.setOprMan(orderVO.getOrderAppointPerson());
                             break;
                         default:
                             continue;
@@ -205,10 +229,10 @@ public class RequestService {
                 break;
             case CustomConst.DELETE:
                 break;
-            case CustomConst.MODIFY:
+            /*case CustomConst.MODIFY:
                 orderVO = mapToObject(params, OrderVO.class);
                 resultObj = orderDao.set(orderVO);
-                break;
+                break;*/
             case CustomConst.LIST:
                 orderVO = mapToObject(params, OrderVO.class);
                 List list = orderDao.list(orderVO);
@@ -222,6 +246,16 @@ public class RequestService {
                 orderVO = mapToObject(params, OrderVO.class);
                 resultObj = orderDao.getWorkIngOrderNum(orderVO);
                 break;
+            case CustomConst.ORDER.APPIONT_WORKER:
+                orderVO = new OrderVO()
+                        .setOrderAppointPerson(MapUtils.getString(params, "orderControlPerson"))
+                        .setOrderId(MapUtils.getInteger(params, "orderId"));
+                orderVO = orderDao.get(orderVO);
+                if (orderVO != null) {
+                    resultObj = orderDao.set(new OrderVO()
+                            .setOrderId(orderVO.getOrderId())
+                            .setOrderAppointPerson(MapUtils.getString(params, "orderAppointPerson")));
+                }
             default:
                 break;
 
@@ -266,6 +300,19 @@ public class RequestService {
                 userVO = mapToObject(params, UserVO.class);
                 resultObj = userDao.get(userVO);
                 break;
+            case CustomConst.LIST:
+                userVO = mapToObject(params, UserVO.class);
+                resultObj = userDao.list(userVO);
+                break;
+            case CustomConst.USER.GET_WORKERS:
+                userVO = mapToObject(params, UserVO.class);
+                userVO.setRole(CustomConst.ROLE.WOCKER);
+                resultObj = userDao.list(userVO);
+                break;
+            case CustomConst.ADD:
+                userVO = mapToObject(params, UserVO.class);
+                userVO.setRole(CustomConst.ROLE.CUSTOMER);
+                resultObj = userDao.add(userVO);
             default:
                 break;
         }
@@ -349,7 +396,7 @@ public class RequestService {
             UserVO userVO;
             if (o == null) {
                 userVO = new UserVO().setId(userId);
-                userVO.setRole(CustomConst.ROLE.CUSTOMER);
+                userVO.setRole(CustomConst.ROLE.GUEST);
                 userVO.setName("新用戶");
                 jsonObject.put("user", JsonObject.mapFrom(userVO));
             } else {
@@ -359,11 +406,11 @@ public class RequestService {
                     case CustomConst.ROLE.CUSTOMER:
                         o = tacheManager(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
                         break;
-                    case CustomConst.ROLE.WOCKER:
-                        o = orderManger(CustomConst.ORDER.GET_WORK_NUMBER, Map.of("orderAppointPerson", userVO.getId()));
-                        break;
                     case CustomConst.ROLE.DISTRIBUTOR:
                         o = orderManger(CustomConst.ORDER.GET_WORK_NUMBER, Map.of("orderControlPerson", userVO.getId()));
+                        break;
+                    case CustomConst.ROLE.WOCKER:
+                        o = orderManger(CustomConst.ORDER.GET_WORK_NUMBER, Map.of("orderAppointPerson", userVO.getId()));
                         break;
 
                 }
