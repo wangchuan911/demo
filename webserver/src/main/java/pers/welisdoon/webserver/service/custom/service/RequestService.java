@@ -120,15 +120,17 @@ public class RequestService {
         });
     }
 
-    void test(OrderVO orderVO, Integer tacheId) {
+    void test(OrderVO newOrderVO, OrderVO orderVO, Integer tacheId) {
         switch (tacheId) {
             case 2:
-                orderVO.setOrderAppointPerson(orderVO.getCustId());
+                newOrderVO.setOrderControlPerson(orderVO.getCustId());
                 userDao.set(new UserVO().setRole(CustomConst.ROLE.DISTRIBUTOR).setId(orderVO.getCustId()));
+                orderVO.setOrderControlPerson(orderVO.getCustId());
                 break;
             case 3:
-                orderVO.setOrderAppointPerson(orderVO.getCustId());
+                newOrderVO.setOrderAppointPerson(orderVO.getCustId());
                 userDao.set(new UserVO().setRole(CustomConst.ROLE.WOCKER).setId(orderVO.getCustId()));
+                orderVO.setOrderAppointPerson(orderVO.getCustId());
                 break;
             case CustomConst.TACHE.STATE.END:
                 userDao.set(new UserVO().setRole(CustomConst.ROLE.CUSTOMER).setId(orderVO.getCustId()));
@@ -144,8 +146,7 @@ public class RequestService {
         Integer tacheId = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
         //测试用 目前自己授权给自己
         {
-            newOrderVO.setCustId(orderVO.getCustId());
-            test(newOrderVO, tacheId);
+            test(newOrderVO, orderVO, tacheId);
         }
         if (tacheId != null && tacheId >= 0) {
             TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(tacheId);
