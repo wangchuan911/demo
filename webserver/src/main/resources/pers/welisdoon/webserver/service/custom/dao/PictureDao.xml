@@ -61,6 +61,22 @@
                 #{tacheId})
     </insert>
 
+    <update id="set" parameterMap="PictureVO">
+        update mysql.car_picture_storage
+        <set>
+            <if test="orderId!=null and orderId>=0">
+                order_id=#{orderId,jdbcType=INTEGER},
+            </if>
+            <if test="tacheId!=null and tacheId>=0">
+                tache_id=#{tacheId,jdbcType=INTEGER},
+            </if>
+            <if test="name!=null and name!=''.toString()">
+                picture_name=#{name,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where picture_id=#{pictrueId,jdbcType=INTEGER}
+    </update>
+
 
     <select id="num" resultType="int" parameterMap="PictureVO">
         select count(picture_id) from mysql.car_picture_storage a

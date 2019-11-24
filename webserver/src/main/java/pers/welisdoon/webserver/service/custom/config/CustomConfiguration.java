@@ -8,8 +8,11 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
+import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.ext.web.impl.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +38,10 @@ import pers.welisdoon.webserver.common.ApplicationContextProvider;
 import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import pers.welisdoon.webserver.common.web.CommonAsynService;
 import pers.welisdoon.webserver.common.web.Requset;
+import pers.welisdoon.webserver.common.web.Response;
 import pers.welisdoon.webserver.service.custom.dao.TacheDao;
 import pers.welisdoon.webserver.service.custom.dao.UserDao;
+import pers.welisdoon.webserver.service.custom.entity.PictureVO;
 import pers.welisdoon.webserver.service.custom.entity.TacheVO;
 import pers.welisdoon.webserver.service.custom.service.RequestService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
@@ -109,6 +114,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         final String PATH_WX_APP = "/wxApp";
         final String PATH_WX_APP_UPLOAD = "/imgUpd";
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
+        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
+        final String TMEP_FILE_PATH = "tempPic";
         WebClient webClient = WebClient.create(vertx);
         Consumer<Router> routerConsumer = router -> {
             router.get(PATH_WX_APP).handler(routingContext -> {
@@ -124,30 +131,6 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                         JsonObject jsonObject = httpResponse.body().toJsonObject();
                                         String key = jsonObject.remove("session_key").toString();
                                         String userId = jsonObject.getString("openid");
-                                        /*if (!StringUtils.isEmpty(userId)) {
-                                            Object o = testService.userManger(TestService.GET, Map.of("id", userId));
-                                            UserVO userVO;
-                                            if (o == null) {
-                                                userVO = new UserVO().setId(userId);
-                                                userVO.setRole(0);
-                                                userVO.setName("新用戶");
-                                                jsonObject.put("user", JsonObject.mapFrom(userVO));
-                                            }
-                                            else {
-                                                userVO = (UserVO) o;
-                                                jsonObject.put("user", o);
-                                                switch (userVO.getRole()) {
-                                                    case 0:
-                                                        o = testService.tacheManager(TestService.GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
-                                                        break;
-                                                    default:
-                                                        o = testService.orderManger(TestService.GET_WORK_NUMBER, Map.of("custId", userVO.getId()));
-                                                }
-                                                o=o!=null?JsonObject.mapFrom(o):Map.of("all_nums",0,"nums",0);
-                                                jsonObject.put("work",o);
-                                            }
-
-                                        }*/
                                         jsonObject.mergeIn((JsonObject) requestService.login(userId));
                                         routingContext.response().end(jsonObject.toBuffer());
                                     } else {
@@ -193,8 +176,6 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                     }
                 });
 
-            }).failureHandler(routingContext -> {
-                routingContext.response().end(routingContext.failure().toString());
             });
 
             logger.info("inital request mapping: " + PATH_WX_APP);
@@ -241,13 +222,57 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             });
 
             logger.info("inital request mapping: " + PATH_WX_APP_UPLOAD);
+            StaticHandler staticHandler = StaticHandler.create(TMEP_FILE_PATH);
+            staticHandler.setAlwaysAsyncFS(true);
+            staticHandler.setCachingEnabled(false);
+            router.get("/pic/*").handler(routingContext -> {
+                HttpServerRequest httpServerRequest = routingContext.request();
+                String fileName = Utils.pathOffset(httpServerRequest.path(), routingContext);
+                String file = TMEP_FILE_PATH + fileName;
+                FileSystem fileSystem = routingContext.vertx().fileSystem();
+                fileSystem.exists(file, booleanAsyncResult -> {
+                    if (booleanAsyncResult.succeeded() && !booleanAsyncResult.result()) {
+                        Requset requset = new Requset()
+                                .setService(REQUEST_NAME)
+                                .setMethod("pictureManager")
+                                .setBody(new JsonArray()
+                                        .add(CustomConst.GET)
+                                        .add(Map.of("name", fileName.substring(1))))
+                                .putParams(httpServerRequest.params())
+                                .putSession(routingContext.session());
+                        commonAsynService.requsetCall(requset, responseAsyncResult -> {
+                            if (responseAsyncResult.failed()) {
+                                routingContext.fail(500, responseAsyncResult.cause());
+                                return;
+                            }
+                            if (responseAsyncResult.result() == null || responseAsyncResult.result().getResult() == null) {
+                                routingContext.fail(404);
+                                return;
+                            }
+                            fileSystem.createFile(PATH_PRROJECT + file, voidAsyncResult -> {
+                                if (voidAsyncResult.failed()) {
+                                    routingContext.fail(500, voidAsyncResult.cause());
+                                    return;
+                                }
+                                fileSystem.writeFile(file, Buffer.buffer(((JsonObject) responseAsyncResult.result().getResult()).getString("data")), voidAsyncResult1 -> {
+                                    if (voidAsyncResult1.failed()) {
+                                        routingContext.fail(500, voidAsyncResult.cause());
+                                        return;
+                                    }
+                                    routingContext.next();
+                                });
 
-            router.get("/imgDl/:picType/:picId").handler(routingContext -> {
-                String picType = routingContext.request().getParam("picType");
-                String picId = routingContext.request().getParam("picId");
-                routingContext.response().sendFile("");
+                            });
+                        });
+                    } else {
+                        routingContext.next();
+                    }
+                });
+            }).handler(staticHandler);
+
+            router.route("/*").failureHandler(routingContext -> {
+                routingContext.response().end(routingContext.failure().toString());
             });
-
         };
         return routerConsumer;
     }

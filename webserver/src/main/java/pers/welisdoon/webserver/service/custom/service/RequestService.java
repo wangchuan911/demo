@@ -220,13 +220,23 @@ public class RequestService {
         OrderVO orderVO;
         switch (mode) {
             case CustomConst.ADD:
-                orderVO = mapToObject(params, OrderVO.class);
-                /* orderVO.setTacheId(TACHE_VO_LIST.get(0).getTacheId());*/
+                JsonObject orderVoJson = JsonObject.mapFrom(params);
+                JsonArray jsonArray = (JsonArray) orderVoJson.remove("pictureIds");
+
+                orderVO = orderVoJson.mapTo(OrderVO.class);
                 orderVO.setTacheId(CustomConst.TACHE.FIRST_TACHE.getTacheId());
                 orderVO.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
-                orderVO.setOrderCode("");
                 orderDao.add(orderVO);
-                resultObj = orderVO;
+
+                if (jsonArray != null && jsonArray.size() > 0) {
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        pictureDao.set(new PictureVO()
+                                .setPictrueId(jsonArray.getInteger(i))
+                                .setOrderId(orderVO.getOrderId())
+                                .setTacheId(orderVO.getTacheId()));
+                    }
+                }
+                resultObj = this.tacheManager(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", orderVO.getCustId()));
                 break;
             case CustomConst.DELETE:
                 break;
@@ -570,8 +580,22 @@ public class RequestService {
             StreamUtils.close(inputStream);
             StreamUtils.close(outputStream);
         }
+        return returnObj;
+    }
 
-
+    public Object pictureManager(int mode, Map map) {
+        Object returnObj = null;
+        PictureVO pictureVO;
+        switch (mode) {
+            case CustomConst.GET:
+                pictureVO = mapToObject(map, PictureVO.class);
+                returnObj = pictureDao.get(pictureVO);
+                break;
+            case CustomConst.DELETE:
+                pictureVO = mapToObject(map, PictureVO.class);
+                pictureDao.del(pictureVO);
+                break;
+        }
         return returnObj;
     }
 
