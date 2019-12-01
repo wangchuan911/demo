@@ -163,7 +163,7 @@
         <include refid="selectCondition"></include>
         order by a.create_date desc
     </select>
-    <select id="get" parameterMap="OrderVO" resultMap="OrderVO">
+    <select id="get" parameterMap="OrderVO" resultMap="OrderVO_All">
         select * from mysql.car_wash_order a
         <include refid="selectCondition"></include>
         LIMIT 0, 1

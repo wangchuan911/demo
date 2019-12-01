@@ -155,6 +155,12 @@ public class RequestService {
 
             orderDao.set(newOrderVO);
             if (!CollectionUtils.isEmpty(tacheVO.getTacheRelas())) {
+                {
+                    operationDao.set(new OperationVO()
+                            .setActive(false)
+                            .setFinishTime(new Timestamp(System.currentTimeMillis()))
+                            .setOrderId(orderVO.getOrderId()));
+                }
                 for (TacheVO.TacheRela tacheRela :
                         tacheVO.getTacheRelas()) {
                     Integer newTacheId = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), tacheRela.getChildTaches().get(0));
@@ -177,7 +183,8 @@ public class RequestService {
                         default:
                             continue;
                     }
-                    operationManager(CustomConst.ADD, operationVO);
+//                    operationManager(CustomConst.ADD, operationVO);
+                    operationDao.add(operationVO.setActive(true));
                 }
             } /*else if (operation != null && !StringUtils.isEmpty(operation.getOprMan())) {
                 OperationVO operationVO = new OperationVO()
@@ -488,7 +495,10 @@ public class RequestService {
             nextOrder = true;
         }
         /*不为主环节，且环节走到尽头*/
-        else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null && queryTacheVo.getNextTache()/*.getTacheId()*/ < 0)) {
+        /*当前可操作操作数不大于1*/
+        else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null
+                && queryTacheVo.getNextTache()/*.getTacheId()*/ < 0)
+                && operationDao.num(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true)) <= 1) {
             //没有下一环节
             nextOrder = true;
         }
@@ -524,8 +534,6 @@ public class RequestService {
                         || CustomConst.TACHE.STATE.END == (nextTache = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), CustomConst.TACHE.TACHE_MAP.get(nextTache)))) {
                     /*存在非用户operationVO 证明有其他人也在处理*/
                     if (this.waitOtherOperation(operationDao.list(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true)), operationVO)) {
-                        /*让当前人员等待*/
-                        operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
                         /*结束自己的操作*/
                         operationDao.set(new OperationVO()
                                 .setActive(false)
@@ -533,6 +541,8 @@ public class RequestService {
                                 .setOprMan(operationVO.getOprMan())
                                 .setOrderId(operationVO.getOrderId())
                                 .setTacheId(operationVO.getTacheId()));
+                        /*让当前人员等待*/
+                        operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
                     } else if (doNext) {
                         /*直接触发过单*/
                         this.toBeContinue(orderVO/*, operationVO
@@ -553,7 +563,7 @@ public class RequestService {
 
     private boolean waitOtherOperation(List<OperationVO> operationVOList, OperationVO operationVO) {
         Stream<OperationVO> stream = operationVOList.stream();
-        long all = stream.count();
+        long all = operationVOList.size();
         long orther = stream.filter(operationVO1 -> !operationVO1.getOprMan().equals(operationVO.getOprMan())).count();
         return orther > 1 || (all - orther > 0);
     }
