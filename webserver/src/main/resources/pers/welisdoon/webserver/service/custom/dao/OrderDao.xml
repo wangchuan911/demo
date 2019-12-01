@@ -58,6 +58,7 @@
         <result property="posX" column="pos_x"></result>
         <result property="posY" column="pos_y"></result>
         <result property="tacheId" column="tache_id"></result>
+        <result property="workerName" column="order_appoint_person_name"></result>
 
         <association property="carVO"
                      select="pers.welisdoon.webserver.service.custom.dao.CarDao.get"
