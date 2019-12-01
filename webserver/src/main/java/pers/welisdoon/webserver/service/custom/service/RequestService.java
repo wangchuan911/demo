@@ -246,7 +246,7 @@ public class RequestService {
                 break;*/
             case CustomConst.LIST:
                 orderVO = mapToObject(params, OrderVO.class);
-                List list = orderDao.list(orderVO);
+                List list = orderDao.listAll(orderVO);
                 resultObj = list;
                 break;
             case CustomConst.GET:

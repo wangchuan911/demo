@@ -225,6 +225,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             StaticHandler staticHandler = StaticHandler.create(TMEP_FILE_PATH);
             staticHandler.setAlwaysAsyncFS(true);
             staticHandler.setCachingEnabled(false);
+//            staticHandler.setDirectoryListing(true);
+//            staticHandler.setFilesReadOnly(false);
             router.get("/pic/*").handler(routingContext -> {
                 HttpServerRequest httpServerRequest = routingContext.request();
                 String fileName = Utils.pathOffset(httpServerRequest.path(), routingContext);
@@ -254,7 +256,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                     routingContext.fail(500, voidAsyncResult.cause());
                                     return;
                                 }
-                                fileSystem.writeFile(file, Buffer.buffer(((JsonObject) responseAsyncResult.result().getResult()).getString("data")), voidAsyncResult1 -> {
+                                fileSystem.writeFile(file, Buffer.buffer(((JsonObject) responseAsyncResult.result().getResult()).getBinary("data")), voidAsyncResult1 -> {
                                     if (voidAsyncResult1.failed()) {
                                         routingContext.fail(500, voidAsyncResult.cause());
                                         return;

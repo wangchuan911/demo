@@ -82,4 +82,16 @@
         select count(picture_id) from mysql.car_picture_storage a
         <include refid="wherePictureVO"></include>
     </select>
+
+    <select id="listWithoutData" parameterMap="PictureVO" resultMap="PictureVO">
+        SELECT
+          picture_id,
+          picture_name,
+          picture_modidy_date,
+          order_id,
+          tache_id
+        FROM mysql.car_picture_storage a
+        <include refid="wherePictureVO"></include>
+        LIMIT 0, 1000;
+    </select>
 </mapper>

@@ -1,6 +1,7 @@
 package pers.welisdoon.webserver.service.custom.entity;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 public class OrderVO {
     private Integer orderId;
@@ -19,6 +20,7 @@ public class OrderVO {
     private Integer tacheId;
     private Double posX;
     private Double posY;
+    private List<PictureVO> pictureVOS;
 
     public Integer getOrderId() {
         return orderId;
@@ -162,6 +164,14 @@ public class OrderVO {
     public OrderVO setTacheId(Integer tacheId) {
         this.tacheId = tacheId;
         return this;
+    }
+
+    public List<PictureVO> getPictureVOS() {
+        return pictureVOS;
+    }
+
+    public void setPictureVOS(List<PictureVO> pictureVOS) {
+        this.pictureVOS = pictureVOS;
     }
 }
 
