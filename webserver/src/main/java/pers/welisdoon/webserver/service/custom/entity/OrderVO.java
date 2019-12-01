@@ -21,6 +21,7 @@ public class OrderVO {
     private Double posX;
     private Double posY;
     private List<PictureVO> pictureVOS;
+    private CarVO carVO;
 
     public Integer getOrderId() {
         return orderId;
@@ -172,6 +173,14 @@ public class OrderVO {
 
     public void setPictureVOS(List<PictureVO> pictureVOS) {
         this.pictureVOS = pictureVOS;
+    }
+
+    public CarVO getCarVO() {
+        return carVO;
+    }
+
+    public void setCarVO(CarVO carVO) {
+        this.carVO = carVO;
     }
 }
 

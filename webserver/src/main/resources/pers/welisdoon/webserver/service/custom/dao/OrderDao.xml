@@ -42,7 +42,7 @@
         <result property="tacheId" column="tache_id"></result>
     </resultMap>
     <resultMap id="OrderVO_All" type="pers.welisdoon.webserver.service.custom.entity.OrderVO">
-        <result property="orderId" column="order_id"></result>
+        <id property="orderId" column="order_id"></id>
         <result property="orderCode" column="order_code"></result>
         <result property="carLicenseNumber" column="car_license_number"></result>
         <result property="carAddress" column="car_address"></result>
@@ -58,6 +58,12 @@
         <result property="posX" column="pos_x"></result>
         <result property="posY" column="pos_y"></result>
         <result property="tacheId" column="tache_id"></result>
+
+        <association property="carVO"
+                     select="pers.welisdoon.webserver.service.custom.dao.CarDao.get"
+                     javaType="pers.welisdoon.webserver.service.custom.entity.CarVO"
+                     column="{lisence=car_license_number,userId=cust_id}">
+        </association>
         <collection property="pictureVOS"
                     select="pers.welisdoon.webserver.service.custom.dao.PictureDao.listWithoutData"
                     ofType="pers.welisdoon.webserver.service.custom.entity.PictureVO"
