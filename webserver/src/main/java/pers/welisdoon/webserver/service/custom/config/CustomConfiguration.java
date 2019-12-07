@@ -55,6 +55,16 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     final static String REQUEST_NAME = "requestService";
     private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
 
+    private int orderCycleTime;
+
+    public Integer getOrderCycleTime() {
+        return orderCycleTime;
+    }
+
+    public void setOrderCycleTime(int orderCycleTime) {
+        this.orderCycleTime = orderCycleTime;
+    }
+
     CommonAsynService commonAsynService;
     @Autowired
     RequestService requestService;
@@ -104,7 +114,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 });
             };
             /*5s*/
-            vertx1.setPeriodic(10 * 1000, longHandler);
+            if (this.getOrderCycleTime() > 0)
+                vertx1.setPeriodic(this.getOrderCycleTime() * 1000, longHandler);
         };
         return vertxConsumer;
     }
