@@ -506,7 +506,7 @@ public class RequestService {
                     .setOrderId(orderVO.getOrderId())
                     .setOprMan(userInfo.getId()).setTacheId(tacheId).setActive(true));
             if (operationVO != null) {
-                operationDao.set(operationVO.setInfo(info));
+//                operationDao.set(operationVO.setInfo(info));
                 /*没有下一环节了*/
                 /*或者因为跳过没有下一环节了*/
                 Integer nextTache = queryTacheVo.getNextTache();
@@ -544,6 +544,7 @@ public class RequestService {
     private void operationInfoDeal(Map map) {
         Integer orderId = MapUtils.getInteger(map, "orderId", null);
         Integer tacheId = MapUtils.getInteger(map, "tacheId", null);
+        String userId = MapUtils.getString(map, "userId", null);
         try {
             JsonObject infoJson = JsonObject.mapFrom(map.get("info"));
             if (infoJson.containsKey("pictureIds")) {
@@ -556,6 +557,13 @@ public class RequestService {
                                 .setTacheId(tacheId));
                     }
                 }
+            }
+
+            OperationVO operationVO = operationDao.get(new OperationVO()
+                    .setOrderId(orderId)
+                    .setOprMan(userId).setTacheId(tacheId).setActive(true));
+            if (operationVO != null) {
+                operationDao.set(operationVO.setInfo(infoJson.toString()));
             }
         } catch (Throwable e) {
             e.printStackTrace();
