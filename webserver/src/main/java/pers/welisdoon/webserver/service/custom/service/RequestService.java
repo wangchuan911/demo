@@ -457,34 +457,14 @@ public class RequestService {
 
         UserVO userInfo = userDao.get(new UserVO().setId(userId));
         OrderVO orderVO = orderDao.get(new OrderVO().setOrderId(orderId));
-        /*TacheVO queryTacheVo = new TacheVO().setTacheId(tacheId);
-        TacheVO orderTache = null;
-        Iterator<TacheVO> iterator = TACHE_VO_LIST.iterator();
-        while (iterator.hasNext()) {
-            TacheVO iteratorTempVo = iterator.next();
-            if (iteratorTempVo.getTacheId() == orderVO.getTacheId()) {
-                orderTache = iteratorTempVo;
-                if (tacheId == iteratorTempVo.getTacheId()) {
-                    queryTacheVo = iteratorTempVo;
-                    if (queryTacheVo.getNextTache() == null) {
-                        queryTacheVo.setNextTache(iterator.hasNext() ?
-                                iterator.next() : new TacheVO().setTacheId(CustomConst.TACHE.STATE.END));
-                    }
-                    break;
-                }
-                else if (!CollectionUtils.isEmpty(iteratorTempVo.getTacheRelas())) {
-                    queryTacheVo = findTache(queryTacheVo, iteratorTempVo, userInfo);
-                    if (queryTacheVo != null) break;
-                }
-                else {
-                    queryTacheVo = null;
-                }
-            }
-        }*/
         TacheVO orderTache = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId());
         TacheVO queryTacheVo = CustomConst.TACHE.TACHE_MAP.get(tacheId);
 
         if (queryTacheVo == null) return null;
+
+        if (!StringUtils.isEmpty(info)) {
+            this.operationInfoDeal(map);
+        }
 
         /*流程有权限限制*/
 
@@ -559,6 +539,27 @@ public class RequestService {
             }
         }
         return returnObj;
+    }
+
+    private void operationInfoDeal(Map map) {
+        Integer orderId = MapUtils.getInteger(map, "orderId", null);
+        Integer tacheId = MapUtils.getInteger(map, "tacheId", null);
+        try {
+            JsonObject infoJson = JsonObject.mapFrom(map.get("info"));
+            if (infoJson.containsKey("pictureIds")) {
+                JsonArray jsonArray = infoJson.getJsonArray("pictureIds");
+                if (jsonArray != null && jsonArray.size() > 0) {
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        pictureDao.set(new PictureVO()
+                                .setPictrueId(jsonArray.getInteger(i))
+                                .setOrderId(orderId)
+                                .setTacheId(tacheId));
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean waitOtherOperation(List<OperationVO> operationVOList, OperationVO operationVO) {
