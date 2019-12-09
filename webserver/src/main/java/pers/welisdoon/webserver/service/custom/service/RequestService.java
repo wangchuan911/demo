@@ -459,7 +459,11 @@ public class RequestService {
         OrderVO orderVO = orderDao.get(new OrderVO().setOrderId(orderId));
         TacheVO orderTache = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId());
         TacheVO queryTacheVo = CustomConst.TACHE.TACHE_MAP.get(tacheId);
+        OperationVO operationVO = operationDao.get(new OperationVO()
+                .setOrderId(orderVO.getOrderId())
+                .setOprMan(userInfo.getId()).setTacheId(tacheId).setActive(true));
 
+        /*走工单子流程*/
         if (queryTacheVo == null) return null;
 
         if (!StringUtils.isEmpty(info)) {
@@ -468,75 +472,156 @@ public class RequestService {
 
         /*流程有权限限制*/
 
-        boolean nextOrder = false;
-        boolean nextOperation = false;
+//        boolean nextOrder = false;
+//        boolean nextOperation = false;
+//        /*为主环节，该环节没有关联环节,则让他往下走*/
+//        if ((orderTache == queryTacheVo && orderTache.getTacheRelas().size() <= 0)) {
+//            nextOrder = true;
+//        }
+//        /*不为主环节，且环节走到尽头*/
+//        /*当前可操作操作数不大于1*/
+//        else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null
+//                && queryTacheVo.getNextTache()/*.getTacheId()*/ < 0)
+//                && operationDao.num(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true)) <= 1) {
+//            //没有下一环节
+//            nextOrder = true;
+//        }
+//        /*不管是不是主环节 有子环节都要处理*/
+//        else {
+//            nextOperation = true;
+//        }
+//        /*走工单*/
+//        if (nextOrder) {
+//            if (doNext) {
+//                /*直接触发过单*/
+//                returnObj = new OperationVO()
+//                        .setOrderId(orderVO.getOrderId())
+//                        .setTacheId(CustomConst.TACHE.STATE.END)
+//                        .setOprMan(userId)
+//                /*.setInfo(info)*/;
+//                this.toBeContinue(orderVO/*, (OperationVO) returnObj*/);
+//            } else {
+//                orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+//                returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.WAIT);
+//            }
+//        } else if (nextOperation) {
+//            /*走工单子流程*/
+//            OperationVO operationVO = operationDao.get(new OperationVO()
+//                    .setOrderId(orderVO.getOrderId())
+//                    .setOprMan(userInfo.getId()).setTacheId(tacheId).setActive(true));
+//            if (operationVO != null) {
+////                operationDao.set(operationVO.setInfo(info));
+//                /*没有下一环节了*/
+//                /*或者因为跳过没有下一环节了*/
+//                Integer nextTache = queryTacheVo.getNextTache();
+//                if (CustomConst.TACHE.STATE.END == nextTache
+//                        || CustomConst.TACHE.STATE.END == (nextTache = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), CustomConst.TACHE.TACHE_MAP.get(nextTache)))) {
+//                    /*存在非用户operationVO 证明有其他人也在处理*/
+//                    if (this.waitOtherOperation(operationDao.list(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true)), operationVO)) {
+//                        /*结束自己的操作*/
+//                        operationDao.set(new OperationVO()
+//                                .setActive(false)
+//                                .setFinishTime(new Timestamp(System.currentTimeMillis()))
+//                                .setOprMan(operationVO.getOprMan())
+//                                .setOrderId(operationVO.getOrderId())
+//                                .setTacheId(operationVO.getTacheId()));
+//                        /*让当前人员等待*/
+//                        operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
+//                    } else if (doNext) {
+//                        /*直接触发过单*/
+//                        this.toBeContinue(orderVO/*, operationVO
+//                                .setInfo(info)*/);
+//                    } else
+//                        /*提交到扫单触发过单*/
+//                        orderDao.set(new OrderVO()
+//                                .setOrderId(orderVO.getOrderId())
+//                                .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+//                } else {
+//                    operationManager(CustomConst.ADD, operationVO.setTacheId(nextTache));
+//                }
+//                returnObj = operationVO;
+//            }
+//        }
+//        return returnObj;
+
+        Integer nextTache = queryTacheVo.getNextTache();
+        int num = operationDao.num(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true));
+        int operationMode = -1;
         /*为主环节，该环节没有关联环节,则让他往下走*/
-        if ((orderTache == queryTacheVo && orderTache.getTacheRelas().size() <= 0)) {
-            nextOrder = true;
-        }
-        /*不为主环节，且环节走到尽头*/
-        /*当前可操作操作数不大于1*/
-        else if ((orderTache != queryTacheVo && queryTacheVo.getNextTache() != null
-                && queryTacheVo.getNextTache()/*.getTacheId()*/ < 0)
-                && operationDao.num(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true)) <= 1) {
-            //没有下一环节
-            nextOrder = true;
+        if ((orderTache.getTacheId().equals(queryTacheVo.getTacheId()) && orderTache.getTacheRelas().size() <= 0)) {
+            operationMode = doNext ? 1 : 0;
+        } else if (!orderTache.getTacheId().equals(queryTacheVo.getTacheId())
+                && (orderTache.getTacheId().equals(queryTacheVo.getSuperTache()))) {
+            ///*不为主环节，且环节走到尽头*/
+            ///*不为主环节，但一定是当前环节的子环节*/
+            if (queryTacheVo.getNextTache() != null
+                    && queryTacheVo.getNextTache() < 0
+                    && num <= 1) {
+                //没有下一环节了，且没其他人也完成了
+                operationMode = doNext ? 1 : 0;
+            } else if (operationVO != null) {
+                //当前环节有操作记录
+                if (CustomConst.TACHE.STATE.END == nextTache
+                        || CustomConst.TACHE.STATE.END == (nextTache = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), CustomConst.TACHE.TACHE_MAP.get(nextTache)))) {
+                    //下一环节没有了
+                    //或者因为有跳过的环节下一环没有了
+                    if (num > 1) {
+                        //还有其他操作数
+                        operationMode = 2;
+                    } else if (doNext) {
+                        //快速过单
+                        operationMode = 3;
+                    } else {
+                        //直接增加操作
+                        operationMode = 4;
+                    }
+                } else {
+                    operationMode = 5;
+                }
+            }
         }
         /*不管是不是主环节 有子环节都要处理*/
-        else {
-            nextOperation = true;
-        }
         /*走工单*/
-        if (nextOrder) {
-            if (doNext) {
-                /*直接触发过单*/
+        switch (operationMode) {
+            case 0:
+                orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+                returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.WAIT);
+                break;
+            case 1:
                 returnObj = new OperationVO()
                         .setOrderId(orderVO.getOrderId())
                         .setTacheId(CustomConst.TACHE.STATE.END)
-                        .setOprMan(userId)
-                /*.setInfo(info)*/;
-                this.toBeContinue(orderVO/*, (OperationVO) returnObj*/);
-            } else {
-                orderDao.set(new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
-                returnObj = new OperationVO().setOrderId(orderVO.getOrderId()).setTacheId(CustomConst.TACHE.STATE.WAIT);
-            }
-        } else if (nextOperation) {
-            /*走工单子流程*/
-            OperationVO operationVO = operationDao.get(new OperationVO()
-                    .setOrderId(orderVO.getOrderId())
-                    .setOprMan(userInfo.getId()).setTacheId(tacheId).setActive(true));
-            if (operationVO != null) {
-//                operationDao.set(operationVO.setInfo(info));
-                /*没有下一环节了*/
-                /*或者因为跳过没有下一环节了*/
-                Integer nextTache = queryTacheVo.getNextTache();
-                if (CustomConst.TACHE.STATE.END == nextTache
-                        || CustomConst.TACHE.STATE.END == (nextTache = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), CustomConst.TACHE.TACHE_MAP.get(nextTache)))) {
-                    /*存在非用户operationVO 证明有其他人也在处理*/
-                    if (this.waitOtherOperation(operationDao.list(new OperationVO().setOrderId(orderVO.getOrderId()).setActive(true)), operationVO)) {
-                        /*结束自己的操作*/
-                        operationDao.set(new OperationVO()
-                                .setActive(false)
-                                .setFinishTime(new Timestamp(System.currentTimeMillis()))
-                                .setOprMan(operationVO.getOprMan())
-                                .setOrderId(operationVO.getOrderId())
-                                .setTacheId(operationVO.getTacheId()));
-                        /*让当前人员等待*/
-                        operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
-                    } else if (doNext) {
-                        /*直接触发过单*/
-                        this.toBeContinue(orderVO/*, operationVO
-                                .setInfo(info)*/);
-                    } else
-                        /*提交到扫单触发过单*/
-                        orderDao.set(new OrderVO()
-                                .setOrderId(orderVO.getOrderId())
-                                .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
-                } else {
-                    operationManager(CustomConst.ADD, operationVO.setTacheId(nextTache));
-                }
+                        .setOprMan(userId);
+                this.toBeContinue(orderVO);
+                break;
+            case 2:
+                operationDao.set(new OperationVO()
+                        .setActive(false)
+                        .setFinishTime(new Timestamp(System.currentTimeMillis()))
+                        .setOprMan(operationVO.getOprMan())
+                        .setOrderId(operationVO.getOrderId())
+                        .setTacheId(operationVO.getTacheId()));
+                /*让当前人员等待*/
+                operationVO.setTacheId(CustomConst.TACHE.STATE.WAIT);
                 returnObj = operationVO;
-            }
+                break;
+            case 3:
+                /*直接触发过单*/
+                this.toBeContinue(orderVO);
+                returnObj = operationVO;
+                break;
+            case 4:
+                /*提交到扫单触发过单*/
+                orderDao.set(new OrderVO()
+                        .setOrderId(orderVO.getOrderId())
+                        .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+                returnObj = operationVO;
+                break;
+            case 5:
+                operationManager(CustomConst.ADD, operationVO.setTacheId(nextTache));
+                returnObj = operationVO;
+                break;
+
         }
         return returnObj;
     }
