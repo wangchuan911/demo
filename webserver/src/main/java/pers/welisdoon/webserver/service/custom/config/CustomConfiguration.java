@@ -16,6 +16,7 @@ import io.vertx.ext.web.impl.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -68,6 +69,9 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     CommonAsynService commonAsynService;
     @Autowired
     RequestService requestService;
+
+    @Value("${wechat-app.tempFilePath}")
+    String staticPath;
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
@@ -126,7 +130,6 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         final String PATH_WX_APP_UPLOAD = "/imgUpd";
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
         final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
-        final String TMEP_FILE_PATH = "tempPic";
         WebClient webClient = WebClient.create(vertx);
         Consumer<Router> routerConsumer = router -> {
             router.get(PATH_WX_APP).handler(routingContext -> {
@@ -233,7 +236,9 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             });
 
             logger.info("inital request mapping: " + PATH_WX_APP_UPLOAD);
-            StaticHandler staticHandler = StaticHandler.create(TMEP_FILE_PATH);
+            StaticHandler staticHandler = StaticHandler.create()
+                    .setAllowRootFileSystemAccess(true)
+                    .setWebRoot(staticPath);
             staticHandler.setAlwaysAsyncFS(true);
             staticHandler.setCachingEnabled(false);
 //            staticHandler.setDirectoryListing(true);
@@ -241,7 +246,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             router.get("/pic/*").handler(routingContext -> {
                 HttpServerRequest httpServerRequest = routingContext.request();
                 String fileName = Utils.pathOffset(httpServerRequest.path(), routingContext);
-                String file = TMEP_FILE_PATH + fileName;
+                String file = staticPath + fileName;
                 FileSystem fileSystem = routingContext.vertx().fileSystem();
                 fileSystem.exists(file, booleanAsyncResult -> {
                     if (booleanAsyncResult.succeeded() && !booleanAsyncResult.result()) {
@@ -262,7 +267,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                 routingContext.fail(404);
                                 return;
                             }
-                            fileSystem.createFile(PATH_PRROJECT + file, voidAsyncResult -> {
+                            fileSystem.createFile(file, voidAsyncResult -> {
                                 if (voidAsyncResult.failed()) {
                                     routingContext.fail(500, voidAsyncResult.cause());
                                     return;
