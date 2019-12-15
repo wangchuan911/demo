@@ -19,7 +19,6 @@ import pers.welisdoon.webserver.service.custom.entity.*;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -640,6 +639,23 @@ public class RequestService {
                                 .setPictrueId(jsonArray.getInteger(i))
                                 .setOrderId(orderId)
                                 .setTacheId(tacheId));
+                    }
+                }
+            }
+            if (infoJson.containsKey("setWorker")) {
+                String workerId = infoJson.getString("setWorker");
+                OrderVO orderVO;
+                UserVO userVO;
+                synchronized (this) {
+                    if (!StringUtils.isEmpty(workerId)
+                            && (orderVO = orderDao.get(new OrderVO().setOrderId(orderId))) != null
+                            && StringUtils.isEmpty(orderVO.getOrderAppointPerson())
+                            && (userVO = userDao.get(new UserVO().setId(workerId))) != null) {
+                        orderDao.set(new OrderVO()
+                                .setOrderId(orderVO.getOrderId())
+                                .setOrderAppointPerson(userVO.getId())
+                                .setOrderAppointPersonName(userVO.getName())
+                                .setOrderAppointPhone(userVO.getPhone()));
                     }
                 }
             }
