@@ -294,8 +294,12 @@ public class RequestService {
                 resultObj = carDao.del(carVO);
                 break;
             case CustomConst.ADD:
+                Object phone = params.remove("phone");
                 carVO = mapToObject(params, CarVO.class);
                 carDao.add(carVO);
+                if (!StringUtils.isEmpty(phone)) {
+                    userDao.set(new UserVO().setId(carVO.getUserId()).setPhone(phone.toString()));
+                }
                 resultObj = carVO;
                 break;
             case CustomConst.MODIFY:
