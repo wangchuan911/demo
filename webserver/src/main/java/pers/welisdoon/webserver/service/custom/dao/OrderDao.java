@@ -8,6 +8,6 @@ import pers.welisdoon.webserver.common.dao.IDao;
 import pers.welisdoon.webserver.service.custom.entity.OrderVO;
 
 @Repository
-public interface OrderDao extends IDao<OrderVO, String> {
+public interface OrderDao extends IDao<OrderVO, Integer> {
     Map getWorkIngOrderNum(OrderVO orderVO);
 }

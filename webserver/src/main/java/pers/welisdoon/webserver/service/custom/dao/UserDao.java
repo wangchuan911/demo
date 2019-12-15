@@ -8,7 +8,7 @@ import pers.welisdoon.webserver.common.dao.IDao;
 import pers.welisdoon.webserver.service.custom.entity.UserVO;
 
 @Repository
-public interface UserDao extends IDao<UserVO, Integer> {
+public interface UserDao extends IDao<UserVO, String> {
 
     List<UserVO.RoleConfig> listRoles();
 }

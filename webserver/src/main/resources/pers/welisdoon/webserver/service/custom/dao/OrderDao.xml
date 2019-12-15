@@ -58,7 +58,9 @@
         <result property="posX" column="pos_x"></result>
         <result property="posY" column="pos_y"></result>
         <result property="tacheId" column="tache_id"></result>
-        <result property="workerName" column="order_appoint_person_name"></result>
+        <result property="orderAppointPersonName" column="order_appoint_person_name"></result>
+        <result property="custName" column="cust_name"></result>
+        <result property="custPhone" column="cust_phone"></result>
 
         <association property="carVO"
                      select="pers.welisdoon.webserver.service.custom.dao.CarDao.get"
@@ -83,8 +85,11 @@
         #{orderState,jdbcType=INTEGER},
         #{orderControlPerson,jdbcType=VARCHAR},
         #{orderAppointPerson,jdbcType=VARCHAR},
+        #{orderAppointPersonName,jdbcType=VARCHAR},
         #{orderArrangeDate,jdbcType=TIMESTAMP},
         #{custId,jdbcType=VARCHAR},
+        #{custName,jdbcType=VARCHAR},
+        #{custPhone,jdbcType=VARCHAR},
         #{orderNote,jdbcType=VARCHAR},
         #{passTache,jdbcType=VARCHAR},
         #{posX,jdbcType=DOUBLE},
@@ -145,8 +150,11 @@
              order_state,
              order_control_person,
              order_appoint_person,
+             order_appoint_person_name,
              order_arrange_date,
              cust_id,
+             cust_name,
+             cust_phone,
              order_note,
              pass_tache,
              pos_x,
@@ -196,11 +204,20 @@
             <if test="orderAppointPerson!=null and orderAppointPerson!=''.toString()">
                 order_appoint_person = #{orderAppointPerson,jdbcType=VARCHAR},
             </if>
+            <if test="orderAppointPersonName!=null and orderAppointPersonName!=''.toString()">
+                order_appoint_person_name = #{orderAppointPersonName,jdbcType=VARCHAR},
+            </if>
             <if test="orderArrangeDate!=null">
                 order_arrange_date = #{orderArrangeDate,jdbcType=TIMESTAMP},
             </if>
             <if test="custId!=null and custId!=''.toString()">
                 cust_id = #{custId,jdbcType=VARCHAR},
+            </if>
+            <if test="custName!=null and custName!=''.toString()">
+                cust_name = #{custId,jdbcType=VARCHAR},
+            </if>
+            <if test="custPhone!=null and custPhone!=''.toString()">
+                cust_phone = #{custId,jdbcType=VARCHAR},
             </if>
             <if test="orderNote!=null and orderNote!=''.toString()">
                 order_note = #{orderNote,jdbcType=VARCHAR},
@@ -230,8 +247,11 @@
         #{vo.orderState,jdbcType=INTEGER} as orderState,
         #{vo.orderControlPerson,jdbcType=VARCHAR} as orderControlPerson,
         #{vo.orderAppointPerson,jdbcType=VARCHAR} as orderAppointPerson,
+        #{vo.orderAppointPersonName,jdbcType=VARCHAR} as orderAppointPersonName,
         #{vo.orderArrangeDate,jdbcType=TIMESTAMP} as orderArrangeDate,
         #{vo.custId,jdbcType=VARCHAR} as custId,
+        #{vo.custName,jdbcType=VARCHAR} as custName,
+        #{vo.custPhone,jdbcType=VARCHAR} as custPhone,
         #{vo.orderNote,jdbcType=VARCHAR} as orderNote,
         #{vo.passTache,jdbcType=VARCHAR} as passTache,
         #{vo.posX,jdbcType=DOUBLE} as posX,

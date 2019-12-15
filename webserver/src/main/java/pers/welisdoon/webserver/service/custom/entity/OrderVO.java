@@ -22,7 +22,9 @@ public class OrderVO {
     private Double posY;
     private List<PictureVO> pictureVOS;
     private CarVO carVO;
-    private String workerName;
+    private String orderAppointPersonName;
+    private String custName;
+    private String custPhone;
 
     public Integer getOrderId() {
         return orderId;
@@ -184,12 +186,28 @@ public class OrderVO {
         this.carVO = carVO;
     }
 
-    public String getWorkerName() {
-        return workerName;
+    public String getOrderAppointPersonName() {
+        return orderAppointPersonName;
     }
 
-    public void setWorkerName(String workerName) {
-        this.workerName = workerName;
+    public void setOrderAppointPersonName(String orderAppointPersonName) {
+        this.orderAppointPersonName = orderAppointPersonName;
+    }
+
+    public String getCustName() {
+        return custName;
+    }
+
+    public void setCustName(String custName) {
+        this.custName = custName;
+    }
+
+    public String getCustPhone() {
+        return custPhone;
+    }
+
+    public void setCustPhone(String custPhone) {
+        this.custPhone = custPhone;
     }
 }
 

@@ -70,7 +70,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     @Autowired
     RequestService requestService;
 
-    @Value("${wechat-app.tempFilePath}")
+    @Value("${temp.filePath}")
     String staticPath;
 
     @VertxRegister(StandaredVerticle.class)
