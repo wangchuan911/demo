@@ -51,16 +51,17 @@
         <result property="orderState" column="order_state"></result>
         <result property="orderControlPerson" column="order_control_person"></result>
         <result property="orderAppointPerson" column="order_appoint_person"></result>
+        <result property="orderAppointPersonName" column="order_appoint_person_name"></result>
+        <result property="orderAppointPhone" column="order_appoint_phone"></result>
         <result property="orderArrangeDate" column="order_arrange_date"></result>
         <result property="custId" column="cust_id"></result>
+        <result property="custName" column="cust_name"></result>
+        <result property="custPhone" column="cust_phone"></result>
         <result property="passTache" column="pass_tache"></result>
         <result property="orderNote" column="order_note"></result>
         <result property="posX" column="pos_x"></result>
         <result property="posY" column="pos_y"></result>
         <result property="tacheId" column="tache_id"></result>
-        <result property="orderAppointPersonName" column="order_appoint_person_name"></result>
-        <result property="custName" column="cust_name"></result>
-        <result property="custPhone" column="cust_phone"></result>
 
         <association property="carVO"
                      select="pers.welisdoon.webserver.service.custom.dao.CarDao.get"
@@ -207,6 +208,9 @@
             <if test="orderAppointPersonName!=null and orderAppointPersonName!=''.toString()">
                 order_appoint_person_name = #{orderAppointPersonName,jdbcType=VARCHAR},
             </if>
+            <if test="orderAppointPhone!=null and orderAppointPhone!=''.toString()">
+                order_appoint_phone= #{orderAppointPhone,jdbcType=VARCHAR},
+            </if>
             <if test="orderArrangeDate!=null">
                 order_arrange_date = #{orderArrangeDate,jdbcType=TIMESTAMP},
             </if>
@@ -214,10 +218,10 @@
                 cust_id = #{custId,jdbcType=VARCHAR},
             </if>
             <if test="custName!=null and custName!=''.toString()">
-                cust_name = #{custId,jdbcType=VARCHAR},
+                cust_name = #{custName,jdbcType=VARCHAR},
             </if>
             <if test="custPhone!=null and custPhone!=''.toString()">
-                cust_phone = #{custId,jdbcType=VARCHAR},
+                cust_phone = #{custPhone,jdbcType=VARCHAR},
             </if>
             <if test="orderNote!=null and orderNote!=''.toString()">
                 order_note = #{orderNote,jdbcType=VARCHAR},

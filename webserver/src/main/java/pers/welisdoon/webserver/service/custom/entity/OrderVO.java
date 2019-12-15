@@ -13,8 +13,12 @@ public class OrderVO {
     private Integer orderState;
     private String orderControlPerson;
     private String orderAppointPerson;
+    private String orderAppointPersonName;
+    private String orderAppointPhone;
     private Timestamp orderArrangeDate;
     private String custId;
+    private String custName;
+    private String custPhone;
     private String passTache;
     private String orderNote;
     private Integer tacheId;
@@ -22,9 +26,6 @@ public class OrderVO {
     private Double posY;
     private List<PictureVO> pictureVOS;
     private CarVO carVO;
-    private String orderAppointPersonName;
-    private String custName;
-    private String custPhone;
 
     public Integer getOrderId() {
         return orderId;
@@ -174,40 +175,54 @@ public class OrderVO {
         return pictureVOS;
     }
 
-    public void setPictureVOS(List<PictureVO> pictureVOS) {
+    public OrderVO setPictureVOS(List<PictureVO> pictureVOS) {
         this.pictureVOS = pictureVOS;
+        return this;
     }
 
     public CarVO getCarVO() {
         return carVO;
     }
 
-    public void setCarVO(CarVO carVO) {
+    public OrderVO setCarVO(CarVO carVO) {
         this.carVO = carVO;
+        return this;
     }
 
     public String getOrderAppointPersonName() {
         return orderAppointPersonName;
     }
 
-    public void setOrderAppointPersonName(String orderAppointPersonName) {
+    public OrderVO setOrderAppointPersonName(String orderAppointPersonName) {
         this.orderAppointPersonName = orderAppointPersonName;
+        return this;
     }
 
     public String getCustName() {
         return custName;
     }
 
-    public void setCustName(String custName) {
+    public OrderVO setCustName(String custName) {
         this.custName = custName;
+        return this;
     }
 
     public String getCustPhone() {
         return custPhone;
     }
 
-    public void setCustPhone(String custPhone) {
+    public OrderVO setCustPhone(String custPhone) {
         this.custPhone = custPhone;
+        return this;
+    }
+
+    public String getOrderAppointPhone() {
+        return orderAppointPhone;
+    }
+
+    public OrderVO setOrderAppointPhone(String orderAppointPhone) {
+        this.orderAppointPhone = orderAppointPhone;
+        return this;
     }
 }
 
