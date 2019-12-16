@@ -230,8 +230,13 @@ public class RequestService {
                 JsonArray jsonArray = (JsonArray) orderVoJson.remove("pictureIds");
 
                 orderVO = orderVoJson.mapTo(OrderVO.class);
-                orderVO.setTacheId(CustomConst.TACHE.FIRST_TACHE.getTacheId());
-                orderVO.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
+                orderVO.setTacheId(CustomConst.TACHE.FIRST_TACHE.getTacheId())
+                        .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
+                UserVO userVO = userDao.get(new UserVO().setId(orderVO.getCustId()));
+                orderVO.setCustName(userVO.getName())
+                        .setCustPhone(StringUtils.isEmpty(orderVO.getCustPhone())
+                                ? userVO.getPhone()
+                                : orderVO.getCustPhone());
                 orderDao.add(orderVO);
 
                 if (jsonArray != null && jsonArray.size() > 0) {
