@@ -332,8 +332,11 @@ public class RequestService {
                 break;
             case CustomConst.USER.GET_WORKERS:
                 userVO = mapToObject(params, UserVO.class);
-                userVO.setRole(CustomConst.ROLE.WOCKER);
-                resultObj = userDao.list(userVO);
+                List<UserVO> userVOS = userDao.list(new UserVO().setRole(CustomConst.ROLE.WOCKER));
+                if (!StringUtils.isEmpty(userVO.getId())) {
+                    userVOS.add(0, userDao.get(new UserVO().setId(userVO.getId())));
+                }
+                resultObj = userVOS;
                 break;
             case CustomConst.ADD:
                 userVO = mapToObject(params, UserVO.class);
