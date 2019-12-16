@@ -119,7 +119,7 @@ public class RequestService {
         });
     }
 
-    void test(OrderVO newOrderVO, OrderVO orderVO, Integer tacheId) {
+    /*void test(OrderVO newOrderVO, OrderVO orderVO, Integer tacheId) {
         switch (tacheId) {
             case 2:
                 newOrderVO.setOrderControlPerson(orderVO.getCustId());
@@ -137,16 +137,16 @@ public class RequestService {
             default:
                 return;
         }
-    }
+    }*/
 
     void toBeContinue(OrderVO orderVO/*, OperationVO operation*/) {
         OrderVO newOrderVO = new OrderVO()
                 .setOrderId(orderVO.getOrderId());
         Integer tacheId = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
-        //测试用 目前自己授权给自己
+        /*//测试用 目前自己授权给自己
         {
             test(newOrderVO, orderVO, tacheId);
-        }
+        }*/
         if (tacheId != null && tacheId >= 0) {
             TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(tacheId);
             newOrderVO.setTacheId(tacheVO.getTacheId());
@@ -339,6 +339,10 @@ public class RequestService {
                 userVO = mapToObject(params, UserVO.class);
                 userVO.setRole(CustomConst.ROLE.CUSTOMER);
                 resultObj = userDao.add(userVO);
+            case CustomConst.MODIFY:
+                userVO = mapToObject(params, UserVO.class);
+                userDao.set(new UserVO().setRole(userVO.getRole()).setId(userVO.getId()));
+                resultObj = userVO;
             default:
                 break;
         }
