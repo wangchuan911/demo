@@ -7,7 +7,6 @@ public class UserVO {
     private String name;
     private Integer role;
     private String phone;
-    private Integer level;
 
     public String getId() {
         return id;
@@ -43,35 +42,5 @@ public class UserVO {
     public UserVO setPhone(String phone) {
         this.phone = phone;
         return this;
-    }
-
-    public Integer getLevel() {
-        return level;
-    }
-
-    public UserVO setLevel(Integer level) {
-        this.level = level;
-        return this;
-    }
-
-    public static class RoleConfig {
-        private Integer roleId;
-        private Integer level;
-
-        public Integer getRoleId() {
-            return roleId;
-        }
-
-        public void setRoleId(Integer roleId) {
-            this.roleId = roleId;
-        }
-
-        public Integer getLevel() {
-            return level;
-        }
-
-        public void setLevel(Integer level) {
-            this.level = level;
-        }
     }
 }

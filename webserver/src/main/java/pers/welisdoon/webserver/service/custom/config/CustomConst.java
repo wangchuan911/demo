@@ -89,15 +89,6 @@ public class CustomConst {
         public final static int CUSTOMER = 0;
         public final static int WOCKER = 1;
         public final static int DISTRIBUTOR = 2;
-
-        public static Map<Integer, Integer> ROLE_MAP;
-
-        static void initRoleMapValue(List<UserVO.RoleConfig> roleConfigs) {
-            ROLE_MAP = roleConfigs.stream()
-                    .collect(Collectors
-                            .toMap(UserVO.RoleConfig::getRoleId
-                                    , UserVO.RoleConfig::getLevel));
-        }
     }
 
     public static class FUNCTION {

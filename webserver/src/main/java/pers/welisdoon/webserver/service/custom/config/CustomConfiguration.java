@@ -88,9 +88,6 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
         UserDao userDao = ApplicationContextProvider.getBean(UserDao.class);
         CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
-        CustomConst.ROLE.initRoleMapValue(userDao.listRoles());
-
-
     }
 
     /*定時任務*/

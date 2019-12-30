@@ -9,12 +9,6 @@
         <result property="name" column="car_user_name"></result>
         <result property="role" column="car_user_role"></result>
         <result property="phone" column="car_user_telephone"></result>
-        <result property="level" column="role_level"></result>
-    </resultMap>
-
-    <resultMap id="RoleConfig" type="pers.welisdoon.webserver.service.custom.entity.UserVO$RoleConfig">
-        <result property="roleId" column="role_id"></result>
-        <result property="level" column="role_level"></result>
     </resultMap>
 
     <parameterMap id="UserVO" type="pers.welisdoon.webserver.service.custom.entity.UserVO">
@@ -25,9 +19,7 @@
     </parameterMap>
 
     <select id="get" parameterType="string" resultMap="UserVO">
-        select a.*,b.role_level from mysql.car_user a
-         join role_config b
-         on b.role_id=a.car_user_role
+        select a.* from mysql.car_user a
          where a.car_user_id=#{id,jdbcType=VARCHAR}
     </select>
     <update id="set" parameterMap="UserVO">
@@ -60,14 +52,8 @@
             #{phone,jdbcType=VARCHAR})
     </insert>
 
-    <select id="listRoles" resultMap="RoleConfig">
-        SELECT * FROM role_config
-    </select>
-
     <select id="list" parameterMap="UserVO" resultMap="UserVO">
-        select a.*,b.role_level from mysql.car_user a
-        join role_config b
-        on b.role_id=a.car_user_role
+        select a.* from mysql.car_user a
         <where>
             <if test="role!=null and role>=0">
                 car_user_role=#{role,jdbcType=INTEGER}

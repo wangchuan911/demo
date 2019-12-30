@@ -10,5 +10,4 @@ import pers.welisdoon.webserver.service.custom.entity.UserVO;
 @Repository
 public interface UserDao extends IDao<UserVO, String> {
 
-    List<UserVO.RoleConfig> listRoles();
 }
