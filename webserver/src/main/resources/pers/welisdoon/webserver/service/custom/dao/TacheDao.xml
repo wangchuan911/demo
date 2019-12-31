@@ -156,7 +156,7 @@
                 c.tache_id in (
                 select d.tache_id from mysql.car_wash_order d
                 where d.cust_id=#{userId,jdbcType=VARCHAR}
-                and d.finish_date is null
+                and d.order_state !=2
                 )
             </if>
         </where>

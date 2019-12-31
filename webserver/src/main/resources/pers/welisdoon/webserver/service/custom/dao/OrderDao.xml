@@ -120,9 +120,14 @@
             <if test="finishDate==null ">
                 and finish_date  is null
             </if>
-            <if test="orderState!=null ">
-                and order_state= #{orderState,jdbcType=INTEGER}
-            </if>
+            <choose>
+                <when test="orderState!=null ">
+                    and order_state= #{orderState,jdbcType=INTEGER}
+                </when>
+                <otherwise>
+                    and order_state = 0
+                </otherwise>
+            </choose>
             <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
                 and order_control_person= #{orderControlPerson,jdbcType=VARCHAR}
             </if>
@@ -301,9 +306,14 @@
         <if test="createDate!=null ">
             create_date= #{createDate,jdbcType=TIMESTAMP} and
         </if>
-        <if test="orderState!=null ">
-            order_state= #{orderState,jdbcType=INTEGER} and
-        </if>
+        <choose>
+            <when test="orderState!=null ">
+                order_state= #{orderState,jdbcType=INTEGER} and
+            </when>
+            <otherwise>
+                order_state = 0 and
+            </otherwise>
+        </choose>
         <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
             order_control_person= #{orderControlPerson,jdbcType=VARCHAR} and
         </if>
