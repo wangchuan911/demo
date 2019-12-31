@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
@@ -44,8 +45,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
             ResponseMesseage responseMesseage = weChatService.receive(requestMesseageBody);
             //报文转对象;
             promise.complete(JAXBUtils.toXML(responseMesseage));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             promise.fail(e);
         }
     }
@@ -87,20 +87,16 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                 }
             }
             throw new NoSuchMethodError();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             jsonObject.put("exception", e.getMessage());
-        }
-        catch (Error e) {
+        } catch (Error e) {
             e.printStackTrace();
             jsonObject.put("error", e.getMessage());
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             promise.fail(e);
-        }
-        finally {
+        } finally {
             if (!promise.future().isComplete()) {
                 promise.complete(jsonObject.toString());
             }
@@ -132,8 +128,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 JsonObject arg = (JsonObject) body;
                 for (int i = 0; i < methods.length; i++) {
                     if (methods[i].getName().equals(requset.getMethod()) && methods[i].getParameterCount() == 1) {
@@ -144,8 +139,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
                             response.setResult(o);
                             promise.complete(response);
                             return;
-                        }
-                        catch (Throwable e) {
+                        } catch (Throwable e) {
                             e.printStackTrace();
                             continue;
                         }
@@ -154,20 +148,19 @@ public class CommonAsynServiceImpl implements CommonAsynService {
             }
 
             throw new NoSuchMethodError();
-        }
-        catch (Exception e) {
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+            response.setException(e.getCause().getMessage());
+        } catch (Exception e) {
             e.printStackTrace();
             response.setException(e.getMessage());
-        }
-        catch (Error e) {
+        } catch (Error e) {
             e.printStackTrace();
             response.setError(e.getMessage());
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             promise.fail(e);
-        }
-        finally {
+        } finally {
             if (!promise.future().isComplete()) {
                 promise.complete(response);
             }
@@ -181,8 +174,7 @@ public class CommonAsynServiceImpl implements CommonAsynService {
             if (value == null) {
                 isThisMethod = true;
                 classes[j] = typeChange(classes[j]);
-            }
-            else {
+            } else {
                 if (!(isThisMethod = ((classes[j] = classEquals(classes[j], value.getClass(), false)) != null)))
                     break;
             }
@@ -194,14 +186,11 @@ public class CommonAsynServiceImpl implements CommonAsynService {
     private static Class<?> classEquals(Class<?> a, Class<?> b, boolean returnObjClass) {
         if (a == b) {
             return a;
-        }
-        else if (typeChange(a) == b) {
+        } else if (typeChange(a) == b) {
             return returnObjClass ? b : a;
-        }
-        else if (a == typeChange(b)) {
+        } else if (a == typeChange(b)) {
             return returnObjClass ? b : a;
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -213,32 +202,23 @@ public class CommonAsynServiceImpl implements CommonAsynService {
     private static Class<?> typeChange(Class<?> a) {
         if (a == int.class) {
             return Integer.class;
-        }
-        else if (a == char.class) {
+        } else if (a == char.class) {
             return Character.class;
-        }
-        else if (a == byte.class) {
+        } else if (a == byte.class) {
             return Byte.class;
-        }
-        else if (a == long.class) {
+        } else if (a == long.class) {
             return Long.class;
-        }
-        else if (a == float.class) {
+        } else if (a == float.class) {
             return Float.class;
-        }
-        else if (a == double.class) {
+        } else if (a == double.class) {
             return Double.class;
-        }
-        else if (a == boolean.class) {
+        } else if (a == boolean.class) {
             return Boolean.class;
-        }
-        else if (a == JsonArray.class) {
+        } else if (a == JsonArray.class) {
             return List.class;
-        }
-        else if (a == JsonObject.class) {
+        } else if (a == JsonObject.class) {
             return Map.class;
-        }
-        else {
+        } else {
             return a;
         }
     }
@@ -246,11 +226,9 @@ public class CommonAsynServiceImpl implements CommonAsynService {
     private static Object getValue(Object targetValue) {
         if (targetValue instanceof JsonObject) {
             return ((JsonObject) targetValue).getMap();
-        }
-        else if (targetValue instanceof JsonArray) {
+        } else if (targetValue instanceof JsonArray) {
             return ((JsonArray) targetValue).getList();
-        }
-        else {
+        } else {
             return targetValue;
         }
     }

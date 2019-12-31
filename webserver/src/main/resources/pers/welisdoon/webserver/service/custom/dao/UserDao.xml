@@ -9,6 +9,7 @@
         <result property="name" column="car_user_name"></result>
         <result property="role" column="car_user_role"></result>
         <result property="phone" column="car_user_telephone"></result>
+        <association property="userAttr" javaType="pers.welisdoon.webserver.service.custom.entity.UserVO$UserAttr" column="car_user_id" select="getUserAttr"></association>
     </resultMap>
 
     <parameterMap id="UserVO" type="pers.welisdoon.webserver.service.custom.entity.UserVO">
@@ -17,6 +18,11 @@
         <parameter property="role" jdbcType="INTEGER"></parameter>
         <parameter property="phone" jdbcType="VARCHAR"></parameter>
     </parameterMap>
+
+    <resultMap id="UserAttr" type="pers.welisdoon.webserver.service.custom.entity.UserVO$UserAttr">
+        <result property="vip" column="vip"></result>
+        <collection property="regionCode"  ofType="int" column="region_code" select="getRegionCodes" ></collection>
+    </resultMap>
 
     <select id="get" parameterType="string" resultMap="UserVO">
         select a.* from mysql.car_user a
@@ -70,4 +76,11 @@
         </where>
     </select>
 
+    <select id="getUserAttr" parameterType="string" resultMap="UserAttr">
+        select * from mysql.user_attr a where a.USER_ID=#{value}
+    </select>
+
+    <select id="getRegionCodes" parameterType="string" resultType="int">
+        select region_code from pub_region  a where a.region_code REGEXP CONCAT('^(',REPLACE(#{value},',','|'),')$')  and a.region_code is not null
+    </select>
 </mapper>
