@@ -14,8 +14,8 @@ import io.vertx.ext.web.client.WebClient;
 import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import pers.welisdoon.webserver.common.encrypt.AesException;
 import pers.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
+import pers.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import pers.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
-import pers.welisdoon.webserver.common.web.CommonAsynService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import pers.welisdoon.webserver.vertx.annotation.VertxRegister;
 import pers.welisdoon.webserver.vertx.verticle.StandaredVerticle;
@@ -40,7 +40,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
 
     private Long wechatAliveTimerId = null;
 
-    CommonAsynService commonAsynService;
+    ICommonAsynService commonAsynService;
 
     @Bean
     public WXBizMsgCrypt getWXBizMsgCrypt(
@@ -56,7 +56,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            CommonAsynService.create(vertx1);
+            ICommonAsynService.create(vertx1);
         };
         return vertxConsumer;
     }
@@ -64,7 +64,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            commonAsynService = CommonAsynService.createProxy(vertx1);
+            commonAsynService = ICommonAsynService.createProxy(vertx1);
 
 
             final String key = "WX.TOKEN";

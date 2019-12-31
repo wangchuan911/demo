@@ -10,7 +10,6 @@ import javax.annotation.PostConstruct;
 
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.Json;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
 import org.slf4j.Logger;
@@ -37,12 +36,10 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import pers.welisdoon.webserver.common.ApplicationContextProvider;
 import pers.welisdoon.webserver.common.config.AbstractWechatConfiguration;
-import pers.welisdoon.webserver.common.web.CommonAsynService;
+import pers.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import pers.welisdoon.webserver.common.web.Requset;
-import pers.welisdoon.webserver.common.web.Response;
 import pers.welisdoon.webserver.service.custom.dao.TacheDao;
 import pers.welisdoon.webserver.service.custom.dao.UserDao;
-import pers.welisdoon.webserver.service.custom.entity.PictureVO;
 import pers.welisdoon.webserver.service.custom.entity.TacheVO;
 import pers.welisdoon.webserver.service.custom.service.RequestService;
 import pers.welisdoon.webserver.vertx.annotation.VertxConfiguration;
@@ -66,7 +63,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         this.orderCycleTime = orderCycleTime;
     }
 
-    CommonAsynService commonAsynService;
+    ICommonAsynService commonAsynService;
     @Autowired
     RequestService requestService;
 
@@ -76,7 +73,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            commonAsynService = CommonAsynService.createProxy(vertx1);
+            commonAsynService = ICommonAsynService.createProxy(vertx1);
             System.out.println(commonAsynService);
         };
         return vertxConsumer;
