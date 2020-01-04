@@ -21,6 +21,7 @@
         <parameter property="posX" jdbcType="DOUBLE"></parameter>
         <parameter property="posY" jdbcType="DOUBLE"></parameter>
         <parameter property="tacheId" jdbcType="INTEGER"></parameter>
+        <parameter property="regionCode" jdbcType="INTEGER"></parameter>
     </parameterMap>
 
     <resultMap id="OrderVO" type="pers.welisdoon.webserver.service.custom.entity.OrderVO">
@@ -40,6 +41,7 @@
         <result property="posX" column="pos_x"></result>
         <result property="posY" column="pos_y"></result>
         <result property="tacheId" column="tache_id"></result>
+        <result property="regionCode" column="region_code"></result>
     </resultMap>
     <resultMap id="OrderVO_All" type="pers.welisdoon.webserver.service.custom.entity.OrderVO">
         <id property="orderId" column="order_id"></id>
@@ -62,6 +64,7 @@
         <result property="posX" column="pos_x"></result>
         <result property="posY" column="pos_y"></result>
         <result property="tacheId" column="tache_id"></result>
+        <result property="regionCode" column="region_code"></result>
 
         <association property="carVO"
                      select="pers.welisdoon.webserver.service.custom.dao.CarDao.get"
@@ -95,7 +98,8 @@
         #{passTache,jdbcType=VARCHAR},
         #{posX,jdbcType=DOUBLE},
         #{posY,jdbcType=DOUBLE},
-        #{tacheId,jdbcType=INTEGER})
+        #{tacheId,jdbcType=INTEGER},
+        #{regionCode,jdbcType=VARCHAR})
     </insert>
     <sql id="selectCondition">
         <where>
@@ -143,6 +147,9 @@
             <if test="tacheId!=null and tacheId!=0">
                 and tache_id= #{tacheId,jdbcType=INTEGER}
             </if>
+            <if test="regionCode!=null and regionCode!=''.toString()">
+                and region_code=#{regionCode,jdbcType=VARCHAR}
+            </if>
         </where>
     </sql>
     <sql id="insertThis">
@@ -165,7 +172,8 @@
              pass_tache,
              pos_x,
              pos_y,
-             tache_id)
+             tache_id,
+             region_code)
     </sql>
     <select id="list" parameterMap="OrderVO" resultMap="OrderVO">
         select * from mysql.car_wash_order a
@@ -243,6 +251,9 @@
             <if test="tacheId!=null and tacheId>=0">
                 tache_id=#{tacheId,jdbcType=INTEGER},
             </if>
+            <if test="regionCode!=null and regionCode!=''.toString()">
+                region_code REGEXP CONCAT('^(',#{regionCode,jdbcType=VARCHAR}),
+            </if>
         </set>
         where order_id = #{orderId,jdbcType=INTEGER}
     </update>
@@ -264,8 +275,9 @@
         #{vo.orderNote,jdbcType=VARCHAR} as orderNote,
         #{vo.passTache,jdbcType=VARCHAR} as passTache,
         #{vo.posX,jdbcType=DOUBLE} as posX,
-        #{vo.posY,jdbcType=DOUBLE} as posY
-        #{vo.tacheId,jdbcType=DOUBLE} as tacheId
+        #{vo.posY,jdbcType=DOUBLE} as posY,
+        #{vo.tacheId,jdbcType=INTEGER} as tacheId,
+        #{vo.regionCode,jdbcType=VARCHAR} as regionCode
         from dual
     </sql>
     <insert id="addAll">
@@ -365,6 +377,9 @@
                 </if>
                 <if test="vo.tacheId!=null and vo.tacheId!=0">
                     tache_id= #{vo.tacheId,jdbcType=INTEGER} ,
+                </if>
+                <if test="regionCode!=null and regionCode!=''.toString()">
+                    region_code=#{vo.regionCode,jdbcType=VARCHAR},
                 </if>
             </set>
             <where>
