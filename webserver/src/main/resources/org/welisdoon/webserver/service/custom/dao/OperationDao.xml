@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.webserver.service.custom.dao.OperationDao">
+    <parameterMap id="OperationVO" type="org.welisdoon.webserver.service.custom.entity.OperationVO">
+        <parameter property="operationId" jdbcType="INTEGER"></parameter>
+        <parameter property="orderId" jdbcType="INTEGER"></parameter>
+        <parameter property="tacheId" jdbcType="INTEGER"></parameter>
+        <parameter property="startTime" jdbcType="TIMESTAMP"></parameter>
+        <parameter property="finishTime" jdbcType="TIMESTAMP"></parameter>
+        <parameter property="active" jdbcType="BIT"></parameter>
+        <parameter property="oprMan" jdbcType="VARCHAR"></parameter>
+        <parameter property="info" jdbcType="VARCHAR"></parameter>
+    </parameterMap>
+    <resultMap id="OperationVO" type="org.welisdoon.webserver.service.custom.entity.OperationVO">
+        <result column="operation_id" property="operationId"></result>
+        <result column="order_id" property="orderId"></result>
+        <result column="tache_id" property="tacheId"></result>
+        <result column="start_time" property="startTime"></result>
+        <result column="finish_time" property="finishTime"></result>
+        <result column="is_active" property="active"></result>
+        <result column="opr_man" property="oprMan"></result>
+        <result column="info" property="info"></result>
+    </resultMap>
+    <resultMap id="OperationVO_ALL" type="org.welisdoon.webserver.service.custom.entity.OperationVO">
+        <result column="operation_id" property="operationId"></result>
+        <result column="order_id" property="orderId"></result>
+        <result column="tache_id" property="tacheId"></result>
+        <result column="start_time" property="startTime"></result>
+        <result column="finish_time" property="finishTime"></result>
+        <result column="is_active" property="active"></result>
+        <result column="opr_man" property="oprMan"></result>
+        <result column="info" property="info"></result>
+        <association property="tacheVO"
+                     select="org.welisdoon.webserver.service.custom.dao.TacheDao.get" column="tacheId=tache_id"
+                     javaType="org.welisdoon.webserver.service.custom.entity.TacheVO">
+        </association>
+    </resultMap>
+
+    <sql id="whereOperationVO">
+        <where>
+            <if test="operationId!=null and operationId>=0">
+                and a.operation_id = #{operationId,jdbcType=INTEGER}
+            </if>
+            <if test="orderId!=null and orderId>=0">
+                and a.order_id = #{orderId,jdbcType=INTEGER}
+            </if>
+            <if test="tacheId!=null and tacheId>=0">
+                and a.tache_id = #{tacheId,jdbcType=INTEGER}
+            </if>
+            <if test="startTime!=null and startTime>=0">
+                and a.start_time = #{startTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="finishTime!=null and finishTime>=0">
+                and a.finish_time = #{finishTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="active!=null">
+                and a.is_active = #{active,jdbcType=BOOLEAN}
+            </if>
+            <if test="oprMan!=null and oprMan!=''.toString()">
+                and a.opr_man = #{oprMan,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </sql>
+
+    <select id="get" parameterMap="OperationVO" resultMap="OperationVO">
+        select * from mysql.tache_operation a
+        <include refid="whereOperationVO"></include>
+    </select>
+
+    <select id="list" parameterMap="OperationVO" resultMap="OperationVO">
+        select * from mysql.tache_operation a
+        <include refid="whereOperationVO"></include>
+    </select>
+    <select id="listAll" parameterMap="OperationVO" resultMap="OperationVO_ALL">
+        select * from mysql.tache_operation a
+        <include refid="whereOperationVO"></include>
+    </select>
+
+    <insert id="add" parameterMap="OperationVO">
+        INSERT INTO mysql.tache_operation
+            (order_id,
+             tache_id,
+             opr_man,
+             info)
+        VALUES (#{orderId},
+                #{tacheId},
+                #{oprMan},
+                #{info})
+    </insert>
+    <update id="set" parameterMap="OperationVO">
+        UPDATE mysql.tache_operation a
+        <set>
+            <if test="finishTime!=null">
+                a.finish_time = #{finishTime},
+            </if>
+            <if test="active!=null">
+                a.is_active = #{active},
+            </if>
+            <if test="oprMan!=null and oprMan!=''.toString()">
+                a.opr_man = #{oprMan},
+            </if>
+            <if test="info!=null and info!=''.toString()">
+                a.info = #{info},
+            </if>
+        </set>
+        <where>
+            <if test="operationId!=null and operationId>=0">
+                and a.operation_id = #{operationId}
+            </if>
+            <if test="orderId!=null and orderId>=0">
+                and a.order_id = #{orderId}
+            </if>
+            <if test="tacheId!=null and tacheId>=0">
+                and a.tache_id = #{tacheId}
+            </if>
+            and a.is_active = 1
+        </where>
+    </update>
+
+    <select id="num" resultType="int" parameterMap="OperationVO">
+        select count(operation_id) from mysql.tache_operation a
+        <include refid="whereOperationVO"></include>
+    </select>
+</mapper>
