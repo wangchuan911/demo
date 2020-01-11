@@ -4,7 +4,6 @@ import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.entity.wechat.messeage.request.*;
 import org.welisdoon.webserver.entity.wechat.messeage.response.ArticleMesseage;
 import org.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
-import pers.welisdoon.webserver.entity.wechat.messeage.request.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

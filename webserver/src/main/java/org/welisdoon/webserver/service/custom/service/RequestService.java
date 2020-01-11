@@ -17,8 +17,6 @@ import org.welisdoon.webserver.service.custom.dao.*;
 import org.welisdoon.webserver.service.custom.entity.*;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
-import pers.welisdoon.webserver.service.custom.dao.*;
-import pers.welisdoon.webserver.service.custom.entity.*;
 
 import java.io.*;
 import java.sql.Timestamp;
