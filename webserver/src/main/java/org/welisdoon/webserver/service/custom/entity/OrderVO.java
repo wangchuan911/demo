@@ -26,7 +26,7 @@ public class OrderVO {
     private Double posY;
     private List<PictureVO> pictureVOS;
     private CarVO carVO;
-    private String regionCode;
+    private Integer regionCode;
 
     public Integer getOrderId() {
         return orderId;
@@ -226,11 +226,11 @@ public class OrderVO {
         return this;
     }
 
-    public String getRegionCode() {
+    public Integer getRegionCode() {
         return regionCode;
     }
 
-    public OrderVO setRegionCode(String regionCode) {
+    public OrderVO setRegionCode(Integer regionCode) {
         this.regionCode = regionCode;
         return this;
     }

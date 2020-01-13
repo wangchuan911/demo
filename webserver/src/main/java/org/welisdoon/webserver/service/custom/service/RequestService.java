@@ -270,7 +270,7 @@ public class RequestService {
                 break;
             case CustomConst.ORDER.APPIONT_WORKER:
                 orderVO = new OrderVO()
-                        .setOrderAppointPerson(MapUtils.getString(params, "orderControlPerson"))
+//                        .setOrderAppointPerson(MapUtils.getString(params, "orderControlPerson"))
                         .setOrderId(MapUtils.getInteger(params, "orderId"));
                 orderVO = orderDao.get(orderVO);
                 if (orderVO != null) {
@@ -671,7 +671,8 @@ public class RequestService {
                                 .setOrderId(orderVO.getOrderId())
                                 .setOrderAppointPerson(userVO.getId())
                                 .setOrderAppointPersonName(userVO.getName())
-                                .setOrderAppointPhone(userVO.getPhone()));
+                                .setOrderAppointPhone(userVO.getPhone())
+                                .setOrderControlPerson(userId));
                     }
                 }
             }

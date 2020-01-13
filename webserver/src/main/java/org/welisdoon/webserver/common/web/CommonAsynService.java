@@ -144,16 +144,16 @@ public class CommonAsynService implements ICommonAsynService {
 
             throw new NoSuchMethodError();
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
             response.setException(e.getCause().getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
             response.setException(e.getMessage());
         } catch (Error e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
             response.setError(e.getMessage());
         } catch (Throwable e) {
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
             promise.fail(e);
         } finally {
             if (!promise.future().isComplete()) {
