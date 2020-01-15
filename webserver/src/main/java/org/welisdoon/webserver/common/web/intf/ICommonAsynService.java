@@ -30,8 +30,6 @@ public interface ICommonAsynService {
 
     void wechatMsgReceive(String inputBody, Handler<AsyncResult<String>> outputBodyHandler);
 
-    void serviceCall(String serverName, String method, String inputBody, String option, Handler<AsyncResult<String>> outputBodyHandler);
-
     void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler);
 
 }

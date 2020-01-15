@@ -12,7 +12,7 @@ import io.vertx.ext.web.Session;
 public class Requset {
     String method;
     String service;
-    Object body;
+    String body;
     JsonObject session;
     JsonObject params;
 
@@ -24,7 +24,7 @@ public class Requset {
     public Requset(JsonObject jsonObject) {
         method = jsonObject.getString("method");
         service = jsonObject.getString("service");
-        body = jsonObject.getValue("body");
+        body = jsonObject.getString("body");
         session = jsonObject.getJsonObject("session");
         params = jsonObject.getJsonObject("params");
     }
@@ -34,12 +34,10 @@ public class Requset {
             if (t == MultiMap.class) {
                 Map map = ((JsonObject) o).getMap();
                 return (T) MultiMap.caseInsensitiveMultiMap().addAll((Map<String, String>) map);
-            }
-            else {
+            } else {
                 return null;
             }
-        }
-        else {
+        } else {
             return (T) o;
         }
     }
@@ -66,11 +64,11 @@ public class Requset {
         return this;
     }
 
-    public Object getBody() {
+    public String getBody() {
         return body;
     }
 
-    public Requset setBody(Object body) {
+    public Requset setBody(String body) {
         this.body = body;
         return this;
     }

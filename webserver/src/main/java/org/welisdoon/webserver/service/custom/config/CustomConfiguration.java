@@ -147,20 +147,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                 });
                         break;
                     default:
-                        JsonArray jsonArray = new JsonArray()
-                                .add("otherManager")
-                                .add(new JsonArray()
-                                        .add(code)
-                                        .add(new JsonArray("value")));
-                        jsonArray.add(this.getPrams(routingContext));
-                        commonAsynService.serviceCall(REQUEST_NAME, jsonArray.getString(0), jsonArray.getJsonArray(1).toString(), jsonArray.getJsonArray(2).toString(), stringAsyncResult -> {
-                            if (stringAsyncResult.succeeded()) {
-                                routingContext.response().end(stringAsyncResult.result());
-                                System.out.println();
-                            } else {
-                                routingContext.fail(500, stringAsyncResult.cause());
-                            }
-                        });
+
                         break;
                 }
 
@@ -173,7 +160,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 Requset requset = new Requset()
                         .setService(REQUEST_NAME)
                         .setMethod(jsonArray.getString(0))
-                        .setBody(jsonArray.getJsonArray(1))
+                        .setBody(jsonArray.getJsonArray(1).toString())
                         .putParams(routingContext.request().params())
                         .putSession(routingContext.session());
                 commonAsynService.requsetCall(requset, stringAsyncResult -> {
@@ -210,7 +197,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                             .put("size", fileUpload.size())
                                             .put("fileName", fileUpload.fileName())
                                             .put("contentTransferEncoding", fileUpload.contentTransferEncoding()))
-                                    .add(JsonObject.mapFrom(httpServerRequest.formAttributes().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))))
+                                    .add(JsonObject.mapFrom(httpServerRequest.formAttributes().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))).toString())
                             .putParams(httpServerRequest.params())
                             .putSession(routingContext.session());
                     commonAsynService.requsetCall(requset, stringAsyncResult -> {
@@ -249,7 +236,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                 .setMethod("pictureManager")
                                 .setBody(new JsonArray()
                                         .add(CustomConst.GET)
-                                        .add(Map.of("name", fileName.substring(1))))
+                                        .add(Map.of("name", fileName.substring(1))).toString())
                                 .putParams(httpServerRequest.params())
                                 .putSession(routingContext.session());
                         commonAsynService.requsetCall(requset, responseAsyncResult -> {

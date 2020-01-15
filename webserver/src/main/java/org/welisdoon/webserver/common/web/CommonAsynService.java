@@ -4,8 +4,11 @@ package org.welisdoon.webserver.common.web;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.reflections.ReflectionUtils;
+import org.springframework.util.CollectionUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
@@ -17,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,6 +32,30 @@ public class CommonAsynService implements ICommonAsynService {
     private WeChatService weChatService;
 
     private static final Logger logger = LoggerFactory.getLogger(CommonAsynService.class);
+
+    final static Map<Class, Class> CLASS_ALIAS_MAP;
+
+    static {
+        Class[] classes = new Class[]{byte.class, Byte.class,
+                short.class, Short.class,
+                int.class, Integer.class,
+                long.class, Long.class,
+                float.class, Float.class,
+                double.class, Double.class,
+                char.class, Character.class,
+                JsonArray.class, List.class,
+                JsonObject.class, Map.class};
+        Map.Entry[] entrys = new Map.Entry[classes.length];
+
+        int mid = entrys.length / 2;
+        for (int i = 0; i < entrys.length; i++) {
+            boolean flag = i < mid;
+            int a = flag ? i * 2 : (i - mid) * 2 + 1;
+            int b = flag ? i * 2 + 1 : (i - mid) * 2;
+            entrys[i] = Map.entry(classes[a], classes[b]);
+        }
+        CLASS_ALIAS_MAP = Map.ofEntries(entrys);
+    }
 
     @Override
     public void wechatMsgReceive(String message, Handler<AsyncResult<String>> resultHandler) {
@@ -45,58 +73,7 @@ public class CommonAsynService implements ICommonAsynService {
         }
     }
 
-    @Override
-    public void serviceCall(String serverName, String method, String input, String option, Handler<AsyncResult<String>> outputBodyHandler) {
-        Promise<String> promise = Promise.promise();
-        promise.future().setHandler(outputBodyHandler);
-        JsonObject jsonObject = new JsonObject();
-        try {
-            Object sprngService = ApplicationContextProvider.getBean(serverName);
-            Method[] methods = sprngService.getClass().getMethods();
-            JsonArray arg = new JsonArray(input);
-            Object reult = null;
-            for (int i = 0; i < methods.length; i++) {
-                if (methods[i].getName().equals(method) && methods[i].getParameterCount() == arg.size()) {
-                    Object[] args = new Object[arg.size()];
-                    Class<?>[] classes = methods[i].getParameterTypes();
-                    /*boolean isThisMethod = true;
-                    for (int j = 0; j < arg.size(); j++) {
-                        Object value = arg.getValue(j);
-                        if (value == null) {
-                            isThisMethod = true;
-                            classes[j] = typeChange(classes[j]);
-                        }
-                        else {
-                            if (!(isThisMethod = ((classes[j] = classEquals(classes[j], value.getClass(), false)) != null)))
-                                break;
-                        }
-                        args[j] = getValue(value);
-                    }*/
-                    boolean isThisMethod = checkArgs(args, classes, arg);
-                    if (isThisMethod) {
-                        reult = methods[i].invoke(sprngService, args);
-                        jsonObject.put("result", reult);
-                        promise.complete(jsonObject.toString());
-                        return;
-                    }
-                }
-            }
-            throw new NoSuchMethodError();
-        } catch (Exception e) {
-            e.printStackTrace();
-            jsonObject.put("exception", e.getMessage());
-        } catch (Error e) {
-            e.printStackTrace();
-            jsonObject.put("error", e.getMessage());
-        } catch (Throwable e) {
-            e.printStackTrace();
-            promise.fail(e);
-        } finally {
-            if (!promise.future().isComplete()) {
-                promise.complete(jsonObject.toString());
-            }
-        }
-    }
+
 
     @Override
     public void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler) {
@@ -105,43 +82,26 @@ public class CommonAsynService implements ICommonAsynService {
         Response response = new Response();
         try {
             Object sprngService = ApplicationContextProvider.getBean(requset.getService());
-            Method[] methods = sprngService.getClass().getMethods();
-            Object body = requset.getBody();
-            if (body instanceof JsonArray) {
-                JsonArray arg = (JsonArray) requset.getBody();
-                Object reult = null;
-                for (int i = 0; i < methods.length; i++) {
-                    if (methods[i].getName().equals(requset.getMethod()) && methods[i].getParameterCount() == arg.size()) {
-                        Object[] args = new Object[arg.size()];
-                        Class<?>[] classes = methods[i].getParameterTypes();
-                        boolean isThisMethod = checkArgs(args, classes, arg);
-                        if (isThisMethod) {
-                            reult = methods[i].invoke(sprngService, args);
-                            response.setResult(reult);
-                            promise.complete(response);
+            Object input = Json.decodeValue(requset.getBody());
+            if (input instanceof JsonArray) {
+                List body = ((JsonArray) input).getList();
+                Set<Method> methods = ReflectionUtils.getMethods(sprngService.getClass(), method ->
+                        method != null && method.isAnnotationPresent(VertxWebApi.class)
+                                && method.getName().equals(requset.getMethod())
+                                && method.getParameterCount() == body.size()
+                );
+                if (!CollectionUtils.isEmpty(methods)) {
+                    Object[] args = new Object[body.size()];
+                    Optional<Method> optionalMethod = methods.stream()
+                            .filter(method ->
+                                    setValueAndCheck(method.getParameterTypes(), args, body)
+                            ).findFirst();
+                    if (optionalMethod.isPresent()) {
+                        response.setResult(optionalMethod.get().invoke(sprngService, args));
                             return;
                         }
                     }
                 }
-            } else {
-                JsonObject arg = (JsonObject) body;
-                for (int i = 0; i < methods.length; i++) {
-                    if (methods[i].getName().equals(requset.getMethod()) && methods[i].getParameterCount() == 1) {
-                        Object o = null;
-                        try {
-                            o = arg.mapTo(methods[i].getParameters()[0].getClass());
-                            o = methods[i].invoke(sprngService, o);
-                            response.setResult(o);
-                            promise.complete(response);
-                            return;
-                        } catch (Throwable e) {
-                            e.printStackTrace();
-                            continue;
-                        }
-                    }
-                }
-            }
-
             throw new NoSuchMethodError();
         } catch (InvocationTargetException e) {
             logger.error(e.getMessage(),e);
@@ -162,69 +122,25 @@ public class CommonAsynService implements ICommonAsynService {
         }
     }
 
-    private boolean checkArgs(Object[] args, Class<?>[] classes, JsonArray arg) {
-        boolean isThisMethod = true;
-        for (int j = 0; j < arg.size(); j++) {
-            Object value = arg.getValue(j);
-            if (value == null) {
-                isThisMethod = true;
-                classes[j] = typeChange(classes[j]);
-            } else {
-                if (!(isThisMethod = ((classes[j] = classEquals(classes[j], value.getClass(), false)) != null)))
-                    break;
+    boolean setValueAndCheck(Class<?>[] methodParameterTypes, Object[] target, List orgrin) {
+        Object value;
+        Class valueClass;
+        Class paramType;
+        for (int i = 0; i < orgrin.size(); i++) {
+            value = orgrin.get(i);
+            valueClass = value != null ? value.getClass() : Void.class;
+            paramType = methodParameterTypes[i];
+            if (value != null
+                    && !(paramType.isAssignableFrom(valueClass)
+                    || (CLASS_ALIAS_MAP.containsKey(paramType)
+                    ? CLASS_ALIAS_MAP.get(paramType)
+                    : Void.class).isAssignableFrom(valueClass))) {
+                return false;
             }
-            args[j] = getValue(value);
+            target[i] = value;
         }
-        return isThisMethod;
+        return true;
     }
 
-    private static Class<?> classEquals(Class<?> a, Class<?> b, boolean returnObjClass) {
-        if (a == b) {
-            return a;
-        } else if (typeChange(a) == b) {
-            return returnObjClass ? b : a;
-        } else if (a == typeChange(b)) {
-            return returnObjClass ? b : a;
-        } else {
-            return null;
-        }
-    }
 
-    private static Class<?> classEquals(Class<?> a, Class<?> b) {
-        return classEquals(a, b, false);
-    }
-
-    private static Class<?> typeChange(Class<?> a) {
-        if (a == int.class) {
-            return Integer.class;
-        } else if (a == char.class) {
-            return Character.class;
-        } else if (a == byte.class) {
-            return Byte.class;
-        } else if (a == long.class) {
-            return Long.class;
-        } else if (a == float.class) {
-            return Float.class;
-        } else if (a == double.class) {
-            return Double.class;
-        } else if (a == boolean.class) {
-            return Boolean.class;
-        } else if (a == JsonArray.class) {
-            return List.class;
-        } else if (a == JsonObject.class) {
-            return Map.class;
-        } else {
-            return a;
-        }
-    }
-
-    private static Object getValue(Object targetValue) {
-        if (targetValue instanceof JsonObject) {
-            return ((JsonObject) targetValue).getMap();
-        } else if (targetValue instanceof JsonArray) {
-            return ((JsonArray) targetValue).getList();
-        } else {
-            return targetValue;
-        }
-    }
 }
