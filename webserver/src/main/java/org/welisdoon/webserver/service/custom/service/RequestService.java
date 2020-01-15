@@ -17,6 +17,7 @@ import org.welisdoon.webserver.service.custom.dao.*;
 import org.welisdoon.webserver.service.custom.entity.*;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.io.*;
 import java.sql.Timestamp;
@@ -63,6 +64,7 @@ public class RequestService {
     }
 
     /*扫单调用*/
+    @VertxWebApi
     public void toBeContinue() {
         final OrderVO nextOrderVO = new OrderVO().setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
         orderDao.list(nextOrderVO).stream().forEach(orderVO -> {
@@ -221,6 +223,7 @@ public class RequestService {
     }
 
     /*工单管理*/
+    @VertxWebApi
     public Object orderManger(int mode, Map params) {
         Object resultObj = null;
         OrderVO orderVO;
@@ -286,6 +289,7 @@ public class RequestService {
     }
 
     /*车辆管理*/
+    @VertxWebApi
     public Object carManger(int mode, Map params) {
         Object resultObj = null;
         CarVO carVO = null;
@@ -318,6 +322,7 @@ public class RequestService {
     }
 
     /*用户管理*/
+    @VertxWebApi
     public Object userManger(int mode, Map params) {
         Object resultObj = null;
         UserVO userVO = null;
@@ -353,6 +358,7 @@ public class RequestService {
     }
 
     /*环节管理*/
+    @VertxWebApi
     public Object tacheManager(int mode, Map params) {
         Object resultObj = null;
         TacheVO tacheVO;
@@ -376,6 +382,7 @@ public class RequestService {
     }
 
     /*环节 操作 管理*/
+    @VertxWebApi
     public Object operationManager(int mode, Map params) {
         Object resultObj = null;
         OperationVO operationVO;
@@ -422,6 +429,7 @@ public class RequestService {
     }
 
     /*登陆初始化*/
+    @VertxWebApi
     public Object login(String userId) {
         JsonObject jsonObject = new JsonObject();
         if (!StringUtils.isEmpty(userId)) {
@@ -456,6 +464,7 @@ public class RequestService {
     }
 
     /*下一步*/
+    @VertxWebApi
     public Object toBeContinue(Map map) {
         Object returnObj = null;
         Integer orderId = MapUtils.getInteger(map, "orderId", null);
@@ -695,6 +704,7 @@ public class RequestService {
         return orther > 1 || (all - orther > 0);
     }
 
+    @VertxWebApi
     public Object uploadFile(Map fileUpload, Map map) {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
@@ -720,6 +730,7 @@ public class RequestService {
         return returnObj;
     }
 
+    @VertxWebApi
     public Object pictureManager(int mode, Map map) {
         Object returnObj = null;
         PictureVO pictureVO;
