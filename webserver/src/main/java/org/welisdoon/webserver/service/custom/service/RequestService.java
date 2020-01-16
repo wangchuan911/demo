@@ -230,7 +230,7 @@ public class RequestService {
         switch (mode) {
             case CustomConst.ADD:
                 JsonObject orderVoJson = JsonObject.mapFrom(params);
-                JsonArray jsonArray = (JsonArray) orderVoJson.remove("pictureIds");
+                List<Integer> jsonArray = (List<Integer>) orderVoJson.remove("pictureIds");
 
                 orderVO = orderVoJson.mapTo(OrderVO.class);
                 orderVO.setTacheId(CustomConst.TACHE.FIRST_TACHE.getTacheId())
@@ -245,7 +245,7 @@ public class RequestService {
                 if (jsonArray != null && jsonArray.size() > 0) {
                     for (int i = 0; i < jsonArray.size(); i++) {
                         pictureDao.set(new PictureVO()
-                                .setPictrueId(jsonArray.getInteger(i))
+                                .setPictrueId(jsonArray.get(i))
                                 .setOrderId(orderVO.getOrderId())
                                 .setTacheId(orderVO.getTacheId()));
                     }
