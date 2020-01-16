@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -12,11 +13,11 @@ import org.springframework.util.StringUtils;
 
 @DataObject
 public class Requset {
-    String method;
-    String service;
-    String body;
-    String session;
-    String params;
+    private String method;
+    private String service;
+    private String body;
+    private String session;
+    private String params;
 
 
     public Requset() {
@@ -31,17 +32,16 @@ public class Requset {
         params = jsonObject.getString("params");
     }
 
-    private <T> T putValue(Object o, Class<T> t) {
-        if (o instanceof JsonObject) {
-            if (t == MultiMap.class) {
-                Map map = ((JsonObject) o).getMap();
-                return (T) MultiMap.caseInsensitiveMultiMap().addAll((Map<String, String>) map);
-            } else {
-                return null;
-            }
-        } else {
-            return (T) o;
-        }
+    public Object bodyAsJson() {
+        return Json.decodeValue(this.body);
+    }
+
+    public Object sessionAsJson() {
+        return Json.decodeValue(this.session);
+    }
+
+    public Object paramsAsJson() {
+        return Json.decodeValue(this.params);
     }
 
     public JsonObject toJson() {

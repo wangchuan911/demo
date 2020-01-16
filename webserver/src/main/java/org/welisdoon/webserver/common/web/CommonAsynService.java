@@ -74,7 +74,6 @@ public class CommonAsynService implements ICommonAsynService {
     }
 
 
-
     @Override
     public void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler) {
         Promise<Response> promise = Promise.promise();
@@ -82,7 +81,7 @@ public class CommonAsynService implements ICommonAsynService {
         Response response = new Response();
         try {
             Object sprngService = ApplicationContextProvider.getBean(requset.getService());
-            Object input = Json.decodeValue(requset.getBody());
+            Object input = requset.bodyAsJson();
             if (input instanceof JsonArray) {
                 List body = ((JsonArray) input).getList();
                 Set<Method> methods = ReflectionUtils.getMethods(sprngService.getClass(), method ->
@@ -98,22 +97,22 @@ public class CommonAsynService implements ICommonAsynService {
                             ).findFirst();
                     if (optionalMethod.isPresent()) {
                         response.setResult(optionalMethod.get().invoke(sprngService, args));
-                            return;
-                        }
+                        return;
                     }
                 }
+            }
             throw new NoSuchMethodError();
         } catch (InvocationTargetException e) {
-            logger.error(e.getMessage(),e);
+            logger.error(e.getMessage(), e);
             response.setException(e.getCause().getMessage());
         } catch (Exception e) {
-            logger.error(e.getMessage(),e);
+            logger.error(e.getMessage(), e);
             response.setException(e.getMessage());
         } catch (Error e) {
-            logger.error(e.getMessage(),e);
+            logger.error(e.getMessage(), e);
             response.setError(e.getMessage());
         } catch (Throwable e) {
-            logger.error(e.getMessage(),e);
+            logger.error(e.getMessage(), e);
             promise.fail(e);
         } finally {
             if (!promise.future().isComplete()) {
