@@ -9,21 +9,17 @@ import java.io.StringWriter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class JAXBUtils {
-    final static Map<Class<?>, JAXBContext> JAXB_CONTEXT_MAP;
+public interface JAXBUtils {
+    Map<Class<?>, JAXBContext> JAXB_CONTEXT_MAP = new ConcurrentHashMap<>();
 
-    static {
-        JAXB_CONTEXT_MAP = new ConcurrentHashMap<>();
-    }
-
-    public static String toXML(Object obj) throws JAXBException {
+    static String toXML(Object obj) throws JAXBException {
         JAXBContext context;
-        Class<?> clazz=obj.getClass();
-        if(JAXB_CONTEXT_MAP.containsKey(clazz)){
-            context=JAXB_CONTEXT_MAP.get(clazz);
-        }else{
-            context=JAXBContext.newInstance(clazz);
-            JAXB_CONTEXT_MAP.put(clazz,context);
+        Class<?> clazz = obj.getClass();
+        if (JAXB_CONTEXT_MAP.containsKey(clazz)) {
+            context = JAXB_CONTEXT_MAP.get(clazz);
+        } else {
+            context = JAXBContext.newInstance(clazz);
+            JAXB_CONTEXT_MAP.put(clazz, context);
         }
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");// //编码格式
@@ -43,14 +39,14 @@ public class JAXBUtils {
      * @Description XML转化为对象
      */
     @SuppressWarnings("unchecked")
-    public static <T> T fromXML(String xml, Class<T> valueType) throws JAXBException {
+    static <T> T fromXML(String xml, Class<T> valueType) throws JAXBException {
         JAXBContext context;
-        Class<?> clazz=valueType;
-        if(JAXB_CONTEXT_MAP.containsKey(clazz)){
-            context=JAXB_CONTEXT_MAP.get(clazz);
-        }else{
-            context=JAXBContext.newInstance(clazz);
-            JAXB_CONTEXT_MAP.put(clazz,context);
+        Class<?> clazz = valueType;
+        if (JAXB_CONTEXT_MAP.containsKey(clazz)) {
+            context = JAXB_CONTEXT_MAP.get(clazz);
+        } else {
+            context = JAXBContext.newInstance(clazz);
+            JAXB_CONTEXT_MAP.put(clazz, context);
         }
         Unmarshaller unmarshaller = context.createUnmarshaller();
         return (T) unmarshaller.unmarshal(new StringReader(xml));
