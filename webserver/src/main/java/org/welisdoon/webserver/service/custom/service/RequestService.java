@@ -429,7 +429,6 @@ public class RequestService {
     }
 
     /*登陆初始化*/
-    @VertxWebApi
     public Object login(String userId) {
         JsonObject jsonObject = new JsonObject();
         if (!StringUtils.isEmpty(userId)) {
@@ -704,7 +703,6 @@ public class RequestService {
         return orther > 1 || (all - orther > 0);
     }
 
-    @VertxWebApi
     public Object uploadFile(Map fileUpload, Map map) {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
