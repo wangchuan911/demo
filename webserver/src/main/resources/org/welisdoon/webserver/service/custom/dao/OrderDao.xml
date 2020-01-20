@@ -122,7 +122,7 @@
                 and finish_date is not null
             </if>
             <if test="finishDate==null ">
-                and finish_date  is null
+                and finish_date is null
             </if>
             <choose>
                 <when test="orderState!=null ">
@@ -314,43 +314,55 @@
         select
         count(order_id) all_nums,
         cast(sum(IF(ISNULL(finish_date) ,0 , 1 ))as unsigned int) nums
-        from mysql.car_wash_order a where
-        <if test="orderId!=null and orderId!=''.toString()">
-            order_id= #{orderId,jdbcType=INTEGER} and
-        </if>
-        <if test="orderCode!=null and orderCode!=''.toString()">
-            order_code= #{orderCode,jdbcType=VARCHAR} and
-        </if>
-        <if test="carLicenseNumber!=null and carLicenseNumber!=''.toString()">
-            car_license_number=#{carLicenseNumber,jdbcType=VARCHAR} and
-        </if>
-        <if test="carAddress!=null and carAddress!=''.toString()">
-            car_address= #{carAddress,jdbcType=VARCHAR} and
-        </if>
-        <if test="createDate!=null ">
-            create_date= #{createDate,jdbcType=TIMESTAMP} and
-        </if>
-        <choose>
-            <when test="orderState!=null ">
-                order_state= #{orderState,jdbcType=INTEGER} and
-            </when>
-            <otherwise>
-                order_state = 0 and
-            </otherwise>
-        </choose>
-        <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
-            order_control_person= #{orderControlPerson,jdbcType=VARCHAR} and
-        </if>
-        <if test="orderAppointPerson!=null and orderAppointPerson!=''.toString()">
-            order_appoint_person= #{orderAppointPerson,jdbcType=VARCHAR} and
-        </if>
-        <if test="orderArrangeDate!=null and orderArrangeDate!=''.toString()">
-            order_arrange_date= #{orderArrangeDate,jdbcType=VARCHAR} and
-        </if>
-        <if test="custId!=null and custId!=''.toString()">
-            cust_id= #{custId,jdbcType=VARCHAR} and
-        </if>
-        order_arrange_date between current_date() and CURRENT_DATE()+1
+        from mysql.car_wash_order a
+        <where>
+            <if test="orderId!=null and orderId!=''.toString()">
+                and order_id= #{orderId,jdbcType=INTEGER}
+            </if>
+            <if test="orderCode!=null and orderCode!=''.toString()">
+                and order_code= #{orderCode,jdbcType=VARCHAR}
+            </if>
+            <if test="carLicenseNumber!=null and carLicenseNumber!=''.toString()">
+                and car_license_number=#{carLicenseNumber,jdbcType=VARCHAR}
+            </if>
+            <if test="carAddress!=null and carAddress!=''.toString()">
+                and car_address= #{carAddress,jdbcType=VARCHAR}
+            </if>
+            <if test="createDate!=null ">
+                and create_date= #{createDate,jdbcType=TIMESTAMP}
+            </if>
+            <choose>
+                <when test="orderState!=null ">
+                    and order_state= #{orderState,jdbcType=INTEGER}
+                </when>
+                <otherwise>
+                    and order_state = 0
+                </otherwise>
+            </choose>
+            <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
+                and (order_control_person= #{orderControlPerson,jdbcType=VARCHAR}
+                or region_code REGEXP
+                (SELECT
+                CONCAT(
+                '^(',
+                REPLACE(a1.REGION_CODE, ',', '|'),
+                ')'
+                )
+                FROM
+                user_attr a1
+                WHERE a1.USER_ID = #{orderControlPerson,jdbcType=VARCHAR})
+                )
+            </if>
+            <if test="orderAppointPerson!=null and orderAppointPerson!=''.toString()">
+                and order_appoint_person= #{orderAppointPerson,jdbcType=VARCHAR}
+            </if>
+            <if test="orderArrangeDate!=null and orderArrangeDate!=''.toString()">
+                and order_arrange_date= #{orderArrangeDate,jdbcType=VARCHAR}
+            </if>
+            <if test="custId!=null and custId!=''.toString()">
+                and cust_id= #{custId,jdbcType=VARCHAR}
+            </if>
+        </where>
     </select>
 
     <update id="setAll" parameterType="list">
