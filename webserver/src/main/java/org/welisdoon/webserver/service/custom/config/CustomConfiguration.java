@@ -64,7 +64,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     }
 
     ICommonAsynService commonAsynService;
-    @Autowired
+
     RequestService requestService;
 
     @Value("${temp.filePath}")
@@ -81,9 +81,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
     @PostConstruct
     void initValue() {
-
         TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
-        UserDao userDao = ApplicationContextProvider.getBean(UserDao.class);
+        requestService = ApplicationContextProvider.getBean(RequestService.class);
         CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
     }
 
@@ -129,8 +128,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             router.get(PATH_WX_APP).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 MultiMap multiMap = routingContext.request().params();
-                int code;
-                switch (code = Integer.parseInt(multiMap.get("code"))) {
+                switch (Integer.parseInt(multiMap.get("code"))) {
                     case -1:
                         webClient.getAbs(URL_CODE_2_SESSION + multiMap.get("value"))
                                 .send(httpResponseAsyncResult -> {
@@ -157,12 +155,13 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             router.post(PATH_WX_APP).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 JsonArray jsonArray = routingContext.getBodyAsJsonArray();
-                Requset requset = new Requset()
+                /*Requset requset = new Requset()
                         .setService(REQUEST_NAME)
                         .setMethod(jsonArray.getString(0))
                         .setBody(jsonArray.getJsonArray(1).toString())
                         .putParams(routingContext.request().params())
-                        .putSession(routingContext.session());
+                        .putSession(routingContext.session());*/
+                Requset requset = Requset.newInstance(Requset.SIMPLE_REQUEST, routingContext).setService(REQUEST_NAME);
                 commonAsynService.requsetCall(requset, stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
@@ -185,7 +184,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                         return;
                     }
                     FileUpload fileUpload = fileUploads.iterator().next();
-                    Requset requset = new Requset()
+                    /*Requset requset = new Requset()
                             .setService(REQUEST_NAME)
                             .setMethod("uploadFile")
                             .setBody(new JsonArray()
@@ -199,7 +198,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                             .put("contentTransferEncoding", fileUpload.contentTransferEncoding()))
                                     .add(JsonObject.mapFrom(httpServerRequest.formAttributes().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))).toString())
                             .putParams(httpServerRequest.params())
-                            .putSession(routingContext.session());
+                            .putSession(routingContext.session());*/
+                    Requset requset = Requset.newInstance(Requset.UPLOAD_FILE, routingContext).setService(REQUEST_NAME);
                     commonAsynService.requsetCall(requset, stringAsyncResult -> {
                         if (stringAsyncResult.succeeded()) {
                             httpServerResponse.end(stringAsyncResult.result().toJson().toBuffer());
@@ -274,26 +274,5 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             });
         };
         return routerConsumer;
-    }
-
-    private JsonArray getPrams(RoutingContext routingContext) {
-        {
-            JsonArray arg3 = new JsonArray();
-            JsonObject jsonObject = new JsonObject();
-            {
-                Iterator<Map.Entry<String, String>> iterator = routingContext.request().params().iterator();
-                while (iterator.hasNext()) {
-                    Map.Entry<String, String> stringEntry = iterator.next();
-                    jsonObject.put(stringEntry.getKey(), stringEntry.getValue());
-                }
-                arg3.add(jsonObject);
-            }
-            {
-                Session session = routingContext.session();
-                Map<String, Object> sessionData = session != null ? session.data() : Map.of();
-                arg3.add(sessionData);
-            }
-            return arg3;
-        }
     }
 }

@@ -808,6 +808,7 @@ public class RequestService {
     OperationSerivce operationSerivce;
     CarSerivce carSerivce;
     PictureSerivce pictureSerivce;
+    EvaluateSerivce evaluateSerivce;
 
     @PostConstruct
     void init() {
@@ -817,6 +818,7 @@ public class RequestService {
         operationSerivce = ApplicationContextProvider.getBean(OperationSerivce.class);
         carSerivce = ApplicationContextProvider.getBean(CarSerivce.class);
         pictureSerivce = ApplicationContextProvider.getBean(PictureSerivce.class);
+        evaluateSerivce = ApplicationContextProvider.getBean(EvaluateSerivce.class);
     }
 
     public void toBeContinue() {
@@ -858,9 +860,16 @@ public class RequestService {
         return operationSerivce.handle(mode, params);
     }
 
+    /*图片 管理*/
     @VertxWebApi
     public Object pictureManager(int mode, Map params) {
         return pictureSerivce.handle(mode, params);
+    }
+
+    /*评价 操作 管理*/
+    @VertxWebApi
+    public Object evaluateManager(int mode, Map params) {
+        return evaluateSerivce.handle(mode, params);
     }
 
     /*登陆初始化*/

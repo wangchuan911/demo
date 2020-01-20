@@ -17,57 +17,50 @@
         <parameter property="userId" jdbcType="INTEGER"></parameter>
         <parameter property="remarks" jdbcType="VARCHAR"></parameter>
     </parameterMap>
-
+    <sql id="condition">
+        <where>
+            <choose>
+                <when test="id!=null and id>=0">
+                    and id = #{id,jdbcType=INTEGER}
+                </when>
+                <when test="orderId!=null and orderId>=0 and userId!=null and userId!=''.toString()">
+                    AND order_id = #{orderId,jdbcType=INTEGER}
+                    AND user_id = #{userId,jdbcType=VARCHAR}
+                </when>
+                <otherwise>
+                    1=2
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
     <select id="get" parameterType="string" resultMap="EvaluateVO">
-        select a.* from mysql.car_user a
-         where a.car_user_id=#{id,jdbcType=VARCHAR}
+        select a.* from car_evaluate a
+        <include refid="condition"></include>
     </select>
     <update id="set" parameterMap="EvaluateVO">
-        update mysql.car_user
+        UPDATE mysql.car_evaluate
         <set>
-            <if test="name!=null and name!=''.toString()">
-                car_user_name=#{name,jdbcType=VARCHAR},
+            <if test="remarks">
+                remarks = #{remarks,jdbcType=VARCHAR},
             </if>
-            <if test="role!=null and role>=0">
-                car_user_role=#{role,jdbcType=INTEGER},
-            </if>
-            <if test="phone!=null and phone!=''.toString()">
-                car_user_telephone=#{phone,jdbcType=VARCHAR},
+            <if test="star!=null and star>0">
+                star = #{star,jdbcType=INTEGER},
             </if>
         </set>
-        <where>
-            car_user_id=#{id,jdbcType=VARCHAR}
-        </where>
+        <include refid="condition"></include>
 
     </update>
     <insert id="add" parameterMap="EvaluateVO">
-        INSERT INTO mysql.car_user
-            (car_user_id,
-             car_user_name,
-             car_user_role,
-             car_user_telephone)
-    VALUES (#{id,jdbcType=VARCHAR},
-            #{name,jdbcType=VARCHAR},
-            #{role,jdbcType=INTEGER},
-            #{phone,jdbcType=VARCHAR})
+        INSERT INTO car_evaluate
+                    (order_id,
+                     user_id,
+                     remarks,
+                     star)
+        VALUES (#{orderId,jdbcType=INTEGER},
+                #{userId,jdbcType=VARCHAR},
+                #{remarks,jdbcType=VARCHAR},
+                #{star,jdbcType=INTEGER})
     </insert>
 
-    <select id="list" parameterMap="EvaluateVO" resultMap="EvaluateVO">
-        select a.* from mysql.car_user a
-        <where>
-            <if test="role!=null and role>=0">
-                car_user_role=#{role,jdbcType=INTEGER}
-            </if>
-            <if test="name!=null and name!=''.toString()">
-                car_user_name=#{name,jdbcType=VARCHAR}
-            </if>
-            <if test="id!=null and id>=0">
-                car_user_id=#{id,jdbcType=INTEGER}
-            </if>
-            <if test="phone!=null and phone!=''.toString()">
-                car_user_telephone=#{phone,jdbcType=VARCHAR}
-            </if>
-        </where>
-    </select>
 
 </mapper>
