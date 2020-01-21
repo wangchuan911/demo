@@ -1,6 +1,7 @@
 package org.welisdoon.webserver.common.web;
 
 
+import com.github.pagehelper.PageHelper;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -9,6 +10,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.reflections.ReflectionUtils;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
@@ -79,6 +81,7 @@ public class CommonAsynService implements ICommonAsynService {
         Promise<Response> promise = Promise.promise();
         promise.future().setHandler(outputBodyHandler);
         Response response = new Response();
+        JsonObject params = (JsonObject) Json.decodeValue(requset.getParams());
         try {
             Object sprngService = ApplicationContextProvider.getBean(requset.getService());
             Object input = requset.bodyAsJson();
@@ -96,6 +99,7 @@ public class CommonAsynService implements ICommonAsynService {
                                     setValueAndCheck(method.getParameterTypes(), args, body)
                             ).findFirst();
                     if (optionalMethod.isPresent()) {
+                        this.setPage(params);
                         response.setResult(optionalMethod.get().invoke(sprngService, args));
                         return;
                     }
@@ -141,5 +145,16 @@ public class CommonAsynService implements ICommonAsynService {
         return true;
     }
 
-
+    void setPage(JsonObject params) {
+        if (params == null || params.size() == 0) return;
+        try {
+            String val = params.getString("page", null);
+            if (!StringUtils.isEmpty(val)) {
+                String[] arr = val.split(",");
+                PageHelper.startPage(Integer.parseInt(arr[0]), Integer.parseInt(arr[1]));
+            }
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
 }
