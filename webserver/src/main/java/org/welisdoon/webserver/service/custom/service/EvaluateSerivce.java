@@ -27,8 +27,11 @@ public class EvaluateSerivce extends AbstractBaseService {
                 break;
             case CustomConst.MODIFY:
                 evaluateVO = mapToObject(params, EvaluateVO.class);
-                resultObj = evaluateDao.set(evaluateVO);
-                break;
+                int updateInt = evaluateDao.set(evaluateVO);
+                if (updateInt != 0) {
+                    resultObj = updateInt;
+                    break;
+                }
             case CustomConst.ADD:
                 evaluateVO = mapToObject(params, EvaluateVO.class);
                 resultObj = evaluateDao.add(evaluateVO);
