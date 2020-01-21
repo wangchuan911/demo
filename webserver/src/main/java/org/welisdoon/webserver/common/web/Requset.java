@@ -14,6 +14,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 @DataObject
@@ -106,8 +107,8 @@ public class Requset {
     }
 
     public Requset putParams(MultiMap params) {
-        if (params != null) {
-            this.setParams(Json.encode(params));
+        if (params != null && !CollectionUtils.isEmpty(params.entries())) {
+            this.setParams(Json.encode(params.entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
         }
         return this;
     }

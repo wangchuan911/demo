@@ -154,7 +154,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             });
             router.post(PATH_WX_APP).handler(routingContext -> {
                 routingContext.response().setChunked(true);
-                JsonArray jsonArray = routingContext.getBodyAsJsonArray();
+//                JsonArray jsonArray = routingContext.getBodyAsJsonArray();
                 /*Requset requset = new Requset()
                         .setService(REQUEST_NAME)
                         .setMethod(jsonArray.getString(0))
