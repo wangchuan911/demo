@@ -65,21 +65,21 @@
     </sql>
 
     <select id="get" parameterMap="OperationVO" resultMap="OperationVO">
-        select * from mysql.tache_operation a
+        select * from tache_operation a
         <include refid="whereOperationVO"></include>
     </select>
 
     <select id="list" parameterMap="OperationVO" resultMap="OperationVO">
-        select * from mysql.tache_operation a
+        select * from tache_operation a
         <include refid="whereOperationVO"></include>
     </select>
     <select id="listAll" parameterMap="OperationVO" resultMap="OperationVO_ALL">
-        select * from mysql.tache_operation a
+        select * from tache_operation a
         <include refid="whereOperationVO"></include>
     </select>
 
     <insert id="add" parameterMap="OperationVO">
-        INSERT INTO mysql.tache_operation
+        INSERT INTO tache_operation
             (order_id,
              tache_id,
              opr_man,
@@ -90,7 +90,7 @@
                 #{info})
     </insert>
     <update id="set" parameterMap="OperationVO">
-        UPDATE mysql.tache_operation a
+        UPDATE tache_operation a
         <set>
             <if test="finishTime!=null">
                 a.finish_time = #{finishTime},
@@ -120,7 +120,7 @@
     </update>
 
     <select id="num" resultType="int" parameterMap="OperationVO">
-        select count(operation_id) from mysql.tache_operation a
+        select count(operation_id) from tache_operation a
         <include refid="whereOperationVO"></include>
     </select>
 </mapper>

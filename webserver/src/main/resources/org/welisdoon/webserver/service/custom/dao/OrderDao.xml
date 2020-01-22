@@ -165,7 +165,7 @@
         </where>
     </sql>
     <sql id="insertThis">
-        INSERT INTO mysql.car_wash_order
+        INSERT INTO car_wash_order
             (order_id,
              order_code,
              car_license_number,
@@ -188,23 +188,23 @@
              region_code)
     </sql>
     <select id="list" parameterMap="OrderVO" resultMap="OrderVO">
-        select * from mysql.car_wash_order a
+        select * from car_wash_order a
         <include refid="selectCondition"></include>
         order by a.create_date desc
     </select>
     <select id="listAll" parameterMap="OrderVO" resultMap="OrderVO_All">
-        select * from mysql.car_wash_order a
+        select * from car_wash_order a
         <include refid="selectCondition"></include>
         order by a.create_date desc
     </select>
     <select id="get" parameterMap="OrderVO" resultMap="OrderVO_All">
-        select * from mysql.car_wash_order a
+        select * from car_wash_order a
         <include refid="selectCondition"></include>
         LIMIT 0, 1
     </select>
 
     <update id="set" parameterMap="OrderVO">
-        update mysql.car_wash_order
+        update car_wash_order
         <set>
             <if test="orderCode!=null and orderCode!=''.toString()">
                 order_code = #{orderCode,jdbcType=VARCHAR},
@@ -302,19 +302,19 @@
     </insert>
 
     <select id="num" resultType="int" parameterMap="OrderVO">
-        select count(order_id) from mysql.car_wash_order a
+        select count(order_id) from car_wash_order a
         <include refid="selectCondition"></include>
     </select>
 
     <select id="count" resultType="int">
-        select count(order_id) from mysql.car_wash_order a
+        select count(order_id) from car_wash_order a
     </select>
 
     <select id="getWorkIngOrderNum" parameterMap="OrderVO" resultType="map">
         select
         count(order_id) all_nums,
         cast(sum(IF(ISNULL(finish_date) ,0 , 1 ))as unsigned int) nums
-        from mysql.car_wash_order a
+        from car_wash_order a
         <where>
             <if test="orderId!=null and orderId!=''.toString()">
                 and order_id= #{orderId,jdbcType=INTEGER}
@@ -367,7 +367,7 @@
 
     <update id="setAll" parameterType="list">
         <foreach collection="list" item="vo" index="index" open="" close="" separator=";">
-            UPDATE mysql.car_wash_order
+            UPDATE car_wash_order
             <set>
                 <if test="vo.orderCode!=null and vo.orderCode!=''.toString()">
                     order_code= #{vo.orderCode,jdbcType=VARCHAR} ,

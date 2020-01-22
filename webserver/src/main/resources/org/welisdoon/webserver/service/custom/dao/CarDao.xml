@@ -23,7 +23,7 @@
         <parameter property="defaultSelected" jdbcType="INTEGER"></parameter>
     </parameterMap>
     <insert id="add" parameterMap="CarVO">
-        INSERT INTO mysql.car_team_manager
+        INSERT INTO car_team_manager
             (car_model,
              car_license,
              car_colour,
@@ -43,12 +43,12 @@
     <update id="set" parameterMap="CarVO">
         <choose>
             <when test="userId!=null and userId!=''.toString()">
-                update mysql.car_team_manager
+                update car_team_manager
                 set def=if(car_license = #{lisence,jdbcType=VARCHAR},1,0)
                 where cust_id=#{userId,jdbcType=VARCHAR}
             </when>
             <otherwise>
-                update mysql.car_team_manager
+                update car_team_manager
                 <set>
                     <if test="modal!=null and modal!=''.toString()">
                         car_model = #{modal,jdbcType=VARCHAR},
@@ -71,7 +71,7 @@
         </choose>
     </update>
     <delete id="del" parameterMap="CarVO">
-        delete FROM mysql.car_team_manager
+        delete FROM car_team_manager
         <where>
             <if test="lisence!=null and lisence!=''.toString()">
                 and #{lisence,jdbcType=VARCHAR}=car_license
@@ -83,7 +83,7 @@
     </delete>
 
     <select id="list" parameterMap="CarVO" resultMap="CarVO">
-        select * from mysql.car_team_manager a
+        select * from car_team_manager a
         <where>
             <if test="lisence!=null and lisence!=''.toString()">
                 and #{lisence,jdbcType=VARCHAR}=car_license
@@ -97,7 +97,7 @@
         </where>
     </select>
     <select id="get" parameterMap="CarVO" resultMap="CarVO">
-        select * from mysql.car_team_manager a
+        select * from car_team_manager a
         <where>
             <if test="lisence!=null and lisence!=''.toString()">
                 and #{lisence,jdbcType=VARCHAR}=car_license

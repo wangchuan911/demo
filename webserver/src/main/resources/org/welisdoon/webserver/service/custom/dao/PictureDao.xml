@@ -38,17 +38,17 @@
     </sql>
 
     <select id="get" parameterMap="PictureVO" resultMap="PictureVO">
-        select * from mysql.car_picture_storage a
+        select * from car_picture_storage a
         <include refid="wherePictureVO"></include>
     </select>
 
     <select id="list" parameterMap="PictureVO" resultMap="PictureVO">
-        select * from mysql.car_picture_storage a
+        select * from car_picture_storage a
         <include refid="wherePictureVO"></include>
     </select>
 
     <insert id="add" parameterMap="PictureVO" useGeneratedKeys="true" keyProperty="pictrueId">
-        insert into mysql.car_picture_storage
+        insert into car_picture_storage
             (picture_id,
              picture_name,
              picture_storage,
@@ -62,7 +62,7 @@
     </insert>
 
     <update id="set" parameterMap="PictureVO">
-        update mysql.car_picture_storage
+        update car_picture_storage
         <set>
             <if test="orderId!=null and orderId>=0">
                 order_id=#{orderId,jdbcType=INTEGER},
@@ -79,7 +79,7 @@
 
 
     <select id="num" resultType="int" parameterMap="PictureVO">
-        select count(picture_id) from mysql.car_picture_storage a
+        select count(picture_id) from car_picture_storage a
         <include refid="wherePictureVO"></include>
     </select>
 
@@ -90,7 +90,7 @@
           picture_modidy_date,
           order_id,
           tache_id
-        FROM mysql.car_picture_storage a
+        FROM car_picture_storage a
         <include refid="wherePictureVO"></include>
         LIMIT 0, 1000;
     </select>

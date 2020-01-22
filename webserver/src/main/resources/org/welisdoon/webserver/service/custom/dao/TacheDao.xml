@@ -44,7 +44,7 @@
         main_tache,
         sub_tamplate,
         role
-        FROM mysql.tamplate_rela a
+        FROM tamplate_rela a
         <where>
             <if test="tampalateId!=null and tampalateId>=0">
                 and main_tamplate=#{tampalateId,jdbcType=INTEGER}
@@ -73,7 +73,7 @@
 
     <select id="list" parameterMap="TacheVO"
             resultMap="TacheVO">
-        select * from mysql.car_tache a
+        select * from car_tache a
         <include refid="selectCondition"></include>
         1=1
     </select>
@@ -82,7 +82,7 @@
             resultMap="TacheVO_all">
         select
         a.*
-        from mysql.car_tache a
+        from car_tache a
         where
         <if test="tacheId!=null and tacheId>=0">
             a.tache_id= #{tacheId,jdbcType=INTEGER} and
@@ -107,15 +107,15 @@
         b.tache_limits		tache_limits_1,
         b.template_id		template_id_1,
         b.super_tache_id		super_tache_id_1
-        from mysql.car_tache a
-        left join mysql.car_tache b
+        from car_tache a
+        left join car_tache b
         on a.super_tache_id=b.tache_id
         where a.tache_id=#{value}
         order by a.template_id,a.seq,b.template_id,b.seq
     </select>
     <select id="get" parameterMap="TacheVO"
             resultMap="TacheVO">
-        select * from mysql.car_tache a
+        select * from car_tache a
         <include refid="selectCondition"></include>
         1=1
         LIMIT 0, 1
@@ -123,12 +123,12 @@
 
 
     <select id="num" resultType="int" parameterMap="TacheVO">
-        select count(order_id) from mysql.car_tache a
+        select count(order_id) from car_tache a
         <include refid="selectCondition"></include>
     </select>
 
     <select id="count" resultType="int">
-        select count(order_id) from mysql.car_tache a
+        select count(order_id) from car_tache a
     </select>
 
     <select id="getProccess" parameterType="map" resultType="map">
@@ -138,15 +138,15 @@
         sum(IF(b.seq >= a.seq, 1, 0)) as unsigned int
         ) nums
         FROM
-        mysql.car_tache a
-        join mysql.car_tache b
+        car_tache a
+        join car_tache b
         WHERE a.template_id = b.template_id
         and b.tache_id in
         (SELECT
             DISTINCT IFNULL(c1.main_tache, c.tache_id)
         FROM
-            mysql.car_tache c
-        left JOIN mysql.tamplate_rela c1
+            car_tache c
+        left JOIN tamplate_rela c1
          ON c.template_id=c1.sub_tamplate
         <where>
             <if test="tacheId!=null and tacheId>=0">
@@ -154,7 +154,7 @@
             </if>
             <if test="userId!=null and userId!=''.toString()">
                 c.tache_id in (
-                select d.tache_id from mysql.car_wash_order d
+                select d.tache_id from car_wash_order d
                 where d.cust_id=#{userId,jdbcType=VARCHAR}
                 and d.order_state !=2
                 )

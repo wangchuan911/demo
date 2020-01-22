@@ -38,7 +38,7 @@
         <include refid="condition"></include>
     </select>
     <update id="set" parameterMap="EvaluateVO">
-        UPDATE mysql.car_evaluate
+        UPDATE car_evaluate
         <set>
             <if test="remarks">
                 remarks = #{remarks,jdbcType=VARCHAR},
