@@ -56,6 +56,7 @@ public class UserSerivce extends AbstractBaseService {
                 userVO = mapToObject(params, UserVO.class);
                 userVO.setRole(CustomConst.ROLE.CUSTOMER);
                 resultObj = userDao.add(userVO);
+                break;
             case CustomConst.MODIFY:
                 userVO = mapToObject(params, UserVO.class);
                 userDao.set(new UserVO().setRole(userVO.getRole()).setId(userVO.getId()));

@@ -81,7 +81,7 @@ public class CommonAsynService implements ICommonAsynService {
         Promise<Response> promise = Promise.promise();
         promise.future().setHandler(outputBodyHandler);
         Response response = new Response();
-        JsonObject params = (JsonObject) Json.decodeValue(requset.getParams());
+        JsonObject params = StringUtils.isEmpty(requset.getParams()) ? null : (JsonObject) Json.decodeValue(requset.getParams());
         try {
             Object sprngService = ApplicationContextProvider.getBean(requset.getService());
             Object input = requset.bodyAsJson();

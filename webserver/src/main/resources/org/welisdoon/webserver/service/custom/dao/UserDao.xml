@@ -68,7 +68,7 @@
                 car_user_name=#{name,jdbcType=VARCHAR}
             </if>
             <if test="id!=null and id>=0">
-                car_user_id=#{id,jdbcType=INTEGER}
+                car_user_id=#{id,jdbcType=VARCHAR}
             </if>
             <if test="phone!=null and phone!=''.toString()">
                 car_user_telephone=#{phone,jdbcType=VARCHAR}
