@@ -75,6 +75,20 @@ public class CustomConst {
             }
         }
 
+        public static Integer getOptionTache(List<String> tacheIds, final TacheVO newTacheVo) {
+            if (tacheIds.stream().anyMatch(s ->
+                    s != null ?
+                            s.trim().equals(newTacheVo.getTacheId().toString().trim())
+                            : false
+            )) {
+                if (newTacheVo.getNextTache() >= 0)
+                    return getOptionTache(tacheIds, TACHE_MAP.get(newTacheVo.getNextTache()));
+                else
+                    return newTacheVo.getNextTache();
+            } else {
+                return newTacheVo.getTacheId();
+            }
+        }
 
     }
 
@@ -95,6 +109,10 @@ public class CustomConst {
         public final static String FINISH = "finish";
     }
 
+    public static class OTHER {
+        public final static int PRE_PAY = -2;
+        public final static int LOGIN = -1;
+    }
 
 }
 

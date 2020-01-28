@@ -7,6 +7,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.*;
 import org.welisdoon.webserver.service.custom.entity.*;
@@ -126,7 +127,7 @@ public class OperationSerivce extends AbstractBaseService {
             } else if (operationVO != null) {
                 //当前环节有操作记录
                 if (CustomConst.TACHE.STATE.END == nextTache
-                        || CustomConst.TACHE.STATE.END == (nextTache = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), CustomConst.TACHE.TACHE_MAP.get(nextTache)))) {
+                        || CustomConst.TACHE.STATE.END == (nextTache = CustomConst.TACHE.getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), CustomConst.TACHE.TACHE_MAP.get(nextTache)))) {
                     //下一环节没有了
                     //或者因为有跳过的环节下一环没有了
                     if (num > 1) {
@@ -267,7 +268,7 @@ public class OperationSerivce extends AbstractBaseService {
                 }
                 for (TacheVO.TacheRela tacheRela :
                         tacheVO.getTacheRelas()) {
-                    Integer newTacheId = getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), tacheRela.getChildTaches().get(0));
+                    Integer newTacheId = CustomConst.TACHE.getOptionTache(Arrays.asList(orderVO.getPassTache().split(",")), tacheRela.getChildTaches().get(0));
                     if (newTacheId < 0) {
                         continue;
                     }

@@ -5,13 +5,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.CarDao;
 import org.welisdoon.webserver.service.custom.dao.UserDao;
 import org.welisdoon.webserver.service.custom.entity.CarVO;
 import org.welisdoon.webserver.service.custom.entity.UserVO;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 

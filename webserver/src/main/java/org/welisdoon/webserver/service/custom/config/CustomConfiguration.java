@@ -1,6 +1,8 @@
 package org.welisdoon.webserver.service.custom.config;
 
+import java.net.InetAddress;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -8,6 +10,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import ch.qos.logback.core.joran.spi.XMLUtil;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.handler.StaticHandler;
@@ -35,7 +38,11 @@ import io.vertx.ext.web.Session;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.common.web.Requset;
+import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
+import org.welisdoon.webserver.entity.wechat.payment.response.PrePayResponseMesseage;
+import org.welisdoon.webserver.service.custom.entity.OrderVO;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
@@ -119,9 +126,11 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
+//        final String PATH_WX_APP = "/wxApp(?:/([^\\/]+))*";
         final String PATH_WX_APP = "/wxApp";
         final String PATH_WX_APP_UPLOAD = "/imgUpd";
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
+        final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
         final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
         WebClient webClient = WebClient.create(vertx);
         Consumer<Router> routerConsumer = router -> {
@@ -129,7 +138,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 routingContext.response().setChunked(true);
                 MultiMap multiMap = routingContext.request().params();
                 switch (Integer.parseInt(multiMap.get("code"))) {
-                    case -1:
+                    case CustomConst.OTHER.LOGIN:
                         webClient.getAbs(URL_CODE_2_SESSION + multiMap.get("value"))
                                 .send(httpResponseAsyncResult -> {
                                     if (httpResponseAsyncResult.succeeded()) {
@@ -143,6 +152,47 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                         routingContext.fail(httpResponseAsyncResult.cause());
                                     }
                                 });
+                        break;
+                    case CustomConst.OTHER.PRE_PAY:
+                        try {
+                            OrderVO orderVo = (OrderVO) requestService.orderManger(CustomConst.GET, Map.of("orderId", multiMap.get("orderId")));
+                            Buffer buffer = Buffer.buffer(JAXBUtils.toXML(new PrePayRequsetMesseage()
+                                    .setAppId(this.getAppID())
+                                    .setMchId(this.getMchId())
+                                    .setNonceStr(multiMap.get("nonce"))
+                                    .setBody(this.getAppName() + "-服务费用结算")
+                                    .setOutTradeNo(orderVo.getOrderCode())
+                                    .setTotalFee((int) 10.0)
+                                    .setSpbillCreateIp(InetAddress.getLocalHost().getHostAddress())
+                                    .setNotifyUrl(multiMap.get("notifyUrl"))
+                                    .setTradeType("JSAPI")
+                                    .setOpenid(orderVo.getCustId())
+                                    .setSign(null)
+                            ));
+                            webClient.postAbs(URL_UNIFIEDORDERON)
+                                    .sendBuffer(buffer, httpResponseAsyncResult -> {
+                                        if (httpResponseAsyncResult.succeeded()) {
+                                            try {
+                                                PrePayResponseMesseage prePayResponseMesseage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), PrePayResponseMesseage.class);
+                                                System.out.println(prePayResponseMesseage.getReturnMsg());
+                                                System.out.println(prePayResponseMesseage.getErrCodeDes());
+                                                System.out.println(prePayResponseMesseage.getErrCode());
+                                                String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s"
+                                                        , this.getAppID()
+                                                        , multiMap.get("nonceStr")
+                                                        , prePayResponseMesseage.getPrepayId()
+                                                        , multiMap.get("timeStamp"));
+                                                routingContext.response().end(new JsonObject().put("sign", sign).toBuffer());
+                                            } catch (Throwable t) {
+                                                routingContext.fail(httpResponseAsyncResult.cause());
+                                            }
+                                        } else {
+                                            routingContext.fail(httpResponseAsyncResult.cause());
+                                        }
+                                    });
+                        } catch (Throwable t) {
+                            routingContext.fail(t);
+                        }
                         break;
                     default:
 

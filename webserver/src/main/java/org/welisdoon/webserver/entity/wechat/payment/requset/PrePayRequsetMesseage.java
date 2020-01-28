@@ -8,6 +8,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.lang.annotation.Annotation;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -208,7 +210,8 @@ public class PrePayRequsetMesseage {
 
     public PrePayRequsetMesseage setSign(String sign) {
         StringBuilder tmpStr = new StringBuilder();
-        ReflectionUtils.getFields(this.getClass(), ReflectionUtils.withAnnotation(XmlElement.class))
+        Class<XmlElement> annotationClass = XmlElement.class;
+        ReflectionUtils.getFields(this.getClass(), ReflectionUtils.withAnnotation(annotationClass))
                 .stream()
                 .filter(field -> {
                     try {
@@ -219,10 +222,14 @@ public class PrePayRequsetMesseage {
                         return false;
                     }
                 })
-                .sorted((o1, o2) -> o1.getAnnotation(XmlElement.class).name().charAt(0) - o2.getAnnotation(XmlElement.class).name().charAt(0))
+                .sorted((o1, o2) -> {
+                    char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
+                    char c2 = o2.getAnnotation(annotationClass).name().charAt(0);
+                    return c1 - c2;
+                })
                 .forEachOrdered(field -> {
                     try {
-                        tmpStr.append('&').append(field.getAnnotation(XmlElement.class).name()).append('=').append(field.get(this));
+                        tmpStr.append('&').append(field.getAnnotation(annotationClass).name()).append('=').append(field.get(this));
                     } catch (Throwable t) {
                         t.printStackTrace();
                     }
@@ -305,8 +312,13 @@ public class PrePayRequsetMesseage {
         return this;
     }
 
-    public String getTimeStart() {
-        return timeStart;
+    public Date getTimeStart() {
+        try {
+            return new SimpleDateFormat(DATE_FORMAT).parse(this.timeStart);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public PrePayRequsetMesseage setTimeStart(Date timeStart) {
@@ -314,8 +326,13 @@ public class PrePayRequsetMesseage {
         return this;
     }
 
-    public String getTimeExpire() {
-        return timeExpire;
+    public Date getTimeExpire() {
+        try {
+            return new SimpleDateFormat(DATE_FORMAT).parse(this.timeExpire);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public PrePayRequsetMesseage setTimeExpire(Date timeExpire) {
