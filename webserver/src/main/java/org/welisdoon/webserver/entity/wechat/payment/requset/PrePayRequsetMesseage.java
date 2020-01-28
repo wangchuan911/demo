@@ -1,6 +1,8 @@
 package org.welisdoon.webserver.entity.wechat.payment.requset;
 
 import com.sun.istack.NotNull;
+import org.apache.commons.codec.digest.Md5Crypt;
+import org.reflections.ReflectionUtils;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -205,7 +207,29 @@ public class PrePayRequsetMesseage {
     }
 
     public PrePayRequsetMesseage setSign(String sign) {
-        this.sign = sign;
+        StringBuilder tmpStr = new StringBuilder();
+        ReflectionUtils.getFields(this.getClass(), ReflectionUtils.withAnnotation(XmlElement.class))
+                .stream()
+                .filter(field -> {
+                    try {
+                        field.setAccessible(true);
+                        return field.get(this) != null;
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        return false;
+                    }
+                })
+                .sorted((o1, o2) -> o1.getAnnotation(XmlElement.class).name().charAt(0) - o2.getAnnotation(XmlElement.class).name().charAt(0))
+                .forEachOrdered(field -> {
+                    try {
+                        tmpStr.append('&').append(field.getAnnotation(XmlElement.class).name()).append('=').append(field.get(this));
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
+        this.sign = Md5Crypt.md5Crypt(tmpStr
+                .substring(1)
+                .getBytes());
         return this;
     }
 
