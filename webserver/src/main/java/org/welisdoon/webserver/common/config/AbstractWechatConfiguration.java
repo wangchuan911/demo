@@ -10,6 +10,8 @@ public class AbstractWechatConfiguration {
     private Integer afterUpdateTokenTime;
     private Map urls;
     private Map schedul;
+    private String mchId;
+    private String appName;
 
     public String getAppID() {
         return appID;
@@ -65,5 +67,21 @@ public class AbstractWechatConfiguration {
 
     public void setSchedul(Map schedul) {
         this.schedul = schedul;
+    }
+
+    public String getMchId() {
+        return mchId;
+    }
+
+    public void setMchId(String mchId) {
+        this.mchId = mchId;
+    }
+
+    public String getAppName() {
+        return appName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
     }
 }
