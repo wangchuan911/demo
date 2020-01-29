@@ -117,6 +117,22 @@ public class Requset {
     public static final int UPLOAD_FILE = 3;
     public static final int UPLOAD_FILES = 4;
 
+    public static Requset newInstance(RoutingContext context) {
+        int mode;
+        String type = context.request().getParam("A3");
+        switch (StringUtils.isEmpty(type) ? "" : type) {
+            case "UPS":
+                mode = UPLOAD_FILES;
+                break;
+            case "UP":
+                mode = UPLOAD_FILE;
+                break;
+            default:
+                mode = SIMPLE_REQUEST;
+        }
+        return newInstance(mode, context);
+    }
+
     public static Requset newInstance(int mode, RoutingContext context) {
         HttpServerRequest httpServerRequest = context.request();
         MultiMap multiMap = httpServerRequest.params();

@@ -49,7 +49,7 @@ import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 @ConfigurationProperties("wechat-app")
 @VertxConfiguration
 public class CustomConfiguration extends AbstractWechatConfiguration {
-//    final static String REQUEST_NAME = "requestService";
+    //    final static String REQUEST_NAME = "requestService";
     private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
 
     private int orderCycleTime;
@@ -135,10 +135,10 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     public Consumer<Router> routeMapping(Vertx vertx) {
 //        final String PATH_WX_APP = "/wxApp(?:/([^\\/]+))*";
         final String PATH_WX_APP = "/wxApp";
-        final String PATH_WX_APP_UPLOAD = "/imgUpd";
+//        final String PATH_WX_APP_UPLOAD = "/imgUpd";
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
         final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
-        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
+//        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
         WebClient webClient = WebClient.create(vertx);
         Consumer<Router> routerConsumer = router -> {
             router.get(PATH_WX_APP).handler(routingContext -> {
@@ -210,16 +210,74 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             }).failureHandler(routingContext -> {
                 routingContext.response().end(routingContext.failure().toString());
             });
+//            router.post(PATH_WX_APP).handler(routingContext -> {
+//                routingContext.response().setChunked(true);
+////                JsonArray jsonArray = routingContext.getBodyAsJsonArray();
+//                /*Requset requset = new Requset()
+//                        .setService(REQUEST_NAME)
+//                        .setMethod(jsonArray.getString(0))
+//                        .setBody(jsonArray.getJsonArray(1).toString())
+//                        .putParams(routingContext.request().params())
+//                        .putSession(routingContext.session());*/
+//                Requset requset = Requset.newInstance(Requset.SIMPLE_REQUEST, routingContext);//.setService(REQUEST_NAME);
+//                commonAsynService.requsetCall(requset, stringAsyncResult -> {
+//                    if (stringAsyncResult.succeeded()) {
+//                        routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
+//                    } else {
+//                        routingContext.fail(500, stringAsyncResult.cause());
+//                    }
+//                });
+//
+//            });
+//
+//            logger.info("inital request mapping: " + PATH_WX_APP);
+//
+//            router.post(PATH_WX_APP_UPLOAD).blockingHandler(routingContext -> {
+//                try {
+//                    HttpServerRequest httpServerRequest = routingContext.request();
+//                    HttpServerResponse httpServerResponse = routingContext.response();
+//                    Set<FileUpload> fileUploads = routingContext.fileUploads();
+//                    if (fileUploads == null || fileUploads.size() != 1) {
+//                        httpServerResponse.setStatusCode(404).end();
+//                        return;
+//                    }
+//                    FileUpload fileUpload = fileUploads.iterator().next();
+//                    /*Requset requset = new Requset()
+//                            .setService(REQUEST_NAME)
+//                            .setMethod("uploadFile")
+//                            .setBody(new JsonArray()
+//                                    .add(new JsonObject()
+//                                            .put("uploadedFileName", fileUpload.uploadedFileName())
+//                                            .put("name", fileUpload.name())
+//                                            .put("charSet", fileUpload.charSet())
+//                                            .put("contentType", fileUpload.contentType())
+//                                            .put("size", fileUpload.size())
+//                                            .put("fileName", fileUpload.fileName())
+//                                            .put("contentTransferEncoding", fileUpload.contentTransferEncoding()))
+//                                    .add(JsonObject.mapFrom(httpServerRequest.formAttributes().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))).toString())
+//                            .putParams(httpServerRequest.params())
+//                            .putSession(routingContext.session());*/
+//                    Requset requset = Requset.newInstance(Requset.UPLOAD_FILE, routingContext);//.setService(REQUEST_NAME);
+//                    commonAsynService.requsetCall(requset, stringAsyncResult -> {
+//                        if (stringAsyncResult.succeeded()) {
+//                            httpServerResponse.end(stringAsyncResult.result().toJson().toBuffer());
+//                        } else {
+//                            routingContext.fail(500, stringAsyncResult.cause());
+//                        }
+//                        vertx.fileSystem().delete(fileUpload.uploadedFileName(), voidAsyncResult -> {
+//                        });
+//                    });
+//                } catch (Throwable e) {
+//                    e.printStackTrace();
+//                    routingContext.fail(500, e);
+//                }
+//
+//            });
+//
+//            logger.info("inital request mapping: " + PATH_WX_APP_UPLOAD);
             router.post(PATH_WX_APP).handler(routingContext -> {
                 routingContext.response().setChunked(true);
-//                JsonArray jsonArray = routingContext.getBodyAsJsonArray();
-                /*Requset requset = new Requset()
-                        .setService(REQUEST_NAME)
-                        .setMethod(jsonArray.getString(0))
-                        .setBody(jsonArray.getJsonArray(1).toString())
-                        .putParams(routingContext.request().params())
-                        .putSession(routingContext.session());*/
-                Requset requset = Requset.newInstance(Requset.SIMPLE_REQUEST, routingContext);//.setService(REQUEST_NAME);
+                Requset requset = Requset.newInstance(routingContext);
                 commonAsynService.requsetCall(requset, stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
@@ -229,52 +287,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 });
 
             });
-
             logger.info("inital request mapping: " + PATH_WX_APP);
 
-            router.post(PATH_WX_APP_UPLOAD).blockingHandler(routingContext -> {
-                try {
-                    HttpServerRequest httpServerRequest = routingContext.request();
-                    HttpServerResponse httpServerResponse = routingContext.response();
-                    Set<FileUpload> fileUploads = routingContext.fileUploads();
-                    if (fileUploads == null || fileUploads.size() != 1) {
-                        httpServerResponse.setStatusCode(404).end();
-                        return;
-                    }
-                    FileUpload fileUpload = fileUploads.iterator().next();
-                    /*Requset requset = new Requset()
-                            .setService(REQUEST_NAME)
-                            .setMethod("uploadFile")
-                            .setBody(new JsonArray()
-                                    .add(new JsonObject()
-                                            .put("uploadedFileName", fileUpload.uploadedFileName())
-                                            .put("name", fileUpload.name())
-                                            .put("charSet", fileUpload.charSet())
-                                            .put("contentType", fileUpload.contentType())
-                                            .put("size", fileUpload.size())
-                                            .put("fileName", fileUpload.fileName())
-                                            .put("contentTransferEncoding", fileUpload.contentTransferEncoding()))
-                                    .add(JsonObject.mapFrom(httpServerRequest.formAttributes().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))).toString())
-                            .putParams(httpServerRequest.params())
-                            .putSession(routingContext.session());*/
-                    Requset requset = Requset.newInstance(Requset.UPLOAD_FILE, routingContext);//.setService(REQUEST_NAME);
-                    commonAsynService.requsetCall(requset, stringAsyncResult -> {
-                        if (stringAsyncResult.succeeded()) {
-                            httpServerResponse.end(stringAsyncResult.result().toJson().toBuffer());
-                        } else {
-                            routingContext.fail(500, stringAsyncResult.cause());
-                        }
-                        vertx.fileSystem().delete(fileUpload.uploadedFileName(), voidAsyncResult -> {
-                        });
-                    });
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                    routingContext.fail(500, e);
-                }
-
-            });
-
-            logger.info("inital request mapping: " + PATH_WX_APP_UPLOAD);
             StaticHandler staticHandler = StaticHandler.create()
                     .setAllowRootFileSystemAccess(true)
                     .setWebRoot(staticPath);
@@ -290,7 +304,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 fileSystem.exists(file, booleanAsyncResult -> {
                     if (booleanAsyncResult.succeeded() && !booleanAsyncResult.result()) {
                         Requset requset = new Requset()
-                                .setService("pictureSerivce")
+                                .setService("pictureService")
                                 .setMethod("handle")
                                 .setBody(new JsonArray()
                                         .add(CustomConst.GET)
