@@ -1,23 +1,18 @@
 package org.welisdoon.webserver.service.custom.config;
 
 import java.net.InetAddress;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import ch.qos.logback.core.joran.spi.XMLUtil;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -33,8 +28,6 @@ import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.Session;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
@@ -43,13 +36,12 @@ import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PrePayResponseMesseage;
 import org.welisdoon.webserver.service.custom.entity.OrderVO;
+import org.welisdoon.webserver.service.custom.service.*;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.service.custom.dao.TacheDao;
-import org.welisdoon.webserver.service.custom.dao.UserDao;
 import org.welisdoon.webserver.service.custom.entity.TacheVO;
-import org.welisdoon.webserver.service.custom.service.RequestService;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 
@@ -57,7 +49,7 @@ import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 @ConfigurationProperties("wechat-app")
 @VertxConfiguration
 public class CustomConfiguration extends AbstractWechatConfiguration {
-    final static String REQUEST_NAME = "requestService";
+//    final static String REQUEST_NAME = "requestService";
     private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
 
     private int orderCycleTime;
@@ -72,7 +64,14 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
     ICommonAsynService commonAsynService;
 
-    RequestService requestService;
+    //    RequestService requestService;
+//    TacheSerivce tacheSerivce;
+    OrderService orderService;
+    UserService userService;
+    OperationService operationService;
+//    CarSerivce carSerivce;
+//    PictureSerivce pictureSerivce;
+//    EvaluateSerivce evaluateSerivce;
 
     @Value("${temp.filePath}")
     String staticPath;
@@ -89,7 +88,14 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     @PostConstruct
     void initValue() {
         TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
-        requestService = ApplicationContextProvider.getBean(RequestService.class);
+//        requestService = ApplicationContextProvider.getBean(RequestService.class);
+//        tacheSerivce = ApplicationContextProvider.getBean(TacheSerivce.class);
+        orderService = ApplicationContextProvider.getBean(OrderService.class);
+        userService = ApplicationContextProvider.getBean(UserService.class);
+        operationService = ApplicationContextProvider.getBean(OperationService.class);
+//        carSerivce = ApplicationContextProvider.getBean(CarSerivce.class);
+//        pictureSerivce = ApplicationContextProvider.getBean(PictureSerivce.class);
+//        evaluateSerivce = ApplicationContextProvider.getBean(EvaluateSerivce.class);
         CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
     }
 
@@ -105,7 +111,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
                     if (lockAsyncResult.succeeded()) {
                         try {
-                            requestService.toBeContinue();
+//                            requestService.toBeContinue();
+                            operationService.toBeContinue();
                         } finally {
                             Lock lock = lockAsyncResult.result();
                             vertx1.setTimer(3 * 1000, aLong1 -> {
@@ -146,7 +153,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                         JsonObject jsonObject = httpResponse.body().toJsonObject();
                                         String key = jsonObject.remove("session_key").toString();
                                         String userId = jsonObject.getString("openid");
-                                        jsonObject.mergeIn((JsonObject) requestService.login(userId));
+//                                        jsonObject.mergeIn((JsonObject) requestService.login(userId));
+                                        jsonObject.mergeIn((JsonObject) userService.login(userId));
                                         routingContext.response().end(jsonObject.toBuffer());
                                     } else {
                                         routingContext.fail(httpResponseAsyncResult.cause());
@@ -155,7 +163,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                         break;
                     case CustomConst.OTHER.PRE_PAY:
                         try {
-                            OrderVO orderVo = (OrderVO) requestService.orderManger(CustomConst.GET, Map.of("orderId", multiMap.get("orderId")));
+                            OrderVO orderVo = (OrderVO) orderService.handle(CustomConst.GET, Map.of("orderId", multiMap.get("orderId")));
                             Buffer buffer = Buffer.buffer(JAXBUtils.toXML(new PrePayRequsetMesseage()
                                     .setAppId(this.getAppID())
                                     .setMchId(this.getMchId())
@@ -211,7 +219,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                         .setBody(jsonArray.getJsonArray(1).toString())
                         .putParams(routingContext.request().params())
                         .putSession(routingContext.session());*/
-                Requset requset = Requset.newInstance(Requset.SIMPLE_REQUEST, routingContext).setService(REQUEST_NAME);
+                Requset requset = Requset.newInstance(Requset.SIMPLE_REQUEST, routingContext);//.setService(REQUEST_NAME);
                 commonAsynService.requsetCall(requset, stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
@@ -249,7 +257,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                     .add(JsonObject.mapFrom(httpServerRequest.formAttributes().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))).toString())
                             .putParams(httpServerRequest.params())
                             .putSession(routingContext.session());*/
-                    Requset requset = Requset.newInstance(Requset.UPLOAD_FILE, routingContext).setService(REQUEST_NAME);
+                    Requset requset = Requset.newInstance(Requset.UPLOAD_FILE, routingContext);//.setService(REQUEST_NAME);
                     commonAsynService.requsetCall(requset, stringAsyncResult -> {
                         if (stringAsyncResult.succeeded()) {
                             httpServerResponse.end(stringAsyncResult.result().toJson().toBuffer());
@@ -282,8 +290,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 fileSystem.exists(file, booleanAsyncResult -> {
                     if (booleanAsyncResult.succeeded() && !booleanAsyncResult.result()) {
                         Requset requset = new Requset()
-                                .setService(REQUEST_NAME)
-                                .setMethod("pictureManager")
+                                .setService("pictureSerivce")
+                                .setMethod("handle")
                                 .setBody(new JsonArray()
                                         .add(CustomConst.GET)
                                         .add(Map.of("name", fileName.substring(1))).toString())

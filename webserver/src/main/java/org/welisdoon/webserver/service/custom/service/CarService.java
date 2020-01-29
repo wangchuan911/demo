@@ -8,11 +8,12 @@ import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.*;
 import org.welisdoon.webserver.service.custom.entity.CarVO;
 import org.welisdoon.webserver.service.custom.entity.UserVO;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.util.Map;
 
 @Service
-public class CarSerivce extends AbstractBaseService {
+public class CarService extends AbstractBaseService {
     @Autowired
     OrderDao orderDao;
     @Autowired
@@ -23,6 +24,7 @@ public class CarSerivce extends AbstractBaseService {
     CarDao carDao;
 
     @Override
+    @VertxWebApi
     public Object handle(int exeCode, Map params) {
         Object resultObj = null;
         CarVO carVO = null;

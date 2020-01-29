@@ -11,6 +11,7 @@ import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.*;
 import org.welisdoon.webserver.service.custom.entity.*;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Service
-public class OperationSerivce extends AbstractBaseService {
+public class OperationService extends AbstractBaseService {
     @Autowired
     OrderDao orderDao;
     @Autowired
@@ -35,6 +36,7 @@ public class OperationSerivce extends AbstractBaseService {
     PictureDao pictureDao;
 
     @Override
+    @VertxWebApi
     public Object handle(int exeCode, Map params) {
         Object resultObj = null;
         OperationVO operationVO;
@@ -79,7 +81,7 @@ public class OperationSerivce extends AbstractBaseService {
         }
         return resultObj;
     }
-
+    @VertxWebApi
     public Object toBeContinue(Map map) {
         Object returnObj = null;
         Integer orderId = MapUtils.getInteger(map, "orderId", null);

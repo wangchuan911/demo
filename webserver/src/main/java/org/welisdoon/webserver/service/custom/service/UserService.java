@@ -11,27 +11,29 @@ import org.welisdoon.webserver.service.custom.dao.CarDao;
 import org.welisdoon.webserver.service.custom.dao.UserDao;
 import org.welisdoon.webserver.service.custom.entity.CarVO;
 import org.welisdoon.webserver.service.custom.entity.UserVO;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class UserSerivce extends AbstractBaseService {
+public class UserService extends AbstractBaseService {
     @Autowired
     UserDao userDao;
     @Autowired
     CarDao carDao;
 
-    TacheSerivce tacheSerivce;
+    TacheService tacheService;
     OrderService orderService;
 
     @Override
     public void init() {
-        tacheSerivce = ApplicationContextProvider.getBean(TacheSerivce.class);
+        tacheService = ApplicationContextProvider.getBean(TacheService.class);
         orderService = ApplicationContextProvider.getBean(OrderService.class);
     }
 
     @Override
+    @VertxWebApi
     public Object handle(int exeCode, Map params) {
         Object resultObj = null;
         UserVO userVO = null;
@@ -68,6 +70,7 @@ public class UserSerivce extends AbstractBaseService {
     }
 
     /*登陆初始化*/
+    @VertxWebApi
     public Object login(String userId) {
         JsonObject jsonObject = new JsonObject();
         if (!StringUtils.isEmpty(userId)) {
@@ -83,7 +86,7 @@ public class UserSerivce extends AbstractBaseService {
                 jsonObject.put("user", JsonObject.mapFrom(o));
                 switch (userVO.getRole()) {
                     case CustomConst.ROLE.CUSTOMER:
-                        o = tacheSerivce.handle(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
+                        o = tacheService.handle(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", userVO.getId()));
                         break;
                     case CustomConst.ROLE.DISTRIBUTOR:
                         o = orderService.handle(CustomConst.ORDER.GET_WORK_NUMBER, Map.of("orderControlPerson", userVO.getId()));

@@ -1,37 +1,11 @@
 package org.welisdoon.webserver.service.custom.service;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.mybatis.spring.SqlSessionTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
 import org.welisdoon.webserver.common.ApplicationContextProvider;
-import org.welisdoon.webserver.common.StreamUtils;
-import org.welisdoon.webserver.service.custom.dao.*;
-import org.welisdoon.webserver.service.custom.entity.*;
-import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
-import org.welisdoon.webserver.service.custom.config.CustomConst;
-import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
-
-import java.io.*;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
-@Service
-@VertxConfiguration
+//@Service
+//@VertxConfiguration
 public class RequestService {
 
 //    @Autowired
@@ -802,86 +776,92 @@ public class RequestService {
 //    }
 
 
-    TacheSerivce tacheSerivce;
+    TacheService tacheService;
     OrderService orderService;
-    UserSerivce userSerivce;
-    OperationSerivce operationSerivce;
-    CarSerivce carSerivce;
-    PictureSerivce pictureSerivce;
-    EvaluateSerivce evaluateSerivce;
+    UserService userService;
+    OperationService operationService;
+    CarService carService;
+    PictureService pictureService;
+    EvaluateService evaluateSerivce;
 
     @PostConstruct
     void init() {
-        tacheSerivce = ApplicationContextProvider.getBean(TacheSerivce.class);
+        tacheService = ApplicationContextProvider.getBean(TacheService.class);
         orderService = ApplicationContextProvider.getBean(OrderService.class);
-        userSerivce = ApplicationContextProvider.getBean(UserSerivce.class);
-        operationSerivce = ApplicationContextProvider.getBean(OperationSerivce.class);
-        carSerivce = ApplicationContextProvider.getBean(CarSerivce.class);
-        pictureSerivce = ApplicationContextProvider.getBean(PictureSerivce.class);
-        evaluateSerivce = ApplicationContextProvider.getBean(EvaluateSerivce.class);
+        userService = ApplicationContextProvider.getBean(UserService.class);
+        operationService = ApplicationContextProvider.getBean(OperationService.class);
+        carService = ApplicationContextProvider.getBean(CarService.class);
+        pictureService = ApplicationContextProvider.getBean(PictureService.class);
+        evaluateSerivce = ApplicationContextProvider.getBean(EvaluateService.class);
     }
 
-    public void toBeContinue() {
-        operationSerivce.toBeContinue();
-    }
+//    public void toBeContinue() {
+//        operationSerivce.toBeContinue();
+//    }
 
-    @VertxWebApi
-    public Object toBeContinue(Map orderMap) {
-        return operationSerivce.toBeContinue(orderMap);
-    }
+//    @VertxWebApi
+//    public Object toBeContinue(Map orderMap) {
+//        return operationSerivce.toBeContinue(orderMap);
+//    }
 
     /*工单管理*/
-    @VertxWebApi
-    public Object orderManger(int mode, Map params) {
-        return orderService.handle(mode, params);
-    }
+//    @VertxWebApi
+//    public Object orderManger(int mode, Map params) {
+//        return orderService.handle(mode, params);
+//    }
 
-    /*车辆管理*/
-    @VertxWebApi
-    public Object carManger(int mode, Map params) {
-        return carSerivce.handle(mode, params);
-    }
+//    /*车辆管理*/
+//    @VertxWebApi
+//    public Object carManger(int mode, Map params) {
+//        return carSerivce.handle(mode, params);
+//    }
+//
+//    /*用户管理*/
+//    @VertxWebApi
+//    public Object userManger(int mode, Map params) {
+//        return userSerivce.handle(mode, params);
+//    }
+//
+//    /*环节管理*/
+//    @VertxWebApi
+//    public Object tacheManager(int mode, Map params) {
+//        return tacheSerivce.handle(mode, params);
+//    }
+//
+//    /*环节 操作 管理*/
+//    @VertxWebApi
+//    public Object operationManager(int mode, Map params) {
+//        return operationSerivce.handle(mode, params);
+//    }
+//
+//    /*图片 管理*/
+//    @VertxWebApi
+//    public Object pictureManager(int mode, Map params) {
+//        return pictureSerivce.handle(mode, params);
+//    }
+//
+//    /*支付 管理*/
+//    @VertxWebApi
+//    public Object payManger(int mode, Map params) {
+//        return pictureSerivce.handle(mode, params);
+//    }
+//    /*评价 操作 管理*/
+//    @VertxWebApi
+//    public Object evaluateManager(int mode, Map params) {
+//        return evaluateSerivce.handle(mode, params);
+//    }
 
-    /*用户管理*/
-    @VertxWebApi
-    public Object userManger(int mode, Map params) {
-        return userSerivce.handle(mode, params);
-    }
+//    /*登陆初始化*/
+//    @VertxWebApi
+//    public Object login(String userId) {
+//        return userSerivce.login(userId);
+//    }
 
-    /*环节管理*/
-    @VertxWebApi
-    public Object tacheManager(int mode, Map params) {
-        return tacheSerivce.handle(mode, params);
-    }
+//    @VertxWebApi
+//    public Object uploadFile(Map fileUpload, Map map) {
+//        return pictureSerivce.uploadFile(fileUpload, map);
+//    }
 
-    /*环节 操作 管理*/
-    @VertxWebApi
-    public Object operationManager(int mode, Map params) {
-        return operationSerivce.handle(mode, params);
-    }
-
-    /*图片 管理*/
-    @VertxWebApi
-    public Object pictureManager(int mode, Map params) {
-        return pictureSerivce.handle(mode, params);
-    }
-
-    /*评价 操作 管理*/
-    @VertxWebApi
-    public Object evaluateManager(int mode, Map params) {
-        return evaluateSerivce.handle(mode, params);
-    }
-
-    /*登陆初始化*/
-    @VertxWebApi
-    public Object login(String userId) {
-        return userSerivce.login(userId);
-    }
-
-    @VertxWebApi
-    public Object uploadFile(Map fileUpload, Map map) {
-        return pictureSerivce.uploadFile(fileUpload, map);
-    }
 
 }
 

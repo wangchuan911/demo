@@ -119,14 +119,16 @@ public class Requset {
 
     public static Requset newInstance(int mode, RoutingContext context) {
         HttpServerRequest httpServerRequest = context.request();
+        MultiMap multiMap = httpServerRequest.params();
         Requset requset = new Requset();
         String body = null;
         String method = null;
+        String service = multiMap.get("A1") + "Service";
         switch (mode) {
             case SIMPLE_REQUEST: {
-                JsonArray jsonArray = context.getBodyAsJsonArray();
-                method = jsonArray.getString(0);
-                body = jsonArray.getJsonArray(1).toString();
+                method = multiMap.get("A2");
+                method = method != null && !"null".equals(method) && method.length() != 0 ? method : "handle";
+                body = context.getBodyAsString();
             }
             break;
             case UPLOAD_FILES: {
@@ -149,7 +151,7 @@ public class Requset {
             break;
         }
 
-        requset.setMethod(method).setBody(body).putParams(httpServerRequest.params())
+        requset.setMethod(method).setBody(body).setService(service).putParams(httpServerRequest.params())
                 .putSession(context.session());
         return requset;
     }

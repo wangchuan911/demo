@@ -6,16 +6,18 @@ import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.EvaluateDao;
 import org.welisdoon.webserver.service.custom.entity.EvaluateVO;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.util.Map;
 
 @Service
-public class EvaluateSerivce extends AbstractBaseService {
+public class EvaluateService extends AbstractBaseService {
 
     @Autowired
     EvaluateDao evaluateDao;
 
     @Override
+    @VertxWebApi
     public Object handle(int exeCode, Map params) {
         Object resultObj = null;
         EvaluateVO evaluateVO;

@@ -12,6 +12,7 @@ import org.welisdoon.webserver.service.custom.dao.*;
 import org.welisdoon.webserver.service.custom.entity.OrderVO;
 import org.welisdoon.webserver.service.custom.entity.PictureVO;
 import org.welisdoon.webserver.service.custom.entity.UserVO;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;
@@ -30,14 +31,15 @@ public class OrderService extends AbstractBaseService {
     @Autowired
     PictureDao pictureDao;
 
-    TacheSerivce tacheSerivce;
+    TacheService tacheService;
 
     @Override
     public void init() {
-        tacheSerivce = ApplicationContextProvider.getBean(TacheSerivce.class);
+        tacheService = ApplicationContextProvider.getBean(TacheService.class);
     }
 
     @Override
+    @VertxWebApi
     public Object handle(int exeCode, Map params) {
         Object resultObj = null;
         OrderVO orderVO;
@@ -64,7 +66,7 @@ public class OrderService extends AbstractBaseService {
                                 .setTacheId(orderVO.getTacheId()));
                     }
                 }
-                resultObj = tacheSerivce.handle(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", orderVO.getCustId()));
+                resultObj = tacheService.handle(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", orderVO.getCustId()));
                 break;
             case CustomConst.DELETE:
                 break;

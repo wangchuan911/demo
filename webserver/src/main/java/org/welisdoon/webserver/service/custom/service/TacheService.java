@@ -6,17 +6,19 @@ import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.TacheDao;
 import org.welisdoon.webserver.service.custom.entity.TacheVO;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class TacheSerivce extends AbstractBaseService {
+public class TacheService extends AbstractBaseService {
 
     @Autowired
     TacheDao tacheDao;
 
     @Override
+    @VertxWebApi
     public Object handle(int exeCode, Map params) {
         Object resultObj = null;
         TacheVO tacheVO;

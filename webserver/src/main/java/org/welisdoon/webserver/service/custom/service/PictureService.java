@@ -8,6 +8,7 @@ import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.PictureDao;
 import org.welisdoon.webserver.service.custom.entity.PictureVO;
+import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -16,11 +17,12 @@ import java.io.InputStream;
 import java.util.Map;
 
 @Service
-public class PictureSerivce extends AbstractBaseService {
+public class PictureService extends AbstractBaseService {
     @Autowired
     PictureDao pictureDao;
 
     @Override
+    @VertxWebApi
     public Object handle(int exeCode, Map params) {
         Object returnObj = null;
         PictureVO pictureVO;
@@ -36,7 +38,7 @@ public class PictureSerivce extends AbstractBaseService {
         }
         return returnObj;
     }
-
+    @VertxWebApi
     public Object uploadFile(Map fileUpload, Map map) {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
