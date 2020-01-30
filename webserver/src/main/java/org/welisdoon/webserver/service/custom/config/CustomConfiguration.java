@@ -135,6 +135,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     public Consumer<Router> routeMapping(Vertx vertx) {
 //        final String PATH_WX_APP = "/wxApp(?:/([^\\/]+))*";
         final String PATH_WX_APP = "/wxApp";
+        final String PATH_WX_APP_PAY = "/wxAppPay";
 //        final String PATH_WX_APP_UPLOAD = "/imgUpd";
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
         final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
@@ -144,9 +145,11 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             router.get(PATH_WX_APP).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 MultiMap multiMap = routingContext.request().params();
-                switch (Integer.parseInt(multiMap.get("code"))) {
+                int code = Integer.parseInt(multiMap.get("B1"));
+                String value = multiMap.get("B2");
+                switch (code) {
                     case CustomConst.OTHER.LOGIN:
-                        webClient.getAbs(URL_CODE_2_SESSION + multiMap.get("value"))
+                        webClient.getAbs(URL_CODE_2_SESSION + value)
                                 .send(httpResponseAsyncResult -> {
                                     if (httpResponseAsyncResult.succeeded()) {
                                         HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
@@ -163,16 +166,23 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                         break;
                     case CustomConst.OTHER.PRE_PAY:
                         try {
-                            OrderVO orderVo = (OrderVO) orderService.handle(CustomConst.GET, Map.of("orderId", multiMap.get("orderId")));
+                            int offset = 32;
+                            String nonce = value.substring(0, offset);
+                            String orderId = value.substring(offset, (offset = value.indexOf('.', offset)));
+                            String timeStamp = value.substring(++offset, (offset = value.indexOf('.', offset)));
+                            String custId = value.substring(++offset);
+
+                            OrderVO orderVo = (OrderVO) orderService
+                                    .handle(CustomConst.GET, Map.of("orderId", orderId, "custId", custId));
                             Buffer buffer = Buffer.buffer(JAXBUtils.toXML(new PrePayRequsetMesseage()
                                     .setAppId(this.getAppID())
                                     .setMchId(this.getMchId())
-                                    .setNonceStr(multiMap.get("nonce"))
+                                    .setNonceStr(nonce)
                                     .setBody(this.getAppName() + "-服务费用结算")
                                     .setOutTradeNo(orderVo.getOrderCode())
                                     .setTotalFee((int) 10.0)
                                     .setSpbillCreateIp(InetAddress.getLocalHost().getHostAddress())
-                                    .setNotifyUrl(multiMap.get("notifyUrl"))
+                                    .setNotifyUrl(this.getUrls().get("notifyUrl").toString())
                                     .setTradeType("JSAPI")
                                     .setOpenid(orderVo.getCustId())
                                     .setSign(null)
@@ -190,7 +200,12 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                                         , multiMap.get("nonceStr")
                                                         , prePayResponseMesseage.getPrepayId()
                                                         , multiMap.get("timeStamp"));
-                                                routingContext.response().end(new JsonObject().put("sign", sign).toBuffer());
+                                                String prePayId = prePayResponseMesseage.getPrepayId();
+                                                routingContext.response()
+                                                        .end(new JsonObject()
+                                                                .put("sign", sign)
+                                                                .put("prePayId", prePayId)
+                                                                .toBuffer());
                                             } catch (Throwable t) {
                                                 routingContext.fail(httpResponseAsyncResult.cause());
                                             }
@@ -210,6 +225,12 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             }).failureHandler(routingContext -> {
                 routingContext.response().end(routingContext.failure().toString());
             });
+
+
+            router.post(PATH_WX_APP_PAY).handler(routingContext -> {
+                routingContext.response().setChunked(true);
+            });
+
 //            router.post(PATH_WX_APP).handler(routingContext -> {
 //                routingContext.response().setChunked(true);
 ////                JsonArray jsonArray = routingContext.getBodyAsJsonArray();
