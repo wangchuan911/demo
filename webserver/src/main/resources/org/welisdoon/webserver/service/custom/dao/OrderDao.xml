@@ -336,7 +336,7 @@
                     and order_state= #{orderState,jdbcType=INTEGER}
                 </when>
                 <otherwise>
-                    and order_state = 0
+                    and order_state IN (0,1,2)
                 </otherwise>
             </choose>
             <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
