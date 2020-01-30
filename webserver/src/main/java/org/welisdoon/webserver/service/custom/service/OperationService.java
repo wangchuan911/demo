@@ -81,6 +81,7 @@ public class OperationService extends AbstractBaseService {
         }
         return resultObj;
     }
+
     @VertxWebApi
     public Object toBeContinue(Map map) {
         Object returnObj = null;
@@ -306,7 +307,10 @@ public class OperationService extends AbstractBaseService {
                         .setFinishTime(new Timestamp(System.currentTimeMillis()))
                         .setOrderId(orderVO.getOrderId()));
             }
-        } else {
+        }
+        if (tacheId == null
+                || tacheId < 0
+                || "finish".equals(CustomConst.TACHE.TACHE_MAP.get(tacheId).getCode())) {
             newOrderVO.setFinishDate(Timestamp.valueOf(LocalDateTime.now()));
             newOrderVO.setOrderState(CustomConst.ORDER.STATE.END);
             orderDao.set(newOrderVO);
