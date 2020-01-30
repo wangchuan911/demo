@@ -11,6 +11,7 @@ import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
+import org.apache.commons.codec.digest.Md5Crypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -192,9 +193,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                         if (httpResponseAsyncResult.succeeded()) {
                                             try {
                                                 PrePayResponseMesseage prePayResponseMesseage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), PrePayResponseMesseage.class);
-                                                System.out.println(prePayResponseMesseage.getReturnMsg());
-                                                System.out.println(prePayResponseMesseage.getErrCodeDes());
-                                                System.out.println(prePayResponseMesseage.getErrCode());
+                                                System.out.println(prePayResponseMesseage);
                                                 String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s"
                                                         , this.getAppID()
                                                         , multiMap.get("nonceStr")
@@ -203,7 +202,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                                 String prePayId = prePayResponseMesseage.getPrepayId();
                                                 routingContext.response()
                                                         .end(new JsonObject()
-                                                                .put("sign", sign)
+                                                                .put("sign", Md5Crypt.md5Crypt(sign.getBytes()))
                                                                 .put("prePayId", prePayId)
                                                                 .toBuffer());
                                             } catch (Throwable t) {

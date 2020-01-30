@@ -225,4 +225,23 @@ public class PrePayResponseMesseage {
         this.prepayId = prepayId;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "PrePayResponseMesseage{" +
+                "returnCode='" + returnCode + '\'' +
+                ", returnMsg='" + returnMsg + '\'' +
+                ", appId='" + appId + '\'' +
+                ", mchId='" + mchId + '\'' +
+                ", deviceInfo='" + deviceInfo + '\'' +
+                ", nonceStr='" + nonceStr + '\'' +
+                ", sign='" + sign + '\'' +
+                ", resultCode='" + resultCode + '\'' +
+                ", errCode='" + errCode + '\'' +
+                ", errCodeDes='" + errCodeDes + '\'' +
+                ", codeUrl='" + codeUrl + '\'' +
+                ", tradeType='" + tradeType + '\'' +
+                ", prepayId='" + prepayId + '\'' +
+                '}';
+    }
 }
