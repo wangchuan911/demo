@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
+import javax.xml.bind.JAXBException;
 
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
@@ -35,7 +36,9 @@ import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.CommonConst;
 import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.common.web.Requset;
+import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
+import org.welisdoon.webserver.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PrePayResponseMesseage;
 import org.welisdoon.webserver.service.custom.entity.OrderVO;
 import org.welisdoon.webserver.service.custom.service.*;
@@ -242,6 +245,18 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
             router.post(PATH_WX_APP_PAY).handler(routingContext -> {
                 routingContext.response().setChunked(true);
+                try {
+                    PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
+                    PayBillResponseMesseage payBillResponseMesseage=new PayBillResponseMesseage();
+                    payBillResponseMesseage.setReturnCode("SUCCESS");
+                    payBillResponseMesseage.setReturnMsg("OK");
+                    routingContext.response()
+                            .end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
+                } catch (JAXBException e) {
+                    e.printStackTrace();
+                    routingContext.fail(e);
+                }
+
             });
 
 //            router.post(PATH_WX_APP).handler(routingContext -> {
