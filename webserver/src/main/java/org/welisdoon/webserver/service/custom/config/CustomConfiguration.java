@@ -192,20 +192,33 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                             webClient.postAbs(URL_UNIFIEDORDERON)
                                     .sendBuffer(buffer, httpResponseAsyncResult -> {
                                         if (httpResponseAsyncResult.succeeded()) {
+                                            JsonObject resultBodyJson = new JsonObject();
                                             try {
                                                 PrePayResponseMesseage prePayResponseMesseage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), PrePayResponseMesseage.class);
                                                 System.out.println(prePayResponseMesseage);
-                                                String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s"
-                                                        , this.getAppID()
-                                                        , multiMap.get("nonceStr")
-                                                        , prePayResponseMesseage.getPrepayId()
-                                                        , multiMap.get("timeStamp"));
-                                                String prePayId = prePayResponseMesseage.getPrepayId();
+                                                if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getResultCode())) {
+                                                    resultBodyJson
+                                                            .put("error", String.format("支付失败:%s[%s]",
+                                                                    prePayResponseMesseage.getReturnMsg(),
+                                                                    prePayResponseMesseage.getErrCode()));
+                                                } else if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getReturnCode())) {
+                                                    resultBodyJson
+                                                            .put("error", String.format("支付失败:%s[%s]",
+                                                                    prePayResponseMesseage.getErrCodeDes(),
+                                                                    prePayResponseMesseage.getErrCode()));
+                                                } else {
+                                                    String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s"
+                                                            , this.getAppID()
+                                                            , multiMap.get("nonceStr")
+                                                            , prePayResponseMesseage.getPrepayId()
+                                                            , multiMap.get("timeStamp"));
+                                                    String prePayId = prePayResponseMesseage.getPrepayId();
+                                                    resultBodyJson
+                                                            .put("sign", Md5Crypt.md5Crypt(sign.getBytes()))
+                                                            .put("prePayId", prePayId);
+                                                }
                                                 routingContext.response()
-                                                        .end(new JsonObject()
-                                                                .put("sign", Md5Crypt.md5Crypt(sign.getBytes()))
-                                                                .put("prePayId", prePayId)
-                                                                .toBuffer());
+                                                        .end(resultBodyJson.toBuffer());
                                             } catch (Throwable t) {
                                                 routingContext.fail(httpResponseAsyncResult.cause());
                                             }

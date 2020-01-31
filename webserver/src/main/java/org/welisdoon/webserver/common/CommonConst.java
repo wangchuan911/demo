@@ -9,4 +9,9 @@ public interface CommonConst {
         String GET_CODE = "B1";
         String GET_VALUE_1 = "B2";
     }
+
+    interface WeChatPubValues {
+        String SUCCESS = "SUCCESS";
+        String FAIL = "FAIL";
+    }
 }
