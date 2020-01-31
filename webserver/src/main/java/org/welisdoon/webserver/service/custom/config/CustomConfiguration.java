@@ -139,15 +139,15 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
 //        final String PATH_WX_APP = "/wxApp(?:/([^\\/]+))*";
-        final String PATH_WX_APP = "/wxApp";
-        final String PATH_WX_APP_PAY = "/wxAppPay";
+//        final String PATH_WX_APP = "/wxApp";
+//        final String PATH_WX_APP_PAY = "/wxAppPay";
 //        final String PATH_WX_APP_UPLOAD = "/imgUpd";
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
         final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
         WebClient webClient = WebClient.create(vertx);
         Consumer<Router> routerConsumer = router -> {
-            router.get(PATH_WX_APP).handler(routingContext -> {
+            router.get(this.getPath().getApp()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 MultiMap multiMap = routingContext.request().params();
                 int code = Integer.parseInt(multiMap.get(CommonConst.WebParamsKeys.GET_CODE));
@@ -187,7 +187,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                     .setOutTradeNo(orderVo.getOrderCode())
                                     .setTotalFee((int) 10.0)
                                     .setSpbillCreateIp(InetAddress.getLocalHost().getHostAddress())
-                                    .setNotifyUrl(this.getUrls().get("notifyUrl").toString())
+                                    .setNotifyUrl(this.getAddress() + this.getPath().getPay())
                                     .setTradeType("JSAPI")
                                     .setOpenid(orderVo.getCustId())
                                     .setSign(null)
@@ -243,11 +243,11 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             });
 
 
-            router.post(PATH_WX_APP_PAY).handler(routingContext -> {
+            router.post(this.getPath().getPay()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 try {
                     PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
-                    PayBillResponseMesseage payBillResponseMesseage=new PayBillResponseMesseage();
+                    PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
                     payBillResponseMesseage.setReturnCode("SUCCESS");
                     payBillResponseMesseage.setReturnMsg("OK");
                     routingContext.response()
@@ -324,7 +324,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 //            });
 //
 //            logger.info("inital request mapping: " + PATH_WX_APP_UPLOAD);
-            router.post(PATH_WX_APP).handler(routingContext -> {
+            router.post(this.getPath().getApp()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 Requset requset = Requset.newInstance(routingContext);
                 commonAsynService.requsetCall(requset, stringAsyncResult -> {
@@ -336,7 +336,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 });
 
             });
-            logger.info("inital request mapping: " + PATH_WX_APP);
+            logger.info("inital request mapping: " + this.getPath().getApp());
 
             StaticHandler staticHandler = StaticHandler.create()
                     .setAllowRootFileSystemAccess(true)

@@ -12,6 +12,8 @@ public class AbstractWechatConfiguration {
     private Map schedul;
     private String mchId;
     private String appName;
+    private String address;
+    private Path path;
 
     public String getAppID() {
         return appID;
@@ -83,5 +85,42 @@ public class AbstractWechatConfiguration {
 
     public void setAppName(String appName) {
         this.appName = appName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Path getPath() {
+        return path;
+    }
+
+    public void setPath(Path path) {
+        this.path = path;
+    }
+
+    public static class Path {
+        String pay;
+        String app;
+
+        public String getPay() {
+            return pay;
+        }
+
+        public void setPay(String pay) {
+            this.pay = pay;
+        }
+
+        public String getApp() {
+            return app;
+        }
+
+        public void setApp(String app) {
+            this.app = app;
+        }
     }
 }
