@@ -16,6 +16,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.CommonConst;
 
 @DataObject
 public class Requset {
@@ -119,7 +120,7 @@ public class Requset {
 
     public static Requset newInstance(RoutingContext context) {
         int mode;
-        String type = context.request().getParam("A3");
+        String type = context.request().getParam(CommonConst.WebParamsKeys.REQUSET_TYPE);
         switch (StringUtils.isEmpty(type) ? "" : type) {
             case "UPS":
                 mode = UPLOAD_FILES;
@@ -139,10 +140,10 @@ public class Requset {
         Requset requset = new Requset();
         String body = null;
         String method = null;
-        String service = multiMap.get("A1") + "Service";
+        String service = multiMap.get(CommonConst.WebParamsKeys.SPRING_BEAN) + "Service";
         switch (mode) {
             case SIMPLE_REQUEST: {
-                method = multiMap.get("A2");
+                method = multiMap.get(CommonConst.WebParamsKeys.BEAN_METHOD);
                 method = method != null && !"null".equals(method) && method.length() != 0 ? method : "handle";
                 body = context.getBodyAsString();
             }

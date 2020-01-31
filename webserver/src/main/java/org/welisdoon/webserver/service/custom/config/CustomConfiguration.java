@@ -32,6 +32,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.CommonConst;
 import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
@@ -146,8 +147,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             router.get(PATH_WX_APP).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 MultiMap multiMap = routingContext.request().params();
-                int code = Integer.parseInt(multiMap.get("B1"));
-                String value = multiMap.get("B2");
+                int code = Integer.parseInt(multiMap.get(CommonConst.WebParamsKeys.GET_CODE));
+                String value = multiMap.get(CommonConst.WebParamsKeys.GET_VALUE_1);
                 switch (code) {
                     case CustomConst.OTHER.LOGIN:
                         webClient.getAbs(URL_CODE_2_SESSION + value)
