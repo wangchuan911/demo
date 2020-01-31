@@ -4,6 +4,13 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
+import org.reflections.Reflections;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.util.CollectionUtils;
+import org.welisdoon.webserver.WebserverApplication;
+import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.vertx.SpringVerticleFactory;
 import org.welisdoon.webserver.vertx.verticle.AbstractCustomVerticle;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
@@ -19,6 +26,8 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
+import java.net.URL;
+import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -59,6 +68,29 @@ public class VertxConfiguration {
     @Value("${vertx.dns.maxQueries}")
     Integer dnsMaxQueries;
 
+
+    @Bean
+    Reflections getReflections() {
+        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+        {
+            Collection<URL> CollectUrl = null;
+            for (int i = 0; i < scanPath.length; i++) {
+                String path = scanPath[i];
+                switch (i) {
+                    case 0:
+                        CollectUrl = ClasspathHelper.forPackage(path);
+                        break;
+                    default:
+                        CollectUrl.addAll(ClasspathHelper.forPackage(path));
+                        break;
+                }
+            }
+            CollectUrl = CollectionUtils.isEmpty(CollectUrl) ? ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()) : CollectUrl;
+            configurationBuilder.setUrls(CollectUrl);
+        }
+        return new Reflections(configurationBuilder);
+    }
+
     /**
      * Verticles deploy after  springboot ready
      */
@@ -70,7 +102,7 @@ public class VertxConfiguration {
         this.optionManager(vertxOptions);
 
 
-        if (vertxOptions.getClusterManager()!=null) {
+        if (vertxOptions.getClusterManager() != null) {
             Vertx.clusteredVertx(
                     vertxOptions,
                     result -> {
@@ -119,7 +151,7 @@ public class VertxConfiguration {
     }
 
     private Consumer<Vertx> deployVerticles() {
-        AbstractCustomVerticle.scanRegister(scanPath);
+        AbstractCustomVerticle.scanRegister(ApplicationContextProvider.getBean(Reflections.class));
         Consumer<Vertx> runner = vertx -> {
             // The verticle factory is registered manually because it is created by the Spring container
             vertx.registerVerticleFactory(verticleFactory);

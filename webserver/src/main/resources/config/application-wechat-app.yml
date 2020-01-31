@@ -4,9 +4,13 @@ wechat-app:
   token: 9dvL9Kze96Oc76XhMUeI03LTZ29
   key: AC32OLzYAjjkPqzxilsPiMPbqYCHESnOuPzyYpjFyVw
   afterUpdateTokenTime: 6000
-  orderCycleTime: 10
+  orderCycleTime: 0
+  mchId: xxxx
+  appName: 爱车智联AUTOCAR
   urls:
     getAccessToken: https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat-app.appID}&secret=${wechat-app.appsecret}
     code2Session: https://api.weixin.qq.com/sns/jscode2session?appid=${wechat-app.appID}&secret=${wechat-app.appsecret}&grant_type=authorization_code&js_code=
+    unifiedorder: https://api.mch.weixin.qq.com/pay/unifiedorder
+    notifyUrl: https://www.welisdoon.xyz/wxApp/notify
 temp:
   filePath: /opt/wechat/tempPic

@@ -75,26 +75,9 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         }
     }
 
-    final public static void scanRegister(String[] paths) {
+    final public static void scanRegister(Reflections reflections) {
         if (HANDLES.size() != 0) return;
-        ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-        {
-            Collection<URL> CollectUrl = null;
-            for (int i = 0; i < paths.length; i++) {
-                String path = paths[i];
-                switch (i) {
-                    case 0:
-                        CollectUrl = ClasspathHelper.forPackage(path);
-                        break;
-                    default:
-                        CollectUrl.addAll(ClasspathHelper.forPackage(path));
-                        break;
-                }
-            }
-            CollectUrl = CollectionUtils.isEmpty(CollectUrl) ? ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()) : CollectUrl;
-            configurationBuilder.setUrls(CollectUrl);
-        }
-        Reflections reflections = new Reflections(configurationBuilder);
+
         Set<Class<?>> classes = reflections.getTypesAnnotatedWith(VertxConfiguration.class);
         classes.forEach(aClass -> {
             Set<Method> methods = ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class));
