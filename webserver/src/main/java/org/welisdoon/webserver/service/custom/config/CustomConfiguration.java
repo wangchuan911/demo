@@ -247,9 +247,24 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 routingContext.response().setChunked(true);
                 try {
                     PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
+                    OrderVO orderVO = new OrderVO()
+                            .setOrderCode(payBillRequsetMesseage.getOutTradeNo())
+                            .setCustId(payBillRequsetMesseage.getOpenId());
+                    orderVO = (OrderVO) orderService
+                            .handle(CustomConst.GET,
+                                    JsonObject.mapFrom(orderVO).getMap());
                     PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
-                    payBillResponseMesseage.setReturnCode("SUCCESS");
-                    payBillResponseMesseage.setReturnMsg("OK");
+                    String code;
+                    String msg;
+                    if (orderVO.getOrderId() != null) {
+                        code = "SUCCESS";
+                        msg = "OK";
+                    } else {
+                        code = "FAIL";
+                        msg = "定单不存在";
+                    }
+                    payBillResponseMesseage.setReturnCode(code);
+                    payBillResponseMesseage.setReturnMsg(msg);
                     routingContext.response()
                             .end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
                 } catch (JAXBException e) {
