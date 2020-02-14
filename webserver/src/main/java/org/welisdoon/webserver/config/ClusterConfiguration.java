@@ -34,8 +34,6 @@ public class ClusterConfiguration {
     final public static String CLUSTER_MODE_HAZELCAST = "hazelcast";
     final public static String CLUSTER_MODE_ZOOKEEPER = "zookeeper";
 
-    @Autowired
-    ApplicationContextProvider applicationContextProvider;
 
     /**
      * cluster power [true/false]
@@ -66,7 +64,7 @@ public class ClusterConfiguration {
     }
 
     private void listenMembersState() {
-        HazelcastInstance hazelcastInstance = applicationContextProvider.getBean(HazelcastInstance.class);
+        HazelcastInstance hazelcastInstance = ApplicationContextProvider.getBean(HazelcastInstance.class);
         if (hazelcastInstance != null) {
             hazelcastInstance.getCluster().addMembershipListener(new MembershipListener() {
                 @Override
@@ -120,7 +118,7 @@ public class ClusterConfiguration {
         if (CLUSTERED_IS_ENABLE && !StringUtils.isEmpty(CLUSTERED_MODE)) {
             switch (CLUSTERED_MODE) {
                 case CLUSTER_MODE_HAZELCAST:
-                    HazelcastInstance hazelcastInstance = applicationContextProvider.getBean(HazelcastInstance.class);
+                    HazelcastInstance hazelcastInstance = ApplicationContextProvider.getBean(HazelcastInstance.class);
                     mgr = hazelcastInstance == null ? new HazelcastClusterManager(ConfigUtil.loadConfig()) : new HazelcastClusterManager(hazelcastInstance);
                     break;
                 case CLUSTER_MODE_ZOOKEEPER:
