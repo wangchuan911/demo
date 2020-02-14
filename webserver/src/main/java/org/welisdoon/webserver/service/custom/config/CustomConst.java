@@ -4,36 +4,36 @@ import java.util.*;
 
 import org.welisdoon.webserver.service.custom.entity.TacheVO;
 
-public class CustomConst {
+public final class CustomConst {
 
     /*all*/
-    public final static int ADD = 0;
-    public final static int DELETE = 1;
-    public final static int MODIFY = 2;
-    public final static int GET = 3;
-    public final static int LIST = 4;
+    public final static int ADD = 0,
+            DELETE = 1,
+            MODIFY = 2,
+            GET = 3,
+            LIST = 4;
 
-    public static class USER {
-        public final static int GET_WORKERS = 100;
+    public final static class USER {
+        public final static int GET_WORKERS = 100, AREA_RANGE = 101;
     }
 
-    public static class ORDER {
-        public final static int GET_WORK_NUMBER = 100;
-        public final static int APPIONT_WORKER = 101;
+    public final static class ORDER {
+        public final static int GET_WORK_NUMBER = 100,
+                APPIONT_WORKER = 101;
 
-        public static class STATE {
-            public final static int RUNNING = 0;
-            public final static int WAIT_NEXT = 1;
-            public final static int END = 2;
+        public final static class STATE {
+            public final static int RUNNING = 0,
+                    WAIT_NEXT = 1,
+                    END = 2;
         }
     }
 
-    public static class TACHE {
+    public final static class TACHE {
         public final static int GET_WORK_NUMBER = 100;
 
-        public static class STATE {
-            public final static int END = -2;
-            public final static int WAIT = -1;
+        public final static class STATE {
+            public final static int END = -2,
+                    WAIT = -1;
         }
 
         public static final Map<Integer, TacheVO> TACHE_MAP = new HashMap<>();
@@ -92,26 +92,26 @@ public class CustomConst {
 
     }
 
-    public static class CAR {
+    public final static class CAR {
     }
 
-    public static class ROLE {
+    public final static class ROLE {
 
-        public final static int GUEST = -1;
-        public final static int CUSTOMER = 0;
-        public final static int WOCKER = 1;
-        public final static int DISTRIBUTOR = 2;
+        public final static int GUEST = -1,
+                CUSTOMER = 0,
+                WOCKER = 1,
+                DISTRIBUTOR = 2;
     }
 
-    public static class FUNCTION {
+    public final static class FUNCTION {
         public final static String DISTRIBUTE = "distribute";
         public final static String PAYMENT = "payment";
         public final static String FINISH = "finish";
     }
 
-    public static class OTHER {
-        public final static int PRE_PAY = -2;
-        public final static int LOGIN = -1;
+    public final static class OTHER {
+        public final static int PRE_PAY = -2,
+                LOGIN = -1;
     }
 
 }
