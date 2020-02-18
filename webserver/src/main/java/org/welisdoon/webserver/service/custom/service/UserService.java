@@ -63,6 +63,9 @@ public class UserService extends AbstractBaseService {
                 userVO = mapToObject(params, UserVO.class);
                 userDao.set(new UserVO().setRole(userVO.getRole()).setId(userVO.getId()));
                 resultObj = userVO;
+            case CustomConst.USER.AREA_RANGE:
+                userVO = mapToObject(params, UserVO.class);
+                resultObj = userDao.getWorkAreaRange(userVO);
             default:
                 break;
         }
