@@ -93,6 +93,7 @@ public final class CustomConst {
     }
 
     public final static class CAR {
+        public final static int GET_MODEL = 100;
     }
 
     public final static class ROLE {

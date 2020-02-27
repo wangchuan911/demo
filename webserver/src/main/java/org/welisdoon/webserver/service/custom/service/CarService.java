@@ -50,6 +50,8 @@ public class CarService extends AbstractBaseService {
                 carVO = mapToObject(params, CarVO.class);
                 resultObj = carDao.set(carVO);
                 break;
+            case CustomConst.CAR.GET_MODEL:
+                resultObj = carDao.getModel(params);
             default:
                 break;
         }
