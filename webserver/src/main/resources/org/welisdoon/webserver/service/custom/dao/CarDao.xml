@@ -111,4 +111,36 @@
         </where>
     </select>
 
+    <resultMap type="java.util.Map" id="ModelMapItems">
+        <result property="name" column="car_brand" javaType="java.lang.String"></result>
+    </resultMap>
+    <resultMap type="java.util.Map" id="ModelMapList">
+        <result property="text" column="car_model"></result>
+        <result property="value" column="car_model_id"></result>
+    </resultMap>
+
+    <resultMap id="ModelMap" type="java.util.Map">
+        <result property="name" column="car_simplicity"></result>
+        <result property="text" column="car_system"></result>
+        <collection property="items" resultMap="ModelMapItems" javaType="java.util.List"></collection>
+        <collection property="list" resultMap="ModelMapList" javaType="java.util.List"></collection>
+    </resultMap>
+    <select id="getModel" parameterType="map" resultMap="ModelMap">
+        <choose>
+            <when test="level==1">
+                SELECT DISTINCT
+                car_simplicity ,
+                car_brand
+                FROM car_message_modelinfo
+            </when>
+            <when test="level==2">
+                SELECT
+                car_model_id,
+                car_system,
+                car_model
+                FROM car_message_modelinfo
+                where car_brand=#{carBrand,jdbcType=VARCHAR}
+            </when>
+        </choose>
+    </select>
 </mapper>
