@@ -11,6 +11,8 @@
         <result property="modal" column="car_model"></result>
         <result property="picture" column="car_picture"></result>
         <result property="defaultSelected" column="def"></result>
+        <result property="carModelId" column="car_model_id"></result>
+        <association property="carInfo" column="car_model_id" select="getCarInfo"></association>
     </resultMap>
 
     <parameterMap id="CarVO" type="org.welisdoon.webserver.service.custom.entity.CarVO">
@@ -21,6 +23,7 @@
         <parameter property="modal" jdbcType="VARCHAR"></parameter>
         <parameter property="picture" jdbcType="BLOB"></parameter>
         <parameter property="defaultSelected" jdbcType="INTEGER"></parameter>
+        <parameter property="carModelId" jdbcType="INTEGER"></parameter>
     </parameterMap>
     <insert id="add" parameterMap="CarVO">
         INSERT INTO car_team_manager
@@ -30,14 +33,16 @@
              car_picture,
              cust_id,
              car_brand,
-             def)
+             def,
+             car_model_id)
         VALUES (#{modal,jdbcType=VARCHAR},
                 #{lisence,jdbcType=VARCHAR},
                 #{color,jdbcType=VARCHAR},
                 #{picture,jdbcType=BLOB},
                 #{userId,jdbcType=VARCHAR},
                 #{brand,jdbcType=VARCHAR},
-                #{defaultSelected,jdbcType=INTEGER}
+                #{defaultSelected,jdbcType=INTEGER},
+                #{carModelId,jdbcType=INTEGER}
                 )
     </insert>
     <update id="set" parameterMap="CarVO">
@@ -142,5 +147,15 @@
                 where car_brand=#{carBrand,jdbcType=VARCHAR}
             </when>
         </choose>
+    </select>
+
+
+    <resultMap id="CarInfoVO" type="org.welisdoon.webserver.service.custom.entity.CarVO$CarInfo">
+        <result property="priceInside" column="car_price_inside"></result>
+        <result property="priceOutside" column="car_price_outside"></result>
+    </resultMap>
+    <select id="getCarInfo" resultMap="CarInfoVO" parameterType="int">
+        SELECT * FROM car_message_modelinfo A
+        WHERE A.car_model_id=#{value}
     </select>
 </mapper>

@@ -8,6 +8,8 @@ public class CarVO {
     private String modal;
     private byte[] picture;
     private Integer defaultSelected;
+    private Integer carModelId;
+    private CarInfo carInfo;
 
     public String getUserId() {
         return userId;
@@ -70,5 +72,42 @@ public class CarVO {
     public CarVO setDefaultSelected(Integer defaultSelected) {
         this.defaultSelected = defaultSelected;
         return this;
+    }
+
+    public Integer getCarModelId() {
+        return carModelId;
+    }
+
+    public void setCarModelId(Integer carModelId) {
+        this.carModelId = carModelId;
+    }
+
+    public static class CarInfo {
+        private Double priceInside;
+        private Double priceOutside;
+
+        public Double getPriceInside() {
+            return priceInside;
+        }
+
+        public void setPriceInside(Double priceInside) {
+            this.priceInside = priceInside;
+        }
+
+        public Double getPriceOutside() {
+            return priceOutside;
+        }
+
+        public void setPriceOutside(Double priceOutside) {
+            this.priceOutside = priceOutside;
+        }
+    }
+
+    public CarInfo getCarInfo() {
+        return carInfo;
+    }
+
+    public void setCarInfo(CarInfo carInfo) {
+        this.carInfo = carInfo;
     }
 }
