@@ -44,6 +44,9 @@ public class CarService extends AbstractBaseService {
                 if (!StringUtils.isEmpty(phone)) {
                     userDao.set(new UserVO().setId(carVO.getUserId()).setPhone(phone.toString()));
                 }
+                if (carVO.getCarInfo() == null) {
+                    carVO.setCarInfo(carDao.getCarInfo(carVO.getCarModelId()));
+                }
                 resultObj = carVO;
                 break;
             case CustomConst.MODIFY:

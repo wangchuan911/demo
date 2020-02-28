@@ -27,6 +27,7 @@ public class OrderVO {
     private List<PictureVO> pictureVOS;
     private CarVO carVO;
     private Integer regionCode;
+    private Double cost;
 
     public Integer getOrderId() {
         return orderId;
@@ -233,6 +234,14 @@ public class OrderVO {
     public OrderVO setRegionCode(Integer regionCode) {
         this.regionCode = regionCode;
         return this;
+    }
+
+    public Double getCost() {
+        return cost;
+    }
+
+    public void setCost(Double cost) {
+        this.cost = cost;
     }
 }
 

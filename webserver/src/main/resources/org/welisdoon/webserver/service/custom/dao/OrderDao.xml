@@ -22,6 +22,7 @@
         <parameter property="posY" jdbcType="DOUBLE"></parameter>
         <parameter property="tacheId" jdbcType="INTEGER"></parameter>
         <parameter property="regionCode" jdbcType="INTEGER"></parameter>
+        <parameter property="cost" jdbcType="DOUBLE"></parameter>
     </parameterMap>
 
     <resultMap id="OrderVO" type="org.welisdoon.webserver.service.custom.entity.OrderVO">
@@ -42,6 +43,7 @@
         <result property="posY" column="pos_y"></result>
         <result property="tacheId" column="tache_id"></result>
         <result property="regionCode" column="region_code"></result>
+        <result property="cost" column="cost"></result>
     </resultMap>
     <resultMap id="OrderVO_All" type="org.welisdoon.webserver.service.custom.entity.OrderVO">
         <id property="orderId" column="order_id"></id>
@@ -65,6 +67,7 @@
         <result property="posY" column="pos_y"></result>
         <result property="tacheId" column="tache_id"></result>
         <result property="regionCode" column="region_code"></result>
+        <result property="cost" column="cost"></result>
 
         <association property="carVO"
                      select="org.welisdoon.webserver.service.custom.dao.CarDao.get"
@@ -99,7 +102,8 @@
         #{posX,jdbcType=DOUBLE},
         #{posY,jdbcType=DOUBLE},
         #{tacheId,jdbcType=INTEGER},
-        #{regionCode,jdbcType=VARCHAR})
+        #{regionCode,jdbcType=VARCHAR},
+        #{cost,jdbcType=DOUBLE})
     </insert>
     <sql id="selectCondition">
         <where>
@@ -185,7 +189,8 @@
              pos_x,
              pos_y,
              tache_id,
-             region_code)
+             region_code,
+             cost)
     </sql>
     <select id="list" parameterMap="OrderVO" resultMap="OrderVO">
         select * from car_wash_order a
@@ -266,6 +271,9 @@
             <if test="regionCode!=null and regionCode!=''.toString()">
                 region_code=#{regionCode,jdbcType=INTEGER},
             </if>
+            <if  test="cost!=null">
+                cost=#{cost,jdbcType=DOUBLE},
+            </if>
         </set>
         where order_id = #{orderId,jdbcType=INTEGER}
     </update>
@@ -289,7 +297,8 @@
         #{vo.posX,jdbcType=DOUBLE} as posX,
         #{vo.posY,jdbcType=DOUBLE} as posY,
         #{vo.tacheId,jdbcType=INTEGER} as tacheId,
-        #{vo.regionCode,jdbcType=VARCHAR} as regionCode
+        #{vo.regionCode,jdbcType=VARCHAR} as regionCode,
+        #{vo.cost,jdbcType=DOUBLE} as cost
         from dual
     </sql>
     <insert id="addAll">
@@ -404,6 +413,9 @@
                 </if>
                 <if test="regionCode!=null and regionCode!=''.toString()">
                     region_code=#{vo.regionCode,jdbcType=VARCHAR},
+                </if>
+                <if  test="cost!=null">
+                    cost=#{vo.cost,jdbcType=DOUBLE},
                 </if>
             </set>
             <where>
