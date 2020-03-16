@@ -6,6 +6,8 @@ public class UserVO {
     private Integer role;
     private String phone;
     private UserAttr userAttr;
+    private String sessionKey;
+    private boolean openData = true;
 
     public String getId() {
         return id;
@@ -43,6 +45,20 @@ public class UserVO {
         return this;
     }
 
+    public String getSessionKey() {
+        return this.openData ? null : sessionKey;
+    }
+
+    public UserVO setSessionKey(String sessionKey) {
+        this.sessionKey = sessionKey;
+        return this;
+    }
+
+    public UserVO openData(boolean sw) {
+        this.openData = sw;
+        return this;
+    }
+
     public UserAttr getUserAttr() {
         return userAttr;
     }
@@ -51,6 +67,7 @@ public class UserVO {
         this.userAttr = userAttr;
         return this;
     }
+
 
     static class UserAttr {
         private boolean vip;

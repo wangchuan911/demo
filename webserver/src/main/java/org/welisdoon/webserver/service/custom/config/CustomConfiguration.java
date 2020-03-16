@@ -162,7 +162,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                         String key = jsonObject.remove("session_key").toString();
                                         String userId = jsonObject.getString("openid");
 //                                        jsonObject.mergeIn((JsonObject) requestService.login(userId));
-                                        jsonObject.mergeIn((JsonObject) userService.login(userId));
+                                        jsonObject.mergeIn((JsonObject) userService.login(userId, key));
                                         routingContext.response().end(jsonObject.toBuffer());
                                     } else {
                                         routingContext.fail(httpResponseAsyncResult.cause());

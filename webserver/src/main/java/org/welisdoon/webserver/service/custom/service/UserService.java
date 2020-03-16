@@ -75,6 +75,9 @@ public class UserService extends AbstractBaseService {
     /*登陆初始化*/
     @VertxWebApi
     public Object login(String userId) {
+        return login(userId, null);
+    }
+    public Object login(String userId,String sessionKey) {
         JsonObject jsonObject = new JsonObject();
         if (!StringUtils.isEmpty(userId)) {
             Object o = handle(CustomConst.GET, Map.of("id", userId));
@@ -84,6 +87,8 @@ public class UserService extends AbstractBaseService {
                 userVO.setRole(CustomConst.ROLE.GUEST);
                 userVO.setName("新用戶");
                 jsonObject.put("user", JsonObject.mapFrom(userVO));
+                userVO.setSessionKey(sessionKey);
+                userDao.add(userVO.openData(false));
             } else {
                 userVO = (UserVO) o;
                 jsonObject.put("user", JsonObject.mapFrom(o));
@@ -102,6 +107,9 @@ public class UserService extends AbstractBaseService {
                 o = o != null ? JsonObject.mapFrom(o) : Map.of("all_nums", 0, "nums", 0);
                 jsonObject.put("work", o);
                 jsonObject.put("cars", carDao.list(new CarVO().setUserId(userId).setDefaultSelected(1)));
+                if (!StringUtils.isEmpty(sessionKey)) {
+                    userDao.set(new UserVO().setId(userVO.getId()).setSessionKey(sessionKey).openData(false));
+                }
             }
         }
         return jsonObject;

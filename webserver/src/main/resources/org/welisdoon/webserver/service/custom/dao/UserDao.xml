@@ -9,6 +9,7 @@
         <result property="name" column="car_user_name"></result>
         <result property="role" column="car_user_role"></result>
         <result property="phone" column="car_user_telephone"></result>
+        <result property="sessionKey" column="session_key"></result>
         <association property="userAttr" javaType="org.welisdoon.webserver.service.custom.entity.UserVO$UserAttr"
                      column="car_user_id" select="getUserAttr"></association>
     </resultMap>
@@ -18,6 +19,7 @@
         <parameter property="name" jdbcType="VARCHAR"></parameter>
         <parameter property="role" jdbcType="INTEGER"></parameter>
         <parameter property="phone" jdbcType="VARCHAR"></parameter>
+        <parameter property="sessionKey" jdbcType="VARCHAR"></parameter>
     </parameterMap>
 
     <resultMap id="UserAttr" type="org.welisdoon.webserver.service.custom.entity.UserVO$UserAttr">
@@ -40,6 +42,9 @@
             </if>
             <if test="phone!=null and phone!=''.toString()">
                 car_user_telephone=#{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="sessionKey!=null and sessionKey!=''.toString()">
+                session_key=#{sessionKey,jdbcType=VARCHAR},
             </if>
         </set>
         <where>
