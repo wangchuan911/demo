@@ -229,14 +229,17 @@ public class PrePayRequsetMesseage {
                 })
                 .forEachOrdered(field -> {
                     try {
-                        tmpStr.append('&').append(field.getAnnotation(annotationClass).name()).append('=').append(field.get(this));
+                        tmpStr.append(field.getAnnotation(annotationClass).name()).append('=').append(field.get(this)).append('&');
                     } catch (Throwable t) {
                         t.printStackTrace();
                     }
                 });
-        this.sign = Md5Crypt.md5Crypt(tmpStr
-                .substring(1)
-                .getBytes());
+        this.sign = Md5Crypt
+                .md5Crypt(tmpStr.append("key=")
+                        .append(sign)
+                        .toString()
+                        .getBytes())
+                .toUpperCase();
         return this;
     }
 
