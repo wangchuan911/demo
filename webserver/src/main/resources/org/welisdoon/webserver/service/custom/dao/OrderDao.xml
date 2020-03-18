@@ -122,12 +122,12 @@
             <if test="createDate!=null ">
                 and create_date= #{createDate,jdbcType=TIMESTAMP}
             </if>
-            <if test="finishDate!=null ">
+            <!--<if test="finishDate!=null ">
                 and finish_date is not null
             </if>
             <if test="finishDate==null ">
                 and finish_date is null
-            </if>
+            </if>-->
             <choose>
                 <when test="orderState!=null ">
                     and order_state= #{orderState,jdbcType=INTEGER}
