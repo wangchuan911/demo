@@ -12,6 +12,7 @@ import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,6 +161,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                         HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
                                         JsonObject jsonObject = httpResponse.body().toJsonObject();
                                         String key = jsonObject.remove("session_key").toString();
+                                        logger.info(key);
                                         String userId = jsonObject.getString("openid");
 //                                        jsonObject.mergeIn((JsonObject) requestService.login(userId));
                                         jsonObject.mergeIn((JsonObject) userService.login(userId, key));
@@ -210,14 +212,15 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                                                     prePayResponseMesseage.getErrCodeDes(),
                                                                     prePayResponseMesseage.getErrCode()));
                                                 } else {
-                                                    String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s"
+                                                    String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s&key=%s"
                                                             , this.getAppID()
-                                                            , multiMap.get("nonceStr")
+                                                            , nonce
                                                             , prePayResponseMesseage.getPrepayId()
-                                                            , multiMap.get("timeStamp"));
+                                                            , timeStamp
+                                                            , this.getMchKey());
                                                     String prePayId = prePayResponseMesseage.getPrepayId();
                                                     resultBodyJson
-                                                            .put("sign", Md5Crypt.md5Crypt(sign.getBytes()))
+                                                            .put("sign", DigestUtils.md5Hex(sign))
                                                             .put("prePayId", prePayId);
                                                 }
                                                 routingContext.response()
