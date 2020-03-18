@@ -185,7 +185,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                     .setAppId(this.getAppID())
                                     .setMchId(this.getMchId())
                                     .setNonceStr(nonce)
-                                    .setBody(this.getAppName() + "-服务费用结算")
+                                    .setBody(String.format("%s-服务费用结算:\n定单编号：%s\n金额%s", this.getAppName(), orderVo.getOrderCode(), orderVo.getCost()))
                                     .setOutTradeNo(orderVo.getOrderCode())
                                     .setTotalFee((int) (orderVo.getCost() * 100))
                                     .setSpbillCreateIp(this.getNetIp())
