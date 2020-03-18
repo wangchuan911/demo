@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class UserService extends AbstractBaseService {
+public class UserService extends AbstractBaseService<UserVO> {
     @Autowired
     UserDao userDao;
     @Autowired

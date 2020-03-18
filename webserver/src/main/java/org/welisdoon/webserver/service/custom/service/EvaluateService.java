@@ -11,7 +11,7 @@ import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 import java.util.Map;
 
 @Service
-public class EvaluateService extends AbstractBaseService {
+public class EvaluateService extends AbstractBaseService<EvaluateVO> {
 
     @Autowired
     EvaluateDao evaluateDao;

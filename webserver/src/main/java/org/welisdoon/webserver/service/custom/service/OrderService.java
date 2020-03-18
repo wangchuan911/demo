@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class OrderService extends AbstractBaseService {
+public class OrderService extends AbstractBaseService<OrderVO> {
 
     @Autowired
     OrderDao orderDao;
@@ -100,6 +100,17 @@ public class OrderService extends AbstractBaseService {
             default:
                 break;
 
+        }
+        return resultObj;
+    }
+    @Override
+    public Object handle(int exeCode, OrderVO orderVO) {
+        Object resultObj = null;
+        switch (exeCode) {
+            case CustomConst.MODIFY:
+                orderDao.set(orderVO);
+                resultObj = orderVO;
+                break;
         }
         return resultObj;
     }

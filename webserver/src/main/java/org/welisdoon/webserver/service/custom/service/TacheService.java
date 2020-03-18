@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class TacheService extends AbstractBaseService {
+public class TacheService extends AbstractBaseService<TacheVO> {
 
     @Autowired
     TacheDao tacheDao;

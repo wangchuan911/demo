@@ -262,6 +262,9 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                     if (orderVO.getOrderId() != null) {
                         code = "SUCCESS";
                         msg = "OK";
+                        if (orderVO.getOrderState() >= 0) {
+                            orderService.handle(CustomConst.MODIFY, new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+                        }
                     } else {
                         code = "FAIL";
                         msg = "定单不存在";

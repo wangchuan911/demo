@@ -8,14 +8,19 @@ import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractBaseService {
+public abstract class AbstractBaseService<T> {
+
     public abstract Object handle(int exeCode, Map map);
+
+    public Object handle(int exeCode, T map) {
+        throw new RuntimeException();
+    }
 
     @PostConstruct
     public void init() {
     }
 
-    public static <T> T mapToObject(Map params, Class<T> type) {
+    public static <K> K mapToObject(Map params, Class<K> type) {
         return JsonObject.mapFrom(params).mapTo(type);
     }
 

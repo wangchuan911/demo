@@ -17,7 +17,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 @Service
-public class PictureService extends AbstractBaseService {
+public class PictureService extends AbstractBaseService<PictureVO> {
     @Autowired
     PictureDao pictureDao;
 
@@ -38,6 +38,7 @@ public class PictureService extends AbstractBaseService {
         }
         return returnObj;
     }
+
     @VertxWebApi
     public Object uploadFile(Map fileUpload, Map map) {
         InputStream inputStream = null;

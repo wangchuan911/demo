@@ -13,7 +13,7 @@ import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 import java.util.Map;
 
 @Service
-public class CarService extends AbstractBaseService {
+public class CarService extends AbstractBaseService<CarVO> {
     @Autowired
     OrderDao orderDao;
     @Autowired

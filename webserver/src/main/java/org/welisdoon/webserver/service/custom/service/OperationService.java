@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Service
-public class OperationService extends AbstractBaseService {
+public class OperationService extends AbstractBaseService<OperationVO> {
     @Autowired
     OrderDao orderDao;
     @Autowired
