@@ -1,5 +1,12 @@
 package org.welisdoon.webserver.common.config;
 
+import org.springframework.util.StringUtils;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 
 public class AbstractWechatConfiguration {
@@ -11,9 +18,11 @@ public class AbstractWechatConfiguration {
     private Map urls;
     private Map schedul;
     private String mchId;
+    private String mchKey;
     private String appName;
     private String address;
     private Path path;
+    private String netIp;
 
     public String getAppID() {
         return appID;
@@ -101,6 +110,32 @@ public class AbstractWechatConfiguration {
 
     public void setPath(Path path) {
         this.path = path;
+    }
+
+    public String getMchKey() {
+        return mchKey;
+    }
+
+    public void setMchKey(String mchKey) {
+        this.mchKey = mchKey;
+    }
+
+    public String getNetIp() {
+        if (StringUtils.isEmpty(this.netIp)) {
+            try {
+                URL whatismyip = new URL("http://checkip.amazonaws.com");
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        whatismyip.openStream()));
+                this.netIp = in.readLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return netIp;
+    }
+
+    public void setNetIp(String netIp) {
+        this.netIp = netIp;
     }
 
     public static class Path {

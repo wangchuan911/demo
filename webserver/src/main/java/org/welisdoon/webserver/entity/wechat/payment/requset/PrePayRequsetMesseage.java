@@ -1,6 +1,7 @@
 package org.welisdoon.webserver.entity.wechat.payment.requset;
 
 import com.sun.istack.NotNull;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.digest.Md5Crypt;
 import org.reflections.ReflectionUtils;
 
@@ -219,28 +220,45 @@ public class PrePayRequsetMesseage {
                         return field.get(this) != null;
                     } catch (Throwable t) {
                         t.printStackTrace();
-                        return false;
+                        throw new RuntimeException(t);
                     }
                 })
                 .sorted((o1, o2) -> {
-                    char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
+                    /*char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
                     char c2 = o2.getAnnotation(annotationClass).name().charAt(0);
-                    return c1 - c2;
+                    return c1 - c2;*/
+                    return ASCIISort(o1.getAnnotation(annotationClass).name(), o2.getAnnotation(annotationClass).name());
                 })
                 .forEachOrdered(field -> {
                     try {
                         tmpStr.append(field.getAnnotation(annotationClass).name()).append('=').append(field.get(this)).append('&');
                     } catch (Throwable t) {
                         t.printStackTrace();
+                        throw new RuntimeException(t);
                     }
                 });
-        this.sign = Md5Crypt
-                .md5Crypt(tmpStr.append("key=")
-                        .append(sign)
-                        .toString()
-                        .getBytes())
+        tmpStr.append("key=")
+                .append(sign);
+        this.sign = DigestUtils
+                .md5Hex(tmpStr.toString())
                 .toUpperCase();
         return this;
+    }
+
+    public static int ASCIISort(String str1, String str2) {
+        char c1;
+        char c2;
+        int v = 0, len = Math.min(str1.length(), str2.length());
+        for (int idx = 0; idx < len; idx++) {
+            c1 = str1.charAt(idx);
+            c2 = str2.charAt(idx);
+            v = c1 - c2;
+            if (v == 0) {
+                continue;
+            }
+            return v;
+        }
+        return v;
     }
 
     public String getSignType() {

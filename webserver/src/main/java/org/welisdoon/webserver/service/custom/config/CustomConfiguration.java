@@ -185,12 +185,12 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                     .setNonceStr(nonce)
                                     .setBody(this.getAppName() + "-服务费用结算")
                                     .setOutTradeNo(orderVo.getOrderCode())
-                                    .setTotalFee((int) 10.0)
-                                    .setSpbillCreateIp(InetAddress.getLocalHost().getHostAddress())
+                                    .setTotalFee((int) (orderVo.getCost() * 100))
+                                    .setSpbillCreateIp(this.getNetIp())
                                     .setNotifyUrl(this.getAddress() + this.getPath().getPay())
                                     .setTradeType("JSAPI")
                                     .setOpenid(orderVo.getCustId())
-                                    .setSign(null)
+                                    .setSign(this.getMchKey())
                             ));
                             webClient.postAbs(URL_UNIFIEDORDERON)
                                     .sendBuffer(buffer, httpResponseAsyncResult -> {
