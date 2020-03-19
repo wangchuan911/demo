@@ -57,11 +57,13 @@
             (car_user_id,
              car_user_name,
              car_user_role,
-             car_user_telephone)
+             car_user_telephone,
+             session_key)
     VALUES (#{id,jdbcType=VARCHAR},
             #{name,jdbcType=VARCHAR},
             #{role,jdbcType=INTEGER},
-            #{phone,jdbcType=VARCHAR})
+            #{phone,jdbcType=VARCHAR},
+            #{sessionKey,jdbcType=VARCHAR})
     </insert>
 
     <select id="list" parameterMap="UserVO" resultMap="UserVO">
