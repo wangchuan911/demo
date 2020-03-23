@@ -2,6 +2,7 @@ package org.welisdoon.webserver.service.custom.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.EvaluateDao;
@@ -11,6 +12,7 @@ import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 import java.util.Map;
 
 @Service
+@Transactional(rollbackFor = Throwable.class)
 public class EvaluateService extends AbstractBaseService<EvaluateVO> {
 
     @Autowired

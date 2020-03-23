@@ -3,6 +3,7 @@ package org.welisdoon.webserver.service.custom.service;
 import io.vertx.core.json.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
@@ -34,6 +35,7 @@ public class UserService extends AbstractBaseService<UserVO> {
 
     @Override
     @VertxWebApi
+    @Transactional(rollbackFor = Throwable.class)
     public Object handle(int exeCode, Map params) {
         Object resultObj = null;
         UserVO userVO = null;
@@ -74,10 +76,13 @@ public class UserService extends AbstractBaseService<UserVO> {
 
     /*登陆初始化*/
     @VertxWebApi
+    @Transactional(rollbackFor = Throwable.class)
     public Object login(String userId) {
         return login(userId, null);
     }
-    public Object login(String userId,String sessionKey) {
+
+    @Transactional(rollbackFor = Throwable.class)
+    public Object login(String userId, String sessionKey) {
         JsonObject jsonObject = new JsonObject();
         if (!StringUtils.isEmpty(userId)) {
             Object o = handle(CustomConst.GET, Map.of("id", userId));

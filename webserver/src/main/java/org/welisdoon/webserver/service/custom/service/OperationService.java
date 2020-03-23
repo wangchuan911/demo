@@ -6,6 +6,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Service
+@Transactional(rollbackFor = Throwable.class)
 public class OperationService extends AbstractBaseService<OperationVO> {
     @Autowired
     OrderDao orderDao;

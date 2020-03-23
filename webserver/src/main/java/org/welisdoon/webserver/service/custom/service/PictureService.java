@@ -3,6 +3,7 @@ package org.welisdoon.webserver.service.custom.service;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.webserver.common.StreamUtils;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 @Service
+@Transactional(rollbackFor = Throwable.class)
 public class PictureService extends AbstractBaseService<PictureVO> {
     @Autowired
     PictureDao pictureDao;

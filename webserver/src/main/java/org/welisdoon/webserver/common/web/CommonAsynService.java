@@ -9,6 +9,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.reflections.ReflectionUtils;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
@@ -88,7 +89,7 @@ public class CommonAsynService implements ICommonAsynService {
             if (input instanceof JsonArray) {
                 List body = ((JsonArray) input).getList();
                 Set<Method> methods = ReflectionUtils.getMethods(sprngService.getClass(), method ->
-                        method != null && method.isAnnotationPresent(VertxWebApi.class)
+                        method != null && AnnotationUtils.findAnnotation(method, VertxWebApi.class) != null
                                 && method.getName().equals(requset.getMethod())
                                 && method.getParameterCount() == body.size()
                 );
