@@ -6,6 +6,7 @@ wechat-app:
   afterUpdateTokenTime: 6000
   orderCycleTime: 0
   mchId: xxxx
+  mchKey: xxx
   appName: 爱车智联AUTOCAR
   address: https://www.welisdoon.xyz
   path:

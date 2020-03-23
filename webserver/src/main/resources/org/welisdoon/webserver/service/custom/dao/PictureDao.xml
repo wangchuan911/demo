@@ -40,6 +40,7 @@
     <select id="get" parameterMap="PictureVO" resultMap="PictureVO">
         select * from car_picture_storage a
         <include refid="wherePictureVO"></include>
+        limit 0,1;
     </select>
 
     <select id="list" parameterMap="PictureVO" resultMap="PictureVO">
