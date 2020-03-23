@@ -2,11 +2,14 @@ package org.welisdoon.webserver.service.custom.service;
 
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.service.custom.config.CustomConst;
 import org.welisdoon.webserver.service.custom.dao.*;
@@ -14,6 +17,7 @@ import org.welisdoon.webserver.service.custom.entity.OrderVO;
 import org.welisdoon.webserver.service.custom.entity.PictureVO;
 import org.welisdoon.webserver.service.custom.entity.UserVO;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
+import org.welisdoon.webserver.vertx.verticle.AbstractCustomVerticle;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +25,8 @@ import java.util.Map;
 @Service
 @Transactional(rollbackFor = Throwable.class)
 public class OrderService extends AbstractBaseService<OrderVO> {
+
+    private static final Logger logger = logger(OrderService.class);
 
     @Autowired
     OrderDao orderDao;
@@ -32,6 +38,8 @@ public class OrderService extends AbstractBaseService<OrderVO> {
     OperationDao operationDao;
     @Autowired
     PictureDao pictureDao;
+    @Autowired
+    WXBizMsgCrypt wxBizMsgCrypt;
 
     TacheService tacheService;
 
@@ -47,13 +55,29 @@ public class OrderService extends AbstractBaseService<OrderVO> {
         OrderVO orderVO;
         switch (exeCode) {
             case CustomConst.ADD:
+
                 JsonObject orderVoJson = JsonObject.mapFrom(params);
                 List<Integer> jsonArray = (List<Integer>) orderVoJson.remove("pictureIds");
+
+                Map encryptedMap = mapSpliter(params, Map.class, "phoneEncryptedData", "phoneEncryptedIv");
 
                 orderVO = orderVoJson.mapTo(OrderVO.class);
                 orderVO.setTacheId(CustomConst.TACHE.FIRST_TACHE.getTacheId())
                         .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
                 UserVO userVO = userDao.get(new UserVO().setId(orderVO.getCustId()));
+
+                try {
+                    String phoneEncryptedData = MapUtils.getString(encryptedMap, "phoneEncryptedData", null),
+                            phoneEncryptedIv = MapUtils.getString(encryptedMap, "phoneEncryptedIv", null);
+                    if (!(StringUtils.isEmpty(phoneEncryptedData) || StringUtils.isEmpty(phoneEncryptedIv))) {
+                        userVO.openData(false);
+                        JsonObject jsonObject = new JsonObject(wxBizMsgCrypt.wxDecrypt(phoneEncryptedData, userVO.getSessionKey(), phoneEncryptedIv));
+                        orderVO.setCustPhone(jsonObject.getString("phoneNumber", jsonObject.getString("purePhoneNumber", null)));
+                    }
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
+                    return null;
+                }
                 orderVO.setCustName(userVO.getName())
                         .setCustPhone(StringUtils.isEmpty(orderVO.getCustPhone())
                                 ? userVO.getPhone()
@@ -105,6 +129,7 @@ public class OrderService extends AbstractBaseService<OrderVO> {
         }
         return resultObj;
     }
+
     @Override
     public Object handle(int exeCode, OrderVO orderVO) {
         Object resultObj = null;
@@ -116,4 +141,5 @@ public class OrderService extends AbstractBaseService<OrderVO> {
         }
         return resultObj;
     }
+
 }
