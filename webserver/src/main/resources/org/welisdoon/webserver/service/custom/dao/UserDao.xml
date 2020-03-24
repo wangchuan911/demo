@@ -10,6 +10,7 @@
         <result property="role" column="car_user_role"></result>
         <result property="phone" column="car_user_telephone"></result>
         <result property="sessionKey" column="session_key"></result>
+        <result property="maxRole" column="car_user_max_role"></result>
         <association property="userAttr" javaType="org.welisdoon.webserver.service.custom.entity.UserVO$UserAttr"
                      column="car_user_id" select="getUserAttr"></association>
     </resultMap>
@@ -70,16 +71,19 @@
         select a.* from car_user a
         <where>
             <if test="role!=null and role>=0">
-                car_user_role=#{role,jdbcType=INTEGER}
+                and car_user_role=#{role,jdbcType=INTEGER}
             </if>
             <if test="name!=null and name!=''.toString()">
-                car_user_name=#{name,jdbcType=VARCHAR}
+                and car_user_name=#{name,jdbcType=VARCHAR}
             </if>
             <if test="id!=null and id!=''.toString()">
-                car_user_id=#{id,jdbcType=VARCHAR}
+                and car_user_id=#{id,jdbcType=VARCHAR}
             </if>
             <if test="phone!=null and phone!=''.toString()">
-                car_user_telephone=#{phone,jdbcType=VARCHAR}
+                and car_user_telephone=#{phone,jdbcType=VARCHAR}
+            </if>
+            <if test="maxRole!=null and maxRole>=0">
+                and car_user_max_role=#{maxRole,jdbcType=INTEGER}
             </if>
         </where>
     </select>

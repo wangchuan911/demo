@@ -50,7 +50,7 @@ public class UserService extends AbstractBaseService<UserVO> {
                 break;
             case CustomConst.USER.GET_WORKERS:
                 userVO = mapToObject(params, UserVO.class);
-                List<UserVO> userVOS = userDao.list(new UserVO().setRole(CustomConst.ROLE.WOCKER));
+                List<UserVO> userVOS = userDao.list(new UserVO().setMaxRole(CustomConst.ROLE.WOCKER));
                 if (!StringUtils.isEmpty(userVO.getId())) {
                     userVOS.add(0, userDao.get(new UserVO().setId(userVO.getId())));
                 }

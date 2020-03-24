@@ -4,6 +4,7 @@ public class UserVO {
     private String id;
     private String name;
     private Integer role;
+    private Integer maxRole;
     private String phone;
     private UserAttr userAttr;
     private String sessionKey;
@@ -68,6 +69,14 @@ public class UserVO {
         return this;
     }
 
+    public Integer getMaxRole() {
+        return maxRole;
+    }
+
+    public UserVO setMaxRole(Integer maxRole) {
+        this.maxRole = maxRole;
+        return this;
+    }
 
     static class UserAttr {
         private boolean vip;
