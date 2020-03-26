@@ -1,0 +1,4 @@
+modules:
+  tstdtz:
+    url:
+      powerSearch: http://www.tstdtz.com/tags/{location}停电通知
