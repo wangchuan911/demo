@@ -76,7 +76,6 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                     }
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
-                    return null;
                 }
                 orderVO.setCustName(userVO.getName())
                         .setCustPhone(StringUtils.isEmpty(orderVO.getCustPhone())
