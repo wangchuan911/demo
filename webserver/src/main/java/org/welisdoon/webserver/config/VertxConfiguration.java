@@ -26,8 +26,12 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -73,19 +77,13 @@ public class VertxConfiguration {
     Reflections getReflections() {
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
         {
-            Collection<URL> CollectUrl = null;
-            for (int i = 0; i < scanPath.length; i++) {
-                String path = scanPath[i];
-                switch (i) {
-                    case 0:
-                        CollectUrl = ClasspathHelper.forPackage(path);
-                        break;
-                    default:
-                        CollectUrl.addAll(ClasspathHelper.forPackage(path));
-                        break;
-                }
+            final Collection<URL> CollectUrl = new LinkedList<>();
+            Arrays.stream(scanPath).forEach(path -> {
+                CollectUrl.addAll(ClasspathHelper.forPackage(path));
+            });
+            if (CollectionUtils.isEmpty(CollectUrl)) {
+                CollectUrl.addAll(ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()));
             }
-            CollectUrl = CollectionUtils.isEmpty(CollectUrl) ? ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()) : CollectUrl;
             configurationBuilder.setUrls(CollectUrl);
         }
         return new Reflections(configurationBuilder);
