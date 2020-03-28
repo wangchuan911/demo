@@ -5,7 +5,7 @@ server:
     sslEnable: true
     sslKeyType: pfx
     sslKeyStore: /opt/wechat/thekeystore
-    sslPassword: changeit
+    sslPassword: e75M8y7K
     sslKeyPath:
     staticPath: /opt/wechat/tempPic
 spring:
