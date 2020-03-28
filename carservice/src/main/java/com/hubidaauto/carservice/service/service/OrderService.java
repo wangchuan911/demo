@@ -17,6 +17,7 @@ import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -92,7 +93,12 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                 resultObj = tacheService.handle(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", orderVO.getCustId()));
                 break;
             case CustomConst.DELETE:
-
+                orderVO = mapToObject(params, OrderVO.class);
+                resultObj = this.handle(CustomConst.MODIFY, new OrderVO()
+                        .setOrderId(orderVO.getOrderId())
+                        .setCustId(orderVO.getCustId())
+                        .setFinishDate(new Timestamp(System.currentTimeMillis()))
+                        .setOrderState(CustomConst.ORDER.STATE.CANCEL));
                 break;
             /*case CustomConst.MODIFY:
                 orderVO = mapToObject(params, OrderVO.class);

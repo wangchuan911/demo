@@ -156,7 +156,7 @@
                 c.tache_id in (
                 select d.tache_id from car_wash_order d
                 where d.cust_id=#{userId,jdbcType=VARCHAR}
-                and d.order_state !=2
+                and d.order_state in (0,1)
                 )
             </if>
         </where>

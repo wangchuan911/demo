@@ -24,7 +24,8 @@ public final class CustomConst {
         public final static class STATE {
             public final static int RUNNING = 0,
                     WAIT_NEXT = 1,
-                    END = 2;
+                    END = 2,
+                    CANCEL = -1;
         }
     }
 
