@@ -1,8 +1,8 @@
 wechat:
-  appID: wx675824e3f240da6d
-  appsecret: b2f4490e7f14bf60edc3bbe854ce70c1
-  token: 9dvL9Kze96Oc76XhMUeI03LTZ29
-  key: AC32OLzYAjjkPqzxilsPiMPbqYCHESnOuPzyYpjFyVw
+  appID:
+  appsecret:
+  token:
+  key:
   afterUpdateTokenTime: 6000
   urls:
     base: https://api.weixin.qq.com
