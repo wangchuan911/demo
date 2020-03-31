@@ -12,7 +12,8 @@
         <result property="picture" column="car_picture"></result>
         <result property="defaultSelected" column="def"></result>
         <result property="carModelId" column="car_model_id"></result>
-        <association property="carInfo" column="car_model_id" select="getCarInfo"></association>
+        <!--<association property="carInfo" column="car_model_id" select="getCarInfo"></association>-->
+        <association property="carInfo" column="car_model" select="getCarInfoByModel"></association>
     </resultMap>
 
     <parameterMap id="CarVO" type="com.hubidaauto.carservice.service.entity.CarVO">
@@ -157,5 +158,10 @@
     <select id="getCarInfo" resultMap="CarInfoVO" parameterType="int">
         SELECT * FROM car_message_modelinfo A
         WHERE A.car_model_id=#{value}
+    </select>
+
+    <select id="getCarInfoByModel" resultMap="CarInfoVO" parameterType="string">
+        SELECT * FROM car_price A
+        WHERE A.car_type=#{value}
     </select>
 </mapper>
