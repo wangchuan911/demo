@@ -60,8 +60,8 @@ import java.util.Random;
  * </ol>
  */
 public class WXBizMsgCrypt {
-    Charset CHARSET = StandardCharsets.UTF_8;
-    Base64 base64 = new Base64();
+    static Charset CHARSET = StandardCharsets.UTF_8;
+    static Base64 base64 = new Base64();
     byte[] aesKey;
     String token;
     String appId;
@@ -325,7 +325,7 @@ public class WXBizMsgCrypt {
      * @param sessionKey 会话ID
      * @param iv         加密算法的初始向量
      */
-    public String wxDecrypt(String encrypted, String sessionKey, String iv) throws Throwable {
+    public static String wxDecrypt(String encrypted, String sessionKey, String iv) throws Throwable {
         String result = "";
         // 被加密的数据
         byte[] dataByte = base64.decode(encrypted);

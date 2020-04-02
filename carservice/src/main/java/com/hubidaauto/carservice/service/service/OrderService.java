@@ -40,14 +40,12 @@ public class OrderService extends AbstractBaseService<OrderVO> {
     @Autowired
     PictureDao pictureDao;
 
-    WXBizMsgCrypt wxBizMsgCrypt;
 
     TacheService tacheService;
 
     @Override
     public void init() throws Throwable {
         tacheService = ApplicationContextProvider.getBean(TacheService.class);
-        wxBizMsgCrypt = ApplicationContextProvider.getBean(CustomConfiguration.class).getWXBizMsgCrypt();
     }
 
     @Override
@@ -73,7 +71,7 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                             phoneEncryptedIv = MapUtils.getString(encryptedMap, "phoneEncryptedIv", null);
                     if (!(StringUtils.isEmpty(phoneEncryptedData) || StringUtils.isEmpty(phoneEncryptedIv))) {
                         userVO.openData(false);
-                        JsonObject jsonObject = new JsonObject(wxBizMsgCrypt.wxDecrypt(phoneEncryptedData, userVO.getSessionKey(), phoneEncryptedIv));
+                        JsonObject jsonObject = new JsonObject(WXBizMsgCrypt.wxDecrypt(phoneEncryptedData, userVO.getSessionKey(), phoneEncryptedIv));
                         orderVO.setCustPhone(jsonObject.getString("phoneNumber", jsonObject.getString("purePhoneNumber", null)));
                     }
                 } catch (Throwable e) {
