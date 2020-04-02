@@ -177,7 +177,7 @@ public abstract class AbstractWechatConfiguration {
 
     public WXBizMsgCrypt getWXBizMsgCrypt() throws AesException {
         if (wxBizMsgCrypt == null) {
-            synchronized (wxBizMsgCrypt) {
+            synchronized (this) {
                 if (wxBizMsgCrypt == null)
                     wxBizMsgCrypt = new WXBizMsgCrypt(this.getToken(), this.getKey(), this.getAppID());
             }

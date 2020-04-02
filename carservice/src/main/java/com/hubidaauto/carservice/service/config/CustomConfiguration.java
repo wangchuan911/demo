@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 @Configuration
 @ConfigurationProperties("wechat-app")
 @VertxConfiguration
-@ConditionalOnProperty(prefix = "wechat", name = "appID")
+@ConditionalOnProperty(prefix = "wechat-app", name = "appID")
 public class CustomConfiguration extends AbstractWechatConfiguration {
     //    final static String REQUEST_NAME = "requestService";
     private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
