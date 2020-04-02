@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 @Configuration
 @ConfigurationProperties("wechat-app")
 @VertxConfiguration
-@ConditionalOnProperty(prefix = "wechat",name = "appID")
+@ConditionalOnProperty(prefix = "wechat", name = "appID")
 public class CustomConfiguration extends AbstractWechatConfiguration {
     //    final static String REQUEST_NAME = "requestService";
     private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
@@ -81,9 +81,10 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
     WXBizMsgCrypt wxBizMsgCrypt;
 
+    @Override
     @Bean(CustomConst.BEAN_NAME_WXBIZMSGCRYPT)
     public WXBizMsgCrypt getWXBizMsgCrypt() throws AesException {
-        return new WXBizMsgCrypt(this.getToken(), this.getKey(), this.getAppID());
+        return super.getWXBizMsgCrypt();
     }
 
     @Value("${temp.filePath}")

@@ -17,7 +17,6 @@ import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
-import org.welisdoon.webserver.vertx.verticle.WorkerVerticle;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
@@ -26,7 +25,6 @@ import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +35,7 @@ import java.util.function.Consumer;
 @VertxConfiguration
 @ConfigurationProperties("wechat")
 @Configuration
-@ConditionalOnProperty(prefix = "wechat",name = "appID")
+@ConditionalOnProperty(prefix = "wechat", name = "appID")
 public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(WeChatServiceConfiguration.class);
 
@@ -45,12 +43,10 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
 
     ICommonAsynService commonAsynService;
 
+    @Override
     @Bean("WXBizMsgCrypt")
-    public WXBizMsgCrypt getWXBizMsgCrypt(
-            @Value("${wechat.token}") String apptoken,
-            @Value("${wechat.key}") String appsecret,
-            @Value("${wechat.appID}") String appID) throws AesException {
-        return new WXBizMsgCrypt(apptoken, appsecret, appID);
+    public WXBizMsgCrypt getWXBizMsgCrypt() throws AesException {
+        return super.getWXBizMsgCrypt();
     }
 
     @Autowired

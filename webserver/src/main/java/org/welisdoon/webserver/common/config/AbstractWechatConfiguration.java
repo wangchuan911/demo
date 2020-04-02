@@ -1,6 +1,7 @@
 package org.welisdoon.webserver.common.config;
 
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 
 import java.io.BufferedReader;
@@ -168,5 +169,9 @@ public class AbstractWechatConfiguration {
         public void setPush(String push) {
             this.push = push;
         }
+    }
+
+    public WXBizMsgCrypt getWXBizMsgCrypt() throws AesException {
+        return new WXBizMsgCrypt(this.getToken(), this.getKey(), this.getAppID());
     }
 }
