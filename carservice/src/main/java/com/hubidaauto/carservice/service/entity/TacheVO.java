@@ -12,6 +12,8 @@ public class TacheVO {
     private Integer nextTache;
     private Integer superTache;
 
+    private List<PushConfig> pushConfigs;
+
     public String getCode() {
         return code;
     }
@@ -105,5 +107,34 @@ public class TacheVO {
 
     public void setSuperTache(Integer superTache) {
         this.superTache = superTache;
+    }
+
+    public static class PushConfig {
+        String templateId;
+        Integer roleId;
+
+        public String getTemplateId() {
+            return templateId;
+        }
+
+        public void setTemplateId(String templateId) {
+            this.templateId = templateId;
+        }
+
+        public Integer getRoleId() {
+            return roleId;
+        }
+
+        public void setRoleId(Integer roleId) {
+            this.roleId = roleId;
+        }
+    }
+
+    public List<PushConfig> getPushConfigs() {
+        return pushConfigs;
+    }
+
+    public void setPushConfigs(List<PushConfig> pushConfigs) {
+        this.pushConfigs = pushConfigs;
     }
 }

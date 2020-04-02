@@ -14,6 +14,12 @@
                     select="getRela"
                     column="{tampalateId=template_id,tacheId=tache_id}">
         </collection>
+        <collection property="pushConfigs"
+                    ofType="PushConfig"
+                    select="getWeChatMsgTemplates"
+                    column="tache_id">
+
+        </collection>
     </resultMap>
     <resultMap id="TacheVO" type="com.hubidaauto.carservice.service.entity.TacheVO">
         <result property="tacheId" column="tache_id"></result>
@@ -143,11 +149,11 @@
         WHERE a.template_id = b.template_id
         and b.tache_id in
         (SELECT
-            DISTINCT IFNULL(c1.main_tache, c.tache_id)
+        DISTINCT IFNULL(c1.main_tache, c.tache_id)
         FROM
-            car_tache c
+        car_tache c
         left JOIN tamplate_rela c1
-         ON c.template_id=c1.sub_tamplate
+        ON c.template_id=c1.sub_tamplate
         <where>
             <if test="tacheId!=null and tacheId>=0">
                 c.tache_id =#{tacheId,jdbcType=INTEGER} and
@@ -162,5 +168,16 @@
         </where>
 
         )
+    </select>
+
+    <resultMap id="PushConfig" type="com.hubidaauto.carservice.service.entity.TacheVO$PushConfig">
+        <result property="roleId" column="role_id"></result>
+        <result property="templateId" column="msg_template_id"></result>
+    </resultMap>
+    <select id="getWeChatMsgTemplates" parameterType="int" resultMap="PushConfig">
+        SELECT
+          *
+        FROM hubidaauto.car_message_push
+          where tache_id=#{value}
     </select>
 </mapper>
