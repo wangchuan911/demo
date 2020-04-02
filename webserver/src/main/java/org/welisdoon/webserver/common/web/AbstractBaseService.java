@@ -19,7 +19,7 @@ public abstract class AbstractBaseService<T> {
     }
 
     @PostConstruct
-    public void init() {
+    public void init() throws Throwable {
     }
 
     public static <K> K mapToObject(Map params, Class<K> type) {

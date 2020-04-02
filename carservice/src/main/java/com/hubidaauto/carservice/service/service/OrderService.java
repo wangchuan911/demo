@@ -1,5 +1,6 @@
 package com.hubidaauto.carservice.service.service;
 
+import com.hubidaauto.carservice.service.config.CustomConfiguration;
 import com.hubidaauto.carservice.service.config.CustomConst;
 import com.hubidaauto.carservice.service.dao.*;
 import com.hubidaauto.carservice.service.entity.OrderVO;
@@ -38,15 +39,15 @@ public class OrderService extends AbstractBaseService<OrderVO> {
     OperationDao operationDao;
     @Autowired
     PictureDao pictureDao;
-    @Autowired
-    @Qualifier(CustomConst.BEAN_NAME_WXBIZMSGCRYPT)
+
     WXBizMsgCrypt wxBizMsgCrypt;
 
     TacheService tacheService;
 
     @Override
-    public void init() {
+    public void init() throws Throwable {
         tacheService = ApplicationContextProvider.getBean(TacheService.class);
+        wxBizMsgCrypt = ApplicationContextProvider.getBean(CustomConfiguration.class).getWXBizMsgCrypt();
     }
 
     @Override
