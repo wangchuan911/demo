@@ -250,14 +250,11 @@ public class OperationService extends AbstractBaseService<OperationVO> {
         return orther > 1 || (all - orther > 0);
     }
 
-    void toBeContinue(OrderVO orderVO/*, OperationVO operation*/) {
+    void toBeContinue(OrderVO orderVO) {
         OrderVO newOrderVO = new OrderVO()
                 .setOrderId(orderVO.getOrderId());
         Integer tacheId = CustomConst.TACHE.TACHE_MAP.get(orderVO.getTacheId()).getNextTache();
-        /*//测试用 目前自己授权给自己
-        {
-            test(newOrderVO, orderVO, tacheId);
-        }*/
+
         if (tacheId != null && tacheId >= 0) {
             TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(tacheId);
             newOrderVO.setTacheId(tacheVO.getTacheId());
@@ -296,14 +293,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
 //                    operationManager(CustomConst.ADD, operationVO);
                     operationDao.add(operationVO.setActive(true));
                 }
-            } /*else if (operation != null && !StringUtils.isEmpty(operation.getOprMan())) {
-                OperationVO operationVO = new OperationVO()
-                        .setTacheId(tacheVO.getTacheId())
-                        .setOrderId(orderVO.getOrderId())
-                        .setOprMan(operation.getOprMan())
-                        .setInfo(operation.getInfo());
-                operationManager(CustomConst.ADD, operationVO);
-            }*/ else {
+            } else {
                 operationDao.set(new OperationVO()
                         .setActive(false)
                         .setFinishTime(new Timestamp(System.currentTimeMillis()))

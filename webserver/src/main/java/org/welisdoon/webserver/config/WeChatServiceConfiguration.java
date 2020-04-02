@@ -57,14 +57,6 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     @Qualifier("WXBizMsgCrypt")
     private WXBizMsgCrypt wxBizMsgCrypt;
 
-    @VertxRegister(WorkerVerticle.class)
-    public Consumer<Vertx> createAsyncService() {
-        Consumer<Vertx> vertxConsumer = vertx1 -> {
-            ICommonAsynService.create(vertx1);
-        };
-        return vertxConsumer;
-    }
-
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {

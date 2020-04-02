@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.webserver.WebserverApplication;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.vertx.SpringVerticleFactory;
+import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 import org.welisdoon.webserver.vertx.verticle.AbstractCustomVerticle;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import org.welisdoon.webserver.vertx.verticle.WorkerVerticle;
@@ -38,8 +40,10 @@ import java.util.function.Consumer;
 
 @Configuration
 @AutoConfigureAfter({WeChatServiceConfiguration.class, ClusterConfiguration.class})
+@org.welisdoon.webserver.vertx.annotation.VertxConfiguration
 public class VertxConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(VertxConfiguration.class);
+
 
     @Autowired
     @Qualifier("verticleFactory")
@@ -228,5 +232,11 @@ public class VertxConfiguration {
         return runner;
     }
 
-
+    @VertxRegister(WorkerVerticle.class)
+    public Consumer<Vertx> createAsyncService() {
+        Consumer<Vertx> vertxConsumer = vertx1 -> {
+            ICommonAsynService.create(vertx1);
+        };
+        return vertxConsumer;
+    }
 }

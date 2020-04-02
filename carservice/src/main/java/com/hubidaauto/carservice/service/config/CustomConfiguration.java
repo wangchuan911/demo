@@ -26,6 +26,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,6 +56,7 @@ import java.util.function.Consumer;
 @Configuration
 @ConfigurationProperties("wechat-app")
 @VertxConfiguration
+@ConditionalOnProperty(prefix = "wechat",name = "appID")
 public class CustomConfiguration extends AbstractWechatConfiguration {
     //    final static String REQUEST_NAME = "requestService";
     private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
