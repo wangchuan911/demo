@@ -1,8 +1,11 @@
 package org.welisdoon.webserver.common.config;
 
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.RoutingContext;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
+import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,7 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
-public class AbstractWechatConfiguration {
+public abstract class AbstractWechatConfiguration {
     private String appID;
     private String appsecret;
     private String token;
@@ -172,6 +175,32 @@ public class AbstractWechatConfiguration {
     }
 
     public WXBizMsgCrypt getWXBizMsgCrypt() throws AesException {
-        return new WXBizMsgCrypt(this.getToken(), this.getKey(), this.getAppID());
+        if (wxBizMsgCrypt == null) {
+            synchronized (wxBizMsgCrypt) {
+                if (wxBizMsgCrypt == null)
+                    wxBizMsgCrypt = new WXBizMsgCrypt(this.getToken(), this.getKey(), this.getAppID());
+            }
+        }
+        return wxBizMsgCrypt;
+    }
+
+    public void wechatMsgCheck(RoutingContext routingContext) {
+        HttpServerRequest httpServerRequest = routingContext.request();
+        String signature = httpServerRequest.getParam("signature");
+        String timestamp = httpServerRequest.getParam("timestamp");
+        String nonce = httpServerRequest.getParam("nonce");
+        String echostr = httpServerRequest.getParam("echostr");
+        if (StringUtils.isEmpty(signature)
+                || StringUtils.isEmpty(timestamp)
+                || StringUtils.isEmpty(nonce)
+                || StringUtils.isEmpty(echostr)) {
+            routingContext.response().end("interl server error");
+            return;
+        }
+        try {
+            routingContext.response().end(wxBizMsgCrypt.verifyUrl2(signature, timestamp, nonce, echostr));
+        } catch (Exception e) {
+            routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+        }
     }
 }

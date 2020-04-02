@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.function.Consumer;
 
 @VertxConfiguration
@@ -43,15 +44,12 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
 
     ICommonAsynService commonAsynService;
 
-    @Override
-    @Bean("WXBizMsgCrypt")
-    public WXBizMsgCrypt getWXBizMsgCrypt() throws AesException {
-        return super.getWXBizMsgCrypt();
-    }
-
-    @Autowired
-    @Qualifier("WXBizMsgCrypt")
     private WXBizMsgCrypt wxBizMsgCrypt;
+
+    @PostConstruct
+    void initValue() throws Throwable {
+        wxBizMsgCrypt = this.getWXBizMsgCrypt();
+    }
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
@@ -120,25 +118,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping() {
         Consumer<Router> routerConsumer = router -> {
-            router.get("/wx").handler(routingContext -> {
-                HttpServerRequest httpServerRequest = routingContext.request();
-                String signature = httpServerRequest.getParam("signature");
-                String timestamp = httpServerRequest.getParam("timestamp");
-                String nonce = httpServerRequest.getParam("nonce");
-                String echostr = httpServerRequest.getParam("echostr");
-                if (StringUtils.isEmpty(signature)
-                        || StringUtils.isEmpty(timestamp)
-                        || StringUtils.isEmpty(nonce)
-                        || StringUtils.isEmpty(echostr)) {
-                    routingContext.response().end("interl server error");
-                    return;
-                }
-                try {
-                    routingContext.response().end(wxBizMsgCrypt.verifyUrl2(signature, timestamp, nonce, echostr));
-                } catch (Exception e) {
-                    routingContext.response().end(MesseageTypeValue.MSG_REPLY);
-                }
-            });
+            router.get("/wx").handler(this::wechatMsgCheck);
 
             router.post("/wx").handler(routingContext -> {
                 routingContext.response().setChunked(true);

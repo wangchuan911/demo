@@ -81,12 +81,6 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
     WXBizMsgCrypt wxBizMsgCrypt;
 
-    @Override
-    @Bean(CustomConst.BEAN_NAME_WXBIZMSGCRYPT)
-    public WXBizMsgCrypt getWXBizMsgCrypt() throws AesException {
-        return super.getWXBizMsgCrypt();
-    }
-
     @Value("${temp.filePath}")
     String staticPath;
 
@@ -100,7 +94,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     }
 
     @PostConstruct
-    void initValue() {
+    void initValue() throws Throwable {
         TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
         orderService = ApplicationContextProvider.getBean(OrderService.class);
         userService = ApplicationContextProvider.getBean(UserService.class);
@@ -108,7 +102,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
 
         pushUtils = ApplicationContextProvider.getBean(PushUtils.class);
-        wxBizMsgCrypt = ApplicationContextProvider.getBean(CustomConst.BEAN_NAME_WXBIZMSGCRYPT, WXBizMsgCrypt.class);
+        wxBizMsgCrypt = this.getWXBizMsgCrypt();
     }
 
     /*定時任務*/
@@ -357,27 +351,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             }).handler(staticHandler);
 
 
-            router.get(this.getPath().getPush()).handler(routingContext -> {
-                HttpServerRequest httpServerRequest = routingContext.request();
-                String signature = httpServerRequest.getParam("signature");
-                String timestamp = httpServerRequest.getParam("timestamp");
-                String echostr = httpServerRequest.getParam("echostr");
-                String nonce = httpServerRequest.getParam("nonce");
-                if (StringUtils.isEmpty(signature)
-                        || StringUtils.isEmpty(nonce)
-                        || StringUtils.isEmpty(timestamp)
-                        || StringUtils.isEmpty(echostr)) {
-                    routingContext.response().end("interl server error");
-                    return;
-                }
-                try {
-                    routingContext.response().end(wxBizMsgCrypt.verifyUrl2(signature, timestamp, nonce, echostr));
-                } catch (Exception e) {
-                    routingContext.response().end(MesseageTypeValue.MSG_REPLY);
-                }
-            });
-            pushUtils.init(webClient, "");
-
+            router.get(this.getPath().getPush()).handler(this::wechatMsgCheck);
 
             router.route("/*").failureHandler(routingContext -> {
                 routingContext.response().end(routingContext.failure().toString());
