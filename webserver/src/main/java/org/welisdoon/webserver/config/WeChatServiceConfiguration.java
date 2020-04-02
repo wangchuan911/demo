@@ -11,6 +11,8 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
@@ -35,6 +37,7 @@ import java.util.function.Consumer;
 @VertxConfiguration
 @ConfigurationProperties("wechat")
 @Configuration
+@ConditionalOnProperty(prefix = "wechat",name = "appID")
 public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(WeChatServiceConfiguration.class);
 
@@ -42,7 +45,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
 
     ICommonAsynService commonAsynService;
 
-    @Bean
+    @Bean("WXBizMsgCrypt")
     public WXBizMsgCrypt getWXBizMsgCrypt(
             @Value("${wechat.token}") String apptoken,
             @Value("${wechat.key}") String appsecret,
@@ -51,6 +54,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     }
 
     @Autowired
+    @Qualifier("WXBizMsgCrypt")
     private WXBizMsgCrypt wxBizMsgCrypt;
 
     @VertxRegister(WorkerVerticle.class)
@@ -90,20 +94,17 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                                         if (httpResponseAsyncResult.succeeded()) {
                                             HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
                                             eventBus.publish(URL_TOCKEN_UPDATE, httpResponse.body().toJsonObject());
-                                        }
-                                        else {
+                                        } else {
                                             httpResponseAsyncResult.cause().printStackTrace();
                                         }
-                                    }
-                                    finally {
+                                    } finally {
                                         Lock lock = lockAsyncResult.result();
                                         vertx1.setTimer(30 * 1000, aLong1 -> {
                                             lock.release();
                                         });
                                     }
                                 });
-                    }
-                    else {
+                    } else {
                         logger.info(lockAsyncResult.cause().getMessage());
                     }
                 });
@@ -114,8 +115,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 if (tokenJson.getInteger("errcode") != null) {
                     logger.info("errcode:" + tokenJson.getInteger("errcode"));
                     logger.info("errmsg:" + tokenJson.getString("errmsg"));
-                }
-                else {
+                } else {
                     logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
                 }
                 /*if (wechatAliveTimerId != null) {
@@ -147,8 +147,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 }
                 try {
                     routingContext.response().end(wxBizMsgCrypt.verifyUrl2(signature, timestamp, nonce, echostr));
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     routingContext.response().end(MesseageTypeValue.MSG_REPLY);
                 }
             });
@@ -170,11 +169,9 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                     requestbuffer = Buffer.buffer(wxBizMsgCrypt.decryptMsg(signature, timeStamp, nonce, requestbuffer.toString()));
                     routingContext.setBody(requestbuffer);
 
-                }
-                catch (AesException e) {
+                } catch (AesException e) {
                     e.printStackTrace();
-                }
-                finally {
+                } finally {
                     routingContext.next();
                 }
             }).handler(routingContext -> {
@@ -199,8 +196,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                         Buffer buffer = Buffer.buffer(stringAsyncResult.result());
                         routingContext.setBody(buffer);
                         routingContext.next();
-                    }
-                    else {
+                    } else {
                         stringAsyncResult.cause().printStackTrace();
                         routingContext.response().end(MesseageTypeValue.MSG_REPLY);
                     }
@@ -220,11 +216,9 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                     }
 
                     requestbuffer = Buffer.buffer(wxBizMsgCrypt.encryptMsg(requestbuffer.toString(), timeStamp, nonce));
-                }
-                catch (AesException e) {
+                } catch (AesException e) {
                     e.printStackTrace();
-                }
-                finally {
+                } finally {
                     routingContext.response().end(requestbuffer);
                 }
             }).failureHandler(routingContext -> {

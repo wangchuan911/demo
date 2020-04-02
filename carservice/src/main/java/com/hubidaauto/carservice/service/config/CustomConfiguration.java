@@ -27,13 +27,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.CommonConst;
 import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
+import org.welisdoon.webserver.common.encrypt.AesException;
+import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
+import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PayBillResponseMesseage;
@@ -66,14 +71,18 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
     ICommonAsynService commonAsynService;
 
-    //    RequestService requestService;
-//    TacheSerivce tacheSerivce;
     OrderService orderService;
     UserService userService;
     OperationService operationService;
-//    CarSerivce carSerivce;
-//    PictureSerivce pictureSerivce;
-//    EvaluateSerivce evaluateSerivce;
+
+    PushUtils pushUtils;
+
+    WXBizMsgCrypt wxBizMsgCrypt;
+
+    @Bean(CustomConst.BEAN_NAME_WXBIZMSGCRYPT)
+    public WXBizMsgCrypt getWXBizMsgCrypt() throws AesException {
+        return new WXBizMsgCrypt(this.getToken(), this.getKey(), this.getAppID());
+    }
 
     @Value("${temp.filePath}")
     String staticPath;
@@ -90,15 +99,13 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     @PostConstruct
     void initValue() {
         TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
-//        requestService = ApplicationContextProvider.getBean(RequestService.class);
-//        tacheSerivce = ApplicationContextProvider.getBean(TacheSerivce.class);
         orderService = ApplicationContextProvider.getBean(OrderService.class);
         userService = ApplicationContextProvider.getBean(UserService.class);
         operationService = ApplicationContextProvider.getBean(OperationService.class);
-//        carSerivce = ApplicationContextProvider.getBean(CarSerivce.class);
-//        pictureSerivce = ApplicationContextProvider.getBean(PictureSerivce.class);
-//        evaluateSerivce = ApplicationContextProvider.getBean(EvaluateSerivce.class);
         CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
+
+        pushUtils = ApplicationContextProvider.getBean(PushUtils.class);
+        wxBizMsgCrypt = ApplicationContextProvider.getBean(CustomConst.BEAN_NAME_WXBIZMSGCRYPT, WXBizMsgCrypt.class);
     }
 
     /*定時任務*/
@@ -144,12 +151,14 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
         WebClient webClient = WebClient.create(vertx);
         Consumer<Router> routerConsumer = router -> {
+            //get请求入口
             router.get(this.getPath().getApp()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 MultiMap multiMap = routingContext.request().params();
                 int code = Integer.parseInt(multiMap.get(CommonConst.WebParamsKeys.GET_CODE));
                 String value = multiMap.get(CommonConst.WebParamsKeys.GET_VALUE_1);
                 switch (code) {
+                    //获取登陆信息
                     case CustomConst.OTHER.LOGIN:
                         webClient.getAbs(URL_CODE_2_SESSION + value)
                                 .send(httpResponseAsyncResult -> {
@@ -167,6 +176,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                                     }
                                 });
                         break;
+                    //获取支付信息
                     case CustomConst.OTHER.PRE_PAY:
                         try {
                             int offset = 32;
@@ -241,7 +251,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 routingContext.response().end(routingContext.failure().toString());
             });
 
-
+            //支付信息微信回调
             router.post(this.getPath().getPay()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 try {
@@ -275,72 +285,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 }
 
             });
-
-//            router.post(PATH_WX_APP).handler(routingContext -> {
-//                routingContext.response().setChunked(true);
-////                JsonArray jsonArray = routingContext.getBodyAsJsonArray();
-//                /*Requset requset = new Requset()
-//                        .setService(REQUEST_NAME)
-//                        .setMethod(jsonArray.getString(0))
-//                        .setBody(jsonArray.getJsonArray(1).toString())
-//                        .putParams(routingContext.request().params())
-//                        .putSession(routingContext.session());*/
-//                Requset requset = Requset.newInstance(Requset.SIMPLE_REQUEST, routingContext);//.setService(REQUEST_NAME);
-//                commonAsynService.requsetCall(requset, stringAsyncResult -> {
-//                    if (stringAsyncResult.succeeded()) {
-//                        routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
-//                    } else {
-//                        routingContext.fail(500, stringAsyncResult.cause());
-//                    }
-//                });
-//
-//            });
-//
-//            logger.info("inital request mapping: " + PATH_WX_APP);
-//
-//            router.post(PATH_WX_APP_UPLOAD).blockingHandler(routingContext -> {
-//                try {
-//                    HttpServerRequest httpServerRequest = routingContext.request();
-//                    HttpServerResponse httpServerResponse = routingContext.response();
-//                    Set<FileUpload> fileUploads = routingContext.fileUploads();
-//                    if (fileUploads == null || fileUploads.size() != 1) {
-//                        httpServerResponse.setStatusCode(404).end();
-//                        return;
-//                    }
-//                    FileUpload fileUpload = fileUploads.iterator().next();
-//                    /*Requset requset = new Requset()
-//                            .setService(REQUEST_NAME)
-//                            .setMethod("uploadFile")
-//                            .setBody(new JsonArray()
-//                                    .add(new JsonObject()
-//                                            .put("uploadedFileName", fileUpload.uploadedFileName())
-//                                            .put("name", fileUpload.name())
-//                                            .put("charSet", fileUpload.charSet())
-//                                            .put("contentType", fileUpload.contentType())
-//                                            .put("size", fileUpload.size())
-//                                            .put("fileName", fileUpload.fileName())
-//                                            .put("contentTransferEncoding", fileUpload.contentTransferEncoding()))
-//                                    .add(JsonObject.mapFrom(httpServerRequest.formAttributes().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))).toString())
-//                            .putParams(httpServerRequest.params())
-//                            .putSession(routingContext.session());*/
-//                    Requset requset = Requset.newInstance(Requset.UPLOAD_FILE, routingContext);//.setService(REQUEST_NAME);
-//                    commonAsynService.requsetCall(requset, stringAsyncResult -> {
-//                        if (stringAsyncResult.succeeded()) {
-//                            httpServerResponse.end(stringAsyncResult.result().toJson().toBuffer());
-//                        } else {
-//                            routingContext.fail(500, stringAsyncResult.cause());
-//                        }
-//                        vertx.fileSystem().delete(fileUpload.uploadedFileName(), voidAsyncResult -> {
-//                        });
-//                    });
-//                } catch (Throwable e) {
-//                    e.printStackTrace();
-//                    routingContext.fail(500, e);
-//                }
-//
-//            });
-//
-//            logger.info("inital request mapping: " + PATH_WX_APP_UPLOAD);
+            //请求总入口
             router.post(this.getPath().getApp()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 Requset requset = Requset.newInstance(routingContext);
@@ -362,6 +307,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             staticHandler.setCachingEnabled(false);
 //            staticHandler.setDirectoryListing(true);
 //            staticHandler.setFilesReadOnly(false);
+            //图片服务
             router.get("/pic/*").handler(routingContext -> {
                 HttpServerRequest httpServerRequest = routingContext.request();
                 String fileName = Utils.pathOffset(httpServerRequest.path(), routingContext);
@@ -406,6 +352,29 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                     }
                 });
             }).handler(staticHandler);
+
+
+            router.get(this.getPath().getPush()).handler(routingContext -> {
+                HttpServerRequest httpServerRequest = routingContext.request();
+                String signature = httpServerRequest.getParam("signature");
+                String timestamp = httpServerRequest.getParam("timestamp");
+                String echostr = httpServerRequest.getParam("echostr");
+                String nonce = httpServerRequest.getParam("nonce");
+                if (StringUtils.isEmpty(signature)
+                        || StringUtils.isEmpty(nonce)
+                        || StringUtils.isEmpty(timestamp)
+                        || StringUtils.isEmpty(echostr)) {
+                    routingContext.response().end("interl server error");
+                    return;
+                }
+                try {
+                    routingContext.response().end(wxBizMsgCrypt.verifyUrl2(signature, timestamp, nonce, echostr));
+                } catch (Exception e) {
+                    routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+                }
+            });
+            pushUtils.init(webClient, "");
+
 
             router.route("/*").failureHandler(routingContext -> {
                 routingContext.response().end(routingContext.failure().toString());

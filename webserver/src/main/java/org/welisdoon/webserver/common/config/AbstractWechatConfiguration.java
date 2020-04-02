@@ -1,6 +1,7 @@
 package org.welisdoon.webserver.common.config;
 
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,6 +24,7 @@ public class AbstractWechatConfiguration {
     private String address;
     private Path path;
     private String netIp;
+    private WXBizMsgCrypt wxBizMsgCrypt;
 
     public String getAppID() {
         return appID;
@@ -141,6 +143,7 @@ public class AbstractWechatConfiguration {
     public static class Path {
         String pay;
         String app;
+        String push;
 
         public String getPay() {
             return pay;
@@ -156,6 +159,14 @@ public class AbstractWechatConfiguration {
 
         public void setApp(String app) {
             this.app = app;
+        }
+
+        public String getPush() {
+            return push;
+        }
+
+        public void setPush(String push) {
+            this.push = push;
         }
     }
 }

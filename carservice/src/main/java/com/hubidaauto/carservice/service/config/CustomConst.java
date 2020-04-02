@@ -5,7 +5,7 @@ import com.hubidaauto.carservice.service.entity.TacheVO;
 import java.util.*;
 
 public final class CustomConst {
-
+    public final static String BEAN_NAME_WXBIZMSGCRYPT="HUBIDAAutoWXBizMsgCrypt";
     /*all*/
     public final static int ADD = 0,
             DELETE = 1,
