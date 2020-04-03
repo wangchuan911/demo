@@ -119,7 +119,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                 try {
                     serviceBean = ApplicationContextProvider.getBean(handlerEntry.ServiceClass);
                 } catch (Throwable t) {
-                    logger.info(t.getMessage());
+                    logger.warn(t.getMessage());
                     return;
                 }
                 Object value = null;

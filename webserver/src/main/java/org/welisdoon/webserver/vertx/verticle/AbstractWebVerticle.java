@@ -42,9 +42,8 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
             //开启https
             HttpServerOptions httpServerOptions = new HttpServerOptions();
             if (!new File(sslKeyStore).exists()) {
-                logger.error("sslKeyStore:" + sslKeyStore + " is not exists!");
-            }
-            else if (sslEnable) {
+                logger.warn(String.format("sslKeyStore:%s is not exists!", sslKeyStore));
+            } else if (sslEnable) {
                 httpServerOptions.setSsl(true);
                 switch (this.sslKeyType.toLowerCase()) {
                     case "pem":
@@ -68,8 +67,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                         if (httpServerAsyncResult.succeeded()) {
                             startFuture.complete();
                             logger.info("HTTP server started on http" + (sslEnable ? "s" : "") + "://localhost:" + port);
-                        }
-                        else {
+                        } else {
                             startFuture.fail(httpServerAsyncResult.cause());
                         }
                     });
