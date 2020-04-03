@@ -1,10 +1,24 @@
 package org.welisdoon.webserver.common.config;
 
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.Lock;
+import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
+import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 
 import javax.annotation.PostConstruct;
@@ -14,8 +28,11 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public abstract class AbstractWechatConfiguration {
+    private static final Logger logger = LoggerFactory.getLogger(AbstractWechatConfiguration.class);
+
     private String appID;
     private String appsecret;
     private String token;
@@ -203,5 +220,57 @@ public abstract class AbstractWechatConfiguration {
         } catch (Exception e) {
             routingContext.response().end(MesseageTypeValue.MSG_REPLY);
         }
+    }
+
+    public <T> void createAsyncServiceProxy(Vertx vertx1, Handler<Message<T>> var1) {
+        createAsyncServiceProxy(vertx1, WebClient.create(vertx1), var1);
+    }
+
+    public <T> void createAsyncServiceProxy(Vertx vertx1, WebClient webClient, Handler<Message<T>> var1) {
+
+        final String key = "WX.TOKEN";
+        final String URL_TOCKEN_LOCK = key + ".LOCK";
+        final String URL_TOCKEN_UPDATE = key + ".UPDATE";
+        final String URL_REQUSET = this.getUrls().get("getAccessToken").toString();
+        EventBus eventBus = vertx1.eventBus();
+        SharedData sharedData = vertx1.sharedData();
+
+        Handler<Long> longHandler = avoid -> {
+            sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
+                if (lockAsyncResult.succeeded()) {
+                    logger.info(URL_REQUSET);
+                    webClient.getAbs(URL_REQUSET)
+                            /*.addQueryParam("grant_type", "client_credential")
+                            .addQueryParam("appid", this.getAppID())
+                            .addQueryParam("secret", this.getAppsecret())*/
+                            .timeout(20000)
+                            .send(httpResponseAsyncResult -> {
+                                try {
+                                    if (httpResponseAsyncResult.succeeded()) {
+                                        HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
+                                        eventBus.publish(URL_TOCKEN_UPDATE, httpResponse.body().toJsonObject());
+                                    } else {
+                                        httpResponseAsyncResult.cause().printStackTrace();
+                                    }
+                                } finally {
+                                    Lock lock = lockAsyncResult.result();
+                                    vertx1.setTimer(30 * 1000, aLong1 -> {
+                                        lock.release();
+                                    });
+                                }
+                            });
+                } else {
+                    logger.info(lockAsyncResult.cause().getMessage());
+                }
+            });
+        };
+
+        MessageConsumer<T> messageConsumer = eventBus.consumer(URL_TOCKEN_UPDATE);
+        messageConsumer.handler(var1);
+        //启动就运行运行
+        longHandler.handle(null);
+        //开始循环
+        vertx1.setPeriodic(this.getAfterUpdateTokenTime() * 1000, longHandler);
+
     }
 }

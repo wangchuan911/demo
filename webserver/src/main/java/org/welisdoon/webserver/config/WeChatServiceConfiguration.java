@@ -51,7 +51,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         wxBizMsgCrypt = this.getWXBizMsgCrypt();
     }
 
-    @VertxRegister(StandaredVerticle.class)
+    /*@VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
             commonAsynService = ICommonAsynService.createProxy(vertx1);
@@ -104,19 +104,32 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 } else {
                     logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
                 }
-                /*if (wechatAliveTimerId != null) {
+                *//*if (wechatAliveTimerId != null) {
                     vertx1.cancelTimer(wechatAliveTimerId);
                 }
-                wechatAliveTimerId = vertx1.setTimer(this.getAfterUpdateTokenTime() * 1000, longHandler);*/
+                wechatAliveTimerId = vertx1.setTimer(this.getAfterUpdateTokenTime() * 1000, longHandler);*//*
             });
             longHandler.handle(null);
             vertx1.setPeriodic(this.getAfterUpdateTokenTime() * 1000, longHandler);
         };
         return vertxConsumer;
-    }
+    }*/
 
     @VertxRegister(StandaredVerticle.class)
-    public Consumer<Router> routeMapping() {
+    public Consumer<Router> routeMapping(Vertx vertx) {
+        commonAsynService = ICommonAsynService.createProxy(vertx);
+        WebClient webClient = WebClient.create(vertx);
+
+        this.createAsyncServiceProxy(vertx, webClient, objectMessage -> {
+            JsonObject tokenJson = (JsonObject) objectMessage.body();
+            if (tokenJson.getInteger("errcode") != null) {
+                logger.info("errcode:" + tokenJson.getInteger("errcode"));
+                logger.info("errmsg:" + tokenJson.getString("errmsg"));
+            } else {
+                logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
+            }
+        });
+
         Consumer<Router> routerConsumer = router -> {
             router.get("/wx").handler(this::wechatMsgCheck);
 

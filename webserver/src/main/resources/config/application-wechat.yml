@@ -5,10 +5,10 @@ wechat:
   key: AC32OLzYAjjkPqzxilsPiMPbqYCHESnOuPzyYpjFyVw
   afterUpdateTokenTime: 6000
   urls:
-    base: https://api.weixin.qq.com
-    sendToUser: /cgi-bin/message/custom/send?access_token=${wechat.token}
-    getToken: /cgi-bin/token
-    getIPs: /cgi-bin/getcallbackip?access_token=${wechat.token}
+    getAccessToken: https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat-app.appID}&secret=${wechat-app.appsecret}
+    code2Session: https://api.weixin.qq.com/sns/jscode2session?appid=${wechat-app.appID}&secret=${wechat-app.appsecret}&grant_type=authorization_code&js_code=
+    unifiedorder: https://api.mch.weixin.qq.com/pay/unifiedorder
+    subscribeSend: https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=
   schedul:
     power: on
     delay: 300000

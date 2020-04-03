@@ -81,6 +81,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
     WXBizMsgCrypt wxBizMsgCrypt;
 
+    public static String accessToken = null;
+
     @Value("${temp.filePath}")
     String staticPath;
 
@@ -103,6 +105,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 
         pushUtils = ApplicationContextProvider.getBean(PushUtils.class);
         wxBizMsgCrypt = this.getWXBizMsgCrypt();
+
     }
 
     /*定時任務*/
@@ -145,8 +148,26 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
 //        final String PATH_WX_APP_UPLOAD = "/imgUpd";
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
         final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
+        final String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
+        final String URL_ACCESS_TOKEN = this.getUrls().get("getAccessToken").toString();
+
+
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
         WebClient webClient = WebClient.create(vertx);
+
+        this.createAsyncServiceProxy(vertx, webClient, objectMessage -> {
+            JsonObject tokenJson = (JsonObject) objectMessage.body();
+            if (tokenJson.getInteger("errcode") != null) {
+                logger.info("errcode:" + tokenJson.getInteger("errcode"));
+                logger.info("errmsg:" + tokenJson.getString("errmsg"));
+            } else {
+                accessToken = tokenJson.getString("access_token");
+                logger.info("Token:" + accessToken + "[" + tokenJson.getLong("expires_in") + "]");
+            }
+        });
+
+        pushUtils.init(webClient, URL_SUBSCRIBESEND);
+
         Consumer<Router> routerConsumer = router -> {
             //get请求入口
             router.get(this.getPath().getApp()).handler(routingContext -> {
