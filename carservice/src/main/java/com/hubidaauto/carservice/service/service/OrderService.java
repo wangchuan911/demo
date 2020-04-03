@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
@@ -42,10 +43,12 @@ public class OrderService extends AbstractBaseService<OrderVO> {
 
 
     TacheService tacheService;
+    OperationService operationService;
 
     @Override
     public void init() throws Throwable {
         tacheService = ApplicationContextProvider.getBean(TacheService.class);
+        operationService = ApplicationContextProvider.getBean(OperationService.class);
     }
 
     @Override
@@ -57,7 +60,7 @@ public class OrderService extends AbstractBaseService<OrderVO> {
             case CustomConst.ADD:
 
                 JsonObject orderVoJson = JsonObject.mapFrom(params);
-                List<Integer> jsonArray = (List<Integer>) orderVoJson.remove("pictureIds");
+                List<Integer> pictureIds = (List<Integer>) orderVoJson.remove("pictureIds");
 
                 Map encryptedMap = mapSpliter(params, Map.class, "phoneEncryptedData", "phoneEncryptedIv");
 
@@ -83,15 +86,18 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                                 : orderVO.getCustPhone());
                 orderDao.add(orderVO);
 
-                if (jsonArray != null && jsonArray.size() > 0) {
-                    for (int i = 0; i < jsonArray.size(); i++) {
+                if (!CollectionUtils.isEmpty(pictureIds)) {
+                    Integer orderId = orderVO.getOrderId();
+                    Integer tacheId = orderVO.getTacheId();
+                    pictureIds.stream().forEach(pictureId -> {
                         pictureDao.set(new PictureVO()
-                                .setPictrueId(jsonArray.get(i))
-                                .setOrderId(orderVO.getOrderId())
-                                .setTacheId(orderVO.getTacheId()));
-                    }
+                                .setPictrueId(pictureId)
+                                .setOrderId(orderId)
+                                .setTacheId(tacheId));
+                    });
                 }
                 resultObj = tacheService.handle(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", orderVO.getCustId()));
+                operationService.wechatMessagePush(orderVO, orderVO.getTacheId());
                 break;
             case CustomConst.DELETE:
                 orderVO = mapToObject(params, OrderVO.class);

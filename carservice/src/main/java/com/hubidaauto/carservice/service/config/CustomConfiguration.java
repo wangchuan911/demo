@@ -55,7 +55,7 @@ import java.util.function.Consumer;
 @ConditionalOnProperty(prefix = "wechat-app", name = "appID")
 public class CustomConfiguration extends AbstractWechatConfiguration {
     //    final static String REQUEST_NAME = "requestService";
-    private static final Logger logger = LoggerFactory.getLogger(RequestService.class);
+    private static final Logger logger = LoggerFactory.getLogger(CustomConfiguration.class);
 
     private int orderCycleTime;
 
@@ -77,7 +77,6 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     WXBizMsgCrypt wxBizMsgCrypt;
 
     public static WechatAsyncMeassger wechatAsyncMeassger = null;
-    public static String accessToken = null;
 
     @Value("${temp.filePath}")
     String staticPath;
@@ -155,7 +154,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
                 logger.info("errcode:" + tokenJson.getInteger("errcode"));
                 logger.info("errmsg:" + tokenJson.getString("errmsg"));
             } else {
-                accessToken = tokenJson.getString("access_token");
+                String accessToken = tokenJson.getString("access_token");
+                wechatAsyncMeassger.setToken(accessToken);
                 logger.info("Token:" + accessToken + "[" + tokenJson.getLong("expires_in") + "]");
             }
         });

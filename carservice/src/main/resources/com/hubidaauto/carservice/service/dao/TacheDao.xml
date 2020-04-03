@@ -173,6 +173,7 @@
     <resultMap id="PushConfig" type="com.hubidaauto.carservice.service.entity.TacheVO$PushConfig">
         <result property="roleId" column="role_id"></result>
         <result property="templateId" column="msg_template_id"></result>
+        <result property="values" column="values"></result>
     </resultMap>
     <select id="getWeChatMsgTemplates" parameterType="int" resultMap="PushConfig">
         SELECT

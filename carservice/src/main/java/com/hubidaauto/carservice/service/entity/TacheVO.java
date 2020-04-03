@@ -1,6 +1,12 @@
 package com.hubidaauto.carservice.service.entity;
 
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TacheVO {
     private Integer tacheId;
@@ -64,8 +70,9 @@ public class TacheVO {
         return tacheRelas;
     }
 
-    public void setTacheRelas(List<TacheRela> tacheRelas) {
+    public TacheVO setTacheRelas(List<TacheRela> tacheRelas) {
         this.tacheRelas = tacheRelas;
+        return this;
     }
 
     public static class TacheRela {
@@ -97,44 +104,87 @@ public class TacheVO {
         return nextTache;
     }
 
-    public void setNextTache(Integer nextTache) {
+    public TacheVO setNextTache(Integer nextTache) {
         this.nextTache = nextTache;
+        return this;
     }
 
     public Integer getSuperTache() {
         return superTache;
     }
 
-    public void setSuperTache(Integer superTache) {
+    public TacheVO setSuperTache(Integer superTache) {
         this.superTache = superTache;
+        return this;
     }
 
     public static class PushConfig {
         String templateId;
         Integer roleId;
+        String values;
+        Map<String, String> valueMap;
 
         public String getTemplateId() {
             return templateId;
         }
 
-        public void setTemplateId(String templateId) {
+        public PushConfig setTemplateId(String templateId) {
             this.templateId = templateId;
+            return this;
         }
 
         public Integer getRoleId() {
             return roleId;
         }
 
-        public void setRoleId(Integer roleId) {
+        public PushConfig setRoleId(Integer roleId) {
             this.roleId = roleId;
+            return this;
+        }
+
+        public String getValues() {
+            return values;
+        }
+
+        public void setValues(String values) {
+            this.values = values;
+            valuesToMap();
+        }
+
+        public Map<String, String> valuesToMap() {
+            if (StringUtils.isEmpty(values)) return null;
+            if (CollectionUtils.isEmpty(valueMap)) {
+                this.valueMap = Map.ofEntries(Arrays.stream(values.split("&&")).map(s -> {
+                    int i = s.indexOf("="), j;
+                    StringBuilder value = new StringBuilder(s.substring(i + 1));
+                    if (value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"') {
+
+                    } else if ((j = value.indexOf(".")) > 0) {
+                        int k = j + 1, l = j + 2;
+                        String word = value.substring(k, l);
+                        value = value.replace(k, l, word.toUpperCase());
+                    }
+                    return Map.entry(s.substring(0, i), value.toString());
+                }).toArray(Map.Entry[]::new));
+            }
+            return valueMap;
         }
     }
 
     public List<PushConfig> getPushConfigs() {
-        return pushConfigs;
+        return this.openData ? null : this.pushConfigs;
     }
 
-    public void setPushConfigs(List<PushConfig> pushConfigs) {
+    public TacheVO setPushConfigs(List<PushConfig> pushConfigs) {
         this.pushConfigs = pushConfigs;
+        return this;
     }
+
+    private boolean openData = true;
+
+    public TacheVO openData(boolean sw) {
+        this.openData = sw;
+        return this;
+    }
+
 }

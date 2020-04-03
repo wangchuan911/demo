@@ -1,5 +1,6 @@
 package com.hubidaauto.carservice.service.service;
 
+import com.hubidaauto.carservice.service.config.CustomConfiguration;
 import com.hubidaauto.carservice.service.config.CustomConst;
 import com.hubidaauto.carservice.service.dao.*;
 import com.hubidaauto.carservice.service.entity.*;
@@ -7,16 +8,22 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
+import org.welisdoon.webserver.entity.wechat.push.SubscribeMessage;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -24,6 +31,7 @@ import java.util.stream.Stream;
 @Service
 @Transactional(rollbackFor = Throwable.class)
 public class OperationService extends AbstractBaseService<OperationVO> {
+    private static final Logger logger = LoggerFactory.getLogger(OperationService.class);
     @Autowired
     OrderDao orderDao;
     @Autowired
@@ -190,6 +198,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
             case 5:
                 operationManager(CustomConst.ADD, operationVO.setTacheId(nextTache));
                 returnObj = operationVO;
+                this.wechatMessagePush(orderVO, nextTache);
                 break;
 
         }
@@ -292,6 +301,8 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                     }
 //                    operationManager(CustomConst.ADD, operationVO);
                     operationDao.add(operationVO.setActive(true));
+
+                    this.wechatMessagePush(orderVO, operationVO.getTacheId());
                 }
             } else {
                 operationDao.set(new OperationVO()
@@ -299,6 +310,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                         .setFinishTime(new Timestamp(System.currentTimeMillis()))
                         .setOrderId(orderVO.getOrderId()));
             }
+            this.wechatMessagePush(orderVO, orderVO.getTacheId());
         }
         if (tacheId == null
                 || tacheId < 0
@@ -313,6 +325,75 @@ public class OperationService extends AbstractBaseService<OperationVO> {
         final OrderVO nextOrderVO = new OrderVO().setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
         orderDao.list(nextOrderVO).stream().forEach(orderVO -> {
             this.toBeContinue(orderVO);
+        });
+    }
+
+    void wechatMessagePush(OrderVO orderVO, Integer nextTache) {
+        if (nextTache == null) return;
+        final SubscribeMessage message = new SubscribeMessage();
+        TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(nextTache);
+
+        List<TacheVO.PushConfig> pushConfigs = tacheVO.openData(false).getPushConfigs();
+        tacheVO.openData(true);
+        if (CollectionUtils.isEmpty(pushConfigs)) return;
+        pushConfigs.forEach(pushConfig -> {
+            if (MapUtils.isEmpty(pushConfig.valuesToMap())) return;
+            message.setTemplate_id(pushConfig.getTemplateId());
+            message.setData(null);
+            message.addDatas((pushConfig.valuesToMap().entrySet()).stream().map(entry -> {
+                String value = entry.getValue();
+                int index;
+                if ((index = value.indexOf(".")) > 0) {
+                    String objName = value.substring(0, index);
+                    String objValue = value.substring(index + 1);
+                    Object obj;
+                    switch (objName) {
+                        case "order":
+                            obj = orderVO;
+                            break;
+                        case "tache":
+                            obj = tacheVO;
+                            break;
+                        default:
+                            obj = null;
+                    }
+                    try {
+                        if (obj != null) {
+                            Object res = obj.getClass().getMethod("get" + objValue).invoke(obj);
+//                            logger.warn(res.getClass().getName());
+                            if (res instanceof Date) {
+                                res = LocalDateTime.ofInstant(((Date) res).toInstant(), ZoneId.systemDefault());
+                            } else if (res instanceof Timestamp) {
+                                res = ((Timestamp) res).toLocalDateTime();
+                            }
+                            if (res instanceof LocalDateTime) {
+                                res = (String.format("%04d年%02d月%02d日 %02d:%02d",
+                                        ((LocalDateTime) res).getYear(),
+                                        ((LocalDateTime) res).getDayOfMonth(),
+                                        ((LocalDateTime) res).getDayOfMonth(),
+                                        ((LocalDateTime) res).getHour(),
+                                        ((LocalDateTime) res).getMinute()));
+                            }
+                            entry = Map.entry(entry.getKey(), res != null ? res.toString() : "");
+                        }
+                    } catch (NullPointerException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                        logger.error(e.getMessage(), e);
+                    }
+                }
+                return entry;
+            }).toArray(Map.Entry[]::new));
+            switch (pushConfig.getRoleId()) {
+                case CustomConst.ROLE.CUSTOMER:
+                    message.setTouser(orderVO.getCustId());
+                    break;
+                case CustomConst.ROLE.WOCKER:
+                    message.setTouser(orderVO.getOrderAppointPerson());
+                    break;
+                case CustomConst.ROLE.DISTRIBUTOR:
+                    message.setTouser(orderVO.getOrderControlPerson());
+                    break;
+            }
+            CustomConfiguration.wechatAsyncMeassger.pushMessage(message);
         });
     }
 }
