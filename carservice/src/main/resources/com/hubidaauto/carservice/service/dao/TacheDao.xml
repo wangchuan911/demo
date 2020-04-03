@@ -177,7 +177,7 @@
     <select id="getWeChatMsgTemplates" parameterType="int" resultMap="PushConfig">
         SELECT
           *
-        FROM hubidaauto.car_message_push
+        FROM car_message_push
           where tache_id=#{value}
     </select>
 </mapper>
