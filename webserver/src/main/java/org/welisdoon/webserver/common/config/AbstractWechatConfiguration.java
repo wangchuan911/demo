@@ -229,7 +229,7 @@ public abstract class AbstractWechatConfiguration {
     public <T> void initAccessTokenSyncTimer(Vertx vertx1, WebClient webClient, Handler<Message<T>> var1) {
         final String key = "WX.TOKEN";
         final String URL_TOCKEN_LOCK = String.format("%s.%s.LOCK", key, this.getAppID());
-        final String URL_TOCKEN_UPDATE = String.format("%s.%s.UPDATE", key);
+        final String URL_TOCKEN_UPDATE = String.format("%s.%s.UPDATE", key, this.getAppID());
         final String URL_REQUSET = this.getUrls().get("getAccessToken").toString();
         EventBus eventBus = vertx1.eventBus();
         SharedData sharedData = vertx1.sharedData();
@@ -237,7 +237,7 @@ public abstract class AbstractWechatConfiguration {
         Handler<Long> longHandler = avoid -> {
             sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
                 if (lockAsyncResult.succeeded()) {
-                    logger.info(URL_REQUSET);
+//                    logger.info(URL_REQUSET);
                     webClient.getAbs(URL_REQUSET)
                             /*.addQueryParam("grant_type", "client_credential")
                             .addQueryParam("appid", this.getAppID())
