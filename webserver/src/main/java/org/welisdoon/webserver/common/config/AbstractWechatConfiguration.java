@@ -222,15 +222,14 @@ public abstract class AbstractWechatConfiguration {
         }
     }
 
-    public <T> void createAsyncServiceProxy(Vertx vertx1, Handler<Message<T>> var1) {
-        createAsyncServiceProxy(vertx1, WebClient.create(vertx1), var1);
+    public <T> void initAccessTokenSyncTimer(Vertx vertx1, Handler<Message<T>> var1) {
+        initAccessTokenSyncTimer(vertx1, WebClient.create(vertx1), var1);
     }
 
-    public <T> void createAsyncServiceProxy(Vertx vertx1, WebClient webClient, Handler<Message<T>> var1) {
-
+    public <T> void initAccessTokenSyncTimer(Vertx vertx1, WebClient webClient, Handler<Message<T>> var1) {
         final String key = "WX.TOKEN";
-        final String URL_TOCKEN_LOCK = key + ".LOCK";
-        final String URL_TOCKEN_UPDATE = key + ".UPDATE";
+        final String URL_TOCKEN_LOCK = String.format("%s.%s.LOCK", key, this.getAppID());
+        final String URL_TOCKEN_UPDATE = String.format("%s.%s.UPDATE", key);
         final String URL_REQUSET = this.getUrls().get("getAccessToken").toString();
         EventBus eventBus = vertx1.eventBus();
         SharedData sharedData = vertx1.sharedData();

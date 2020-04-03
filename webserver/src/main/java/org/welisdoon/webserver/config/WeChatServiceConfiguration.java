@@ -120,7 +120,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         commonAsynService = ICommonAsynService.createProxy(vertx);
         WebClient webClient = WebClient.create(vertx);
 
-        this.createAsyncServiceProxy(vertx, webClient, objectMessage -> {
+        this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
             JsonObject tokenJson = (JsonObject) objectMessage.body();
             if (tokenJson.getInteger("errcode") != null) {
                 logger.info("errcode:" + tokenJson.getInteger("errcode"));

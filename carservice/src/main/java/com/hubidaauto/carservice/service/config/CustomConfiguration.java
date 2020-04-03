@@ -28,18 +28,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.CommonConst;
 import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
-import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
-import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PayBillResponseMesseage;
@@ -77,10 +73,10 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     UserService userService;
     OperationService operationService;
 
-    PushUtils pushUtils;
 
     WXBizMsgCrypt wxBizMsgCrypt;
 
+    public static WechatAsyncMeassger wechatAsyncMeassger = null;
     public static String accessToken = null;
 
     @Value("${temp.filePath}")
@@ -103,7 +99,6 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         operationService = ApplicationContextProvider.getBean(OperationService.class);
         CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
 
-        pushUtils = ApplicationContextProvider.getBean(PushUtils.class);
         wxBizMsgCrypt = this.getWXBizMsgCrypt();
 
     }
@@ -149,13 +144,12 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
         final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
         final String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
-        final String URL_ACCESS_TOKEN = this.getUrls().get("getAccessToken").toString();
 
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
         WebClient webClient = WebClient.create(vertx);
 
-        this.createAsyncServiceProxy(vertx, webClient, objectMessage -> {
+        this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
             JsonObject tokenJson = (JsonObject) objectMessage.body();
             if (tokenJson.getInteger("errcode") != null) {
                 logger.info("errcode:" + tokenJson.getInteger("errcode"));
@@ -166,7 +160,7 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
             }
         });
 
-        pushUtils.init(webClient, URL_SUBSCRIBESEND);
+        wechatAsyncMeassger = new WechatAsyncMeassger(webClient, URL_SUBSCRIBESEND);
 
         Consumer<Router> routerConsumer = router -> {
             //get请求入口
