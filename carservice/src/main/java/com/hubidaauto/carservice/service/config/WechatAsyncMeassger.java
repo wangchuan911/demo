@@ -36,14 +36,20 @@ public class WechatAsyncMeassger {
 
     public void pushMessage(Object o) {
         final String url = String.format("%s%s", this.url, this.token);
-        logger.info(JsonObject.mapFrom(o).toString());
-        logger.info(url);
         webClient.postAbs(url).sendJson(o, httpResponseAsyncResult -> {
             if (httpResponseAsyncResult.succeeded()) {
-                logger.info(httpResponseAsyncResult.result().bodyAsString());
+                String res = httpResponseAsyncResult.result().bodyAsString();
+                if (res.indexOf("\"errcode\":0") == -1) {
+                    printErr(url, o, res);
+                }
             } else {
+                printErr(url, o, httpResponseAsyncResult.cause().getMessage());
                 logger.error(httpResponseAsyncResult.cause().getMessage(), httpResponseAsyncResult.cause());
             }
         });
+    }
+
+    private void printErr(String url, Object o, String res) {
+        logger.error(String.format("\nURL===>%s\nREQ===>%s\nRESP===>%s", url, JsonObject.mapFrom(o).toString(), res));
     }
 }
