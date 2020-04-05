@@ -333,8 +333,8 @@ public class OperationService extends AbstractBaseService<OperationVO> {
         final SubscribeMessage message = new SubscribeMessage();
         TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(nextTache);
 
-        List<TacheVO.PushConfig> pushConfigs = tacheVO.openData(false).getPushConfigs();
-        tacheVO.openData(true);
+        List<TacheVO.PushConfig> pushConfigs = tacheVO.getPushConfigs();
+
         if (CollectionUtils.isEmpty(pushConfigs)) return;
         pushConfigs.forEach(pushConfig -> {
             if (MapUtils.isEmpty(pushConfig.valuesToMap())) return;

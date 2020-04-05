@@ -6,7 +6,6 @@ import org.springframework.util.StringUtils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class TacheVO {
     private Integer tacheId;
@@ -143,7 +142,7 @@ public class TacheVO {
         }
 
         public String getValues() {
-            return values;
+            return openData ? null : values;
         }
 
         public void setValues(String values) {
@@ -169,21 +168,21 @@ public class TacheVO {
             }
             return valueMap;
         }
+
+        private boolean openData = true;
+
+        public PushConfig openData(boolean sw) {
+            this.openData = sw;
+            return this;
+        }
     }
 
     public List<PushConfig> getPushConfigs() {
-        return this.openData ? null : this.pushConfigs;
+        return this.pushConfigs;
     }
 
     public TacheVO setPushConfigs(List<PushConfig> pushConfigs) {
         this.pushConfigs = pushConfigs;
-        return this;
-    }
-
-    private boolean openData = true;
-
-    public TacheVO openData(boolean sw) {
-        this.openData = sw;
         return this;
     }
 
