@@ -369,7 +369,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                             if (res instanceof LocalDateTime) {
                                 res = (String.format("%04d年%02d月%02d日 %02d:%02d",
                                         ((LocalDateTime) res).getYear(),
-                                        ((LocalDateTime) res).getDayOfMonth(),
+                                        ((LocalDateTime) res).getMonth(),
                                         ((LocalDateTime) res).getDayOfMonth(),
                                         ((LocalDateTime) res).getHour(),
                                         ((LocalDateTime) res).getMinute()));
