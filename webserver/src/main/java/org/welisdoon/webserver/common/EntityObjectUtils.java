@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.welisdoon.webserver.common.annotation.EntityObjectKey;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -14,15 +15,50 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public interface EntityObjectUtils {
     Logger logger = LoggerFactory.getLogger(EntityObjectUtils.class);
-    Map<Class<?>, Set<Field>> fieldMap = new HashMap<>();
-    Map<Class<?>, Set<Method>> methodMap = new HashMap<>();
+    /*Map<Class<?>, Set<Field>> fieldMap = new HashMap<>();
+    Map<Class<?>, Set<Method>> methodMap = new HashMap<>();*/
+    Map<Class<?>, AccessibleObject[]> CLASS_SET_MAP = new HashMap<>();
 
     static Object objValueByKey(Object t, String key) {
         Class tKey = t.getClass();
-        Set<Field> fields = fieldMap.get(tKey);
+        //----------------------------------
+        AccessibleObject[] accessibleObjects = CLASS_SET_MAP.get(tKey);
+        if (accessibleObjects != null && accessibleObjects.length != 0) {
+            synchronized (CLASS_SET_MAP) {
+                if (!CLASS_SET_MAP.containsKey(tKey)) {
+                    AccessibleObject[][] sets = new AccessibleObject[][]{
+                            ReflectionUtils.getFields(tKey, ReflectionUtils.withAnnotation(EntityObjectKey.class)).stream().toArray(AccessibleObject[]::new)
+                            , ReflectionUtils.getMethods(tKey, ReflectionUtils.withAnnotation(EntityObjectKey.class)).stream().toArray(AccessibleObject[]::new)};
+                    CLASS_SET_MAP
+                            .put(tKey, accessibleObjects = Arrays.stream(sets)
+                                    .flatMap(set -> Arrays.stream(set))
+                                    .toArray(AccessibleObject[]::new));
+                }
+            }
+            Optional<AccessibleObject> optional = Arrays.stream(accessibleObjects).filter(accessibleObject -> {
+                EntityObjectKey annotation = accessibleObject.getAnnotation(EntityObjectKey.class);
+                return annotation != null && key.equals(annotation.name());
+            }).findFirst();
+
+            if (optional.isPresent()) {
+                Object val = optional.get();
+                try {
+                    if (val instanceof Method)
+                        return ((Method) val).invoke(t, key);
+                    else
+                        return ((Field) val).get(t);
+
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }
+        }
+        //----------------------------------
+        /*Set<Field> fields = fieldMap.get(tKey);
         if (CollectionUtils.isEmpty(fields)) {
             fields = ReflectionUtils.getFields(tKey, ReflectionUtils.withAnnotation(EntityObjectKey.class));
             synchronized (fieldMap) {
@@ -46,7 +82,7 @@ public interface EntityObjectUtils {
         }
 
         Set<Method> methods = methodMap.get(tKey);
-        if (CollectionUtils.isEmpty(fields)) {
+        if (CollectionUtils.isEmpty(methods)) {
             methods = ReflectionUtils.getMethods(tKey, ReflectionUtils.withAnnotation(EntityObjectKey.class));
             synchronized (methodMap) {
                 if (methodMap.containsKey(tKey))
@@ -55,8 +91,8 @@ public interface EntityObjectUtils {
         } else {
             methods = methodMap.get(tKey);
         }
-        Optional<Method> optionalMethod = methods.stream().filter(field -> {
-            EntityObjectKey annotation = field.getAnnotation(EntityObjectKey.class);
+        Optional<Method> optionalMethod = methods.stream().filter(method -> {
+            EntityObjectKey annotation = method.getAnnotation(EntityObjectKey.class);
             return annotation != null && key.equals(annotation.name());
         }).findFirst();
 
@@ -66,7 +102,7 @@ public interface EntityObjectUtils {
             } catch (IllegalAccessException | InvocationTargetException e) {
                 logger.error(e.getMessage(), e);
             }
-        }
+        }*/
 
         try {
             Object res = t.getClass().getMethod("get" + key).invoke(t);
@@ -81,7 +117,7 @@ public interface EntityObjectUtils {
             if (res instanceof LocalDateTime) {
                 res = (String.format("%04d年%02d月%02d日 %02d:%02d",
                         ((LocalDateTime) res).getYear(),
-                        ((LocalDateTime) res).getMonth(),
+                        ((LocalDateTime) res).getMonth().getValue(),
                         ((LocalDateTime) res).getDayOfMonth(),
                         ((LocalDateTime) res).getHour(),
                         ((LocalDateTime) res).getMinute()));

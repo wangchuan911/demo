@@ -1,5 +1,7 @@
 package com.hubidaauto.carservice.service.entity;
 
+import com.hubidaauto.carservice.service.config.CustomConst;
+
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -242,6 +244,19 @@ public class OrderVO {
 
     public void setCost(Double cost) {
         this.cost = cost;
+    }
+
+    public String orderPersonIdByRole(Integer roleId) {
+        switch (roleId) {
+            case CustomConst.ROLE.CUSTOMER:
+                return (this.getCustId());
+            case CustomConst.ROLE.WOCKER:
+                return (this.getOrderAppointPerson());
+            case CustomConst.ROLE.DISTRIBUTOR:
+                return (this.getOrderControlPerson());
+            default:
+                return null;
+        }
     }
 }
 

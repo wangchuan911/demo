@@ -1,6 +1,5 @@
 package com.hubidaauto.carservice.service.service;
 
-import com.hubidaauto.carservice.service.config.CustomConfiguration;
 import com.hubidaauto.carservice.service.config.CustomConst;
 import com.hubidaauto.carservice.service.dao.*;
 import com.hubidaauto.carservice.service.entity.OrderVO;
@@ -10,7 +9,6 @@ import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;

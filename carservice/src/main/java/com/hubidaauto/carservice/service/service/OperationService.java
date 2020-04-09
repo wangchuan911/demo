@@ -1,6 +1,6 @@
 package com.hubidaauto.carservice.service.service;
 
-import com.hubidaauto.carservice.service.config.CustomConfiguration;
+import com.hubidaauto.carservice.service.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.carservice.service.config.CustomConst;
 import com.hubidaauto.carservice.service.dao.*;
 import com.hubidaauto.carservice.service.entity.*;
@@ -14,16 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.EntityObjectUtils;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.entity.wechat.push.SubscribeMessage;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -286,7 +284,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                     OperationVO operationVO = new OperationVO()
                             .setOrderId(orderVO.getOrderId())
                             .setTacheId(newTacheId);
-                    switch (tacheRela.getRole()) {
+                    /*switch (tacheRela.getRole()) {
                         case CustomConst.ROLE.CUSTOMER:
                             operationVO.setOprMan(orderVO.getCustId());
                             break;
@@ -298,7 +296,8 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                             break;
                         default:
                             continue;
-                    }
+                    }*/
+                    operationVO.setOprMan(orderVO.orderPersonIdByRole(tacheRela.getRole()));
 //                    operationManager(CustomConst.ADD, operationVO);
                     operationDao.add(operationVO.setActive(true));
 
@@ -357,7 +356,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                         default:
                             obj = null;
                     }
-                    try {
+                    /*try {
                         if (obj != null) {
                             Object res = obj.getClass().getMethod("get" + objValue).invoke(obj);
 //                            logger.warn(res.getClass().getName());
@@ -378,11 +377,17 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                         }
                     } catch (NullPointerException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                         logger.error(e.getMessage(), e);
+                    }*/
+                    if (obj != null) {
+                        Object v = EntityObjectUtils.objValueByKey(obj, objValue);
+                        if (v != null) {
+                            entry = Map.entry(entry.getKey(), v.toString());
+                        }
                     }
                 }
                 return entry;
             }).toArray(Map.Entry[]::new));
-            switch (pushConfig.getRoleId()) {
+            /*switch (pushConfig.getRoleId()) {
                 case CustomConst.ROLE.CUSTOMER:
                     message.setTouser(orderVO.getCustId());
                     break;
@@ -392,8 +397,9 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                 case CustomConst.ROLE.DISTRIBUTOR:
                     message.setTouser(orderVO.getOrderControlPerson());
                     break;
-            }
-            CustomConfiguration.wechatAsyncMeassger.pushMessage(message);
+            }*/
+            message.setTouser(orderVO.orderPersonIdByRole(pushConfig.getRoleId()));
+            CustomWeChatAppConfiguration.wechatAsyncMeassger.pushMessage(message);
         });
     }
 }

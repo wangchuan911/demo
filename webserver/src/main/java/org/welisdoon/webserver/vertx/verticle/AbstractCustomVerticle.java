@@ -4,10 +4,7 @@ import io.vertx.core.*;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.ext.web.Router;
 
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
-
-import org.welisdoon.webserver.WebserverApplication;
+import org.springframework.util.CollectionUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
@@ -16,11 +13,8 @@ import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.net.URL;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -28,7 +22,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractCustomVerticle.class);
 
-    final private static Map<HandlerEntry, Set<Method>> HANDLES = new HashMap<>(4);
+    private static HandlerEntry[] HANDLES;
 
 
     @Override
@@ -74,44 +68,49 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         }
     }
 
-    final public static void scanRegister(Reflections reflections) {
-        if (HANDLES.size() != 0) return;
+    final public synchronized static void scanRegister(Reflections reflections) {
+        if (HANDLES != null) return;
+        Map<HandlerEntry, List<Method>> map = new HashMap<>();
+        reflections.getTypesAnnotatedWith(VertxConfiguration.class)
+                .stream()
+                .forEach(aClass -> {
+                    ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class))
+                            .stream()
+                            .forEach(method -> {
+                                VertxRegister annotation = method.getDeclaredAnnotation(VertxRegister.class);
+                                try {
+                                    Class vertCls = annotation.value();
+                                    Type retunType = (method.getGenericReturnType());
+                                    Type innertype = retunType == null ? null : ((ParameterizedType) retunType).getActualTypeArguments()[0];
+                                    if (vertCls == null || vertCls == Verticle.class || retunType == null) return;
 
-        Set<Class<?>> classes = reflections.getTypesAnnotatedWith(VertxConfiguration.class);
-        classes.forEach(aClass -> {
-            Set<Method> methods = ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class));
-            methods.forEach(method -> {
-                Annotation annotation = method.getDeclaredAnnotation(VertxRegister.class);
-                if (annotation == null) return;
-                try {
-                    Class vertCls = ((VertxRegister) annotation).value();
-                    Type retunType = (method.getGenericReturnType());
-                    Type innertype = ((ParameterizedType) retunType).getActualTypeArguments()[0];
-                    if (vertCls == null || vertCls == Verticle.class || retunType == null) return;
-                    synchronized (HANDLES) {
-                        {
-                            HandlerEntry handlerEntry = new HandlerEntry();
-                            handlerEntry.verticleClass = vertCls;
-                            handlerEntry.VertxRegisterInnerType = innertype;
-                            handlerEntry.ServiceClass = aClass;
-                            Set set = HANDLES.get(handlerEntry);
-                            if (set == null) {
-                                set = new HashSet<>(4);
-                                HANDLES.put(handlerEntry, set);
-                            }
-                            set.add(method);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-        });
+                                    HandlerEntry handlerEntry = new HandlerEntry();
+                                    handlerEntry.verticleClass = vertCls;
+                                    handlerEntry.VertxRegisterInnerType = innertype;
+                                    handlerEntry.ServiceClass = aClass;
+                                    synchronized (map) {
+                                        List<Method> list = map.get(handlerEntry);
+                                        if (CollectionUtils.isEmpty(list)) {
+                                            list = new LinkedList<>();
+                                            map.put(handlerEntry, list);
+                                        }
+                                        list.add(method);
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+                });
+        HANDLES = map.entrySet().stream().map(handlerEntryListEntry -> {
+            HandlerEntry entry = handlerEntryListEntry.getKey();
+            entry.methods = handlerEntryListEntry.getValue().stream().toArray(Method[]::new);
+            return entry;
+        }).toArray(HandlerEntry[]::new);
     }
 
     final private void handleRegist() {
         Class clazz = this.getClass();
-        HANDLES.forEach((handlerEntry, methods) -> {
+        Arrays.stream(HANDLES).forEach(handlerEntry -> {
             Class<? extends AbstractCustomVerticle> verticleClass = handlerEntry.verticleClass;
             if (verticleClass == clazz) {
                 Type VertxRegisterInnerType = handlerEntry.VertxRegisterInnerType;
@@ -132,7 +131,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     return;
                 }
                 final Object finalValue = value;
-                methods.forEach(method -> {
+                Arrays.stream(handlerEntry.methods).forEach(method -> {
                     try {
                         Class<?>[] parameterTypesClasses = method.getParameterTypes();
                         Object[] parameterValue = null;
@@ -187,6 +186,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         Class<? extends AbstractCustomVerticle> verticleClass;
         Type VertxRegisterInnerType;
         Class<?> ServiceClass;
+        Method[] methods;
 
         @Override
         public boolean equals(Object obj) {

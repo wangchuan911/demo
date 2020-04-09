@@ -10,7 +10,7 @@ server:
     staticPath: /opt/wechat/tempPic
 spring:
   profiles:
-    active: [wechat,atomSrv,database,wechat-app]
+    active: [atomSrv,database,wechat-app]
 
 ################### Vert.x Configuration ##########################
 vertx:

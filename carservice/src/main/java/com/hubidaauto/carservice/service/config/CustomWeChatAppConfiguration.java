@@ -50,12 +50,12 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 @Configuration
-@ConfigurationProperties("wechat-app")
+@ConfigurationProperties("wechat-app-hubida")
 @VertxConfiguration
-@ConditionalOnProperty(prefix = "wechat-app", name = "appID")
-public class CustomConfiguration extends AbstractWechatConfiguration {
+@ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
+public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
     //    final static String REQUEST_NAME = "requestService";
-    private static final Logger logger = LoggerFactory.getLogger(CustomConfiguration.class);
+    private static final Logger logger = LoggerFactory.getLogger(CustomWeChatAppConfiguration.class);
 
     private int orderCycleTime;
 
@@ -81,14 +81,14 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
     @Value("${temp.filePath}")
     String staticPath;
 
-    @VertxRegister(StandaredVerticle.class)
+    /*@VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
             commonAsynService = ICommonAsynService.createProxy(vertx1);
-            System.out.println(commonAsynService);
+            logger.info(String.format("create AsyncServiceProxy:%s", commonAsynService));
         };
         return vertxConsumer;
-    }
+    }*/
 
     @PostConstruct
     void initValue() throws Throwable {
@@ -144,6 +144,8 @@ public class CustomConfiguration extends AbstractWechatConfiguration {
         final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
         final String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
 
+        commonAsynService = ICommonAsynService.createProxy(vertx);
+        logger.info(String.format("create AsyncServiceProxy:%s", commonAsynService));
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
         WebClient webClient = WebClient.create(vertx);
