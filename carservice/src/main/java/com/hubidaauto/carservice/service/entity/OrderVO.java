@@ -1,9 +1,16 @@
 package com.hubidaauto.carservice.service.entity;
 
 import com.hubidaauto.carservice.service.config.CustomConst;
+import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.annotation.EntityObjectKey;
 
 import java.sql.Timestamp;
+import java.text.Collator;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class OrderVO {
     private Integer orderId;
@@ -257,6 +264,18 @@ public class OrderVO {
             default:
                 return null;
         }
+    }
+
+    private final static Integer[] ENABLE_PASS_TACHE = new Integer[]{8, 9};
+
+    @EntityObjectKey(name = "ServerType")
+    public String ServerType() {
+        if (StringUtils.isEmpty(this.getPassTache())) return "";
+        Set<Integer> passIds = Arrays
+                .stream(this.getPassTache().split(","))
+                .map(s -> Integer.parseInt(s))
+                .collect(Collectors.toSet());
+        return Arrays.stream(ENABLE_PASS_TACHE).filter(value -> !passIds.contains(value)).map(value -> CustomConst.TACHE.TACHE_MAP.get(value).getTacheName()).collect(Collectors.joining(","));
     }
 }
 

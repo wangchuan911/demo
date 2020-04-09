@@ -217,7 +217,9 @@ public abstract class AbstractWechatConfiguration {
         }
         try {
             routingContext.response().end(wxBizMsgCrypt.verifyUrl2(signature, timestamp, nonce, echostr));
+            logger.info("wechat token check success!");
         } catch (Exception e) {
+            logger.error("wechat token check fail!", e);
             routingContext.response().end(MesseageTypeValue.MSG_REPLY);
         }
     }
