@@ -82,17 +82,17 @@ public class UserService extends AbstractBaseService<UserVO> {
     }
 
     @Transactional(rollbackFor = Throwable.class)
-    public Object login(UserVO userVO) {
+    public Object login(UserVO wxUserInfo) {
         JsonObject jsonObject = new JsonObject();
-        if (userVO == null || !StringUtils.isEmpty(userVO.getId())) {
-            Object o = handle(CustomConst.GET, Map.of("id", userVO.getId()));
+        if (wxUserInfo != null && !StringUtils.isEmpty(wxUserInfo.getId())) {
+            Object o = handle(CustomConst.GET, Map.of("id", wxUserInfo.getId()));
             if (o == null) {
-                userVO.setRole(CustomConst.ROLE.GUEST);
-                userVO.setName("新用戶");
-                jsonObject.put("user", JsonObject.mapFrom(userVO));
-                userDao.add(userVO.openData(false));
+                wxUserInfo.setRole(CustomConst.ROLE.GUEST);
+                wxUserInfo.setName("新用戶");
+                jsonObject.put("user", JsonObject.mapFrom(wxUserInfo));
+                userDao.add(wxUserInfo.openData(false));
             } else {
-                userVO = (UserVO) o;
+                UserVO userVO = (UserVO) o;
                 jsonObject.put("user", JsonObject.mapFrom(o));
                 switch (userVO.getRole()) {
                     case CustomConst.ROLE.CUSTOMER:
@@ -109,8 +109,8 @@ public class UserService extends AbstractBaseService<UserVO> {
                 o = o != null ? JsonObject.mapFrom(o) : Map.of("all_nums", 0, "nums", 0);
                 jsonObject.put("work", o);
                 jsonObject.put("cars", carDao.list(new CarVO().setUserId(userVO.getId()).setDefaultSelected(1)));
-                if (!StringUtils.isEmpty(userVO.getSessionKey())) {
-                    userDao.set(new UserVO().setId(userVO.getId()).setSessionKey(userVO.getSessionKey()).openData(false));
+                if (!StringUtils.isEmpty(wxUserInfo.openData(false).getSessionKey())) {
+                    userDao.set(wxUserInfo);
                 }
             }
         }
