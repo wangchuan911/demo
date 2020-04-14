@@ -1,5 +1,6 @@
 package com.hubidaauto.carservice.service.service;
 
+import com.hubidaauto.carservice.service.config.CustomWeChaConfiguration;
 import com.hubidaauto.carservice.service.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.carservice.service.config.CustomConst;
 import com.hubidaauto.carservice.service.dao.*;
@@ -398,8 +399,26 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                     message.setTouser(orderVO.getOrderControlPerson());
                     break;
             }*/
-            message.setTouser(orderVO.orderPersonIdByRole(pushConfig.getRoleId()));
-            CustomWeChatAppConfiguration.wechatAsyncMeassger.pushMessage(message);
+            String userId = (orderVO.orderPersonIdByRole(pushConfig.getRoleId()));
+            if (StringUtils.isEmpty(userId)) return;
+            switch (pushConfig.getRoleId()) {
+                case CustomConst.ROLE.CUSTOMER:
+                    CustomWeChatAppConfiguration
+                            .wechatAsyncMeassger
+                            .pushMessage(message
+                                    .setTouser(userId));
+                    break;
+                case CustomConst.ROLE.WOCKER:
+                case CustomConst.ROLE.DISTRIBUTOR:
+                    UserVO userVO = new UserVO().setId(userId);
+                    userVO = userDao.get(userVO);
+                    if (StringUtils.isEmpty(userVO.getUnionid())) break;
+                    CustomWeChaConfiguration
+                            .wechatAsyncMeassger
+                            .pushMessage(message
+                                    .setTouser(userVO.getUnionid()));
+                    break;
+            }
         });
     }
 }

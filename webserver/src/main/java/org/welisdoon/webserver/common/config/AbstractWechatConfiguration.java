@@ -212,14 +212,14 @@ public abstract class AbstractWechatConfiguration {
                 || StringUtils.isEmpty(timestamp)
                 || StringUtils.isEmpty(nonce)
                 || StringUtils.isEmpty(echostr)) {
-            routingContext.response().end("interl server error");
+            routingContext.response().end(String.format("[%s]interl server error", this.getAppID()));
             return;
         }
         try {
             routingContext.response().end(wxBizMsgCrypt.verifyUrl2(signature, timestamp, nonce, echostr));
-            logger.info("wechat token check success!");
+            logger.info(String.format("[%s]wechat token check success!", this.getAppID()));
         } catch (Exception e) {
-            logger.error("wechat token check fail!", e);
+            logger.error(String.format("[%s]wechat token check fail!", this.getAppID()), e);
             routingContext.response().end(MesseageTypeValue.MSG_REPLY);
         }
     }

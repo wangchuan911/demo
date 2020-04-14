@@ -48,6 +48,9 @@
             <if test="sessionKey!=null and sessionKey!=''.toString()">
                 session_key=#{sessionKey,jdbcType=VARCHAR},
             </if>
+            <if test="unionid!=null and unionid!=''.toString()">
+                union_id=#{unionid,jdbcType=VARCHAR},
+            </if>
         </set>
         <where>
             car_user_id=#{id,jdbcType=VARCHAR}
