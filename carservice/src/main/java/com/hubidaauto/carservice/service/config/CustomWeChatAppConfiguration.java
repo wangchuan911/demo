@@ -3,6 +3,7 @@ package com.hubidaauto.carservice.service.config;
 import com.hubidaauto.carservice.service.dao.TacheDao;
 import com.hubidaauto.carservice.service.entity.OrderVO;
 import com.hubidaauto.carservice.service.entity.TacheVO;
+import com.hubidaauto.carservice.service.entity.UserVO;
 import com.hubidaauto.carservice.service.service.OperationService;
 import com.hubidaauto.carservice.service.service.OrderService;
 import com.hubidaauto.carservice.service.service.UserService;
@@ -144,22 +145,17 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
         final String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
 
+        WebClient webClient = WebClient.create(vertx);
         commonAsynService = ICommonAsynService.createProxy(vertx);
         logger.info(String.format("create AsyncServiceProxy:%s", commonAsynService));
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
-        WebClient webClient = WebClient.create(vertx);
 
         this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
-            JsonObject tokenJson = (JsonObject) objectMessage.body();
-            if (tokenJson.getInteger("errcode") != null) {
-                logger.info("errcode:" + tokenJson.getInteger("errcode"));
-                logger.info("errmsg:" + tokenJson.getString("errmsg"));
-            } else {
-                String accessToken = tokenJson.getString("access_token");
+            this.tokenHandler(objectMessage, accessToken -> {
                 wechatAsyncMeassger.setToken(accessToken);
-                logger.info("Token:" + accessToken + "[" + tokenJson.getLong("expires_in") + "]");
-            }
+            }, s -> {
+            });
         });
 
         wechatAsyncMeassger = new WechatAsyncMeassger(webClient, URL_SUBSCRIBESEND);
@@ -179,11 +175,15 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                                     if (httpResponseAsyncResult.succeeded()) {
                                         HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
                                         JsonObject jsonObject = httpResponse.body().toJsonObject();
-                                        String key = jsonObject.remove("session_key").toString();
+/*                                        String key = jsonObject.remove("session_key").toString();
                                         logger.info(key);
-                                        String userId = jsonObject.getString("openid");
+                                        String userId = jsonObject.getString("openid");*/
 //                                        jsonObject.mergeIn((JsonObject) requestService.login(userId));
-                                        jsonObject.mergeIn((JsonObject) userService.login(userId, key));
+                                        jsonObject.mergeIn((JsonObject) userService
+                                                .login(new UserVO()
+                                                        .setId(jsonObject.getString("openid"))
+                                                        .setSessionKey(jsonObject.getString("session_key"))
+                                                        .setUnionid(jsonObject.getString("unionid"))));
                                         routingContext.response().end(jsonObject.toBuffer());
                                     } else {
                                         routingContext.fail(httpResponseAsyncResult.cause());

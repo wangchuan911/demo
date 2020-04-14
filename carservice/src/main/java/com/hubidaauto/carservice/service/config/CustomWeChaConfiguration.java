@@ -55,15 +55,10 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
         WebClient webClient = WebClient.create(vertx);
 
         this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
-            JsonObject tokenJson = (JsonObject) objectMessage.body();
-            if (tokenJson.getInteger("errcode") != null) {
-                logger.info("errcode:" + tokenJson.getInteger("errcode"));
-                logger.info("errmsg:" + tokenJson.getString("errmsg"));
-            } else {
-                String accessToken = tokenJson.getString("access_token");
+            this.tokenHandler(objectMessage, accessToken -> {
                 wechatAsyncMeassger.setToken(accessToken);
-                logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
-            }
+            }, s -> {
+            });
         });
         wechatAsyncMeassger = new WechatAsyncMeassger(webClient, URL_SUBSCRIBESEND);
 

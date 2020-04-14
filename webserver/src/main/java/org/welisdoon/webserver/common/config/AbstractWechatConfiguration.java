@@ -320,4 +320,18 @@ public abstract class AbstractWechatConfiguration {
         }
 
     }
+
+    public <T> void tokenHandler(Message<T> var1, Handler<String> token, Handler<String> failHandler) {
+        JsonObject tokenJson = (JsonObject) var1.body();
+        if (tokenJson.getInteger("errcode") != null) {
+            String error;
+            logger.info(String.format("[%s]errcode:%s", this.getAppID(), tokenJson.getInteger("errcode")));
+            logger.info(String.format("[%s]errmsg:%s", this.getAppID(), error = tokenJson.getString("errmsg")));
+            failHandler.handle(error);
+        } else {
+            String accessToken = tokenJson.getString("access_token");
+            token.handle(accessToken);
+            logger.info(String.format("[%s]Token:%s[%s]", this.getAppID(), accessToken, tokenJson.getLong("expires_in")));
+        }
+    }
 }

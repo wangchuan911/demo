@@ -9,6 +9,7 @@ public class UserVO {
     private UserAttr userAttr;
     private String sessionKey;
     private boolean openData = true;
+    private String unionid;
 
     public String getId() {
         return id;
@@ -75,6 +76,15 @@ public class UserVO {
 
     public UserVO setMaxRole(Integer maxRole) {
         this.maxRole = maxRole;
+        return this;
+    }
+
+    public String getUnionid() {
+        return this.openData ? null : unionid;
+    }
+
+    public UserVO setUnionid(String unionid) {
+        this.unionid = unionid;
         return this;
     }
 

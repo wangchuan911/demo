@@ -78,21 +78,18 @@ public class UserService extends AbstractBaseService<UserVO> {
     @VertxWebApi
     @Transactional(rollbackFor = Throwable.class)
     public Object login(String userId) {
-        return login(userId, null);
+        return login(new UserVO().setId(userId));
     }
 
     @Transactional(rollbackFor = Throwable.class)
-    public Object login(String userId, String sessionKey) {
+    public Object login(UserVO userVO) {
         JsonObject jsonObject = new JsonObject();
-        if (!StringUtils.isEmpty(userId)) {
-            Object o = handle(CustomConst.GET, Map.of("id", userId));
-            UserVO userVO;
+        if (userVO == null || !StringUtils.isEmpty(userVO.getId())) {
+            Object o = handle(CustomConst.GET, Map.of("id", userVO.getId()));
             if (o == null) {
-                userVO = new UserVO().setId(userId);
                 userVO.setRole(CustomConst.ROLE.GUEST);
                 userVO.setName("新用戶");
                 jsonObject.put("user", JsonObject.mapFrom(userVO));
-                userVO.setSessionKey(sessionKey);
                 userDao.add(userVO.openData(false));
             } else {
                 userVO = (UserVO) o;
@@ -111,9 +108,9 @@ public class UserService extends AbstractBaseService<UserVO> {
                 }
                 o = o != null ? JsonObject.mapFrom(o) : Map.of("all_nums", 0, "nums", 0);
                 jsonObject.put("work", o);
-                jsonObject.put("cars", carDao.list(new CarVO().setUserId(userId).setDefaultSelected(1)));
-                if (!StringUtils.isEmpty(sessionKey)) {
-                    userDao.set(new UserVO().setId(userVO.getId()).setSessionKey(sessionKey).openData(false));
+                jsonObject.put("cars", carDao.list(new CarVO().setUserId(userVO.getId()).setDefaultSelected(1)));
+                if (!StringUtils.isEmpty(userVO.getSessionKey())) {
+                    userDao.set(new UserVO().setId(userVO.getId()).setSessionKey(userVO.getSessionKey()).openData(false));
                 }
             }
         }
