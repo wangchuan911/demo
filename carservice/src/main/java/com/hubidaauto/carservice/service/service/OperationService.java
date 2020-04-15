@@ -403,7 +403,8 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                     CustomWeChatAppConfiguration
                             .wechatAsyncMeassger
                             .pushMessage(message
-                                    .setTouser(userId));
+                                    .setTouser(userId)
+                                    .setPage(pushConfig.getJump()));
                     break;
                 case CustomConst.ROLE.WOCKER:
                 case CustomConst.ROLE.DISTRIBUTOR:
@@ -417,7 +418,8 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                                 CustomWeChaConfiguration
                                         .wechatAsyncMeassger
                                         .pushMessage(message
-                                                .setTouser(userVO.openData(false).getUnionid()));
+                                                .setTouser(userVO.openData(false).getUnionid())
+                                                .setPage(pushConfig.getJump()));
                             });
                         }
                     } else {
@@ -427,7 +429,8 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                         CustomWeChaConfiguration
                                 .wechatAsyncMeassger
                                 .pushMessage(message
-                                        .setTouser(userVO.openData(false).getUnionid()));
+                                        .setTouser(userVO.openData(false).getUnionid())
+                                        .setPage(pushConfig.getJump()));
                     }
                     break;
             }

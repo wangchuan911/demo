@@ -139,4 +139,21 @@
             </otherwise>
         </choose>
     </select>
+
+    <select id="getRegionOrderController" resultType="string" parameterType="int">
+        SELECT a.user_id FROM (
+            SELECT
+              a.USER_ID ,
+              CONCAT(
+                '^(',
+                REPLACE(a.REGION_CODE, ',', '|'),
+                ')'
+              )  reg
+            FROM
+              user_attr a
+              JOIN car_user b
+                ON b.car_user_id = a.USER_ID
+                AND b.car_user_role = 2
+                ) a WHERE #{value} REGEXP a.reg
+    </select>
 </mapper>

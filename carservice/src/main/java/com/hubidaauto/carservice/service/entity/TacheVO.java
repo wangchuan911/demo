@@ -122,6 +122,7 @@ public class TacheVO {
         Integer roleId;
         String values;
         Map<String, String> valueMap;
+        String jump;
 
         public String getTemplateId() {
             return templateId;
@@ -148,6 +149,14 @@ public class TacheVO {
         public void setValues(String values) {
             this.values = values;
             valuesToMap();
+        }
+
+        public String getJump() {
+            return jump;
+        }
+
+        public void setJump(String jump) {
+            this.jump = jump;
         }
 
         public Map<String, String> valuesToMap() {
