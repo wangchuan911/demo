@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface UserDao extends IDao<UserVO, String> {
     List<Integer> getWorkAreaRange(UserVO userVO);
+
+    List<String> getRegionOrderController(Integer regionCode);
 }

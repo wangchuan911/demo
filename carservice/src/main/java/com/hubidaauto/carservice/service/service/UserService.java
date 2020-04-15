@@ -6,11 +6,14 @@ import com.hubidaauto.carservice.service.dao.UserDao;
 import com.hubidaauto.carservice.service.entity.CarVO;
 import com.hubidaauto.carservice.service.entity.UserVO;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.collections4.MapUtils;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
@@ -19,6 +22,7 @@ import java.util.Map;
 
 @Service
 public class UserService extends AbstractBaseService<UserVO> {
+    private static final Logger logger = logger(UserService.class);
     @Autowired
     UserDao userDao;
     @Autowired
@@ -62,9 +66,25 @@ public class UserService extends AbstractBaseService<UserVO> {
                 resultObj = userDao.add(userVO);
                 break;
             case CustomConst.MODIFY:
+                Map encryptedMap = mapSpliter(params, Map.class, "userEncryptedData", "useriv");
                 userVO = mapToObject(params, UserVO.class);
+                try {
+                    String userEncryptedData = MapUtils.getString(encryptedMap, "userEncryptedData", null),
+                            useriv = MapUtils.getString(encryptedMap, "useriv", null);
+                    if (!(StringUtils.isEmpty(userEncryptedData) || StringUtils.isEmpty(useriv))) {
+                        UserVO cacheInfo = userDao.get(userVO);
+                        if (cacheInfo != null) {
+                            String json;
+                            JsonObject jsonObject = new JsonObject(json = WXBizMsgCrypt.wxDecrypt(userEncryptedData, cacheInfo.openData(false).getSessionKey(), useriv));
+                            logger.info(json);
+                            userVO.setUnionid(jsonObject.getString("unionId", null)).openData(false);
+                        }
+                    }
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
+                }
                 userDao.set(userVO);
-                resultObj = userVO;
+                resultObj = userVO.openData(true);
             case CustomConst.USER.AREA_RANGE:
                 userVO = mapToObject(params, UserVO.class);
                 resultObj = userDao.getWorkAreaRange(userVO);

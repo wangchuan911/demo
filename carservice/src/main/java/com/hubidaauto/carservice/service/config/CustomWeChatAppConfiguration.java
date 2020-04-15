@@ -179,6 +179,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                                         logger.info(key);
                                         String userId = jsonObject.getString("openid");*/
 //                                        jsonObject.mergeIn((JsonObject) requestService.login(userId));
+                                        logger.info(jsonObject.toString());
                                         jsonObject.mergeIn((JsonObject) userService
                                                 .login(new UserVO()
                                                         .setId(jsonObject.getString("openid"))

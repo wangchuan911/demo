@@ -301,7 +301,6 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                     operationVO.setOprMan(orderVO.orderPersonIdByRole(tacheRela.getRole()));
 //                    operationManager(CustomConst.ADD, operationVO);
                     operationDao.add(operationVO.setActive(true));
-
                     this.wechatMessagePush(orderVO, operationVO.getTacheId());
                 }
             } else {
@@ -310,7 +309,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                         .setFinishTime(new Timestamp(System.currentTimeMillis()))
                         .setOrderId(orderVO.getOrderId()));
             }
-            this.wechatMessagePush(orderVO, orderVO.getTacheId());
+            this.wechatMessagePush(orderVO, tacheId);
         }
         if (tacheId == null
                 || tacheId < 0
@@ -332,9 +331,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
         if (nextTache == null) return;
         final SubscribeMessage message = new SubscribeMessage();
         TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(nextTache);
-
         List<TacheVO.PushConfig> pushConfigs = tacheVO.getPushConfigs();
-
         if (CollectionUtils.isEmpty(pushConfigs)) return;
         pushConfigs.forEach(pushConfig -> {
             if (MapUtils.isEmpty(pushConfig.valuesToMap())) return;
@@ -400,9 +397,9 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                     break;
             }*/
             String userId = (orderVO.orderPersonIdByRole(pushConfig.getRoleId()));
-            if (StringUtils.isEmpty(userId)) return;
             switch (pushConfig.getRoleId()) {
                 case CustomConst.ROLE.CUSTOMER:
+                    if (StringUtils.isEmpty(userId)) return;
                     CustomWeChatAppConfiguration
                             .wechatAsyncMeassger
                             .pushMessage(message
@@ -410,13 +407,28 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                     break;
                 case CustomConst.ROLE.WOCKER:
                 case CustomConst.ROLE.DISTRIBUTOR:
-                    UserVO userVO = new UserVO().setId(userId);
-                    userVO = userDao.get(userVO);
-                    if (StringUtils.isEmpty(userVO.getUnionid())) break;
-                    CustomWeChaConfiguration
-                            .wechatAsyncMeassger
-                            .pushMessage(message
-                                    .setTouser(userVO.getUnionid()));
+                    if (pushConfig.getRoleId() == CustomConst.ROLE.DISTRIBUTOR && StringUtils.isEmpty(userId)) {
+                        List<String> staffs = userDao.getRegionOrderController(orderVO.getRegionCode());
+                        logger.info(staffs.toString());
+                        if (!CollectionUtils.isEmpty(staffs)) {
+                            staffs.stream().forEach(s -> {
+                                UserVO userVO = new UserVO().setId(s);
+                                userVO = userDao.get(userVO);
+                                CustomWeChaConfiguration
+                                        .wechatAsyncMeassger
+                                        .pushMessage(message
+                                                .setTouser(userVO.openData(false).getUnionid()));
+                            });
+                        }
+                    } else {
+                        UserVO userVO = new UserVO().setId(userId);
+                        userVO = userDao.get(userVO);
+                        if (StringUtils.isEmpty(userVO.getUnionid())) break;
+                        CustomWeChaConfiguration
+                                .wechatAsyncMeassger
+                                .pushMessage(message
+                                        .setTouser(userVO.openData(false).getUnionid()));
+                    }
                     break;
             }
         });
