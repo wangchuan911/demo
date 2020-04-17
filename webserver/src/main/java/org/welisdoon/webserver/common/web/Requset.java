@@ -16,7 +16,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.welisdoon.webserver.common.CommonConst;
 
 @DataObject
 public class Requset {
@@ -25,6 +24,7 @@ public class Requset {
     private String body;
     private String session;
     private String params;
+    private int mode;
 
 
     public Requset() {
@@ -37,6 +37,7 @@ public class Requset {
         body = jsonObject.getString("body");
         session = jsonObject.getString("session");
         params = jsonObject.getString("params");
+        mode = jsonObject.getInteger("mode");
     }
 
     public Object bodyAsJson() {
@@ -114,13 +115,20 @@ public class Requset {
         return this;
     }
 
-    public static final int SIMPLE_REQUEST = 2;
-    public static final int UPLOAD_FILE = 3;
-    public static final int UPLOAD_FILES = 4;
+    public int getMode() {
+        return mode;
+    }
 
-    public static Requset newInstance(RoutingContext context) {
+    public Requset setMode(int mode) {
+        this.mode = mode;
+        return this;
+    }
+
+    public static final int SIMPLE_REQUEST = 2, UPLOAD_FILE = 3, UPLOAD_FILES = 4, WECHAT = 5;
+
+    public static Requset newInstance(RoutingContext context, RequsetOption option) {
         int mode;
-        String type = context.request().getParam(CommonConst.WebParamsKeys.REQUSET_TYPE);
+        String type = context.request().getParam(option.getRequestType());
         switch (StringUtils.isEmpty(type) ? "" : type) {
             case "UPS":
                 mode = UPLOAD_FILES;
@@ -131,19 +139,20 @@ public class Requset {
             default:
                 mode = SIMPLE_REQUEST;
         }
-        return newInstance(mode, context);
+        return newInstance(mode, context, option);
     }
 
-    public static Requset newInstance(int mode, RoutingContext context) {
+    public static Requset newInstance(int mode, RoutingContext context, RequsetOption option) {
+
         HttpServerRequest httpServerRequest = context.request();
         MultiMap multiMap = httpServerRequest.params();
         Requset requset = new Requset();
         String body = null;
         String method = null;
-        String service = multiMap.get(CommonConst.WebParamsKeys.SPRING_BEAN) + "Service";
+        String service = multiMap.get(option.getServerNameKey()) + "Service";
         switch (mode) {
             case SIMPLE_REQUEST: {
-                method = multiMap.get(CommonConst.WebParamsKeys.BEAN_METHOD);
+                method = multiMap.get(option.getMethodNameKey());
                 method = method != null && !"null".equals(method) && method.length() != 0 ? method : "handle";
                 body = context.getBodyAsString();
             }
@@ -169,7 +178,7 @@ public class Requset {
         }
 
         requset.setMethod(method).setBody(body).setService(service).putParams(httpServerRequest.params())
-                .putSession(context.session());
+                .putSession(context.session()).setMode(mode);
         return requset;
     }
 

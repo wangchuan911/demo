@@ -3,7 +3,7 @@ package org.welisdoon.webserver.entity.wechat.push;
 import java.util.Arrays;
 import java.util.Map;
 
-public class SubscribeMessage {
+public class SubscribeMessage extends PushMessage {
 
     /*
     touser	string		是	接收者（用户）的 openid
@@ -14,85 +14,10 @@ public class SubscribeMessage {
     lang	string		否	进入小程序查看”的语言类型，支持zh_CN(简体中文)、en_US(英文)、zh_HK(繁体中文)、zh_TW(繁体中文)，默认为zh_CN
 
     * */
-    String touser;
-    String template_id;
+
     String page;
-    Map<String, Entry> data;
     String miniprogram_state = "formal";
     String lang = "zh_CN";
-
-    public static class Entry {
-        Object value;
-
-        public Object getValue() {
-            return value;
-        }
-
-        public Entry setValue(Object value) {
-            this.value = value;
-            return this;
-        }
-    }
-
-    public String getTouser() {
-        return touser;
-    }
-
-    public SubscribeMessage setTouser(String touser) {
-        this.touser = touser;
-        return this;
-    }
-
-    public String getTemplate_id() {
-        return template_id;
-    }
-
-    public SubscribeMessage setTemplate_id(String template_id) {
-        this.template_id = template_id;
-        return this;
-    }
-
-    public String getPage() {
-        return page;
-    }
-
-    public SubscribeMessage setPage(String page) {
-        this.page = page;
-        return this;
-    }
-
-    public Map<String, Entry> getData() {
-        return data;
-    }
-
-    public SubscribeMessage setData(Map<String, Entry> data) {
-        this.data = data;
-        return this;
-    }
-
-    public SubscribeMessage addDatas(Map.Entry<String, Object>... entrys) {
-        if (entrys != null && entrys.length > 0) {
-            if (this.data == null) {
-                this.data = Map
-                        .ofEntries(Arrays
-                                .stream(entrys)
-                                .map(stringObjectEntry ->
-                                        Map.entry(stringObjectEntry.getKey(),
-                                                new Entry().setValue(stringObjectEntry.getValue())))
-                                .toArray(Map.Entry[]::new));
-            } else {
-                this.data = Map
-                        .ofEntries(Arrays.stream(
-                                new Map.Entry[][]{
-                                        this.data.entrySet().stream().toArray(Map.Entry[]::new),
-                                        entrys})
-                                .flatMap(entries ->
-                                        Arrays.stream(entries)
-                                ).toArray(Map.Entry[]::new));
-            }
-        }
-        return this;
-    }
 
     public String getMiniprogram_state() {
         return miniprogram_state;
@@ -109,6 +34,15 @@ public class SubscribeMessage {
 
     public SubscribeMessage setLang(String lang) {
         this.lang = lang;
+        return this;
+    }
+
+    public String getPage() {
+        return page;
+    }
+
+    public SubscribeMessage setPage(String page) {
+        this.page = page;
         return this;
     }
 }

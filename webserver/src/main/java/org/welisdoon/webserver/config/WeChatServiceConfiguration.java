@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
+import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
+import org.welisdoon.webserver.service.wechat.service.WeChatService;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
@@ -172,13 +174,16 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                     return;
                 }*/
 
-                commonAsynService.wechatMsgReceive(requestbuffer.toString(), stringAsyncResult -> {
-                    if (stringAsyncResult.succeeded()) {
-                        Buffer buffer = Buffer.buffer(stringAsyncResult.result());
+                commonAsynService.requsetCall(new Requset()
+                        .setService("weChatService")
+                        .setBody(requestbuffer.toString())
+                        .setMode(Requset.WECHAT), responseAsyncResult -> {
+                    if (responseAsyncResult.succeeded()) {
+                        Buffer buffer = Buffer.buffer(responseAsyncResult.result().getResult().toString());
                         routingContext.setBody(buffer);
                         routingContext.next();
                     } else {
-                        stringAsyncResult.cause().printStackTrace();
+                        logger.error(responseAsyncResult.cause().getMessage(), responseAsyncResult.cause());
                         routingContext.response().end(MesseageTypeValue.MSG_REPLY);
                     }
                 });

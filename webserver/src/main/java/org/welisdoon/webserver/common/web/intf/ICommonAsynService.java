@@ -28,7 +28,7 @@ public interface ICommonAsynService {
                 .build(ICommonAsynService.class);
     }
 
-    void wechatMsgReceive(String inputBody, Handler<AsyncResult<String>> outputBodyHandler);
+    /*void wechatMsgReceive(String serverName, String inputBody, Handler<AsyncResult<String>> outputBodyHandler);*/
 
     void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler);
 

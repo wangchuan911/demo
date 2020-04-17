@@ -16,6 +16,7 @@ import org.welisdoon.webserver.common.WechatAsyncMeassger;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
+import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
@@ -68,9 +69,12 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
             router.post(this.getPath().getPush()).handler(this::wechatDecryptMsg)
                     .handler(routingContext -> {
                         Buffer requestbuffer = routingContext.getBody();
-                        commonAsynService.wechatMsgReceive(requestbuffer.toString(), stringAsyncResult -> {
+                        commonAsynService.requsetCall(new Requset()
+                                .setService("weChatOfficalAccountService")
+                                .setBody(requestbuffer.toString())
+                                .setMode(Requset.WECHAT), stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
-                                Buffer buffer = Buffer.buffer(stringAsyncResult.result());
+                                Buffer buffer = Buffer.buffer(stringAsyncResult.result().getResult().toString());
                                 routingContext.setBody(buffer);
                                 routingContext.next();
                             } else {

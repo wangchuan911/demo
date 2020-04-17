@@ -25,9 +25,10 @@ public interface EntityObjectUtils {
 
     static Object objValueByKey(Object t, String key) {
         Class tKey = t.getClass();
+        logger.info(tKey.getName());
         //----------------------------------
         AccessibleObject[] accessibleObjects = CLASS_SET_MAP.get(tKey);
-        if (accessibleObjects != null && accessibleObjects.length != 0) {
+        if (accessibleObjects == null) {
             synchronized (CLASS_SET_MAP) {
                 if (!CLASS_SET_MAP.containsKey(tKey)) {
                     AccessibleObject[][] sets = new AccessibleObject[][]{
@@ -37,24 +38,29 @@ public interface EntityObjectUtils {
                             .put(tKey, accessibleObjects = Arrays.stream(sets)
                                     .flatMap(set -> Arrays.stream(set))
                                     .toArray(AccessibleObject[]::new));
+                } else {
+                    accessibleObjects = CLASS_SET_MAP.get(tKey);
                 }
             }
-            Optional<AccessibleObject> optional = Arrays.stream(accessibleObjects).filter(accessibleObject -> {
-                EntityObjectKey annotation = accessibleObject.getAnnotation(EntityObjectKey.class);
-                return annotation != null && key.equals(annotation.name());
-            }).findFirst();
+        }
 
-            if (optional.isPresent()) {
-                Object val = optional.get();
-                try {
-                    if (val instanceof Method)
-                        return ((Method) val).invoke(t, key);
-                    else
-                        return ((Field) val).get(t);
+        Optional<AccessibleObject> optional = Arrays.stream(accessibleObjects).filter(accessibleObject -> {
+            EntityObjectKey annotation = accessibleObject.getAnnotation(EntityObjectKey.class);
+            logger.warn(accessibleObject.toString());
+            logger.warn(annotation.name());
+            return annotation != null && key.equals(annotation.name());
+        }).findFirst();
 
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    logger.error(e.getMessage(), e);
-                }
+        if (optional.isPresent()) {
+            Object val = optional.get();
+            try {
+                if (val instanceof Method)
+                    return ((Method) val).invoke(t, key);
+                else
+                    return ((Field) val).get(t);
+
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                logger.error(e.getMessage(), e);
             }
         }
         //----------------------------------

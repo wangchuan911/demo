@@ -16,6 +16,7 @@ import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import org.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
+import org.welisdoon.webserver.service.wechat.service.AbstractWeChatService;
 import org.welisdoon.webserver.service.wechat.service.WeChatService;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 
@@ -31,8 +32,6 @@ import java.util.*;
 
 @Component
 public class CommonAsynService implements ICommonAsynService {
-    @Autowired
-    private WeChatService weChatService;
 
     private static final Logger logger = LoggerFactory.getLogger(CommonAsynService.class);
 
@@ -60,7 +59,7 @@ public class CommonAsynService implements ICommonAsynService {
         CLASS_ALIAS_MAP = Map.ofEntries(entrys);
     }
 
-    @Override
+    /*@Override
     public void wechatMsgReceive(String message, Handler<AsyncResult<String>> resultHandler) {
         Promise<String> promise = Promise.promise();
         promise.future().setHandler(resultHandler);
@@ -74,7 +73,7 @@ public class CommonAsynService implements ICommonAsynService {
         } catch (Exception e) {
             promise.fail(e);
         }
-    }
+    }*/
 
 
     @Override
@@ -85,28 +84,38 @@ public class CommonAsynService implements ICommonAsynService {
         JsonObject params = StringUtils.isEmpty(requset.getParams()) ? null : (JsonObject) Json.decodeValue(requset.getParams());
         try {
             Object sprngService = ApplicationContextProvider.getBean(requset.getService());
-            Object input = requset.bodyAsJson();
-            if (input instanceof JsonArray) {
-                List body = ((JsonArray) input).getList();
-                Set<Method> methods = ReflectionUtils.getMethods(sprngService.getClass(), method ->
-                        method != null && AnnotationUtils.findAnnotation(method, VertxWebApi.class) != null
-                                && method.getName().equals(requset.getMethod())
-                                && method.getParameterCount() == body.size()
-                );
-                if (!CollectionUtils.isEmpty(methods)) {
-                    Object[] args = new Object[body.size()];
-                    Optional<Method> optionalMethod = methods.stream()
-                            .filter(method ->
-                                    setValueAndCheck(method.getParameterTypes(), args, body)
-                            ).findFirst();
-                    if (optionalMethod.isPresent()) {
-                        this.setPage(params);
-                        response.setResult(optionalMethod.get().invoke(sprngService, args));
-                        return;
+            switch (requset.getMode()) {
+                case Requset.WECHAT:
+                    RequestMesseageBody requestMesseageBody = JAXBUtils.fromXML(requset.getBody(), RequestMesseageBody.class);
+                    //处理数据
+                    ResponseMesseage responseMesseage = ((AbstractWeChatService) sprngService).receive(requestMesseageBody);
+                    //报文转对象;
+                    response.setResult(JAXBUtils.toXML(responseMesseage));
+                    break;
+                default:
+                    Object input = requset.bodyAsJson();
+                    if (input instanceof JsonArray) {
+                        List body = ((JsonArray) input).getList();
+                        Set<Method> methods = ReflectionUtils.getMethods(sprngService.getClass(), method ->
+                                method != null && AnnotationUtils.findAnnotation(method, VertxWebApi.class) != null
+                                        && method.getName().equals(requset.getMethod())
+                                        && method.getParameterCount() == body.size()
+                        );
+                        if (!CollectionUtils.isEmpty(methods)) {
+                            Object[] args = new Object[body.size()];
+                            Optional<Method> optionalMethod = methods.stream()
+                                    .filter(method ->
+                                            setValueAndCheck(method.getParameterTypes(), args, body)
+                                    ).findFirst();
+                            if (optionalMethod.isPresent()) {
+                                this.setPage(params);
+                                response.setResult(optionalMethod.get().invoke(sprngService, args));
+                                return;
+                            }
+                        }
                     }
-                }
+                    throw new NoSuchMethodError();
             }
-            throw new NoSuchMethodError();
         } catch (InvocationTargetException e) {
             logger.error(e.getMessage(), e);
             response.setException(e.getCause().getMessage());

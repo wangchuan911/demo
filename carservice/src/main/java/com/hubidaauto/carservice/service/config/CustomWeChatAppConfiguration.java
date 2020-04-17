@@ -36,6 +36,7 @@ import org.welisdoon.webserver.common.WechatAsyncMeassger;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.Requset;
+import org.welisdoon.webserver.common.web.RequsetOption;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
@@ -73,7 +74,6 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
     OrderService orderService;
     UserService userService;
     OperationService operationService;
-
 
     WXBizMsgCrypt wxBizMsgCrypt;
 
@@ -145,6 +145,10 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
         final String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
 
+        RequsetOption option = new RequsetOption()
+                .setMethodNameKey(CommonConst.WebParamsKeys.BEAN_METHOD)
+                .setServerNameKey(CommonConst.WebParamsKeys.SPRING_BEAN)
+                .setRequestType(CommonConst.WebParamsKeys.REQUSET_TYPE);
         WebClient webClient = WebClient.create(vertx);
         commonAsynService = ICommonAsynService.createProxy(vertx);
         logger.info(String.format("create AsyncServiceProxy:%s", commonAsynService));
@@ -303,7 +307,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             //请求总入口
             router.post(this.getPath().getApp()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
-                Requset requset = Requset.newInstance(routingContext);
+                Requset requset = Requset.newInstance(routingContext, option);
                 commonAsynService.requsetCall(requset, stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
