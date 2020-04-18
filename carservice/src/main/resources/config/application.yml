@@ -11,8 +11,10 @@ server:
 spring:
   profiles:
     active: [atomSrv,database,wechat-app]
-
+  main:
+    web-application-type: none
 ################### Vert.x Configuration ##########################
+
 vertx:
   worker:
     pool:

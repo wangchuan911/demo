@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.CommonConst;
 import org.welisdoon.webserver.common.EntityObjectUtils;
+import org.welisdoon.webserver.common.WechatAsyncMeassger;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.entity.wechat.push.PublicTamplateMessage;
 import org.welisdoon.webserver.entity.wechat.push.SubscribeMessage;
@@ -329,124 +331,91 @@ public class OperationService extends AbstractBaseService<OperationVO> {
     }
 
     void wechatMessagePush(OrderVO orderVO, Integer nextTache) {
-        if (nextTache == null) return;
-        TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(nextTache);
-        List<TacheVO.PushConfig> pushConfigs = tacheVO.getPushConfigs();
-        if (CollectionUtils.isEmpty(pushConfigs)) return;
-        pushConfigs.forEach(pushConfig -> {
-            if (MapUtils.isEmpty(pushConfig.valuesToMap())) return;
-            Map.Entry<String, Object>[] entrys = (pushConfig.valuesToMap().entrySet()).stream().map(entry -> {
-                String value = entry.getValue();
-                int index;
-                if ((index = value.indexOf(".")) > 0) {
-                    String objName = value.substring(0, index);
-                    String objValue = value.substring(index + 1);
-                    Object obj;
-                    switch (objName) {
-                        case "order":
-                            obj = orderVO;
-                            break;
-                        case "tache":
-                            obj = tacheVO;
-                            break;
-                        default:
-                            obj = null;
-                    }
-                    /*try {
+        try {
+            if (nextTache == null) return;
+            TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(nextTache);
+            List<TacheVO.PushConfig> pushConfigs = tacheVO.getPushConfigs();
+            if (CollectionUtils.isEmpty(pushConfigs)) return;
+            pushConfigs.forEach(pushConfig -> {
+                if (MapUtils.isEmpty(pushConfig.valuesToMap())) return;
+                Map.Entry<String, Object>[] entrys = (pushConfig.valuesToMap().entrySet()).stream().map(entry -> {
+                    String value = entry.getValue();
+                    int index;
+                    if ((index = value.indexOf(".")) > 0) {
+                        String objName = value.substring(0, index);
+                        String objValue = value.substring(index + 1);
+                        Object obj;
+                        switch (objName) {
+                            case "order":
+                                obj = orderVO;
+                                break;
+                            case "tache":
+                                obj = tacheVO;
+                                break;
+                            default:
+                                obj = null;
+                        }
                         if (obj != null) {
-                            Object res = obj.getClass().getMethod("get" + objValue).invoke(obj);
-//                            logger.warn(res.getClass().getName());
-                            if (res instanceof Date) {
-                                res = LocalDateTime.ofInstant(((Date) res).toInstant(), ZoneId.systemDefault());
-                            } else if (res instanceof Timestamp) {
-                                res = ((Timestamp) res).toLocalDateTime();
+                            Object v = EntityObjectUtils.objValueByKey(obj, objValue);
+                            if (v != null) {
+                                entry = Map.entry(entry.getKey(), v.toString());
                             }
-                            if (res instanceof LocalDateTime) {
-                                res = (String.format("%04d年%02d月%02d日 %02d:%02d",
-                                        ((LocalDateTime) res).getYear(),
-                                        ((LocalDateTime) res).getMonth(),
-                                        ((LocalDateTime) res).getDayOfMonth(),
-                                        ((LocalDateTime) res).getHour(),
-                                        ((LocalDateTime) res).getMinute()));
-                            }
-                            entry = Map.entry(entry.getKey(), res != null ? res.toString() : "");
-                        }
-                    } catch (NullPointerException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                        logger.error(e.getMessage(), e);
-                    }*/
-                    if (obj != null) {
-                        Object v = EntityObjectUtils.objValueByKey(obj, objValue);
-                        if (v != null) {
-                            entry = Map.entry(entry.getKey(), v.toString());
                         }
                     }
+                    return entry;
+                }).toArray(Map.Entry[]::new);
+                String userId = (orderVO.orderPersonIdByRole(pushConfig.getRoleId()));
+                switch (pushConfig.getRoleId()) {
+                    case CustomConst.ROLE.CUSTOMER:
+                        if (StringUtils.isEmpty(userId)) return;
+                        else {
+                            WechatAsyncMeassger.get(CustomWeChatAppConfiguration.class)
+                                    .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new SubscribeMessage()
+                                            .setPage(pushConfig.getJump())
+                                            .setTemplate_id(pushConfig
+                                                    .getTemplateId())
+                                            .addDatas(entrys)
+                                            .setTouser(userId));
+                        }
+                        break;
+                    case CustomConst.ROLE.WOCKER:
+                    case CustomConst.ROLE.DISTRIBUTOR:
+                        if (pushConfig.getRoleId() == CustomConst.ROLE.DISTRIBUTOR && StringUtils.isEmpty(userId)) {
+                            List<String> staffs = userDao.getRegionOrderController(orderVO.getRegionCode());
+                            logger.info(staffs.toString());
+                            if (!CollectionUtils.isEmpty(staffs)) {
+                                staffs.stream().forEach(s -> {
+                                    UserVO userVO = new UserVO().setId(s);
+                                    userVO = userDao.get(userVO);
+                                    WechatAsyncMeassger.get(CustomWeChaConfiguration.class)
+                                            .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
+                                                    .setTemplate_id(pushConfig.getTemplateId())
+                                                    .setData(null)
+                                                    .addDatas(entrys)
+                                                    .setTouser(userVO
+                                                            .openData(false)
+                                                            .getUnionid()));
+                                });
+                            }
+                        } else {
+                            UserVO userVO = new UserVO().setId(userId);
+                            userVO = userDao.get(userVO);
+                            if (StringUtils.isEmpty(userVO.getUnionid())) break;
+                            WechatAsyncMeassger.get(CustomWeChaConfiguration.class)
+                                    .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
+                                            .setTemplate_id(pushConfig.getTemplateId())
+                                            .addDatas(entrys)
+                                            .setData(null)
+                                            .setTouser(userVO
+                                                    .openData(false)
+                                                    .getUnionid())
+                                    );
+                        }
+                        break;
                 }
-                return entry;
-            }).toArray(Map.Entry[]::new);
-            /*switch (pushConfig.getRoleId()) {
-                case CustomConst.ROLE.CUSTOMER:
-                    message.setTouser(orderVO.getCustId());
-                    break;
-                case CustomConst.ROLE.WOCKER:
-                    message.setTouser(orderVO.getOrderAppointPerson());
-                    break;
-                case CustomConst.ROLE.DISTRIBUTOR:
-                    message.setTouser(orderVO.getOrderControlPerson());
-                    break;
-            }*/
-            String userId = (orderVO.orderPersonIdByRole(pushConfig.getRoleId()));
-            switch (pushConfig.getRoleId()) {
-                case CustomConst.ROLE.CUSTOMER:
-                    if (StringUtils.isEmpty(userId)) return;
-                    else {
-                        ;
-                        CustomWeChatAppConfiguration
-                                .wechatAsyncMeassger
-                                .pushMessage(new SubscribeMessage()
-                                        .setPage(pushConfig.getJump())
-                                        .setTemplate_id(pushConfig
-                                                .getTemplateId())
-                                        .addDatas(entrys)
-                                        .setTouser(userId));
-                    }
-                    break;
-                case CustomConst.ROLE.WOCKER:
-                case CustomConst.ROLE.DISTRIBUTOR:
-                    if (pushConfig.getRoleId() == CustomConst.ROLE.DISTRIBUTOR && StringUtils.isEmpty(userId)) {
-                        List<String> staffs = userDao.getRegionOrderController(orderVO.getRegionCode());
-                        logger.info(staffs.toString());
-                        if (!CollectionUtils.isEmpty(staffs)) {
-                            staffs.stream().forEach(s -> {
-                                UserVO userVO = new UserVO().setId(s);
-                                userVO = userDao.get(userVO);
-                                CustomWeChaConfiguration
-                                        .wechatAsyncMeassger
-                                        .pushMessage(new PublicTamplateMessage()
-                                                .setTemplate_id(pushConfig.getTemplateId())
-                                                .setData(null)
-                                                .addDatas(entrys)
-                                                .setTouser(userVO
-                                                        .openData(false)
-                                                        .getUnionid()));
-                            });
-                        }
-                    } else {
-                        UserVO userVO = new UserVO().setId(userId);
-                        userVO = userDao.get(userVO);
-                        if (StringUtils.isEmpty(userVO.getUnionid())) break;
-                        CustomWeChaConfiguration
-                                .wechatAsyncMeassger
-                                .pushMessage(new PublicTamplateMessage()
-                                        .setTemplate_id(pushConfig.getTemplateId())
-                                        .addDatas(entrys)
-                                        .setData(null)
-                                        .setTouser(userVO
-                                                .openData(false)
-                                                .getUnionid())
-                                );
-                    }
-                    break;
-            }
-        });
+            });
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 }

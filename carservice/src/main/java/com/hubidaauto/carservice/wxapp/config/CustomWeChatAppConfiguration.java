@@ -38,6 +38,7 @@ import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.common.web.RequsetOption;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
+import org.welisdoon.webserver.config.PubConstValues;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PayBillResponseMesseage;
@@ -77,7 +78,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 
     WXBizMsgCrypt wxBizMsgCrypt;
 
-    public static WechatAsyncMeassger wechatAsyncMeassger = null;
+    WechatAsyncMeassger wechatAsyncMeassger = null;
 
     @Value("${temp.filePath}")
     String staticPath;
@@ -141,9 +142,8 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 //        final String PATH_WX_APP = "/wxApp";
 //        final String PATH_WX_APP_PAY = "/wxAppPay";
 //        final String PATH_WX_APP_UPLOAD = "/imgUpd";
-        final String URL_CODE_2_SESSION = this.getUrls().get("code2Session").toString();
-        final String URL_UNIFIEDORDERON = this.getUrls().get("unifiedorder").toString();
-        final String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
+        final String URL_CODE_2_SESSION = this.getUrls().get(CommonConst.WecharUrlKeys.CODE_2_SESSION).toString();
+        final String URL_UNIFIEDORDERON = this.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString();
 
         RequsetOption option = new RequsetOption()
                 .setMethodNameKey(CommonConst.WebParamsKeys.BEAN_METHOD)
@@ -162,7 +162,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             });
         });
 
-        wechatAsyncMeassger = new WechatAsyncMeassger(webClient, URL_SUBSCRIBESEND);
+        wechatAsyncMeassger = getWechatAsyncMeassger(webClient);
 
         Consumer<Router> routerConsumer = router -> {
             //get请求入口

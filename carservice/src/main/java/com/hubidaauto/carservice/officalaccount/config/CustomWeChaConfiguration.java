@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.WechatAsyncMeassger;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
@@ -40,11 +41,10 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
         wxBizMsgCrypt = this.getWXBizMsgCrypt();
     }
 
-    public static WechatAsyncMeassger wechatAsyncMeassger = null;
+    WechatAsyncMeassger wechatAsyncMeassger = null;
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
-        final String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
 
         commonAsynService = ICommonAsynService.createProxy(vertx);
         logger.info(String.format("create AsyncServiceProxy:%s", commonAsynService));
@@ -57,7 +57,7 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
             }, s -> {
             });
         });
-        wechatAsyncMeassger = new WechatAsyncMeassger(webClient, URL_SUBSCRIBESEND);
+        wechatAsyncMeassger = getWechatAsyncMeassger(webClient);
 
         Consumer<Router> routerConsumer = router -> {
             router.get(this.getPath().getPush()).handler(this::wechatMsgCheck);

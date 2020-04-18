@@ -340,9 +340,6 @@ public abstract class AbstractWechatConfiguration {
     }
 
     public WechatAsyncMeassger getWechatAsyncMeassger(WebClient webClient) {
-        String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
-        Assert.hasLength(URL_SUBSCRIBESEND, String.format("plese setting ${%s.urls.subscribeSend}",
-                AnnotationUtils.findAnnotation(this.getClass(), ConfigurationProperties.class).prefix()));
-        return new WechatAsyncMeassger(this.getClass(), webClient, URL_SUBSCRIBESEND);
+        return new WechatAsyncMeassger(this, webClient);
     }
 }

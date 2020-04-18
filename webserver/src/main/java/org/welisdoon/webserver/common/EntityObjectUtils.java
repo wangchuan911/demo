@@ -55,7 +55,7 @@ public interface EntityObjectUtils {
             Object val = optional.get();
             try {
                 if (val instanceof Method)
-                    return ((Method) val).invoke(t, key);
+                    return ((Method) val).invoke(t);
                 else
                     return ((Field) val).get(t);
 
