@@ -29,7 +29,7 @@
         <collection property="regionCode" ofType="int" column="region_code" select="getRegionCodes"></collection>
     </resultMap>
 
-    <select id="get" parameterType="string" resultMap="UserVO">
+    <select id="get" parameterMap="UserVO" resultMap="UserVO">
         select a.* from car_user a
          where a.car_user_id=#{id,jdbcType=VARCHAR}
     </select>

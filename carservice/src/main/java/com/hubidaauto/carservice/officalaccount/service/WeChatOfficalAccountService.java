@@ -4,7 +4,7 @@ package com.hubidaauto.carservice.officalaccount.service;
 import com.hubidaauto.carservice.officalaccount.config.CustomWeChaConfiguration;
 import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
 import com.hubidaauto.carservice.wxapp.config.CustomWeChatAppConfiguration;
-import com.hubidaauto.carservice.wxapp.entity.UserVO;
+import com.hubidaauto.carservice.officalaccount.entity.UserVO;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,6 @@ public class WeChatOfficalAccountService extends AbstractWeChatService {
 
     @PostConstruct
     void init() {
-        logger.info("init");
     }
 
     public ResponseMesseage textProcess(TextMesseage msg) {

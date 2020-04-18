@@ -17,15 +17,14 @@
     </parameterMap>
 
 
-
-    <select id="get" parameterType="string" resultMap="PubUserVO">
+    <select id="get" parameterMap="PubUserVO" resultMap="PubUserVO">
         select a.* from pub_account_user a
-         <where>
-           <choose>
-               <when test="id!=null and id!=''.toString()"> and a.id=#{id,jdbcType=VARCHAR}</when>
-               <when test="unionid!=null and unionid!=''.toString()"> and a.union_id=#{unionid,jdbcType=VARCHAR}</when>
-           </choose>
-         </where>
+        <where>
+            <choose>
+                <when test="id!=null and id!=''.toString()">and a.id=#{id,jdbcType=VARCHAR}</when>
+                <otherwise>and a.union_id=#{unionid,jdbcType=VARCHAR}</otherwise>
+            </choose>
+        </where>
     </select>
     <update id="set" parameterMap="PubUserVO">
         update pub_account_user
