@@ -1,5 +1,7 @@
 package com.hubidaauto.carservice.wxapp.entity;
 
+import java.util.List;
+
 public class UserVO {
     private String id;
     private String name;
@@ -10,6 +12,7 @@ public class UserVO {
     private String sessionKey;
     private boolean openData = true;
     private String unionid;
+    private List<CouponVO> coupons;
 
     public String getId() {
         return id;
@@ -109,5 +112,13 @@ public class UserVO {
             this.regionCode = regionCode;
             return this;
         }
+    }
+
+    public List<CouponVO> getCoupons() {
+        return coupons;
+    }
+
+    public void setCoupons(List<CouponVO> coupons) {
+        this.coupons = coupons;
     }
 }
