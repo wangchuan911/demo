@@ -14,6 +14,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.JAXBUtils;
+import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import org.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
 import org.welisdoon.webserver.service.wechat.service.AbstractWeChatService;
@@ -49,14 +50,18 @@ public class CommonAsynService implements ICommonAsynService {
                 JsonObject.class, Map.class};
         Map.Entry[] entrys = new Map.Entry[classes.length];
 
+        CLASS_ALIAS_MAP = new HashMap<>(classes.length * 2 + 2, 0.99f);
+
         int mid = entrys.length / 2;
         for (int i = 0; i < entrys.length; i++) {
             boolean flag = i < mid;
             int a = flag ? i * 2 : (i - mid) * 2 + 1;
             int b = flag ? i * 2 + 1 : (i - mid) * 2;
-            entrys[i] = Map.entry(classes[a], classes[b]);
+//            entrys[i] = Map.entry(classes[a], classes[b]);
+            CLASS_ALIAS_MAP.put(classes[a], classes[b]);
         }
-        CLASS_ALIAS_MAP = Map.ofEntries(entrys);
+//        CLASS_ALIAS_MAP = Map.ofEntries(entrys);
+
     }
 
     /*@Override
@@ -90,7 +95,10 @@ public class CommonAsynService implements ICommonAsynService {
                     //处理数据
                     ResponseMesseage responseMesseage = ((AbstractWeChatService) sprngService).receive(requestMesseageBody);
                     //报文转对象;
-                    response.setResult(JAXBUtils.toXML(responseMesseage));
+                    if (responseMesseage != null)
+                        response.setResult(JAXBUtils.toXML(responseMesseage));
+                    else
+                        promise.fail(MesseageTypeValue.MSG_REPLY);
                     break;
                 default:
                     Object input = requset.bodyAsJson();
@@ -118,10 +126,10 @@ public class CommonAsynService implements ICommonAsynService {
             }
         } catch (InvocationTargetException e) {
             logger.error(e.getMessage(), e);
-            response.setException(e.getCause().getMessage());
+            response.setException(isNullPoiontException(e.getCause()));
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            response.setException(e.getMessage());
+            response.setException(isNullPoiontException(e.getCause()));
         } catch (Error e) {
             logger.error(e.getMessage(), e);
             response.setError(e.getMessage());
@@ -132,6 +140,15 @@ public class CommonAsynService implements ICommonAsynService {
             if (!promise.future().isComplete()) {
                 promise.complete(response);
             }
+        }
+    }
+
+    private String isNullPoiontException(Throwable throwable) {
+        if (throwable instanceof NullPointerException) {
+            StackTraceElement s = throwable.getStackTrace()[0];
+            return String.format("NULL_DATA:[%s][%d]", s.getClassName(), s.getLineNumber());
+        } else {
+            return throwable.getMessage();
         }
     }
 

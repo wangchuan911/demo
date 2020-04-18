@@ -8,6 +8,10 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class WechatAsyncMeassger {
@@ -18,10 +22,18 @@ public class WechatAsyncMeassger {
     String token;
     Handler<HttpResponse<Buffer>> success = null;
     Handler<Throwable> fail = null;
+    final static Map<Class<?>, WechatAsyncMeassger> MAP = new HashMap(4);
 
-    public WechatAsyncMeassger(WebClient webClient, String url) {
+    public WechatAsyncMeassger(Class<? extends AbstractWechatConfiguration> cls, WebClient webClient, String url) {
         this.webClient = webClient;
         this.url = url;
+        if (MAP.containsKey(cls))
+            throw new RuntimeException(String.format("%s is exists", cls.getName()));
+        MAP.put(cls, this);
+    }
+
+    public static WechatAsyncMeassger get(Class<? extends AbstractWechatConfiguration> cls) {
+        return MAP.get(cls);
     }
 
     public void setWebClient(WebClient webClient) {
@@ -34,6 +46,10 @@ public class WechatAsyncMeassger {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     public void setSuccess(Handler<HttpResponse<Buffer>> success) {

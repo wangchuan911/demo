@@ -15,7 +15,11 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.WechatAsyncMeassger;
 import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
@@ -333,5 +337,12 @@ public abstract class AbstractWechatConfiguration {
             token.handle(accessToken);
             logger.info(String.format("[%s]Token:%s[%s]", this.getAppID(), accessToken, tokenJson.getLong("expires_in")));
         }
+    }
+
+    public WechatAsyncMeassger getWechatAsyncMeassger(WebClient webClient) {
+        String URL_SUBSCRIBESEND = this.getUrls().get("subscribeSend").toString();
+        Assert.hasLength(URL_SUBSCRIBESEND, String.format("plese setting ${%s.urls.subscribeSend}",
+                AnnotationUtils.findAnnotation(this.getClass(), ConfigurationProperties.class).prefix()));
+        return new WechatAsyncMeassger(this.getClass(), webClient, URL_SUBSCRIBESEND);
     }
 }
