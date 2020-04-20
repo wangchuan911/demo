@@ -46,7 +46,7 @@ public interface EntityObjectUtils {
         Optional<AccessibleObject> optional = Arrays
                 .stream(accessibleObjects)
                 .filter(accessibleObject -> key
-                        .equals(accessibleObject.getAnnotation(EntityObjectKey.class)))
+                        .equals(accessibleObject.getAnnotation(EntityObjectKey.class).name()))
                 .findFirst();
 
         if (optional.isPresent()) {

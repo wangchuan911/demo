@@ -393,23 +393,20 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                                     WechatAsyncMeassger.get(CustomWeChaConfiguration.class)
                                             .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
                                                     .setTemplate_id(pushConfig.getTemplateId())
-                                                    .setData(null)
                                                     .addDatas(entrys)
                                                     .setTouser(userVO
                                                             .getId()));
                                 });
                             }
-                        } else {
+                        } else if (!StringUtils.isEmpty(userId)) {
                             com.hubidaauto.carservice.officalaccount.entity.UserVO userVO = officalAccoutUserDao.getByOtherplatformId("car_user", "car_user_id", userId);
                             if (userVO == null || StringUtils.isEmpty(userVO.openData(false).getUnionid())) break;
                             WechatAsyncMeassger.get(CustomWeChaConfiguration.class)
                                     .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
                                             .setTemplate_id(pushConfig.getTemplateId())
                                             .addDatas(entrys)
-                                            .setData(null)
                                             .setTouser(userVO
-                                                    .getId())
-                                    );
+                                                    .getId()));
                         }
                         break;
                 }
