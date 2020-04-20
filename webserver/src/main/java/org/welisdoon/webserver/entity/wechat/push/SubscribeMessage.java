@@ -45,4 +45,9 @@ public class SubscribeMessage extends PushMessage {
         this.page = page;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

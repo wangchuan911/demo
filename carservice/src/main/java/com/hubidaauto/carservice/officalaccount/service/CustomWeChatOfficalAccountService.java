@@ -45,18 +45,17 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
             }
             if (StringUtils.isEmpty(userVO.getUnionid())) {
                 final UserVO userVO1 = userVO;
-                text = "同步中";
                 WechatAsyncMeassger
                         .get(CustomWeChaConfiguration.class)
-                        .get(CommonConst.WecharUrlKeys.USER_INFO, Map.of("OPEN_ID", userVO.getId()))
-                        .setSuccess(bufferHttpResponse -> {
-                            JsonObject jsonObject = bufferHttpResponse.bodyAsJsonObject();
-                            String unionid;
-                            userVO1.setUnionid(unionid = jsonObject.getString("unionid"));
-                            userVO1.setName(jsonObject.getString("nickname"));
-                            userDao.set(userVO1);
-                            logger.info(String.format("unionid:%s", unionid));
-                        });
+                        .get(CommonConst.WecharUrlKeys.USER_INFO
+                                , Map.of("OPEN_ID", userVO.getId())
+                                , bufferHttpResponse -> {
+                                    JsonObject jsonObject = bufferHttpResponse.bodyAsJsonObject();
+                                    userVO1.setUnionid(jsonObject.getString("unionid"));
+                                    userVO1.setName(jsonObject.getString("nickname"));
+                                    userDao.set(userVO1.openData(false));
+                                });
+                text = "同步成功";
             }
         }
         to = new org.welisdoon.webserver.entity.wechat.messeage.response.TextMesseage(msg);

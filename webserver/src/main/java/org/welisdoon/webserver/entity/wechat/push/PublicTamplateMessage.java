@@ -47,4 +47,9 @@ public class PublicTamplateMessage extends PushMessage {
         this.miniprogram = miniprogram;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

@@ -22,8 +22,6 @@ public class WechatAsyncMeassger {
     WebClient webClient;
     Map url;
     String token;
-    Handler<HttpResponse<Buffer>> success = null;
-    Handler<Throwable> fail = null;
     final static Map<Class<?>, WechatAsyncMeassger> MAP = new HashMap(4);
 
     public WechatAsyncMeassger(AbstractWechatConfiguration configuration, WebClient webClient) {
@@ -60,45 +58,58 @@ public class WechatAsyncMeassger {
         return token;
     }
 
-    public WechatAsyncMeassger setSuccess(Handler<HttpResponse<Buffer>> success) {
-        this.success = success;
-        return this;
-    }
-
-    public WechatAsyncMeassger setFail(Handler<Throwable> fail) {
-        this.fail = fail;
-        return this;
-    }
 
     public WechatAsyncMeassger post(String key, Object o) {
-        final String url = urlFill(key, null);
-        webClient.postAbs(url).sendJson(o, this.handler(url, o));
+        return post(key, o, null, null);
+    }
+
+    public WechatAsyncMeassger post(String key, Object o, Handler<HttpResponse<Buffer>> success) {
+        return post(key, o, success, null);
+    }
+
+    public WechatAsyncMeassger post(String key, Object o, Handler<HttpResponse<Buffer>> success, Handler<Throwable> error) {
+        final String url = setUrlParamValue(key, null);
+        logger.info(String.format("url:%s[POST]", url));
+        logger.info(String.format("param:%s", JsonObject.mapFrom(o)));
+        webClient.postAbs(url).sendJson(o, this.handler(url, o, success, error));
         return this;
     }
 
     public WechatAsyncMeassger get(String key, Map o) {
-        final String url = urlFill(key, o);
-        webClient.getAbs(url).send(this.handler(url, o));
+        return get(key, o, null, null);
+    }
+
+    public WechatAsyncMeassger get(String key, Map o, Handler<HttpResponse<Buffer>> success) {
+        return get(key, o, success, null);
+    }
+
+    public WechatAsyncMeassger get(String key, Map o, Handler<HttpResponse<Buffer>> success, Handler<Throwable> error) {
+        final String url = setUrlParamValue(key, o);
+        logger.debug(String.format("url:%s[GET]", url));
+        logger.debug(String.format("param:%s", JsonObject.mapFrom(o)));
+        webClient.getAbs(url).send(this.handler(url, o, success, error));
         return this;
     }
 
-    Handler<AsyncResult<HttpResponse<Buffer>>> handler(String url, Object o) {
+    Handler<AsyncResult<HttpResponse<Buffer>>> handler(String url, Object o, Handler<HttpResponse<Buffer>> success, Handler<Throwable> error) {
         return httpResponseAsyncResult -> {
+            String response;
             if (httpResponseAsyncResult.succeeded()) {
-                if (this.success != null)
-                    this.success.handle(httpResponseAsyncResult.result());
-                else
-                    print(url, o, httpResponseAsyncResult.result().bodyAsString());
+                if (success != null) {
+                    success.handle(httpResponseAsyncResult.result());
+                }
+                response = httpResponseAsyncResult.result().bodyAsString();
             } else {
-                if (this.fail != null)
-                    this.fail.handle(httpResponseAsyncResult.cause());
-                else
-                    print(url, o, httpResponseAsyncResult.result().bodyAsString());
+                if (error != null) {
+                    error.handle(httpResponseAsyncResult.cause());
+                }
+                response = httpResponseAsyncResult.cause().getMessage();
             }
+            logger.debug(String.format("response:%s", response));
         };
     }
 
-    String urlFill(String key, Map map) {
+    String setUrlParamValue(String key, Map map) {
         StringBuilder url = new StringBuilder(this.url.get(key).toString());
         if (MapUtils.isNotEmpty(map)) {
             Set<Map.Entry> s = map.entrySet();
@@ -115,9 +126,5 @@ public class WechatAsyncMeassger {
         if ((idx = url.indexOf(colmn)) > 0) {
             url.replace(idx, idx + colmn.length(), value);
         }
-    }
-
-    public void print(String url, Object o, String res) {
-        logger.warn(String.format("\nURL===>%s\nREQ===>%s\nRESP===>%s", url, JsonObject.mapFrom(o).toString(), res));
     }
 }

@@ -1,6 +1,7 @@
 package com.hubidaauto.carservice.wxapp.service;
 
 import com.hubidaauto.carservice.officalaccount.config.CustomWeChaConfiguration;
+import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
 import com.hubidaauto.carservice.wxapp.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.carservice.wxapp.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.dao.*;
@@ -46,6 +47,8 @@ public class OperationService extends AbstractBaseService<OperationVO> {
     OperationDao operationDao;
     @Autowired
     PictureDao pictureDao;
+    @Autowired
+    OfficalAccoutUserDao officalAccoutUserDao;
 
     @Override
     @VertxWebApi
@@ -336,7 +339,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
             TacheVO tacheVO = CustomConst.TACHE.TACHE_MAP.get(nextTache);
             List<TacheVO.PushConfig> pushConfigs = tacheVO.getPushConfigs();
             if (CollectionUtils.isEmpty(pushConfigs)) return;
-            pushConfigs.forEach(pushConfig -> {
+            pushConfigs.stream().forEach(pushConfig -> {
                 if (MapUtils.isEmpty(pushConfig.valuesToMap())) return;
                 Map.Entry<String, Object>[] entrys = (pushConfig.valuesToMap().entrySet()).stream().map(entry -> {
                     String value = entry.getValue();
@@ -382,33 +385,30 @@ public class OperationService extends AbstractBaseService<OperationVO> {
                     case CustomConst.ROLE.DISTRIBUTOR:
                         if (pushConfig.getRoleId() == CustomConst.ROLE.DISTRIBUTOR && StringUtils.isEmpty(userId)) {
                             List<String> staffs = userDao.getRegionOrderController(orderVO.getRegionCode());
-                            logger.info(staffs.toString());
                             if (!CollectionUtils.isEmpty(staffs)) {
                                 staffs.stream().forEach(s -> {
-                                    UserVO userVO = new UserVO().setId(s);
-                                    userVO = userDao.get(userVO);
+                                    com.hubidaauto.carservice.officalaccount.entity.UserVO userVO = officalAccoutUserDao.getByOtherplatformId("car_user", "car_user_id", s);
+                                    if (userVO == null || StringUtils.isEmpty(userVO.openData(false).getUnionid()))
+                                        return;
                                     WechatAsyncMeassger.get(CustomWeChaConfiguration.class)
                                             .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
                                                     .setTemplate_id(pushConfig.getTemplateId())
                                                     .setData(null)
                                                     .addDatas(entrys)
                                                     .setTouser(userVO
-                                                            .openData(false)
-                                                            .getUnionid()));
+                                                            .getId()));
                                 });
                             }
                         } else {
-                            UserVO userVO = new UserVO().setId(userId);
-                            userVO = userDao.get(userVO);
-                            if (StringUtils.isEmpty(userVO.getUnionid())) break;
+                            com.hubidaauto.carservice.officalaccount.entity.UserVO userVO = officalAccoutUserDao.getByOtherplatformId("car_user", "car_user_id", userId);
+                            if (userVO == null || StringUtils.isEmpty(userVO.openData(false).getUnionid())) break;
                             WechatAsyncMeassger.get(CustomWeChaConfiguration.class)
                                     .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
                                             .setTemplate_id(pushConfig.getTemplateId())
                                             .addDatas(entrys)
                                             .setData(null)
                                             .setTouser(userVO
-                                                    .openData(false)
-                                                    .getUnionid())
+                                                    .getId())
                                     );
                         }
                         break;

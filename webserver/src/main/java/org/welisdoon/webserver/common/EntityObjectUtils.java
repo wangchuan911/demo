@@ -25,7 +25,6 @@ public interface EntityObjectUtils {
 
     static Object objValueByKey(Object t, String key) {
         Class tKey = t.getClass();
-        logger.info(tKey.getName());
         //----------------------------------
         AccessibleObject[] accessibleObjects = CLASS_SET_MAP.get(tKey);
         if (accessibleObjects == null) {
@@ -128,7 +127,9 @@ public interface EntityObjectUtils {
                         ((LocalDateTime) res).getMinute()));
             }
             return res != null ? res.toString() : "";
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+        } catch (NoSuchMethodException e) {
+            logger.warn(String.format("class %s not method %s! please check cofig!", tKey, e.getMessage()));
+        } catch (InvocationTargetException | IllegalAccessException e) {
             logger.error(e.getMessage(), e);
         }
         return null;

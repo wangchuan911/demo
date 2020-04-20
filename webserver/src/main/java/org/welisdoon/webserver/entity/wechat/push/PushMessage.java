@@ -79,4 +79,12 @@ public abstract class PushMessage {
         return this;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PushMessage{");
+        sb.append("touser='").append(touser).append('\'');
+        sb.append(", template_id='").append(template_id).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

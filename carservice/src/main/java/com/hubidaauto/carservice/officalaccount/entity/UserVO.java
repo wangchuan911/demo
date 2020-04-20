@@ -24,7 +24,10 @@ public class UserVO {
         return this;
     }
 
-
+    public UserVO openData(boolean sw) {
+        this.openData = sw;
+        return this;
+    }
 
     public String getUnionid() {
         return this.openData ? null : unionid;
@@ -33,5 +36,15 @@ public class UserVO {
     public UserVO setUnionid(String unionid) {
         this.unionid = unionid;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("UserVO{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", unionid='").append(unionid).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }
