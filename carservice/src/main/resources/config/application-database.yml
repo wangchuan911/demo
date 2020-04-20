@@ -1,8 +1,10 @@
 spring:
   datasource:
     enabled: true
-    username:
-    password:
+    username: hubidaauto
+              #welisdoon
+    password: Mengyan209810$$
+              #We1i$d00n
     #驱动
     driver-class-name: com.mysql.jdbc.Driver
     #数据库连接路径

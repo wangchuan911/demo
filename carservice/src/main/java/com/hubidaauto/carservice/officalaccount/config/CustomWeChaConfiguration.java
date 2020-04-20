@@ -19,6 +19,7 @@ import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
+import org.welisdoon.webserver.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
 import java.util.function.Consumer;
@@ -46,8 +47,7 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
 
-        commonAsynService = ICommonAsynService.createProxy(vertx);
-        logger.info(String.format("create AsyncServiceProxy:%s", commonAsynService));
+        commonAsynService = ICommonAsynService.createProxy(vertx, this.getAppID());
 
         WebClient webClient = WebClient.create(vertx);
 
@@ -66,7 +66,7 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
                     .handler(routingContext -> {
                         Buffer requestbuffer = routingContext.getBody();
                         commonAsynService.requsetCall(new Requset()
-                                .setService("weChatOfficalAccountService")
+                                .setService("customWeChatOfficalAccountService")
                                 .setBody(requestbuffer.toString())
                                 .setMode(Requset.WECHAT), stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
@@ -87,5 +87,12 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
         return routerConsumer;
     }
 
+    @VertxRegister(WorkerVerticle.class)
+    public Consumer<Vertx> createAsyncService() {
+        Consumer<Vertx> vertxConsumer = vertx1 -> {
+            ICommonAsynService.create(vertx1, this.getAppID());
+        };
+        return vertxConsumer;
+    }
 }
 

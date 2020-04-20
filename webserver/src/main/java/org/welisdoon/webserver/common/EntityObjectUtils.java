@@ -44,12 +44,11 @@ public interface EntityObjectUtils {
             }
         }
 
-        Optional<AccessibleObject> optional = Arrays.stream(accessibleObjects).filter(accessibleObject -> {
-            EntityObjectKey annotation = accessibleObject.getAnnotation(EntityObjectKey.class);
-            logger.warn(accessibleObject.toString());
-            logger.warn(annotation.name());
-            return annotation != null && key.equals(annotation.name());
-        }).findFirst();
+        Optional<AccessibleObject> optional = Arrays
+                .stream(accessibleObjects)
+                .filter(accessibleObject -> key
+                        .equals(accessibleObject.getAnnotation(EntityObjectKey.class)))
+                .findFirst();
 
         if (optional.isPresent()) {
             Object val = optional.get();

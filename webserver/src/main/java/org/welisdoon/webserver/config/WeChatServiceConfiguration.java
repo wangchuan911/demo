@@ -31,6 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
 import java.util.function.Consumer;
@@ -117,9 +118,17 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         return vertxConsumer;
     }*/
 
+    @VertxRegister(WorkerVerticle.class)
+    public Consumer<Vertx> createAsyncService() {
+        Consumer<Vertx> vertxConsumer = vertx1 -> {
+            ICommonAsynService.create(vertx1, this.getAppID());
+        };
+        return vertxConsumer;
+    }
+
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
-        commonAsynService = ICommonAsynService.createProxy(vertx);
+        commonAsynService = ICommonAsynService.createProxy(vertx, this.getAddress());
         WebClient webClient = WebClient.create(vertx);
 
         this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {

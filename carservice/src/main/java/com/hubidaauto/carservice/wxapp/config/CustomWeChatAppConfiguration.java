@@ -46,6 +46,7 @@ import org.welisdoon.webserver.entity.wechat.payment.response.PrePayResponseMess
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
+import org.welisdoon.webserver.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
@@ -136,6 +137,14 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         return vertxConsumer;
     }
 
+    @VertxRegister(WorkerVerticle.class)
+    public Consumer<Vertx> createAsyncService() {
+        Consumer<Vertx> vertxConsumer = vertx1 -> {
+            ICommonAsynService.create(vertx1, this.getAppID());
+        };
+        return vertxConsumer;
+    }
+
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
 //        final String PATH_WX_APP = "/wxApp(?:/([^\\/]+))*";
@@ -150,8 +159,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                 .setServerNameKey(CommonConst.WebParamsKeys.SPRING_BEAN)
                 .setRequestType(CommonConst.WebParamsKeys.REQUSET_TYPE);
         WebClient webClient = WebClient.create(vertx);
-        commonAsynService = ICommonAsynService.createProxy(vertx);
-        logger.info(String.format("create AsyncServiceProxy:%s", commonAsynService));
+        commonAsynService = ICommonAsynService.createProxy(vertx, this.getAppID());
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
 

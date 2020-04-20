@@ -50,6 +50,11 @@
             #{name,jdbcType=VARCHAR},
             #{unionid,jdbcType=VARCHAR})
     </insert>
-
+    <select id="getByOtherplatformId" resultMap="PubUserVO">
+        select a.* from pub_account_user a
+        join ${table} b
+        on b.union_id=a.union_id
+        where b.${key}=#{id,jdbcType=VARCHAR}
+    </select>
 
 </mapper>
