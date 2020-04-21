@@ -2,6 +2,7 @@ package org.welisdoon.webserver.entity.wechat.push;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public abstract class PushMessage {
 
@@ -57,23 +58,40 @@ public abstract class PushMessage {
 
     public PushMessage addDatas(Map.Entry<String, Object>... entrys) {
         if (entrys != null && entrys.length > 0) {
+            Map.Entry<String, Entry>[] entries = Arrays
+                    .stream(entrys)
+                    .map(stringObjectEntry ->
+                            Map.entry(stringObjectEntry.getKey(),
+                                    new Entry().setValue(stringObjectEntry.getValue())))
+                    .toArray(Map.Entry[]::new);
             if (this.data == null) {
-                this.data = Map
+                /*this.data = Map
                         .ofEntries(Arrays
                                 .stream(entrys)
                                 .map(stringObjectEntry ->
                                         Map.entry(stringObjectEntry.getKey(),
                                                 new Entry().setValue(stringObjectEntry.getValue())))
-                                .toArray(Map.Entry[]::new));
-            } else {
+                                .toArray(Map.Entry[]::new));*/
                 this.data = Map
+                        .ofEntries(entries);
+            } else {
+                /*this.data = Map
                         .ofEntries(Arrays.stream(
                                 new Map.Entry[][]{
                                         this.data.entrySet().stream().toArray(Map.Entry[]::new),
                                         entrys})
                                 .flatMap(entries ->
                                         Arrays.stream(entries)
-                                ).toArray(Map.Entry[]::new));
+                                ).toArray(Map.Entry[]::new));*/
+
+                Stream<Map.Entry<String, Entry>>[] entryStreams = new Stream[]{
+                        this.data.entrySet().stream(),
+                        Arrays.stream(entries)
+                };
+                this.data = Map
+                        .ofEntries(Arrays.stream(entryStreams)
+                                .flatMap(entries1 -> entries1)
+                                .toArray(Map.Entry[]::new));
             }
         }
         return this;
