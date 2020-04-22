@@ -30,11 +30,13 @@ public class UserService extends AbstractBaseService<UserVO> {
 
     TacheService tacheService;
     OrderService orderService;
+    CouponService couponService;
 
     @Override
     public void init() {
         tacheService = ApplicationContextProvider.getBean(TacheService.class);
         orderService = ApplicationContextProvider.getBean(OrderService.class);
+        couponService = ApplicationContextProvider.getBean(CouponService.class);
     }
 
     @Override
@@ -84,10 +86,15 @@ public class UserService extends AbstractBaseService<UserVO> {
                     logger.error(e.getMessage(), e);
                 }
                 userDao.set(userVO);
+                if (userVO.getRole() == CustomConst.ROLE.CUSTOMER) {
+                    userVO.setCoupons(couponService.newCoupon(CustomConst.COUPON.NEW_USER, Map.of("id", userVO.getId())));
+                }
                 resultObj = userVO.openData(true);
+                break;
             case CustomConst.USER.AREA_RANGE:
                 userVO = mapToObject(params, UserVO.class);
                 resultObj = userDao.getWorkAreaRange(userVO);
+                break;
             default:
                 break;
         }

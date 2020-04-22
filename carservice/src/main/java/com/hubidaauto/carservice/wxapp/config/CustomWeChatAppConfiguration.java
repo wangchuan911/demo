@@ -102,7 +102,6 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
 
         wxBizMsgCrypt = this.getWXBizMsgCrypt();
-
     }
 
     /*定時任務*/

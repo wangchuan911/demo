@@ -105,9 +105,9 @@ public final class CustomConst {
     }
 
     public final static class FUNCTION {
-        public final static String DISTRIBUTE = "distribute";
-        public final static String PAYMENT = "payment";
-        public final static String FINISH = "finish";
+        public final static String DISTRIBUTE = "distribute",
+                PAYMENT = "payment",
+                FINISH = "finish";
     }
 
     public final static class OTHER {
@@ -115,5 +115,13 @@ public final class CustomConst {
                 LOGIN = -1;
     }
 
+    public final static class COUPON {
+        public final static int NEW_USER = 0,
+                ORDER_10 = 1;
+
+        public final static class TEMPLATE {
+            public final static int NEW_USER = 1;
+        }
+    }
 }
 

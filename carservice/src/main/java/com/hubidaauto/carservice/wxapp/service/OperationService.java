@@ -319,7 +319,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
         }
         if (tacheId == null
                 || tacheId < 0
-                || "finish".equals(CustomConst.TACHE.TACHE_MAP.get(tacheId).getCode())) {
+                || CustomConst.FUNCTION.FINISH.equals(CustomConst.TACHE.TACHE_MAP.get(tacheId).getCode())) {
             newOrderVO.setFinishDate(Timestamp.valueOf(LocalDateTime.now()));
             newOrderVO.setOrderState(CustomConst.ORDER.STATE.END);
             orderDao.set(newOrderVO);

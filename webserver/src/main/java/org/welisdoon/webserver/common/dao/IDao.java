@@ -37,7 +37,7 @@ public interface IDao<T, K> {
     int del(T t);
 
     /*delete many object*/
-    int delAll(List<T> ts);
+    int delAll(List<K> ks);
 
     /*count by condition*/
     int num(T t);
