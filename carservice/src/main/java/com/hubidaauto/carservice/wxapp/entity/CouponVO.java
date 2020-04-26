@@ -12,6 +12,7 @@ public class CouponVO {
     Integer type;
     Integer off;
     Integer lv;
+    Integer orderId;
 
     public Integer getId() {
         return id;
@@ -91,6 +92,15 @@ public class CouponVO {
 
     public CouponVO setUseDate(Timestamp useDate) {
         this.useDate = useDate;
+        return this;
+    }
+
+    public Integer getOrderId() {
+        return orderId;
+    }
+
+    public CouponVO setOrderId(Integer orderId) {
+        this.orderId = orderId;
         return this;
     }
 }

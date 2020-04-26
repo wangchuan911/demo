@@ -2,6 +2,7 @@ package com.hubidaauto.carservice.wxapp.service;
 
 import com.hubidaauto.carservice.wxapp.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.dao.*;
+import com.hubidaauto.carservice.wxapp.entity.CouponVO;
 import com.hubidaauto.carservice.wxapp.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.entity.PictureVO;
 import com.hubidaauto.carservice.wxapp.entity.UserVO;
@@ -38,15 +39,19 @@ public class OrderService extends AbstractBaseService<OrderVO> {
     OperationDao operationDao;
     @Autowired
     PictureDao pictureDao;
+    @Autowired
+    UserOperRecordDao userOperRecordDao;
 
 
     TacheService tacheService;
     OperationService operationService;
+    CouponService couponService;
 
     @Override
     public void init() throws Throwable {
         tacheService = ApplicationContextProvider.getBean(TacheService.class);
         operationService = ApplicationContextProvider.getBean(OperationService.class);
+        couponService = ApplicationContextProvider.getBean(CouponService.class);
     }
 
     @Override
@@ -61,12 +66,13 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                 List<Integer> pictureIds = (List<Integer>) orderVoJson.remove("pictureIds");
 
                 Map encryptedMap = mapSpliter(params, Map.class, "phoneEncryptedData", "phoneEncryptedIv");
+                Map coupon = mapSpliter(params, Map.class, "couponId");
 
                 orderVO = orderVoJson.mapTo(OrderVO.class);
                 orderVO.setTacheId(CustomConst.TACHE.FIRST_TACHE.getTacheId())
                         .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
                 UserVO userVO = userDao.get(new UserVO().setId(orderVO.getCustId()));
-
+                //GET WX API ENCRYT TEXT TO PHONE
                 try {
                     String phoneEncryptedData = MapUtils.getString(encryptedMap, "phoneEncryptedData", null),
                             phoneEncryptedIv = MapUtils.getString(encryptedMap, "phoneEncryptedIv", null);
@@ -78,12 +84,13 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
                 }
+                //UPDATE PHONE_NUM
                 orderVO.setCustName(userVO.getName())
                         .setCustPhone(StringUtils.isEmpty(orderVO.getCustPhone())
                                 ? userVO.getPhone()
                                 : orderVO.getCustPhone());
                 orderDao.add(orderVO);
-
+                //save PIC
                 if (!CollectionUtils.isEmpty(pictureIds)) {
                     Integer orderId = orderVO.getOrderId();
                     Integer tacheId = orderVO.getTacheId();
@@ -93,6 +100,13 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                                 .setOrderId(orderId)
                                 .setTacheId(tacheId));
                     });
+                }
+                //SET COUPON
+                if (coupon.get("couponId") != null) {
+                    couponService.handle(CustomConst.MODIFY, new CouponVO()
+                            .setUserId(orderVO.getCustId())
+                            .setOrderId(orderVO.getOrderId())
+                            .setId(MapUtils.getInteger(coupon, "couponId")));
                 }
                 resultObj = tacheService.handle(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", orderVO.getCustId()));
                 operationService.wechatMessagePush(orderVO, orderVO.getTacheId());
@@ -145,6 +159,8 @@ public class OrderService extends AbstractBaseService<OrderVO> {
         switch (exeCode) {
             case CustomConst.MODIFY:
                 orderDao.set(orderVO);
+                //update user operation
+                userOperRecordDao.add(orderVO);
                 resultObj = orderVO;
                 break;
         }

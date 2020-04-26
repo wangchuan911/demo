@@ -7,6 +7,7 @@
     <resultMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.entity.CouponVO">
         <result property="userId" column="user_id"></result>
         <result property="id" column="id"></result>
+        <result property="orderId" column="order_id"></result>
         <result property="content" column="content"></result>
         <result property="startDate" column="start_date"></result>
         <result property="endDate" column="end_date"></result>
@@ -19,6 +20,7 @@
     <parameterMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.entity.CouponVO">
         <parameter property="userId" jdbcType="VARCHAR"></parameter>
         <parameter property="id" jdbcType="INTEGER"></parameter>
+        <parameter property="orderId" jdbcType="INTEGER"></parameter>
         <parameter property="content" jdbcType="VARCHAR"></parameter>
         <parameter property="startDate" jdbcType="TIMESTAMP"></parameter>
         <parameter property="endDate" jdbcType="TIMESTAMP"></parameter>
@@ -38,27 +40,37 @@
     </insert>
     <update id="set" parameterMap="CouponVO">
                 update car_coupon_user
-                set use_date=#{useDate,jdbcType=TIMESTAMP}
+                set use_date=current_timestamp
+                  ,order_id=#{orderId,jdbcType=VARCHAR}
                 where user_id=#{userId,jdbcType=VARCHAR}
                 and coupon_id=#{id,jdbcType=INTEGER}
-                and use_date is null
+                and order_id is null
     </update>
 
     <sql id="couponVailCheck">
         <if test="lv==null">
             and a.lv>0
         </if>
-        <if test="endDate==null">
-            <![CDATA[
+        <choose>
+            <when test="endDate==null">
+                <![CDATA[
             and IF(ISNULL(a.end_date),CURRENT_TIMESTAMP,a.end_date) <= CURRENT_TIMESTAMP
             ]]>
-        </if>
-        <if test="endDate!=null">
-            <![CDATA[
+            </when>
+            <otherwise>
+                <![CDATA[
             and IF(ISNULL(a.end_date),CURRENT_TIMESTAMP,a.end_date) > CURRENT_TIMESTAMP
             ]]>
-        </if>
-
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="orderId != null and orderId > 0">
+                and b.order_id is not null
+            </when>
+            <otherwise>
+                and b.order_id is null
+            </otherwise>
+        </choose>
     </sql>
 
     <sql id="condition">
@@ -67,7 +79,7 @@
                 and a.id=#{id,jdbcType=INTEGER}
             </if>
             <if test="userId!=null and userId!=''.toString()">
-                and b.user_id=#{userId,jdbcType=INTEGER}
+                and b.user_id=#{userId,jdbcType=VARCHAR}
             </if>
             <if test="(userId==null or userId==''.toString()) and (id==null or 0>=id)">
                 and 1=2
@@ -78,7 +90,7 @@
         </where>
     </sql>
     <sql id="select">
-        select a.*,b.user_id from car_coupon_template a
+        select a.*,b.user_id,b.order_id from car_coupon_template a
         join car_coupon_user b
         on b.coupon_id=a.id
     </sql>

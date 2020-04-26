@@ -84,7 +84,7 @@ public class CouponService extends AbstractBaseService<CouponVO> {
                             .setId(CustomConst.COUPON.TEMPLATE.NEW_USER)
                             .setUserId(custId);
                     if (couponDao.num(couponVO) > 0
-                            || couponDao.num(couponVO.setUseDate(new Timestamp(System.currentTimeMillis()))) > 0)
+                            || couponDao.num(couponVO.setOrderId(1)) > 0)
                         break;
                     this.handle(CustomConst.ADD
                             , couponVO);

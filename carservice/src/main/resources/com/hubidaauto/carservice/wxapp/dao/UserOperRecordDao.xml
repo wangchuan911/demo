@@ -84,14 +84,14 @@
     <sql id="duplicateKeyUpdate">
         <choose>
             <when test="orderState==2 or tacheId==7">
-                fin_order_cnt=fin_order_cnt+1
+                fin_order_cnt=ifnull(fin_order_cnt,0)+1
             </when>
             <when test="orderState==-1 ">
-                fail_order_cnt=fail_order_cnt+1
+                fail_order_cnt=ifnull(fail_order_cnt,0)+1
             </when>
             <otherwise>
-                fin_order_cnt=fin_order_cnt,
-                fail_order_cnt=fail_order_cnt
+                fin_order_cnt=ifnull(fin_order_cnt,0),
+                fail_order_cnt=ifnull(fail_order_cnt,0)
             </otherwise>
         </choose>
     </sql>
