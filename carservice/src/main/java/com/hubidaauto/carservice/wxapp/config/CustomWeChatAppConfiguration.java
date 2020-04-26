@@ -236,12 +236,12 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                                                 if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getResultCode())) {
                                                     resultBodyJson
                                                             .put("error", String.format("支付失败:%s[%s]",
-                                                                    prePayResponseMesseage.getReturnMsg(),
+                                                                    prePayResponseMesseage.getErrCodeDes(),
                                                                     prePayResponseMesseage.getErrCode()));
                                                 } else if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getReturnCode())) {
                                                     resultBodyJson
                                                             .put("error", String.format("支付失败:%s[%s]",
-                                                                    prePayResponseMesseage.getErrCodeDes(),
+                                                                    prePayResponseMesseage.getReturnMsg(),
                                                                     prePayResponseMesseage.getErrCode()));
                                                 } else {
                                                     String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s&key=%s"
@@ -280,6 +280,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             //支付信息微信回调
             router.post(this.getPath().getPay()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
+                logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
                 try {
                     PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
                     OrderVO orderVO = new OrderVO()
@@ -294,8 +295,11 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                     if (orderVO.getOrderId() != null) {
                         code = "SUCCESS";
                         msg = "OK";
-                        if (orderVO.getOrderState() >= 0) {
-                            orderService.handle(CustomConst.MODIFY, new OrderVO().setOrderId(orderVO.getOrderId()).setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT));
+                        if (orderVO.getOrderState() == CustomConst.ORDER.STATE.RUNNING) {
+                            orderService.handle(CustomConst.MODIFY, new OrderVO()
+                                    .setOrderId(orderVO.getOrderId())
+                                    .setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT)
+                                    .setCustId(orderVO.getCustId()));
                         }
                     } else {
                         code = "FAIL";
@@ -305,8 +309,8 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                     payBillResponseMesseage.setReturnMsg(msg);
                     routingContext.response()
                             .end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
-                } catch (JAXBException e) {
-                    e.printStackTrace();
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
                     routingContext.fail(e);
                 }
 

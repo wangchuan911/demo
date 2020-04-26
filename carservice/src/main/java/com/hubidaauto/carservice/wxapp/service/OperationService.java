@@ -325,7 +325,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
             newOrderVO.setFinishDate(Timestamp.valueOf(LocalDateTime.now()));
             newOrderVO.setOrderState(CustomConst.ORDER.STATE.END);
             orderDao.set(newOrderVO);
-            userOperRecordDao.add(newOrderVO);
+            userOperRecordDao.add(newOrderVO.setCustId(orderVO.getCustId()));
         }
     }
 
