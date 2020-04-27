@@ -49,8 +49,7 @@ public class CouponService extends AbstractBaseService<CouponVO> {
         switch (exeCode) {
             case CustomConst.LIST:
                 couponVO = mapToObject(params, CouponVO.class);
-                this.handle(exeCode, couponVO);
-                resultObj = couponVO;
+                resultObj = this.handle(exeCode, couponVO);
                 break;
             default:
                 resultObj = null;

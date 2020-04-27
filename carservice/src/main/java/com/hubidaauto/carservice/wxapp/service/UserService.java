@@ -61,7 +61,11 @@ public class UserService extends AbstractBaseService<UserVO> {
                 if (!StringUtils.isEmpty(userVO.getId())) {
                     userVOS.add(0, userDao.get(new UserVO().setId(userVO.getId())));
                 }*/
-                List<UserVO> userVOS = userDao.getWorkers(mapToObject(params, OrderVO.class));
+                OrderVO orderVO = mapToObject(params, OrderVO.class);
+                List<UserVO> userVOS = userDao.getWorkers(orderVO);
+                if (!StringUtils.isEmpty(orderVO.getOrderControlPerson())) {
+                    userVOS.add(0, userDao.get(new UserVO().setId(orderVO.getOrderControlPerson())));
+                }
                 resultObj = userVOS;
                 break;
             case CustomConst.ADD:
