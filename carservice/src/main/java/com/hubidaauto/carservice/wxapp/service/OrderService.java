@@ -102,11 +102,13 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                     });
                 }
                 //SET COUPON
-                if (coupon.get("couponId") != null) {
+                Integer couponId = MapUtils.getInteger(coupon, "couponId", 0);
+                if (couponId > 0) {
                     couponService.handle(CustomConst.MODIFY, new CouponVO()
                             .setUserId(orderVO.getCustId())
                             .setOrderId(orderVO.getOrderId())
-                            .setId(MapUtils.getInteger(coupon, "couponId")));
+                            .setId(couponId)
+                            .setUseDate(new Timestamp(System.currentTimeMillis())));
                 }
                 resultObj = tacheService.handle(CustomConst.TACHE.GET_WORK_NUMBER, Map.of("userId", orderVO.getCustId()));
                 operationService.wechatMessagePush(orderVO, orderVO.getTacheId());
@@ -118,6 +120,14 @@ public class OrderService extends AbstractBaseService<OrderVO> {
                         .setCustId(orderVO.getCustId())
                         .setFinishDate(new Timestamp(System.currentTimeMillis()))
                         .setOrderState(CustomConst.ORDER.STATE.CANCEL));
+
+                CouponVO couponVO = (CouponVO) couponService
+                        .handle(CustomConst.GET, new CouponVO()
+                                .setOrderId(orderVO.getOrderId())
+                                .setUserId(orderVO.getCustId()));
+                if (couponVO != null) {
+                    couponService.handle(CustomConst.MODIFY, couponVO.setOrderId(null).setUseDate(null));
+                }
                 break;
             /*case CustomConst.MODIFY:
                 orderVO = mapToObject(params, OrderVO.class);

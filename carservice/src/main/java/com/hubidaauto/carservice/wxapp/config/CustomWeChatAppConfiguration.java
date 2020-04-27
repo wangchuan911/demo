@@ -309,7 +309,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                     payBillResponseMesseage.setReturnMsg(msg);
                     routingContext.response()
                             .end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
-                } catch (Throwable e) {
+                } catch (JAXBException e) {
                     logger.error(e.getMessage(), e);
                     routingContext.fail(e);
                 }
@@ -340,8 +340,8 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             //图片服务
             router.get("/pic/*").handler(routingContext -> {
                 HttpServerRequest httpServerRequest = routingContext.request();
-                String fileName = Utils.pathOffset(httpServerRequest.path(), routingContext);
-                String file = staticPath + fileName;
+                final String fileName = Utils.pathOffset(httpServerRequest.path(), routingContext);
+                final String file = staticPath + fileName;
                 FileSystem fileSystem = routingContext.vertx().fileSystem();
                 fileSystem.exists(file, booleanAsyncResult -> {
                     if (booleanAsyncResult.succeeded() && !booleanAsyncResult.result()) {
@@ -387,6 +387,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             router.get(this.getPath().getPush()).handler(this::wechatMsgCheck);
 
             router.route("/*").failureHandler(routingContext -> {
+                logger.error(routingContext.failure().getMessage(), routingContext.failure());
                 routingContext.response().end(routingContext.failure().toString());
             });
         };

@@ -30,6 +30,17 @@ public class CouponService extends AbstractBaseService<CouponVO> {
     @Autowired
     UserOperRecordDao userOperRecordDao;
 
+    /*@Override
+    public void init() throws Throwable {
+        CouponVO couponVO = (CouponVO)
+                handle(CustomConst.GET, new CouponVO()
+                        .setOrderId(216)
+                        .setUserId("oX1Dn5YMM2MipWO_owPjMqwmmr18"));
+        if (couponVO != null) {
+            handle(CustomConst.MODIFY, couponVO.setOrderId(null).setUseDate(null));
+        }
+    }*/
+
     @Override
     @VertxWebApi
     public Object handle(int exeCode, Map params) {
@@ -76,6 +87,7 @@ public class CouponService extends AbstractBaseService<CouponVO> {
         CouponVO couponVO;
         try {
             switch (exeCode) {
+                //新用户
                 case CustomConst.COUPON.NEW_USER:
                     String custId = MapUtils.getString(map, "id");
                     if (userOperRecordDao.num(new OrderVO().setCustId(custId)) > 0)

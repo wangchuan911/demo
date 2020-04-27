@@ -3,12 +3,12 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.hubidaauto.carservice.wxapp.dao.TacheDao">
-    <resultMap id="TacheVO_all" type="com.hubidaauto.carservice.wxapp.entity.TacheVO">
-        <result property="tacheId" column="tache_id"></result>
+    <resultMap id="TacheVO_all" type="com.hubidaauto.carservice.wxapp.entity.TacheVO" extends="TacheVO">
+        <!--<result property="tacheId" column="tache_id"></result>
         <result property="tacheName" column="tache_name"></result>
         <result property="seq" column="seq"></result>
         <result property="tampalateId" column="template_id"></result>
-        <result property="code" column="function_code"></result>
+        <result property="code" column="function_code"></result>-->
         <collection property="tacheRelas"
                     ofType="TacheRela"
                     select="getRela"
