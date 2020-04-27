@@ -159,4 +159,33 @@
                 AND b.car_user_role = 2
                 ) a WHERE #{value} REGEXP a.reg
     </select>
+
+    <parameterMap id="OrderVO" type="com.hubidaauto.carservice.wxapp.entity.OrderVO">
+        <parameter property="orderId" jdbcType="INTEGER"></parameter>
+        <parameter property="carLicenseNumber" jdbcType="VARCHAR"></parameter>
+        <parameter property="orderState" jdbcType="INTEGER"></parameter>
+        <parameter property="orderControlPerson" jdbcType="VARCHAR"></parameter>
+        <parameter property="orderAppointPerson" jdbcType="VARCHAR"></parameter>
+        <parameter property="custId" jdbcType="VARCHAR"></parameter>
+        <parameter property="posX" jdbcType="DOUBLE"></parameter>
+        <parameter property="posY" jdbcType="DOUBLE"></parameter>
+        <parameter property="regionCode" jdbcType="INTEGER"></parameter>
+    </parameterMap>
+
+    <select id="getWorkers" parameterMap="OrderVO" resultMap="UserVO">
+        SELECT
+          *
+        FROM
+          car_wash_order a1
+          JOIN user_attr b
+            ON a1.REGION_CODE REGEXP CONCAT(
+              '^(',
+              REPLACE(b.region_code, ',', '|'),
+              ')'
+            )
+          JOIN car_user a
+            ON a.car_user_id = b.USER_ID
+            AND a.car_user_max_role=1
+        WHERE a1.order_id = #{orderId,jdbcType=INTEGER}
+</select>
 </mapper>

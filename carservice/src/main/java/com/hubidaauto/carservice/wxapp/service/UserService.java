@@ -4,6 +4,7 @@ import com.hubidaauto.carservice.wxapp.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.dao.CarDao;
 import com.hubidaauto.carservice.wxapp.dao.UserDao;
 import com.hubidaauto.carservice.wxapp.entity.CarVO;
+import com.hubidaauto.carservice.wxapp.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.entity.UserVO;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
@@ -55,11 +56,12 @@ public class UserService extends AbstractBaseService<UserVO> {
                 resultObj = userDao.list(userVO);
                 break;
             case CustomConst.USER.GET_WORKERS:
-                userVO = mapToObject(params, UserVO.class);
+                /*userVO = mapToObject(params, UserVO.class);
                 List<UserVO> userVOS = userDao.list(new UserVO().setMaxRole(CustomConst.ROLE.WOCKER));
                 if (!StringUtils.isEmpty(userVO.getId())) {
                     userVOS.add(0, userDao.get(new UserVO().setId(userVO.getId())));
-                }
+                }*/
+                List<UserVO> userVOS = userDao.getWorkers(mapToObject(params, OrderVO.class));
                 resultObj = userVOS;
                 break;
             case CustomConst.ADD:
