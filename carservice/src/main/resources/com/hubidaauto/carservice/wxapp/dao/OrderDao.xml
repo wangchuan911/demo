@@ -133,7 +133,7 @@
                     and order_state= #{orderState,jdbcType=INTEGER}
                 </when>
                 <otherwise>
-                    and order_state = 0
+                    and order_state in (0,1)
                 </otherwise>
             </choose>
             <if test="orderControlPerson!=null and orderControlPerson!=''.toString()">
@@ -322,7 +322,17 @@
     <select id="getWorkIngOrderNum" parameterMap="OrderVO" resultType="map">
         select
         count(order_id) all_nums,
-        cast(sum(IF(ISNULL(finish_date) ,0 , 1 ))as unsigned int) nums
+        cast(sum(IF(
+        <choose>
+            <when test="orderControlPerson!=null and orderControlPerson!=''.toString()">
+                tache_id in (1,2)
+            </when>
+            <when test="orderAppointPerson!=null and orderAppointPerson!=''.toString()">
+                tache_id in (3,4,5)
+            </when>
+            <otherwise>order_state=2</otherwise>
+        </choose>
+         ,0 , 1 ))as unsigned int) nums
         from car_wash_order a
         <where>
             <if test="orderId!=null and orderId!=''.toString()">
