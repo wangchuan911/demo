@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.CommonConst;
 import org.welisdoon.webserver.common.EntityObjectUtils;
 import org.welisdoon.webserver.common.WechatAsyncMeassger;
@@ -49,8 +50,15 @@ public class OperationService extends AbstractBaseService<OperationVO> {
     PictureDao pictureDao;
     @Autowired
     OfficalAccoutUserDao officalAccoutUserDao;
-    @Autowired
-    UserOperRecordDao userOperRecordDao;
+    /*@Autowired
+    UserOperRecordDao userOperRecordDao;*/
+
+    UserOperRecordService userOperRecordService;
+
+    public void init() throws Throwable {
+        userOperRecordService = ApplicationContextProvider.getBean(UserOperRecordService.class);
+    }
+
 
     @Override
     @VertxWebApi
@@ -325,7 +333,9 @@ public class OperationService extends AbstractBaseService<OperationVO> {
             newOrderVO.setFinishDate(Timestamp.valueOf(LocalDateTime.now()));
             newOrderVO.setOrderState(CustomConst.ORDER.STATE.END);
             orderDao.set(newOrderVO);
-            userOperRecordDao.add(newOrderVO.setCustId(orderVO.getCustId()));
+//            userOperRecordDao.add(newOrderVO.setCustId(orderVO.getCustId()));
+
+            userOperRecordService.handle(CustomConst.USER_RECORD.ORDER, newOrderVO.setCustId(orderVO.getCustId()));
         }
     }
 

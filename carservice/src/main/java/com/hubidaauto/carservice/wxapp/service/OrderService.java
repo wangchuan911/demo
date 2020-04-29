@@ -39,8 +39,10 @@ public class OrderService extends AbstractBaseService<OrderVO> {
     OperationDao operationDao;
     @Autowired
     PictureDao pictureDao;
-    @Autowired
-    UserOperRecordDao userOperRecordDao;
+    /*@Autowired
+    UserOperRecordDao userOperRecordDao;*/
+
+    UserOperRecordService userOperRecordService;
 
 
     TacheService tacheService;
@@ -52,6 +54,7 @@ public class OrderService extends AbstractBaseService<OrderVO> {
         tacheService = ApplicationContextProvider.getBean(TacheService.class);
         operationService = ApplicationContextProvider.getBean(OperationService.class);
         couponService = ApplicationContextProvider.getBean(CouponService.class);
+        userOperRecordService = ApplicationContextProvider.getBean(UserOperRecordService.class);
     }
 
     @Override
@@ -170,7 +173,8 @@ public class OrderService extends AbstractBaseService<OrderVO> {
             case CustomConst.MODIFY:
                 orderDao.set(orderVO);
                 //update user operation
-                userOperRecordDao.add(orderVO);
+//                userOperRecordDao.add(orderVO);
+                userOperRecordService.handle(CustomConst.USER_RECORD.ORDER, orderVO);
                 resultObj = orderVO;
                 break;
         }

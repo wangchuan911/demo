@@ -123,5 +123,10 @@ public final class CustomConst {
             public final static int NEW_USER = 1;
         }
     }
+
+    public interface USER_RECORD {
+        int ORDER = 0,
+                LOCAL = 1;
+    }
 }
 

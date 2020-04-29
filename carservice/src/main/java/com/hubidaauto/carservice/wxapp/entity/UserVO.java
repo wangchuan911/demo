@@ -1,5 +1,6 @@
 package com.hubidaauto.carservice.wxapp.entity;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 public class UserVO {
@@ -13,6 +14,7 @@ public class UserVO {
     private boolean openData = true;
     private String unionid;
     private List<CouponVO> coupons;
+    private WorkerStatus workerStatus;
 
     public String getId() {
         return id;
@@ -91,7 +93,7 @@ public class UserVO {
         return this;
     }
 
-    static class UserAttr {
+    public static class UserAttr {
         private boolean vip;
         private Integer[] regionCode;
 
@@ -120,5 +122,55 @@ public class UserVO {
 
     public void setCoupons(List<CouponVO> coupons) {
         this.coupons = coupons;
+    }
+
+    public WorkerStatus getWorkerStatus() {
+        return workerStatus;
+    }
+
+    public void setWorkerStatus(WorkerStatus workerStatus) {
+        this.workerStatus = workerStatus;
+    }
+
+    public static class WorkerStatus {
+        private Integer orders;
+        private Double posX;
+        private Double posY;
+        private Timestamp lastPosDate;
+
+        public Double getPosX() {
+            return posX;
+        }
+
+        public WorkerStatus setPosX(Double posX) {
+            this.posX = posX;
+            return this;
+        }
+
+        public Double getPosY() {
+            return posY;
+        }
+
+        public WorkerStatus setPosY(Double posY) {
+            this.posY = posY;
+            return this;
+        }
+
+        public Timestamp getLastPosDate() {
+            return lastPosDate;
+        }
+
+        public WorkerStatus setLastPosDate(Timestamp lastLocalDate) {
+            this.lastPosDate = lastLocalDate;
+            return this;
+        }
+
+        public Integer getOrders() {
+            return orders;
+        }
+
+        public void setOrders(Integer orders) {
+            this.orders = orders;
+        }
     }
 }

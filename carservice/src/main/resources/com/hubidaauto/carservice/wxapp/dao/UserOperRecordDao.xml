@@ -8,43 +8,15 @@
         <parameter property="orderId" jdbcType="INTEGER"></parameter>
         <parameter property="orderCode" jdbcType="VARCHAR"></parameter>
         <parameter property="carLicenseNumber" jdbcType="VARCHAR"></parameter>
-        <parameter property="carAddress" jdbcType="VARCHAR"></parameter>
-        <parameter property="createDate" jdbcType="TIMESTAMP"></parameter>
-        <parameter property="finishDate" jdbcType="TIMESTAMP"></parameter>
         <parameter property="orderState" jdbcType="INTEGER"></parameter>
         <parameter property="orderControlPerson" jdbcType="VARCHAR"></parameter>
         <parameter property="orderAppointPerson" jdbcType="VARCHAR"></parameter>
         <parameter property="orderArrangeDate" jdbcType="TIMESTAMP"></parameter>
         <parameter property="custId" jdbcType="VARCHAR"></parameter>
-        <parameter property="passTache" jdbcType="VARCHAR"></parameter>
-        <parameter property="orderNote" jdbcType="VARCHAR"></parameter>
-        <parameter property="posX" jdbcType="DOUBLE"></parameter>
-        <parameter property="posY" jdbcType="DOUBLE"></parameter>
         <parameter property="tacheId" jdbcType="INTEGER"></parameter>
         <parameter property="regionCode" jdbcType="INTEGER"></parameter>
-        <parameter property="cost" jdbcType="DOUBLE"></parameter>
     </parameterMap>
 
-    <resultMap id="OrderVO" type="com.hubidaauto.carservice.wxapp.entity.OrderVO">
-        <result property="orderId" column="order_id"></result>
-        <result property="orderCode" column="order_code"></result>
-        <result property="carLicenseNumber" column="car_license_number"></result>
-        <result property="carAddress" column="car_address"></result>
-        <result property="createDate" column="create_date"></result>
-        <result property="finishDate" column="finish_date"></result>
-        <result property="orderState" column="order_state"></result>
-        <result property="orderControlPerson" column="order_control_person"></result>
-        <result property="orderAppointPerson" column="order_appoint_person"></result>
-        <result property="orderArrangeDate" column="order_arrange_date"></result>
-        <result property="custId" column="cust_id"></result>
-        <result property="passTache" column="pass_tache"></result>
-        <result property="orderNote" column="order_note"></result>
-        <result property="posX" column="pos_x"></result>
-        <result property="posY" column="pos_y"></result>
-        <result property="tacheId" column="tache_id"></result>
-        <result property="regionCode" column="region_code"></result>
-        <result property="cost" column="cost"></result>
-    </resultMap>
     <insert id="add" parameterMap="OrderVO">
         INSERT INTO car_user_opr_report (
         <include refid="insertColumn"></include>
@@ -98,4 +70,22 @@
     <select id="num" parameterMap="OrderVO" resultType="int">
         SELECT IFNULL(MAX(IFNULL(a.fin_order_cnt,0)),0) FROM  car_user_opr_report a WHERE a.id=#{custId,jdbcType=VARCHAR}
     </select>
+
+
+    <insert id="location" parameterType="com.hubidaauto.carservice.wxapp.entity.UserVO">
+        INSERT INTO car_user_opr_report (
+        last_pos_date,
+        pos_x,
+        pos_y,
+        id
+        ) VALUES (
+        CURRENT_TIMESTAMP
+        ,#{workerStatus.posX,jdbcType=DOUBLE}
+        ,#{workerStatus.posY,jdbcType=DOUBLE}
+        ,#{id,jdbcType=VARCHAR})
+        ON DUPLICATE KEY UPDATE
+        last_pos_date=CURRENT_TIMESTAMP
+        ,pos_x=#{workerStatus.posX,jdbcType=DOUBLE}
+        ,pos_y=#{workerStatus.posY,jdbcType=DOUBLE}
+    </insert>
 </mapper>

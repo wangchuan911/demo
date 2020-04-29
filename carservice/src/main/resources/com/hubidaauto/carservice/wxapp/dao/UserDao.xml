@@ -4,7 +4,7 @@
 
 <mapper namespace="com.hubidaauto.carservice.wxapp.dao.UserDao">
 
-    <resultMap id="UserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO">
+    <resultMap id="BaseUserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO">
         <result property="id" column="car_user_id"></result>
         <result property="name" column="car_user_name"></result>
         <result property="role" column="car_user_role"></result>
@@ -12,11 +12,15 @@
         <result property="sessionKey" column="session_key"></result>
         <result property="maxRole" column="car_user_max_role"></result>
         <result property="unionid" column="union_id"></result>
+    </resultMap>
+
+    <resultMap id="UserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO" extends="BaseUserVO">
         <association property="userAttr" javaType="com.hubidaauto.carservice.wxapp.entity.UserVO$UserAttr"
                      column="car_user_id" select="getUserAttr"></association>
 
         <collection property="coupons" ofType="com.hubidaauto.carservice.wxapp.entity.CouponVO"
-                     column="{userId=car_user_id}" select="com.hubidaauto.carservice.wxapp.dao.CouponDao.list"></collection>
+                    column="{userId=car_user_id}"
+                    select="com.hubidaauto.carservice.wxapp.dao.CouponDao.list"></collection>
     </resultMap>
 
     <parameterMap id="UserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO">
@@ -160,21 +164,14 @@
                 ) a WHERE #{value} REGEXP a.reg
     </select>
 
-    <parameterMap id="OrderVO" type="com.hubidaauto.carservice.wxapp.entity.OrderVO">
-        <parameter property="orderId" jdbcType="INTEGER"></parameter>
-        <parameter property="carLicenseNumber" jdbcType="VARCHAR"></parameter>
-        <parameter property="orderState" jdbcType="INTEGER"></parameter>
-        <parameter property="orderControlPerson" jdbcType="VARCHAR"></parameter>
-        <parameter property="orderAppointPerson" jdbcType="VARCHAR"></parameter>
-        <parameter property="custId" jdbcType="VARCHAR"></parameter>
-        <parameter property="posX" jdbcType="DOUBLE"></parameter>
-        <parameter property="posY" jdbcType="DOUBLE"></parameter>
-        <parameter property="regionCode" jdbcType="INTEGER"></parameter>
-    </parameterMap>
+    <resultMap id="WorkUserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO" extends="com.hubidaauto.carservice.wxapp.dao.UserDao.BaseUserVO">
+        <association property="workerStatus" javaType="com.hubidaauto.carservice.wxapp.entity.UserVO$WorkerStatus"
+                     column="car_user_id" select="getWorkerStatus"></association>
+    </resultMap>
 
-    <select id="getWorkers" parameterMap="OrderVO" resultMap="UserVO">
+    <select id="getWorkers" parameterType="com.hubidaauto.carservice.wxapp.entity.OrderVO" resultMap="WorkUserVO">
         SELECT
-          *
+          a.*
         FROM
           car_wash_order a1
           JOIN user_attr b
@@ -187,5 +184,28 @@
             ON a.car_user_id = b.USER_ID
             AND a.car_user_max_role=1
         WHERE a1.order_id = #{orderId,jdbcType=INTEGER}
-</select>
+    </select>
+
+    <resultMap id="WorkerStatus" type="com.hubidaauto.carservice.wxapp.entity.UserVO$WorkerStatus">
+        <result property="orders" column="orders"></result>
+        <result property="lastPosDate" column="last_pos_date"></result>
+        <result property="posX" column="pos_x"></result>
+        <result property="posY" column="pos_y"></result>
+    </resultMap>
+
+    <select id="getWorkerStatus" parameterType="string" resultMap="WorkerStatus">
+        SELECT
+            (SELECT
+              COUNT(order_id)
+            FROM
+              car_wash_order a
+            WHERE a.order_state IN (0, 1) AND a.tache_id IN (3, 4, 5)
+              AND order_Appoint_Person = b.id
+            GROUP BY order_Appoint_Person
+          ) orders,
+          b.*
+        FROM
+          car_user_opr_report b
+          where b.id=#{value}
+    </select>
 </mapper>
