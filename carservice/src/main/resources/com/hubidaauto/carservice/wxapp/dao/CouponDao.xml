@@ -70,6 +70,8 @@
             ]]>
             </otherwise>
         </choose>
+    </sql>
+    <sql id="couponVailCheck2">
         <choose>
             <when test="orderId != null and orderId > 0">
                 and ifnull(b.order_id,0)>0
@@ -107,11 +109,13 @@
     <select id="list" parameterMap="CouponVO" resultMap="CouponVO">
         <include refid="select"></include>
         <include refid="couponVailCheck"></include>
+        <include refid="couponVailCheck2"></include>
         <include refid="condition"></include>
     </select>
     <select id="get" parameterMap="CouponVO" resultMap="CouponVO">
         <include refid="select"></include>
         <include refid="couponVailCheck"></include>
+        <include refid="couponVailCheck2"></include>
         <include refid="condition"></include>
     </select>
     <select id="num" parameterMap="CouponVO" resultType="int">
@@ -119,6 +123,7 @@
         join car_coupon_user b
         on b.coupon_id=a.id
         <include refid="couponVailCheck"></include>
+        <include refid="couponVailCheck2"></include>
         <include refid="condition"></include>
     </select>
 
