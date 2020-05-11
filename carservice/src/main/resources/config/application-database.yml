@@ -1,14 +1,12 @@
 spring:
   datasource:
     enabled: true
-    username: hubidaauto
-              #welisdoon
-    password: Mengyan209810$$
-              #We1i$d00n
+    username:
+    password:
     #驱动
     driver-class-name: com.mysql.jdbc.Driver
     #数据库连接路径
-    url: jdbc:mysql://123.207.114.46/hubidaauto?&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true
+    url: jdbc:mysql://localhost:8080/hubidaauto?&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true
     #连接池类型
     type: com.alibaba.druid.pool.DruidDataSource
     #连接池配置，因为springboot默认是开启了连接池的，它有默认配置，这一段可以忽略
