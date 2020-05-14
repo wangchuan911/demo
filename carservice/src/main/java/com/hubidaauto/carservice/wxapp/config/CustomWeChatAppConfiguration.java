@@ -196,6 +196,9 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                                                         .setId(jsonObject.getString("openid"))
                                                         .setSessionKey(jsonObject.getString("session_key"))
                                                         .setUnionid(jsonObject.getString("unionid"))));
+                                        //安全问题
+                                        jsonObject.remove("session_key");
+                                        jsonObject.remove("unionid");
                                         routingContext.response().end(jsonObject.toBuffer());
                                     } else {
                                         routingContext.fail(httpResponseAsyncResult.cause());
