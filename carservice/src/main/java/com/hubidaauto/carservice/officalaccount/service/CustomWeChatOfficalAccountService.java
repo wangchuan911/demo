@@ -37,29 +37,34 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
     public ResponseMesseage textProcess(TextMesseage msg) {
         // TODO Auto-generated method stub
         ResponseMesseage to = null;
-        String text = msg.getContent();
-        if ("同步".equals(msg.getContent())) {
-            UserVO userVO = userDao.get(new UserVO().setId(msg.getFromUserName()));
-            if (userVO == null) {
-                userDao.add(userVO = new UserVO().setId(msg.getFromUserName()));
+        String text = StringUtils.isEmpty(msg.getContent()) ? "" : msg.getContent();
+        switch (text) {
+            case "同步": {
+                UserVO userVO = userDao.get(new UserVO().setId(msg.getFromUserName()));
+                if (userVO == null) {
+                    userDao.add(userVO = new UserVO().setId(msg.getFromUserName()));
+                }
+                if (StringUtils.isEmpty(userVO.getUnionid())) {
+                    final UserVO userVO1 = userVO;
+                    WechatAsyncMeassger
+                            .get(CustomWeChaConfiguration.class)
+                            .get(CommonConst.WecharUrlKeys.USER_INFO
+                                    , Map.of("OPEN_ID", userVO.getId())
+                                    , bufferHttpResponse -> {
+                                        JsonObject jsonObject = bufferHttpResponse.bodyAsJsonObject();
+                                        userVO1.setUnionid(jsonObject.getString("unionid"));
+                                        userVO1.setName(jsonObject.getString("nickname"));
+                                        userDao.set(userVO1.openData(false));
+                                    });
+                    text = "同步成功";
+                }
+                to = new org.welisdoon.webserver.entity.wechat.messeage.response.TextMesseage(msg);
+                ((org.welisdoon.webserver.entity.wechat.messeage.response.TextMesseage) to).setContent(text);
+                break;
             }
-            if (StringUtils.isEmpty(userVO.getUnionid())) {
-                final UserVO userVO1 = userVO;
-                WechatAsyncMeassger
-                        .get(CustomWeChaConfiguration.class)
-                        .get(CommonConst.WecharUrlKeys.USER_INFO
-                                , Map.of("OPEN_ID", userVO.getId())
-                                , bufferHttpResponse -> {
-                                    JsonObject jsonObject = bufferHttpResponse.bodyAsJsonObject();
-                                    userVO1.setUnionid(jsonObject.getString("unionid"));
-                                    userVO1.setName(jsonObject.getString("nickname"));
-                                    userDao.set(userVO1.openData(false));
-                                });
-                text = "同步成功";
-            }
+            default:
+                break;
         }
-        to = new org.welisdoon.webserver.entity.wechat.messeage.response.TextMesseage(msg);
-        ((org.welisdoon.webserver.entity.wechat.messeage.response.TextMesseage) to).setContent(text);
         return to;
     }
 }
