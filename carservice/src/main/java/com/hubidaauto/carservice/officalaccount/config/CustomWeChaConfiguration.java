@@ -29,70 +29,68 @@ import java.util.function.Consumer;
 @Configuration
 @ConditionalOnProperty(prefix = "wechat-public-hubida", name = "appID")
 public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
-    private static final Logger logger = LoggerFactory.getLogger(CustomWeChaConfiguration.class);
+	private static final Logger logger = LoggerFactory.getLogger(CustomWeChaConfiguration.class);
 
-    private Long wechatAliveTimerId = null;
+	private Long wechatAliveTimerId = null;
 
-    ICommonAsynService commonAsynService;
+	ICommonAsynService commonAsynService;
 
-    private WXBizMsgCrypt wxBizMsgCrypt;
 
-    @PostConstruct
-    void initValue() throws Throwable {
-        wxBizMsgCrypt = this.getWXBizMsgCrypt();
-    }
+	@PostConstruct
+	public void initValue() throws Throwable {
+		super.initValue();
+	}
 
-    WechatAsyncMeassger wechatAsyncMeassger = null;
 
-    @VertxRegister(StandaredVerticle.class)
-    public Consumer<Router> routeMapping(Vertx vertx) {
+	@VertxRegister(StandaredVerticle.class)
+	public Consumer<Router> routeMapping(Vertx vertx) {
 
-        commonAsynService = ICommonAsynService.createProxy(vertx, this.getAppID());
+		commonAsynService = ICommonAsynService.createProxy(vertx, this.getAppID());
 
-        WebClient webClient = WebClient.create(vertx);
+		WebClient webClient = WebClient.create(vertx);
+		setWechatAsyncMeassger(webClient);
 
-        this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
-            this.tokenHandler(objectMessage, accessToken -> {
-                wechatAsyncMeassger.setToken(accessToken);
-            }, s -> {
-            });
-        });
-        wechatAsyncMeassger = getWechatAsyncMeassger(webClient);
+		this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
+			this.tokenHandler(objectMessage, accessToken -> {
+				this.getWechatAsyncMeassger().setToken(accessToken);
+			}, s -> {
+			});
+		});
 
-        Consumer<Router> routerConsumer = router -> {
-            router.get(this.getPath().getPush()).handler(this::wechatMsgCheck);
+		Consumer<Router> routerConsumer = router -> {
+			router.get(this.getPath().getPush()).handler(this::wechatMsgCheck);
 
-            router.post(this.getPath().getPush()).handler(this::wechatDecryptMsg)
-                    .handler(routingContext -> {
-                        Buffer requestbuffer = routingContext.getBody();
-                        commonAsynService.requsetCall(new Requset()
-                                .setService("customWeChatOfficalAccountService")
-                                .setBody(requestbuffer.toString())
-                                .setMode(Requset.WECHAT), stringAsyncResult -> {
-                            if (stringAsyncResult.succeeded()) {
-                                Buffer buffer = Buffer.buffer(stringAsyncResult.result().getResult().toString());
-                                routingContext.setBody(buffer);
-                                routingContext.next();
-                            } else {
-                                stringAsyncResult.cause().printStackTrace();
-                                routingContext.response().end(MesseageTypeValue.MSG_REPLY);
-                            }
-                        });
+			router.post(this.getPath().getPush()).handler(this::wechatDecryptMsg)
+					.handler(routingContext -> {
+						Buffer requestbuffer = routingContext.getBody();
+						commonAsynService.requsetCall(new Requset()
+								.setService("customWeChatOfficalAccountService")
+								.setBody(requestbuffer.toString())
+								.setMode(Requset.WECHAT), stringAsyncResult -> {
+							if (stringAsyncResult.succeeded()) {
+								Buffer buffer = Buffer.buffer(stringAsyncResult.result().getResult().toString());
+								routingContext.setBody(buffer);
+								routingContext.next();
+							} else {
+								stringAsyncResult.cause().printStackTrace();
+								routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+							}
+						});
 
-                    }).handler(this::wechatEncryptMsg).failureHandler(routingContext -> {
-                routingContext.response().end(MesseageTypeValue.MSG_REPLY);
-            });
-            logger.info(String.format("inital request mapping: %s", this.getPath().getPush()));
-        };
-        return routerConsumer;
-    }
+					}).handler(this::wechatEncryptMsg).failureHandler(routingContext -> {
+				routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+			});
+			logger.info(String.format("inital request mapping: %s", this.getPath().getPush()));
+		};
+		return routerConsumer;
+	}
 
-    @VertxRegister(WorkerVerticle.class)
-    public Consumer<Vertx> createAsyncService() {
-        Consumer<Vertx> vertxConsumer = vertx1 -> {
-            ICommonAsynService.create(vertx1, this.getAppID());
-        };
-        return vertxConsumer;
-    }
+	@VertxRegister(WorkerVerticle.class)
+	public Consumer<Vertx> createAsyncService() {
+		Consumer<Vertx> vertxConsumer = vertx1 -> {
+			ICommonAsynService.create(vertx1, this.getAppID());
+		};
+		return vertxConsumer;
+	}
 }
 

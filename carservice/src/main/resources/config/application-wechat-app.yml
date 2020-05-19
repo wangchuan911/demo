@@ -13,6 +13,7 @@ wechat-app-hubida:
     pay: /wxAppPay
     app: /wxApp
     push: /wxPush
+    index: /pages/index2/index/index
   urls:
     getAccessToken: https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat-app-hubida.appID}&secret=${wechat-app-hubida.appsecret}
     code2Session: https://api.weixin.qq.com/sns/jscode2session?appid=${wechat-app-hubida.appID}&secret=${wechat-app-hubida.appsecret}&grant_type=authorization_code&js_code=
@@ -36,6 +37,7 @@ wechat-public-hubida:
     pay:
     app:
     push: /aczl
+    index:
   urls:
     getAccessToken: https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat-public-hubida.appID}&secret=${wechat-public-hubida.appsecret}
     code2Session: https://api.weixin.qq.com/sns/jscode2session?appid=${wechat-public-hubida.appID}&secret=${wechat-public-hubida.appsecret}&grant_type=authorization_code&js_code=

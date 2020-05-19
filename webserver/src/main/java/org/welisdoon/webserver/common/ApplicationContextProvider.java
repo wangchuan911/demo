@@ -63,4 +63,9 @@ public class ApplicationContextProvider implements ApplicationContextAware {
     public static Class<?> getType(String name) {
         return getApplicationContext().getType(name);
     }
+
+    public static Class<?> getRealClass(Class cls) {
+        return cls.getName().indexOf("EnhancerBySpringCGLIB") > 0 ? cls.getSuperclass() : cls;
+    }
+
 }
