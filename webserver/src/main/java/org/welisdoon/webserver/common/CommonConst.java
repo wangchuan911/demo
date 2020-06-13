@@ -20,6 +20,7 @@ public interface CommonConst {
                 ACCESS_TOKEN = "getAccessToken",
                 CODE_2_SESSION = "code2Session",
                 UNIFIED_ORDER = "unifiedorder",
-                USER_INFO = "userInfo";
+                USER_INFO = "userInfo",
+                CUSTOM_SEND = "customSend";
     }
 }
