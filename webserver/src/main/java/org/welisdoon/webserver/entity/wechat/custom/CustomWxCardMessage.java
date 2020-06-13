@@ -23,8 +23,9 @@ public class CustomWxCardMessage extends CustomMessage {
         return wxcard;
     }
 
-    public void setWxcard(WxCard wxcard) {
+    public CustomWxCardMessage setWxcard(WxCard wxcard) {
         this.wxcard = wxcard;
+        return this;
     }
 
     public CustomWxCardMessage wxcard(String cardId) {

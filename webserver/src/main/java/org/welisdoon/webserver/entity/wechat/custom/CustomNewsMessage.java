@@ -58,6 +58,14 @@ public class CustomNewsMessage extends CustomMessage {
         }
     }
 
+    public News getNews() {
+        return news;
+    }
+
+    public CustomNewsMessage setNews(News news) {
+        this.news = news;
+        return this;
+    }
 
     public CustomNewsMessage addNew(String title, String description, String url, String picurl) {
         if (this.news == null) {

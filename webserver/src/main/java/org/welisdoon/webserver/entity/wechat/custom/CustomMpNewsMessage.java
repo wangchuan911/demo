@@ -23,8 +23,9 @@ public class CustomMpNewsMessage extends CustomMessage {
         return mpnews;
     }
 
-    public void setMpnews(MpNews mpnews) {
+    public CustomMpNewsMessage setMpnews(MpNews mpnews) {
         this.mpnews = mpnews;
+        return this;
     }
 
     public CustomMpNewsMessage mpnews(String mediaId) {

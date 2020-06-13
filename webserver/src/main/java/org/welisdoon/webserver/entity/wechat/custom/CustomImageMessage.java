@@ -23,8 +23,9 @@ public class CustomImageMessage extends CustomMessage {
         return image;
     }
 
-    public void setImage(Image image) {
+    public CustomImageMessage setImage(Image image) {
         this.image = image;
+        return this;
     }
 
     public CustomImageMessage image(String imageId) {

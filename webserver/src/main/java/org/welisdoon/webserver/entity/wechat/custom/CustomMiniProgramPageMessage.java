@@ -47,8 +47,9 @@ public class CustomMiniProgramPageMessage extends CustomMessage {
         return miniprogrampage;
     }
 
-    public void setMiniprogrampage(MiniProgramPage miniprogrampage) {
+    public CustomMiniProgramPageMessage setMiniprogrampage(MiniProgramPage miniprogrampage) {
         this.miniprogrampage = miniprogrampage;
+        return this;
     }
 
     public CustomMiniProgramPageMessage miniprogrampage(String title, String appid, String pagepath, String thumb_media_id) {

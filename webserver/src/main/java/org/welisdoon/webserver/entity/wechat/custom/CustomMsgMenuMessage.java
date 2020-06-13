@@ -35,6 +35,15 @@ public class CustomMsgMenuMessage extends CustomMessage {
         }
     }
 
+    public MsgMenu getMsgmenu() {
+        return msgmenu;
+    }
+
+    public CustomMsgMenuMessage setMsgmenu(MsgMenu msgmenu) {
+        this.msgmenu = msgmenu;
+        return this;
+    }
+
     private void initParameter() {
         if (this.msgmenu == null) {
             this.msgmenu = new MsgMenu();

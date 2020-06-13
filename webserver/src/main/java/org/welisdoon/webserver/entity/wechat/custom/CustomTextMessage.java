@@ -23,8 +23,9 @@ public class CustomTextMessage extends CustomMessage {
         return text;
     }
 
-    public void setText(Text text) {
+    public CustomTextMessage setText(Text text) {
         this.text = text;
+        return this;
     }
 
     public CustomTextMessage text(String text) {

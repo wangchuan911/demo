@@ -47,8 +47,9 @@ public class CustomVoiceMessage extends CustomMessage {
         return voice;
     }
 
-    public void setVoice(Voice voice) {
+    public CustomVoiceMessage setVoice(Voice voice) {
         this.voice = voice;
+        return this;
     }
 
     public CustomVoiceMessage voice(String voiceId) {

@@ -8,7 +8,7 @@ public class CustomWxMusicMessage extends CustomMessage {
     }
 
     public static class Music {
-         String title,description,musicurl,hqmusicurl,thumb_media_id;
+        String title, description, musicurl, hqmusicurl, thumb_media_id;
 
         public String getTitle() {
             return title;
@@ -55,11 +55,12 @@ public class CustomWxMusicMessage extends CustomMessage {
         return music;
     }
 
-    public void setMusic(Music music) {
+    public CustomWxMusicMessage setMusic(Music music) {
         this.music = music;
+        return this;
     }
 
-    public CustomWxMusicMessage music(String title,String description,String musicurl,String hqmusicurl,String thumb_media_id) {
+    public CustomWxMusicMessage music(String title, String description, String musicurl, String hqmusicurl, String thumb_media_id) {
         if (this.music == null) {
             this.music = new Music();
         }
