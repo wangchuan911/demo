@@ -47,11 +47,9 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
 
     ICommonAsynService commonAsynService;
 
-    private WXBizMsgCrypt wxBizMsgCrypt;
-
     @PostConstruct
-    void initValue() throws Throwable {
-        wxBizMsgCrypt = this.getWXBizMsgCrypt();
+    public void initValue() throws Throwable {
+        super.initValue();
     }
 
     /*@VertxRegister(StandaredVerticle.class)

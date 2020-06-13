@@ -319,10 +319,15 @@
         select count(order_id) from car_wash_order a
     </select>
 
-    <select id="getWorkIngOrderNum" parameterMap="OrderVO" resultType="map">
+    <resultMap id="MapGetWorkIngOrderNum" type="java.util.Map">
+        <result property="working" column="working" jdbcType="INTEGER" javaType="int"></result>
+        <result property="order_code" column="order_code" jdbcType="VARCHAR" javaType="string"></result>
+        <result property="pos_x" column="pos_x" jdbcType="NUMERIC" javaType="double"></result>
+        <result property="pos_y" column="pos_y" jdbcType="NUMERIC" javaType="double"></result>
+    </resultMap>
+    <select id="getWorkIngOrderNum" parameterMap="OrderVO" resultMap="MapGetWorkIngOrderNum">
         select
-        count(order_id) all_nums,
-        cast(sum(IF(
+        IF(
         <choose>
             <when test="orderControlPerson!=null and orderControlPerson!=''.toString()">
                 tache_id in (1,2)
@@ -332,7 +337,8 @@
             </when>
             <otherwise>order_state=2</otherwise>
         </choose>
-         ,0 , 1 ))as unsigned int) nums
+         ,0 , 1 ) working,
+        a.order_code,a.pos_x,a.pos_y
         from car_wash_order a
         <where>
             <if test="orderId!=null and orderId!=''.toString()">

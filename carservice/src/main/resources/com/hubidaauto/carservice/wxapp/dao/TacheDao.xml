@@ -137,12 +137,25 @@
         select count(order_id) from car_tache a
     </select>
 
-    <select id="getProccess" parameterType="map" resultType="map">
+    <resultMap id="MapGetProccess" type="java.util.Map">
+        <result property="all_nums" column="all_nums" javaType="int" jdbcType="INTEGER"></result>
+        <result property="nums" column="nums" javaType="int" jdbcType="INTEGER"></result>
+        <collection property="pos"
+                    select="getProccessOfOrder"
+                    ofType="map"
+                    column="user_id">
+        </collection>
+    </resultMap>
+    <select id="getProccessOfOrder" parameterType="string" resultType="map">
+        select d.pos_x,d.pos_y,d.order_code from car_wash_order d
+                where d.cust_id=#{value}
+                and d.order_state in (0,1)
+    </select>
+    <select id="getProccess" parameterType="map" resultMap="MapGetProccess">
         select
         COUNT(1) all_nums,
-        cast(
-        sum(IF(b.seq >= a.seq, 1, 0)) as unsigned int
-        ) nums
+        sum(IF(b.seq >= a.seq, 1, 0)) nums,
+        #{userId,jdbcType=VARCHAR} user_id
         FROM
         car_tache a
         join car_tache b

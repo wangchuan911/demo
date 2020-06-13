@@ -16,17 +16,17 @@ public class SubscribeMessage extends PushMessage {
     * */
 
     String page;
-    String miniprogram_state = "formal";
+    /*String miniprogram_state = "formal";*/
     String lang = "zh_CN";
 
-    public String getMiniprogram_state() {
+    /*public String getMiniprogram_state() {
         return miniprogram_state;
     }
 
     public SubscribeMessage setMiniprogram_state(String miniprogram_state) {
         this.miniprogram_state = miniprogram_state;
         return this;
-    }
+    }*/
 
     public String getLang() {
         return lang;
