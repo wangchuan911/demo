@@ -30,8 +30,9 @@ public abstract class CustomMessage {
         return touser;
     }
 
-    public void setTouser(String touser) {
+    public CustomMessage setTouser(String touser) {
         this.touser = touser;
+        return this;
     }
 
     public String getMsgtype() {
