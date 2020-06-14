@@ -84,7 +84,7 @@ public class CommonAsynService implements ICommonAsynService {
     @Override
     public void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler) {
         Promise<Response> promise = Promise.promise();
-        promise.future().setHandler(outputBodyHandler);
+        promise.future().onComplete(outputBodyHandler);
         Response response = new Response();
         JsonObject params = StringUtils.isEmpty(requset.getParams()) ? null : (JsonObject) Json.decodeValue(requset.getParams());
         try {

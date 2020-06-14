@@ -28,7 +28,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     @Override
     final public void start(Promise<Void> startPromise) {
         Promise<Void> promise = Promise.promise();
-        promise.future().setHandler(voidAsyncResult -> {
+        promise.future().onComplete(voidAsyncResult -> {
             handleRegist();
             registedAfter(startPromise);
         });
