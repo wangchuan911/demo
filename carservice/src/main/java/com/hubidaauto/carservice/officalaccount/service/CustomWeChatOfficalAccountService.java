@@ -76,7 +76,7 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
                                             .text(
                                                     String.format("<a  data-miniprogram-appid=\"%s\" data-miniprogram-path=\"%s\">加入我们</a>"
                                                             , configuration.getAppID()
-                                                            , configuration.getPath().getIndex() + "?joinUs=true"))
+                                                            , String.format("%s?code=joinUs&my=%s", configuration.getPath().getIndex(), userVO.getId())))
                                             .setTouser(userVO.getId()));
                 }
             }
