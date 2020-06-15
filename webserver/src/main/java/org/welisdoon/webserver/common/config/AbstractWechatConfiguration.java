@@ -187,6 +187,7 @@ public abstract class AbstractWechatConfiguration {
 		String app;
 		String push;
 		String index;
+		Map<String, String> other;
 
 		public String getPay() {
 			return pay;
@@ -218,6 +219,14 @@ public abstract class AbstractWechatConfiguration {
 
 		public void setIndex(String index) {
 			this.index = index;
+		}
+
+		public Map<String, String> getOther() {
+			return other;
+		}
+
+		public void setOther(Map<String, String> other) {
+			this.other = other;
 		}
 	}
 
