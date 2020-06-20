@@ -21,12 +21,12 @@
         INSERT INTO car_invite_code
         (
         <if test="valid!=null and valid>0">valid,</if>
-        <if test="type!=null">TYPE,</if>
+        TYPE,
         CODE,
-        create_man)
-        VALUES (
+        create_man
+        ) VALUES (
         <if test="valid!=null and valid>0">#{valid},</if>
-        <if test="type!=null">#{type},</if>
+        #{type},
         #{code},
         #{userId}
         )
@@ -38,6 +38,9 @@
                 and code = #{code}
             </if>
             and a.create_man=#{userId}
+            <if test="type!=null and type!=''">
+                and type = #{type}
+            </if>
             and a.valid!=0
         </where>
     </select>
@@ -49,16 +52,19 @@
                 and a.create_man=#{userId}
             </if>
             and code = #{code}
+            <if test="type!=null and type!=''">
+                and type = #{type}
+            </if>
             and a.valid!=0
         </where>
     </select>
 
     <update id="del" parameterMap="InviteCodeDto">
         update car_invite_code a
-        set
-          a.valid = a.valid-1,
-          type = type
+        <set>
+            a.valid = a.valid-1,
+        </set>
         where code = #{code}
-            and a.valid!=0
+        and a.valid!=0
     </update>
 </mapper>

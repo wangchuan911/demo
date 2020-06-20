@@ -74,7 +74,7 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
 				String keyWord;
 				if (text.indexOf(keyWord = "JOINUS@") == 0) {
 					String inviteCode = text.substring(keyWord.length());
-					InviteCodeDto inviteCodeDto = (InviteCodeDto) inviteCodeService.handle(CustomConst.GET, Map.of("code", inviteCode));
+					InviteCodeDto inviteCodeDto = (InviteCodeDto) inviteCodeService.handle(CustomConst.GET, Map.of("code", inviteCode, "type", CustomConst.INVITE_CODE.WORKER));
 					if (inviteCodeDto.getValid() > 0) {
 						final UserVO userVO = getOrAddUser(msg.getFromUserName());
 						if (StringUtils.isEmpty(userVO.getUnionid())) {
@@ -89,7 +89,7 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
 															String.format("<a  data-miniprogram-appid=\"%s\" data-miniprogram-path=\"%s\">加入我们</a>"
 																	, configuration.getAppID()
 																	, String.format("%s?code=joinUs&my=%s&invite=%s",
-																			configuration.getPath().getOther().get("joinUs"),
+																			configuration.getPath().getOther().get("invite"),
 																			userVO.getId(),
 																			inviteCode)))
 													.setTouser(userVO.getId()));

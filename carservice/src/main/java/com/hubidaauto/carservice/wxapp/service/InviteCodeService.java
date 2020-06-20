@@ -25,9 +25,12 @@ public class InviteCodeService extends AbstractBaseService<InviteCodeDto> {
 	/*@PostConstruct
 	void a() {
 		;
-		this.handle(CustomConst.DELETE, JsonObject.mapFrom(this.handle(CustomConst.ADD, JsonObject.mapFrom(new InviteCodeDto().setUserId("111122")).getMap())).getMap());
-	}
-*/
+		this.handle(CustomConst.DELETE, JsonObject.mapFrom(
+				this.handle(CustomConst.ADD,
+						Map.of("userId", "1", "type", "1")))
+				.getMap());
+	}*/
+
 	@Override
 	@VertxWebApi
 	public Object handle(int exeCode, Map params) {
