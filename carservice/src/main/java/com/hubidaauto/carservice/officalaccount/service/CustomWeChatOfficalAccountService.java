@@ -61,7 +61,7 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
 									, bufferHttpResponse -> {
 										JsonObject jsonObject = bufferHttpResponse.bodyAsJsonObject();
 										userVO.setUnionid(jsonObject.getString("unionid"));
-										userVO.setName(jsonObject.getString("nickname"));
+//										userVO.setName(jsonObject.getString("nickname"));
 										userDao.set(userVO.openData(false));
 									});
 					text = "同步成功";
@@ -102,7 +102,7 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
 		return to;
 	}
 
-	UserVO getOrAddUser(String userId) {
+	public UserVO getOrAddUser(String userId) {
 		UserVO userVO = userDao.get(new UserVO().setId(userId));
 		if (userVO == null) {
 			userDao.add(userVO = new UserVO().setId(userId));

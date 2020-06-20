@@ -164,7 +164,8 @@
                 ) a WHERE #{value} REGEXP a.reg
     </select>
 
-    <resultMap id="WorkUserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO" extends="com.hubidaauto.carservice.wxapp.dao.UserDao.BaseUserVO">
+    <resultMap id="WorkUserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO"
+               extends="com.hubidaauto.carservice.wxapp.dao.UserDao.BaseUserVO">
         <association property="workerStatus" javaType="com.hubidaauto.carservice.wxapp.entity.UserVO$WorkerStatus"
                      column="car_user_id" select="getWorkerStatus"></association>
     </resultMap>
@@ -222,4 +223,14 @@
         #{userAttr.vip,jdbcType=BOOLEAN},
         #{userAttr.inviteCode,jdbcType=INTEGER});
     </insert>
+
+    <update id="setMaxRole" parameterMap="UserVO">
+        update car_user
+        <set>
+            car_user_max_role=#{maxRole,jdbcType=INTEGER},
+        </set>
+        <where>
+            car_user_id=#{id,jdbcType=VARCHAR}
+        </where>
+    </update>
 </mapper>

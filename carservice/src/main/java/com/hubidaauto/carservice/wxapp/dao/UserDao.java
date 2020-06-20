@@ -16,4 +16,6 @@ public interface UserDao extends IDao<UserVO, String> {
 	List<UserVO> getWorkers(OrderVO orderVO);
 
 	int newUserAttr(UserVO userVO);
+
+	int setMaxRole(UserVO userVO);
 }
