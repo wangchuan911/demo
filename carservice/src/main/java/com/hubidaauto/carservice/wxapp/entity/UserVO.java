@@ -1,5 +1,8 @@
 package com.hubidaauto.carservice.wxapp.entity;
 
+import io.vertx.core.json.JsonObject;
+import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
+
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -182,5 +185,18 @@ public class UserVO {
 		public void setOrders(Integer orders) {
 			this.orders = orders;
 		}
+	}
+
+	public UserVO userDecrypted(String userEncryptedData, String useriv) throws Throwable {
+		String json;
+		JsonObject jsonObject = new JsonObject(json = WXBizMsgCrypt.wxDecrypt(userEncryptedData, this.sessionKey, useriv));
+		this.unionid = jsonObject.getString("unionId", null);
+		return this;
+	}
+
+	public UserVO phoneDecrypted(String phoneEncryptedData, String phoneEncryptedIv) throws Throwable {
+		JsonObject jsonObject = new JsonObject(WXBizMsgCrypt.wxDecrypt(phoneEncryptedData, this.sessionKey, phoneEncryptedIv));
+		this.phone = (jsonObject.getString("phoneNumber", jsonObject.getString("purePhoneNumber", null)));
+		return this;
 	}
 }

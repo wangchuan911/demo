@@ -81,9 +81,10 @@ public class OrderService extends AbstractBaseService<OrderVO> {
 					String phoneEncryptedData = MapUtils.getString(encryptedMap, "phoneEncryptedData", null),
 							phoneEncryptedIv = MapUtils.getString(encryptedMap, "phoneEncryptedIv", null);
 					if (!(StringUtils.isEmpty(phoneEncryptedData) || StringUtils.isEmpty(phoneEncryptedIv))) {
-						userVO.openData(false);
+						/*userVO.openData(false);
 						JsonObject jsonObject = new JsonObject(WXBizMsgCrypt.wxDecrypt(phoneEncryptedData, userVO.getSessionKey(), phoneEncryptedIv));
-						orderVO.setCustPhone(jsonObject.getString("phoneNumber", jsonObject.getString("purePhoneNumber", null)));
+						orderVO.setCustPhone(jsonObject.getString("phoneNumber", jsonObject.getString("purePhoneNumber", null)));*/
+						orderVO.setCustPhone(userVO.phoneDecrypted(phoneEncryptedData, phoneEncryptedIv).getPhone());
 					}
 				} catch (Throwable e) {
 					logger.error(e.getMessage(), e);
@@ -150,7 +151,7 @@ public class OrderService extends AbstractBaseService<OrderVO> {
 				orderVO = mapToObject(params, OrderVO.class);
 				List<Map> all = orderDao.getWorkIngOrderNum(orderVO);
 				resultObj = Map.of("all_nums", all.size(),
-						"nums", all.size() == 0 ? 0 : all.stream().map(map -> MapUtils.getInteger(map, "working",0)).reduce((integer, integer2) -> integer + integer2).get(),
+						"nums", all.size() == 0 ? 0 : all.stream().map(map -> MapUtils.getInteger(map, "working", 0)).reduce((integer, integer2) -> integer + integer2).get(),
 						"pos", all
 				);
 				break;
