@@ -6,11 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="carservice" />
         <module name="webserver" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="micro-server-demo" target="1.5" />
+      <module name="micro-server-demo" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>
