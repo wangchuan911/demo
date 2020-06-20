@@ -9,9 +9,11 @@ import java.util.List;
 
 @Repository
 public interface UserDao extends IDao<UserVO, String> {
-    List<Integer> getWorkAreaRange(UserVO userVO);
+	List<Integer> getWorkAreaRange(UserVO userVO);
 
-    List<String> getRegionOrderController(Integer regionCode);
+	List<String> getRegionOrderController(Integer regionCode);
 
-    List<UserVO> getWorkers(OrderVO orderVO);
+	List<UserVO> getWorkers(OrderVO orderVO);
+
+	int newUserAttr(UserVO userVO);
 }

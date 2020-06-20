@@ -131,6 +131,7 @@ public final class CustomConst {
 
 	public interface INVITE_CODE {
 		char WORKER = 'W', VIP = 'V';
+		int USE_INVITE_CODE = 100;
 
 	}
 

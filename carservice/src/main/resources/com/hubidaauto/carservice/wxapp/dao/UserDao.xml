@@ -208,4 +208,18 @@
           car_user_opr_report b
           where b.id=#{value}
     </select>
+
+    <insert id="newUserAttr" parameterType="com.hubidaauto.carservice.wxapp.entity.UserVO">
+        INSERT INTO user_attr
+        (USER_ID,
+        REGION_CODE,
+        VIP,
+        INVITE_CODE)
+        VALUES (#{id,jdbcType=VARCHAR},
+        <foreach collection="userAttr.regionCode" separator=",','," item="region" open="CONCAT(" close=")">
+            #{region,jdbcType=VARCHAR}
+        </foreach>,
+        #{userAttr.vip,jdbcType=BOOLEAN},
+        #{userAttr.inviteCode,jdbcType=INTEGER});
+    </insert>
 </mapper>

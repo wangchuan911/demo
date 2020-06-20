@@ -4,173 +4,183 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public class UserVO {
-    private String id;
-    private String name;
-    private Integer role;
-    private Integer maxRole;
-    private String phone;
-    private UserAttr userAttr;
-    private String sessionKey;
-    private boolean openData = true;
-    private String unionid;
-    private List<CouponVO> coupons;
-    private WorkerStatus workerStatus;
+	private String id;
+	private String name;
+	private Integer role;
+	private Integer maxRole;
+	private String phone;
+	private UserAttr userAttr;
+	private String sessionKey;
+	private boolean openData = true;
+	private String unionid;
+	private List<CouponVO> coupons;
+	private WorkerStatus workerStatus;
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public UserVO setId(String id) {
-        this.id = id;
-        return this;
-    }
+	public UserVO setId(String id) {
+		this.id = id;
+		return this;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public UserVO setName(String name) {
-        this.name = name;
-        return this;
-    }
+	public UserVO setName(String name) {
+		this.name = name;
+		return this;
+	}
 
-    public Integer getRole() {
-        return role;
-    }
+	public Integer getRole() {
+		return role;
+	}
 
-    public UserVO setRole(Integer role) {
-        this.role = role;
-        return this;
-    }
+	public UserVO setRole(Integer role) {
+		this.role = role;
+		return this;
+	}
 
-    public String getPhone() {
-        return phone;
-    }
+	public String getPhone() {
+		return phone;
+	}
 
-    public UserVO setPhone(String phone) {
-        this.phone = phone;
-        return this;
-    }
+	public UserVO setPhone(String phone) {
+		this.phone = phone;
+		return this;
+	}
 
-    public String getSessionKey() {
-        return this.openData ? null : sessionKey;
-    }
+	public String getSessionKey() {
+		return this.openData ? null : sessionKey;
+	}
 
-    public UserVO setSessionKey(String sessionKey) {
-        this.sessionKey = sessionKey;
-        return this;
-    }
+	public UserVO setSessionKey(String sessionKey) {
+		this.sessionKey = sessionKey;
+		return this;
+	}
 
-    public UserVO openData(boolean sw) {
-        this.openData = sw;
-        return this;
-    }
+	public UserVO openData(boolean sw) {
+		this.openData = sw;
+		return this;
+	}
 
-    public UserAttr getUserAttr() {
-        return userAttr;
-    }
+	public UserAttr getUserAttr() {
+		return userAttr;
+	}
 
-    public UserVO setUserAttr(UserAttr userAttr) {
-        this.userAttr = userAttr;
-        return this;
-    }
+	public UserVO setUserAttr(UserAttr userAttr) {
+		this.userAttr = userAttr;
+		return this;
+	}
 
-    public Integer getMaxRole() {
-        return maxRole;
-    }
+	public Integer getMaxRole() {
+		return maxRole;
+	}
 
-    public UserVO setMaxRole(Integer maxRole) {
-        this.maxRole = maxRole;
-        return this;
-    }
+	public UserVO setMaxRole(Integer maxRole) {
+		this.maxRole = maxRole;
+		return this;
+	}
 
-    public String getUnionid() {
-        return this.openData ? null : unionid;
-    }
+	public String getUnionid() {
+		return this.openData ? null : unionid;
+	}
 
-    public UserVO setUnionid(String unionid) {
-        this.unionid = unionid;
-        return this;
-    }
+	public UserVO setUnionid(String unionid) {
+		this.unionid = unionid;
+		return this;
+	}
 
-    public static class UserAttr {
-        private boolean vip;
-        private Integer[] regionCode;
+	public static class UserAttr {
+		private boolean vip;
+		private Integer[] regionCode;
+		Integer inviteCode;
 
-        public boolean isVip() {
-            return vip;
-        }
+		public boolean isVip() {
+			return vip;
+		}
 
-        public UserAttr setVip(boolean vip) {
-            this.vip = vip;
-            return this;
-        }
+		public UserAttr setVip(boolean vip) {
+			this.vip = vip;
+			return this;
+		}
 
-        public Integer[] getRegionCode() {
-            return regionCode;
-        }
+		public Integer[] getRegionCode() {
+			return regionCode;
+		}
 
-        public UserAttr setRegionCode(Integer[] regionCode) {
-            this.regionCode = regionCode;
-            return this;
-        }
-    }
+		public UserAttr setRegionCode(Integer[] regionCode) {
+			this.regionCode = regionCode;
+			return this;
+		}
 
-    public List<CouponVO> getCoupons() {
-        return coupons;
-    }
+		public Integer getInviteCode() {
+			return inviteCode;
+		}
 
-    public void setCoupons(List<CouponVO> coupons) {
-        this.coupons = coupons;
-    }
+		public UserAttr setInviteCode(Integer inviteCode) {
+			this.inviteCode = inviteCode;
+			return this;
+		}
+	}
 
-    public WorkerStatus getWorkerStatus() {
-        return workerStatus;
-    }
+	public List<CouponVO> getCoupons() {
+		return coupons;
+	}
 
-    public void setWorkerStatus(WorkerStatus workerStatus) {
-        this.workerStatus = workerStatus;
-    }
+	public void setCoupons(List<CouponVO> coupons) {
+		this.coupons = coupons;
+	}
 
-    public static class WorkerStatus {
-        private Integer orders;
-        private Double posX;
-        private Double posY;
-        private Timestamp lastPosDate;
+	public WorkerStatus getWorkerStatus() {
+		return workerStatus;
+	}
 
-        public Double getPosX() {
-            return posX;
-        }
+	public void setWorkerStatus(WorkerStatus workerStatus) {
+		this.workerStatus = workerStatus;
+	}
 
-        public WorkerStatus setPosX(Double posX) {
-            this.posX = posX;
-            return this;
-        }
+	public static class WorkerStatus {
+		private Integer orders;
+		private Double posX;
+		private Double posY;
+		private Timestamp lastPosDate;
 
-        public Double getPosY() {
-            return posY;
-        }
+		public Double getPosX() {
+			return posX;
+		}
 
-        public WorkerStatus setPosY(Double posY) {
-            this.posY = posY;
-            return this;
-        }
+		public WorkerStatus setPosX(Double posX) {
+			this.posX = posX;
+			return this;
+		}
 
-        public Timestamp getLastPosDate() {
-            return lastPosDate;
-        }
+		public Double getPosY() {
+			return posY;
+		}
 
-        public WorkerStatus setLastPosDate(Timestamp lastLocalDate) {
-            this.lastPosDate = lastLocalDate;
-            return this;
-        }
+		public WorkerStatus setPosY(Double posY) {
+			this.posY = posY;
+			return this;
+		}
 
-        public Integer getOrders() {
-            return orders;
-        }
+		public Timestamp getLastPosDate() {
+			return lastPosDate;
+		}
 
-        public void setOrders(Integer orders) {
-            this.orders = orders;
-        }
-    }
+		public WorkerStatus setLastPosDate(Timestamp lastLocalDate) {
+			this.lastPosDate = lastLocalDate;
+			return this;
+		}
+
+		public Integer getOrders() {
+			return orders;
+		}
+
+		public void setOrders(Integer orders) {
+			this.orders = orders;
+		}
+	}
 }
