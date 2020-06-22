@@ -134,18 +134,31 @@
     <select id="getModel" parameterType="map" resultMap="ModelMap">
         <choose>
             <when test="level==1">
-                SELECT DISTINCT
+                /*SELECT DISTINCT
                 car_simplicity ,
                 car_brand
-                FROM car_message_modelinfo
+                FROM car_message_modelinfo*/
+                SELECT
+                car_brand_name car_brand,
+                car_simplicity
+                FROM car_brand
             </when>
             <when test="level==2">
-                SELECT
+                /*SELECT
                 car_model_id,
                 car_system,
                 car_model
                 FROM car_message_modelinfo
-                where car_brand=#{carBrand,jdbcType=VARCHAR}
+                where car_brand=*/
+                SELECT
+                    car_brand_name car_system,
+                    car_system_name car_model,
+                    a.car_system_id car_model_id
+                FROM car_system a
+                JOIN car_brand b
+                  ON a.super_car_id=b.car_brand_id
+               WHERE b.car_brand_name=
+                #{carBrand,jdbcType=VARCHAR}
             </when>
         </choose>
     </select>
