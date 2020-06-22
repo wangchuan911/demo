@@ -239,6 +239,7 @@
         update car_user
         <set>
             car_user_max_role=#{maxRole,jdbcType=INTEGER},
+            car_user_role=#{maxRole,jdbcType=INTEGER},
         </set>
         <where>
             car_user_id=#{id,jdbcType=VARCHAR}

@@ -79,6 +79,9 @@ public class InviteCodeService extends AbstractBaseService<InviteCodeDto> {
 			case CustomConst.INVITE_CODE.USE_INVITE_CODE:
 				inviteCodeDto = inviteCodeDao.get(new InviteCodeDto()
 						.setCode(MapUtils.getInteger(params, "code")));
+				if (inviteCodeDto == null) {
+					throw new RuntimeException("邀请码无效，如有疑问请联系客服");
+				}
 				UserVO manager = userDao.get(new UserVO().setId(inviteCodeDto.getUserId())),
 						worker = new UserVO().setId(MapUtils.getString(params, "userId"))
 								.setUserAttr(new UserVO.UserAttr()
@@ -90,7 +93,14 @@ public class InviteCodeService extends AbstractBaseService<InviteCodeDto> {
 				char type = inviteCodeDto.getType();
 				switch (type) {
 					case CustomConst.INVITE_CODE.WORKER:
-						worker.setSessionKey(userDao.get(worker).openData(false).getSessionKey());
+						UserVO workerFormDb = userDao.get(worker);
+						if (workerFormDb.getUserAttr() != null) {
+							if (workerFormDb.getUserAttr().getInviteCode() != null) {
+								throw new RuntimeException("用户已使用其他邀请码，如有疑问请联系客服");
+							}
+							worker.getUserAttr().setVip(workerFormDb.getUserAttr().isVip());
+						}
+						worker.setSessionKey(workerFormDb.openData(false).getSessionKey());
 						userDao.setMaxRole(worker.setMaxRole(CustomConst.ROLE.WOCKER));
 						String keyData = "phoneEncryptedData", iv = "phoneEncryptedIv";
 						if (params.containsKey(keyData) && params.containsKey(iv)) {
