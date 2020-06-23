@@ -4,9 +4,9 @@
 
 <mapper namespace="com.hubidaauto.carservice.wxapp.dao.CouponDao">
 
-    <resultMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.entity.CouponVO">
+    <resultMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.entity.increment.CouponVO">
         <result property="userId" column="user_id"></result>
-        <result property="id" column="id"></result>
+        <result property="templateId" column="id"></result>
         <result property="orderId" column="order_id"></result>
         <result property="content" column="content"></result>
         <result property="startDate" column="start_date"></result>
@@ -15,9 +15,10 @@
         <result property="type" column="type"></result>
         <result property="off" column="off"></result>
         <result property="lv" column="lv"></result>
+        <result property="id" column="inst_id"></result>
     </resultMap>
 
-    <parameterMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.entity.CouponVO">
+    <parameterMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.entity.increment.CouponVO">
         <parameter property="userId" jdbcType="VARCHAR"></parameter>
         <parameter property="id" jdbcType="INTEGER"></parameter>
         <parameter property="orderId" jdbcType="INTEGER"></parameter>
@@ -28,30 +29,31 @@
         <parameter property="type" jdbcType="INTEGER"></parameter>
         <parameter property="off" jdbcType="INTEGER"></parameter>
         <parameter property="lv" jdbcType="INTEGER"></parameter>
+        <parameter property="templateId" jdbcType="INTEGER"></parameter>
     </parameterMap>
-    <insert id="add" parameterMap="CouponVO">
+    <insert id="add" parameterMap="CouponVO" useGeneratedKeys="true" keyColumn="inst_id" keyProperty="id">
         INSERT INTO car_coupon_user
         (user_id,
         coupon_id)
         select #{userId,jdbcType=VARCHAR},
         a.id from car_coupon_template a
-        where a.id=#{id,jdbcType=INTEGER}
+        where a.id=#{templateId,jdbcType=INTEGER}
         <include refid="couponVailCheck"></include>
     </insert>
     <update id="set" parameterMap="CouponVO">
-                update car_coupon_user
-                set use_date=#{useDate,jdbcType=TIMESTAMP}
-                  ,order_id=#{orderId,jdbcType=VARCHAR}
-                where user_id=#{userId,jdbcType=VARCHAR}
-                and coupon_id=#{id,jdbcType=INTEGER}
-                <choose>
-                <when test="orderId!=null and orderId>0">
-                    and order_id is null
-                </when>
-                <otherwise>
-                    and order_id is not null
-                </otherwise>
-                </choose>
+        update car_coupon_user
+        set use_date=#{useDate,jdbcType=TIMESTAMP}
+        ,order_id=#{orderId,jdbcType=VARCHAR}
+        where user_id=#{userId,jdbcType=VARCHAR}
+        and inst_id=#{id,jdbcType=INTEGER}
+        <choose>
+            <when test="orderId!=null and orderId>0">
+                and order_id is null
+            </when>
+            <otherwise>
+                and order_id is not null
+            </otherwise>
+        </choose>
     </update>
 
     <sql id="couponVailCheck">
@@ -85,7 +87,10 @@
     <sql id="condition">
         <where>
             <if test="id!=null and id>0">
-                and a.id=#{id,jdbcType=INTEGER}
+                and b.inst_id=#{id,jdbcType=INTEGER}
+            </if>
+            <if test="templateId!=null and templateId>0">
+                and a.id=#{templateId,jdbcType=INTEGER}
             </if>
             <if test="userId!=null and userId!=''.toString()">
                 and b.user_id=#{userId,jdbcType=VARCHAR}
@@ -102,7 +107,7 @@
         </where>
     </sql>
     <sql id="select">
-        select a.*,b.user_id,b.order_id from car_coupon_template a
+        select a.*,b.user_id,b.order_id,b.inst_id  from car_coupon_template a
         join car_coupon_user b
         on b.coupon_id=a.id
     </sql>

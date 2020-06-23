@@ -117,7 +117,7 @@ public final class CustomConst {
 
 	public final static class COUPON {
 		public final static int NEW_USER = 0,
-				ORDER_10 = 1;
+				BUY_COUPONS = 100;
 
 		public final static class TEMPLATE {
 			public final static int NEW_USER = 1;

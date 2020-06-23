@@ -3,14 +3,14 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.hubidaauto.carservice.wxapp.dao.InviteCodeDao">
-    <parameterMap id="InviteCodeDto" type="com.hubidaauto.carservice.wxapp.entity.InviteCodeDto">
+    <parameterMap id="InviteCodeDto" type="com.hubidaauto.carservice.wxapp.entity.increment.InviteCodeDto">
         <parameter property="code" jdbcType="INTEGER"></parameter>
         <parameter property="userId" jdbcType="VARCHAR"></parameter>
         <parameter property="valid" jdbcType="INTEGER"></parameter>
         <parameter property="type" jdbcType="CHAR"></parameter>
     </parameterMap>
 
-    <resultMap id="InviteCodeDto" type="com.hubidaauto.carservice.wxapp.entity.InviteCodeDto">
+    <resultMap id="InviteCodeDto" type="com.hubidaauto.carservice.wxapp.entity.increment.InviteCodeDto">
         <result property="code" column="code"></result>
         <result property="userId" column="create_man"></result>
         <result property="valid" column="valid"></result>

@@ -6,6 +6,7 @@ import com.hubidaauto.carservice.wxapp.dao.UserDao;
 import com.hubidaauto.carservice.wxapp.entity.CarVO;
 import com.hubidaauto.carservice.wxapp.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.entity.UserVO;
+import com.hubidaauto.carservice.wxapp.service.increment.CouponService;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
-import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 

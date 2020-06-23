@@ -1,4 +1,4 @@
-package com.hubidaauto.carservice.wxapp.service;
+package com.hubidaauto.carservice.wxapp.service.increment;
 
 import com.hubidaauto.carservice.wxapp.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.dao.UserOperRecordDao;

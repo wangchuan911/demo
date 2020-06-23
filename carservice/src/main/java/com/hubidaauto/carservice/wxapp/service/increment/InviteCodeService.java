@@ -1,4 +1,4 @@
-package com.hubidaauto.carservice.wxapp.service;
+package com.hubidaauto.carservice.wxapp.service.increment;
 
 
 import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
@@ -6,9 +6,8 @@ import com.hubidaauto.carservice.officalaccount.service.CustomWeChatOfficalAccou
 import com.hubidaauto.carservice.wxapp.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.dao.InviteCodeDao;
 import com.hubidaauto.carservice.wxapp.dao.UserDao;
-import com.hubidaauto.carservice.wxapp.entity.InviteCodeDto;
+import com.hubidaauto.carservice.wxapp.entity.increment.InviteCodeDto;
 import com.hubidaauto.carservice.wxapp.entity.UserVO;
-import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +18,6 @@ import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 
