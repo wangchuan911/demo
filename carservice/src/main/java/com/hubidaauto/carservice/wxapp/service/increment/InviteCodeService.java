@@ -4,7 +4,7 @@ package com.hubidaauto.carservice.wxapp.service.increment;
 import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
 import com.hubidaauto.carservice.officalaccount.service.CustomWeChatOfficalAccountService;
 import com.hubidaauto.carservice.wxapp.config.CustomConst;
-import com.hubidaauto.carservice.wxapp.dao.InviteCodeDao;
+import com.hubidaauto.carservice.wxapp.dao.increment.InviteCodeDao;
 import com.hubidaauto.carservice.wxapp.dao.UserDao;
 import com.hubidaauto.carservice.wxapp.entity.increment.InviteCodeDto;
 import com.hubidaauto.carservice.wxapp.entity.UserVO;

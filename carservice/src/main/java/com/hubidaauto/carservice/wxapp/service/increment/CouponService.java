@@ -1,9 +1,9 @@
 package com.hubidaauto.carservice.wxapp.service.increment;
 
 import com.hubidaauto.carservice.wxapp.config.CustomConst;
-import com.hubidaauto.carservice.wxapp.dao.CouponDao;
+import com.hubidaauto.carservice.wxapp.dao.increment.CouponDao;
 import com.hubidaauto.carservice.wxapp.dao.UserDao;
-import com.hubidaauto.carservice.wxapp.dao.UserOperRecordDao;
+import com.hubidaauto.carservice.wxapp.dao.increment.UserOperRecordDao;
 import com.hubidaauto.carservice.wxapp.entity.increment.CouponVO;
 import com.hubidaauto.carservice.wxapp.entity.OrderVO;
 import org.apache.commons.collections4.MapUtils;
