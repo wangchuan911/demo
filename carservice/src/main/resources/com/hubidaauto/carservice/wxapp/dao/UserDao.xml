@@ -20,7 +20,7 @@
 
         <collection property="coupons" ofType="com.hubidaauto.carservice.wxapp.entity.increment.CouponVO"
                     column="{userId=car_user_id}"
-                    select="com.hubidaauto.carservice.wxapp.dao.CouponDao.list"></collection>
+                    select="com.hubidaauto.carservice.wxapp.dao.increment.CouponDao.list"></collection>
     </resultMap>
 
     <parameterMap id="UserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO">
