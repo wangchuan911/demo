@@ -28,7 +28,7 @@ import java.util.Map;
 @Transactional(rollbackFor = Throwable.class)
 public class OrderService extends AbstractBaseService<OrderVO> {
 
-	private static final Logger logger = logger(OrderService.class);
+//	private static final Logger logger = logger(OrderService.class);
 
 	@Autowired
 	OrderDao orderDao;

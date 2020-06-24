@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Service
 public class UserOperRecordService extends AbstractBaseService<Object> {
-    Logger logger = logger(UserOperRecordService.class);
+//    Logger logger = logger(UserOperRecordService.class);
     @Autowired
     UserOperRecordDao userOperRecordDao;
 

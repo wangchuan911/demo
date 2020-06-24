@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Service
 public class InviteCodeService extends AbstractBaseService<InviteCodeDto> {
-	private static final Logger logger = logger(InviteCodeService.class);
+//	private static final Logger logger = logger(InviteCodeService.class);
 
 
 	@Autowired

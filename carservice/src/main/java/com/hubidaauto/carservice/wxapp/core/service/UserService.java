@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Service
 public class UserService extends AbstractBaseService<UserVO> {
-	private static final Logger logger = logger(UserService.class);
+//	private static final Logger logger = logger(UserService.class);
 	@Autowired
 	UserDao userDao;
 	@Autowired

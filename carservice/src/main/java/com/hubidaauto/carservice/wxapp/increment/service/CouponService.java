@@ -20,7 +20,7 @@ import java.util.Map;
 @Service
 @Transactional(rollbackFor = Throwable.class)
 public class CouponService extends AbstractBaseService<CouponVO> {
-	private static final Logger logger = logger(CouponService.class);
+//	private static final Logger logger = logger(CouponService.class);
 	@Autowired
 	CouponDao couponDao;
 	@Autowired
@@ -92,7 +92,7 @@ public class CouponService extends AbstractBaseService<CouponVO> {
 					couponVO = new CouponVO()
 							.setTemplateId(CustomConst.COUPON.TEMPLATE.NEW_USER)
 							.setUserId(custId);
-					if (couponDao.num(couponVO) > 0)
+					if (couponDao.num(couponVO) > 0 || couponDao.num(couponVO.setOrderId(0)) > 0)
 						break;
 					this.handle(CustomConst.ADD
 							, couponVO);

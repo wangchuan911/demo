@@ -76,6 +76,9 @@
     <sql id="couponVailCheck2">
         <choose>
             <when test="orderId != null and orderId > 0">
+                and b.order_id=#{orderId,jdbcType=INTEGER}
+            </when>
+            <when test="orderId != null and orderId == 0">
                 and ifnull(b.order_id,0)>0
             </when>
             <otherwise>
