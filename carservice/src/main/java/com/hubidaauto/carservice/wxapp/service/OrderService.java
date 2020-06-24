@@ -65,13 +65,11 @@ public class OrderService extends AbstractBaseService<OrderVO> {
 		OrderVO orderVO;
 		switch (exeCode) {
 			case CustomConst.ADD:
-
-				JsonObject orderVoJson = JsonObject.mapFrom(params);
-				List<Integer> pictureIds = (List<Integer>) orderVoJson.remove("pictureIds");
-
 				Map encryptedMap = mapSpliter(params, Map.class, "phoneEncryptedData", "phoneEncryptedIv");
 				Map coupon = mapSpliter(params, Map.class, "couponId");
 
+				JsonObject orderVoJson = JsonObject.mapFrom(params);
+				List<Integer> pictureIds = (List<Integer>) orderVoJson.remove("pictureIds");
 				orderVO = orderVoJson.mapTo(OrderVO.class);
 				orderVO.setTacheId(CustomConst.TACHE.FIRST_TACHE.getTacheId())
 						.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
