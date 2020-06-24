@@ -1,8 +1,8 @@
 package com.hubidaauto.carservice.wxapp.increment.service;
 
-import com.hubidaauto.carservice.wxapp.config.CustomConst;
-import com.hubidaauto.carservice.wxapp.entity.OrderVO;
-import com.hubidaauto.carservice.wxapp.entity.UserVO;
+import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
+import com.hubidaauto.carservice.wxapp.core.entity.OrderVO;
+import com.hubidaauto.carservice.wxapp.core.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.increment.dao.UserOperRecordDao;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

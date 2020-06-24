@@ -3,9 +3,9 @@ package com.hubidaauto.carservice.wxapp.increment.service;
 
 import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
 import com.hubidaauto.carservice.officalaccount.service.CustomWeChatOfficalAccountService;
-import com.hubidaauto.carservice.wxapp.config.CustomConst;
-import com.hubidaauto.carservice.wxapp.dao.UserDao;
-import com.hubidaauto.carservice.wxapp.entity.UserVO;
+import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
+import com.hubidaauto.carservice.wxapp.core.dao.UserDao;
+import com.hubidaauto.carservice.wxapp.core.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.increment.dao.InviteCodeDao;
 import com.hubidaauto.carservice.wxapp.increment.entity.InviteCodeDto;
 import org.apache.commons.collections4.MapUtils;

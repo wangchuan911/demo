@@ -4,7 +4,7 @@
 
 <mapper namespace="com.hubidaauto.carservice.wxapp.increment.dao.UserOperRecordDao">
 
-    <parameterMap id="OrderVO" type="com.hubidaauto.carservice.wxapp.entity.OrderVO">
+    <parameterMap id="OrderVO" type="com.hubidaauto.carservice.wxapp.core.entity.OrderVO">
         <parameter property="orderId" jdbcType="INTEGER"></parameter>
         <parameter property="orderCode" jdbcType="VARCHAR"></parameter>
         <parameter property="carLicenseNumber" jdbcType="VARCHAR"></parameter>
@@ -72,7 +72,7 @@
     </select>
 
 
-    <insert id="location" parameterType="com.hubidaauto.carservice.wxapp.entity.UserVO">
+    <insert id="location" parameterType="com.hubidaauto.carservice.wxapp.core.entity.UserVO">
         INSERT INTO car_user_opr_report (
         last_pos_date,
         pos_x,
