@@ -1,4 +1,4 @@
-package com.hubidaauto.carservice.wxapp.entity.increment;
+package com.hubidaauto.carservice.wxapp.increment.entity;
 
 public class InviteCodeDto {
 	Integer code;

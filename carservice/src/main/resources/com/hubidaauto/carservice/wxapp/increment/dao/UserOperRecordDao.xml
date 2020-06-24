@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.hubidaauto.carservice.wxapp.dao.increment.UserOperRecordDao">
+<mapper namespace="com.hubidaauto.carservice.wxapp.increment.dao.UserOperRecordDao">
 
     <parameterMap id="OrderVO" type="com.hubidaauto.carservice.wxapp.entity.OrderVO">
         <parameter property="orderId" jdbcType="INTEGER"></parameter>

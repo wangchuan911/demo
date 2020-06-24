@@ -1,6 +1,6 @@
 package com.hubidaauto.carservice.wxapp.entity;
 
-import com.hubidaauto.carservice.wxapp.entity.increment.CouponVO;
+import com.hubidaauto.carservice.wxapp.increment.entity.CouponVO;
 import io.vertx.core.json.JsonObject;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
 

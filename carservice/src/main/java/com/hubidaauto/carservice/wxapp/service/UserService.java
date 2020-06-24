@@ -6,7 +6,7 @@ import com.hubidaauto.carservice.wxapp.dao.UserDao;
 import com.hubidaauto.carservice.wxapp.entity.CarVO;
 import com.hubidaauto.carservice.wxapp.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.entity.UserVO;
-import com.hubidaauto.carservice.wxapp.service.increment.CouponService;
+import com.hubidaauto.carservice.wxapp.increment.service.CouponService;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;

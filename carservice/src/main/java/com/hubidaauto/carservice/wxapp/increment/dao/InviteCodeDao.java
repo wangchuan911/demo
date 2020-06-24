@@ -1,6 +1,6 @@
-package com.hubidaauto.carservice.wxapp.dao.increment;
+package com.hubidaauto.carservice.wxapp.increment.dao;
 
-import com.hubidaauto.carservice.wxapp.entity.increment.InviteCodeDto;
+import com.hubidaauto.carservice.wxapp.increment.entity.InviteCodeDto;
 import org.springframework.stereotype.Repository;
 import org.welisdoon.webserver.common.dao.IDao;
 

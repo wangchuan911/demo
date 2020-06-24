@@ -18,9 +18,9 @@
         <association property="userAttr" javaType="com.hubidaauto.carservice.wxapp.entity.UserVO$UserAttr"
                      column="car_user_id" select="getUserAttr"></association>
 
-        <collection property="coupons" ofType="com.hubidaauto.carservice.wxapp.entity.increment.CouponVO"
+        <collection property="coupons" ofType="com.hubidaauto.carservice.wxapp.increment.entity.CouponVO"
                     column="{userId=car_user_id}"
-                    select="com.hubidaauto.carservice.wxapp.dao.increment.CouponDao.list"></collection>
+                    select="com.hubidaauto.carservice.wxapp.increment.dao.CouponDao.list"></collection>
     </resultMap>
 
     <parameterMap id="UserVO" type="com.hubidaauto.carservice.wxapp.entity.UserVO">

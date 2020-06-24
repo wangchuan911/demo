@@ -2,9 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.hubidaauto.carservice.wxapp.dao.increment.CouponDao">
+<mapper namespace="com.hubidaauto.carservice.wxapp.increment.dao.CouponDao">
 
-    <resultMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.entity.increment.CouponVO">
+    <resultMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.increment.entity.CouponVO">
         <result property="userId" column="user_id"></result>
         <result property="templateId" column="id"></result>
         <result property="orderId" column="order_id"></result>
@@ -18,7 +18,7 @@
         <result property="id" column="inst_id"></result>
     </resultMap>
 
-    <parameterMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.entity.increment.CouponVO">
+    <parameterMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.increment.entity.CouponVO">
         <parameter property="userId" jdbcType="VARCHAR"></parameter>
         <parameter property="id" jdbcType="INTEGER"></parameter>
         <parameter property="orderId" jdbcType="INTEGER"></parameter>

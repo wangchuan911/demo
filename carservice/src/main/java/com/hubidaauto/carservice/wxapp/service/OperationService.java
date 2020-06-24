@@ -6,7 +6,7 @@ import com.hubidaauto.carservice.wxapp.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.carservice.wxapp.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.dao.*;
 import com.hubidaauto.carservice.wxapp.entity.*;
-import com.hubidaauto.carservice.wxapp.service.increment.UserOperRecordService;
+import com.hubidaauto.carservice.wxapp.increment.service.UserOperRecordService;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.CollectionUtils;

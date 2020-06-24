@@ -1,4 +1,4 @@
-package com.hubidaauto.carservice.wxapp.dao.increment;
+package com.hubidaauto.carservice.wxapp.increment.dao;
 
 import com.hubidaauto.carservice.wxapp.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.entity.UserVO;

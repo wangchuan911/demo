@@ -1,13 +1,13 @@
-package com.hubidaauto.carservice.wxapp.service.increment;
+package com.hubidaauto.carservice.wxapp.increment.service;
 
 
 import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
 import com.hubidaauto.carservice.officalaccount.service.CustomWeChatOfficalAccountService;
 import com.hubidaauto.carservice.wxapp.config.CustomConst;
-import com.hubidaauto.carservice.wxapp.dao.increment.InviteCodeDao;
 import com.hubidaauto.carservice.wxapp.dao.UserDao;
-import com.hubidaauto.carservice.wxapp.entity.increment.InviteCodeDto;
 import com.hubidaauto.carservice.wxapp.entity.UserVO;
+import com.hubidaauto.carservice.wxapp.increment.dao.InviteCodeDao;
+import com.hubidaauto.carservice.wxapp.increment.entity.InviteCodeDto;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
