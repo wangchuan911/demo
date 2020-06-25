@@ -22,14 +22,6 @@ public class MallService extends AbstractBaseService<MallDto> {
 	@Autowired
 	MallDao mallDao;
 
-	MallOrderService mallOrderService;
-
-	@Override
-	public void init() throws Throwable {
-		super.init();
-		mallOrderService = ApplicationContextProvider.getBean(MallOrderService.class);
-	}
-
 	@Override
 	@VertxWebApi
 	public Object handle(int exeCode, Map map) {
