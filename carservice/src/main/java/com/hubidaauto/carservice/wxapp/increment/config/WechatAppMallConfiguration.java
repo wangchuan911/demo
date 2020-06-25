@@ -81,14 +81,17 @@ public class WechatAppMallConfiguration {
 
 							MallDto mallDto = (MallDto) mallService.handle(CustomConst.GET, Map.of("id", goodsId));
 
-							MallOrderDto orderVo = (MallOrderDto) mallOrderService
-									.handle(CustomConst.ADD, new MallOrderDto()
-											.setGoodsId(goodsId)
-											.setUserId(custId)
-											.setState(CustomConst.ORDER.STATE.RUNNING)
-											.setCount(count)
+							MallOrderDto orderVo, orderVo2 = new MallOrderDto()
+									.setGoodsId(goodsId)
+									.setUserId(custId)
+									.setState(CustomConst.ORDER.STATE.RUNNING)
+									.setCount(count);
+							orderVo = (orderVo = (MallOrderDto) mallOrderService
+									.handle(CustomConst.GET, orderVo2)) == null
+									? (MallOrderDto) mallOrderService
+									.handle(CustomConst.ADD, orderVo2
 											.setCost(mallDto.getPrice() * count)
-											.setCode(UUID.randomUUID().toString().replaceAll("-", "")));
+											.setCode(UUID.randomUUID().toString().replaceAll("-", ""))) : orderVo;
 
 							Buffer buffer = Buffer.buffer(JAXBUtils.toXML(new PrePayRequsetMesseage()
 									.setAppId(configuration.getAppID())
@@ -151,6 +154,7 @@ public class WechatAppMallConfiguration {
 				}
 
 			}).failureHandler(routingContext -> {
+				logger.error(routingContext.failure().getMessage(), routingContext.failure());
 				routingContext.response().end(routingContext.failure().toString());
 			});
 

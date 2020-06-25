@@ -32,7 +32,13 @@
             and code=#{code,jdbcType=VARCHAR}
         </if>
         <if test="userId!=null and userId!=''.toString()">
-            and code=#{code,jdbcType=VARCHAR}
+            and user_id=#{userId,jdbcType=VARCHAR}
+        </if>
+        <if test="count!=null and count>0">
+            and cnt=#{count,jdbcType=INTEGER}
+        </if>
+        <if test="state!=null">
+            and state=#{state,jdbcType=INTEGER}
         </if>
     </sql>
     <sql id="select">

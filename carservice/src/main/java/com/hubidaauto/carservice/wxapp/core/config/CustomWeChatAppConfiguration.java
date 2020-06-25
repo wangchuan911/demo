@@ -269,6 +269,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 				}
 
 			}).failureHandler(routingContext -> {
+				logger.error(routingContext.failure().getMessage(), routingContext.failure());
 				routingContext.response().end(routingContext.failure().toString());
 			});
 
