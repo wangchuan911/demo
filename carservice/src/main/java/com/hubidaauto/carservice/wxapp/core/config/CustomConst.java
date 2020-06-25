@@ -112,7 +112,7 @@ public final class CustomConst {
 
 	public final static class OTHER {
 		public final static int PRE_PAY = -2,
-				LOGIN = -1;
+				LOGIN = -1, MALL_PRE_PAY = -3;
 	}
 
 	public final static class COUPON {
@@ -132,6 +132,10 @@ public final class CustomConst {
 	public interface INVITE_CODE {
 		char WORKER = 'W', VIP = 'V';
 		int USE_INVITE_CODE = 100;
+
+	}
+
+	public interface MALL {
 
 	}
 

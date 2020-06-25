@@ -9,6 +9,7 @@ import com.hubidaauto.carservice.wxapp.increment.entity.MallOrderDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
@@ -20,6 +21,14 @@ public class MallService extends AbstractBaseService<MallDto> {
 
 	@Autowired
 	MallDao mallDao;
+
+	MallOrderService mallOrderService;
+
+	@Override
+	public void init() throws Throwable {
+		super.init();
+		mallOrderService = ApplicationContextProvider.getBean(MallOrderService.class);
+	}
 
 	@Override
 	@VertxWebApi

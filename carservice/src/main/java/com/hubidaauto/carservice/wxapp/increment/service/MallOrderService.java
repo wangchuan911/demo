@@ -20,12 +20,25 @@ public class MallOrderService extends AbstractBaseService<MallOrderDto> {
 	MallOrderDao mallOrderDao;
 
 	@Override
-	@VertxWebApi
 	public Object handle(int exeCode, Map map) {
+		return null;
+	}
+
+	@Override
+	public Object handle(int exeCode, MallOrderDto mallOrderDto) {
 		Object resultObj = null;
 		switch (exeCode) {
-			case CustomConst.LIST: {
-				resultObj = mallOrderDao.list(mapToObject(map, MallOrderDto.class));
+			case CustomConst.ADD: {
+				mallOrderDao.add(mallOrderDto);
+				resultObj = mallOrderDto;
+			}
+			break;
+			case CustomConst.MODIFY: {
+				resultObj = mallOrderDao.set(mallOrderDto);
+			}
+			break;
+			case CustomConst.GET: {
+				resultObj = mallOrderDao.get(mallOrderDto);
 			}
 			break;
 		}

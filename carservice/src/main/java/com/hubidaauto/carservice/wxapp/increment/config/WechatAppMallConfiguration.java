@@ -2,8 +2,10 @@ package com.hubidaauto.carservice.wxapp.increment.config;
 
 import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
+import com.hubidaauto.carservice.wxapp.increment.entity.MallDto;
 import com.hubidaauto.carservice.wxapp.increment.entity.MallOrderDto;
 import com.hubidaauto.carservice.wxapp.increment.service.MallOrderService;
+import com.hubidaauto.carservice.wxapp.increment.service.MallService;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -11,11 +13,13 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.codec.digest.Md5Crypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.CommonConst;
 import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
@@ -30,6 +34,7 @@ import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Configuration
@@ -41,20 +46,24 @@ public class WechatAppMallConfiguration {
 
 	AbstractWechatConfiguration configuration;
 	WebClient webClient;
-	MallOrderService orderService;
+	MallOrderService mallOrderService;
+	MallService mallService;
 
 	@PostConstruct
 	void init() {
 		configuration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);
+		mallService = ApplicationContextProvider.getBean(MallService.class);
+		mallOrderService = ApplicationContextProvider.getBean(MallOrderService.class);
 	}
 
 	@VertxRegister(StandaredVerticle.class)
 	public Consumer<Router> routeMapping(Vertx vertx) {
 		final String URL_UNIFIEDORDERON = configuration.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString();
+		final String PAY_ADDRESS = configuration.getPath().getOther().get("mallPay"), PAY_CALLBACK = PAY_ADDRESS + "back";
 		webClient = WebClient.create(vertx);
 		Consumer<Router> routerConsumer = router -> {
 			//get请求入口
-			router.get(configuration.getPath().getOther().get("mallPay")).handler(routingContext -> {
+			router.get(PAY_ADDRESS).handler(routingContext -> {
 				routingContext.response().setChunked(true);
 				MultiMap multiMap = routingContext.request().params();
 				int code = Integer.parseInt(multiMap.get(CommonConst.WebParamsKeys.GET_CODE));
@@ -65,12 +74,22 @@ public class WechatAppMallConfiguration {
 						try {
 							int offset = 32;
 							String nonce = value.substring(0, offset);
-							String orderId = value.substring(offset, (offset = value.indexOf('.', offset)));
+							Integer goodsId = Integer.parseInt(value.substring(offset, (offset = value.indexOf('.', offset))));
+							Integer count = Integer.parseInt(value.substring(++offset, (offset = value.indexOf('.', offset))));
 							String timeStamp = value.substring(++offset, (offset = value.indexOf('.', offset)));
 							String custId = value.substring(++offset);
 
-							MallOrderDto orderVo = (MallOrderDto) orderService
-									.handle(CustomConst.GET, Map.of("id", orderId, "userId", custId));
+							MallDto mallDto = (MallDto) mallService.handle(CustomConst.GET, Map.of("id", goodsId));
+
+							MallOrderDto orderVo = (MallOrderDto) mallOrderService
+									.handle(CustomConst.ADD, new MallOrderDto()
+											.setGoodsId(goodsId)
+											.setUserId(custId)
+											.setState(CustomConst.ORDER.STATE.RUNNING)
+											.setCount(count)
+											.setCost(mallDto.getPrice() * count)
+											.setCode(UUID.randomUUID().toString()));
+
 							Buffer buffer = Buffer.buffer(JAXBUtils.toXML(new PrePayRequsetMesseage()
 									.setAppId(configuration.getAppID())
 									.setMchId(configuration.getMchId())
@@ -79,7 +98,7 @@ public class WechatAppMallConfiguration {
 									.setOutTradeNo(orderVo.getCode())
 									.setTotalFee(orderVo.getCost())
 									.setSpbillCreateIp(configuration.getNetIp())
-									.setNotifyUrl(configuration.getAddress() + configuration.getPath().getOther().get("mallPay"))
+									.setNotifyUrl(configuration.getAddress() + PAY_CALLBACK)
 									.setTradeType("JSAPI")
 									.setOpenid(orderVo.getUserId())
 									.setSign(configuration.getMchKey())
@@ -136,7 +155,7 @@ public class WechatAppMallConfiguration {
 			});
 
 			//支付信息微信回调
-			router.post(configuration.getPath().getOther().get("mallPay")).handler(routingContext -> {
+			router.post(PAY_CALLBACK).handler(routingContext -> {
 				routingContext.response().setChunked(true);
 				logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
 				try {
@@ -144,9 +163,8 @@ public class WechatAppMallConfiguration {
 					MallOrderDto orderVO = new MallOrderDto()
 							.setCode(payBillRequsetMesseage.getOutTradeNo())
 							.setUserId(payBillRequsetMesseage.getOpenId());
-					orderVO = (MallOrderDto) orderService
-							.handle(CustomConst.GET,
-									JsonObject.mapFrom(orderVO).getMap());
+					orderVO = (MallOrderDto) mallOrderService
+							.handle(CustomConst.GET, orderVO);
 					PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
 					String code;
 					String msg;
@@ -154,7 +172,7 @@ public class WechatAppMallConfiguration {
 						code = "SUCCESS";
 						msg = "OK";
 						if (orderVO.getState() == CustomConst.ORDER.STATE.RUNNING) {
-							orderService.handle(CustomConst.MODIFY, new MallOrderDto()
+							mallOrderService.handle(CustomConst.MODIFY, new MallOrderDto()
 									.setId(orderVO.getId())
 									.setState(CustomConst.ORDER.STATE.END)
 									.setUserId(orderVO.getUserId()));
