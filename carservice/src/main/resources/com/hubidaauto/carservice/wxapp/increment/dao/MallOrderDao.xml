@@ -60,14 +60,14 @@
                      cnt,
                      cost,
                      user_id,
-                     stete)
+                     state)
         VALUES (#{id},
                 #{code},
                 #{goodsId},
                 #{count},
                 #{cost},
                 #{userId},
-                #{stete})
+                #{state})
     </insert>
 
     <update id="set" parameterMap="PMallOrderDto">
@@ -79,8 +79,8 @@
             <if test="cost!=null and cost>0">
                 cost = #{cost},
             </if>
-            <if test="stete!=null">
-                stete = #{stete}
+            <if test="state!=null">
+                state = #{state}
             </if>
         </set>
         WHERE id = #{id}
