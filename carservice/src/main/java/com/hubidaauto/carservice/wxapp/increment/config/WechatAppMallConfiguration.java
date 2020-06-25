@@ -88,7 +88,7 @@ public class WechatAppMallConfiguration {
 											.setState(CustomConst.ORDER.STATE.RUNNING)
 											.setCount(count)
 											.setCost(mallDto.getPrice() * count)
-											.setCode(UUID.randomUUID().toString()));
+											.setCode(UUID.randomUUID().toString().replaceAll("-", "")));
 
 							Buffer buffer = Buffer.buffer(JAXBUtils.toXML(new PrePayRequsetMesseage()
 									.setAppId(configuration.getAppID())
