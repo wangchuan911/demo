@@ -2,6 +2,8 @@ package com.hubidaauto.carservice.wxapp.mall.config;
 
 import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
+import com.hubidaauto.carservice.wxapp.mall.common.AbstractAutoAssign;
+import com.hubidaauto.carservice.wxapp.mall.entity.AssignDto;
 import com.hubidaauto.carservice.wxapp.mall.entity.MallDto;
 import com.hubidaauto.carservice.wxapp.mall.entity.MallOrderDto;
 import com.hubidaauto.carservice.wxapp.mall.service.MallOrderService;
@@ -180,6 +182,9 @@ public class WechatAppMallConfiguration {
 									.setState(CustomConst.ORDER.STATE.END)
 									.setUserId(orderVO.getUserId()));
 						}
+						MallDto mallDto = (MallDto) mallService.handle(CustomConst.GET, Map.of("id", orderVO.getGoodsId()));
+						AssignDto assignDto = mallDto.assignDto();
+						(ApplicationContextProvider.getBean(AssignDto.getAutoAssignType(mallDto.getProtoType()))).buy(assignDto, orderVO);
 					} else {
 						code = "FAIL";
 						msg = "定单不存在";
