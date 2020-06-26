@@ -20,7 +20,7 @@ import java.util.Map;
 @Service
 @Transactional(rollbackFor = Throwable.class)
 public class CouponService extends AbstractBaseService<CouponVO> {
-//	private static final Logger logger = logger(CouponService.class);
+	//	private static final Logger logger = logger(CouponService.class);
 	@Autowired
 	CouponDao couponDao;
 	@Autowired
@@ -106,7 +106,7 @@ public class CouponService extends AbstractBaseService<CouponVO> {
 				couponVO = new CouponVO()
 						.setTemplateId(MapUtils.getInteger(map, "couponId"))
 						.setUserId(custId);
-				for (int i = 0; i < 5; i++) {
+				for (int i = 0; i < MapUtils.getInteger(map, "count"); i++) {
 					this.handle(CustomConst.ADD, couponVO);
 				}
 			}
