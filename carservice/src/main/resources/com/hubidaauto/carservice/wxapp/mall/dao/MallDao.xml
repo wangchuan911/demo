@@ -2,16 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.hubidaauto.carservice.wxapp.increment.dao.MallDao">
+<mapper namespace="com.hubidaauto.carservice.wxapp.mall.dao.MallDao">
 
-    <resultMap id="MallDto" type="com.hubidaauto.carservice.wxapp.increment.entity.MallDto">
+    <resultMap id="MallDto" type="com.hubidaauto.carservice.wxapp.mall.entity.MallDto">
         <result property="id" column="id"></result>
         <result property="name" column="name"></result>
         <result property="desc" column="desc"></result>
         <result property="price" column="price"></result>
     </resultMap>
 
-    <parameterMap id="PMallDto" type="com.hubidaauto.carservice.wxapp.increment.entity.MallDto">
+    <parameterMap id="PMallDto" type="com.hubidaauto.carservice.wxapp.mall.entity.MallDto">
         <parameter property="desc" jdbcType="VARCHAR"></parameter>
         <parameter property="price" jdbcType="INTEGER"></parameter>
         <parameter property="id" jdbcType="INTEGER"></parameter>

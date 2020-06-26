@@ -1,11 +1,11 @@
-package com.hubidaauto.carservice.wxapp.increment.config;
+package com.hubidaauto.carservice.wxapp.mall.config;
 
 import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
-import com.hubidaauto.carservice.wxapp.increment.entity.MallDto;
-import com.hubidaauto.carservice.wxapp.increment.entity.MallOrderDto;
-import com.hubidaauto.carservice.wxapp.increment.service.MallOrderService;
-import com.hubidaauto.carservice.wxapp.increment.service.MallService;
+import com.hubidaauto.carservice.wxapp.mall.entity.MallDto;
+import com.hubidaauto.carservice.wxapp.mall.entity.MallOrderDto;
+import com.hubidaauto.carservice.wxapp.mall.service.MallOrderService;
+import com.hubidaauto.carservice.wxapp.mall.service.MallService;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -13,7 +13,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.codec.digest.Md5Crypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;

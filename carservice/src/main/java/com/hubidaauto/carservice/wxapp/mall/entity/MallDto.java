@@ -1,4 +1,4 @@
-package com.hubidaauto.carservice.wxapp.increment.entity;
+package com.hubidaauto.carservice.wxapp.mall.entity;
 
 public class MallDto {
 	Integer id;

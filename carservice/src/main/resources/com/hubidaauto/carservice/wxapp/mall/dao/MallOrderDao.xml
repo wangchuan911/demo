@@ -2,9 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.hubidaauto.carservice.wxapp.increment.dao.MallOrderDao">
+<mapper namespace="com.hubidaauto.carservice.wxapp.mall.dao.MallOrderDao">
 
-    <resultMap id="RMallOrderDto" type="com.hubidaauto.carservice.wxapp.increment.entity.MallOrderDto">
+    <resultMap id="RMallOrderDto" type="com.hubidaauto.carservice.wxapp.mall.entity.MallOrderDto">
         <result property="id" column="id"></result>
         <result property="code" column="code"></result>
         <result property="goodsId" column="goods_id"></result>
@@ -14,7 +14,7 @@
         <result property="state" column="state"></result>
     </resultMap>
 
-    <parameterMap id="PMallOrderDto" type="com.hubidaauto.carservice.wxapp.increment.entity.MallOrderDto">
+    <parameterMap id="PMallOrderDto" type="com.hubidaauto.carservice.wxapp.mall.entity.MallOrderDto">
         <parameter property="id" jdbcType="INTEGER"></parameter>
         <parameter property="code" jdbcType="VARCHAR"></parameter>
         <parameter property="goodsId" jdbcType="INTEGER"></parameter>
