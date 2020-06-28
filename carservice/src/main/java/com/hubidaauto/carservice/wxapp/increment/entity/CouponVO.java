@@ -14,6 +14,16 @@ public class CouponVO {
 	Integer off;
 	Integer lv;
 	Integer orderId;
+	String defineType;
+
+	public String getDefineType() {
+		return defineType;
+	}
+
+	public CouponVO setDefineType(String defineType) {
+		this.defineType = defineType;
+		return this;
+	}
 
 	public Integer getId() {
 		return id;

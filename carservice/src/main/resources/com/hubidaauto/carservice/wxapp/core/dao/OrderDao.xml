@@ -22,7 +22,7 @@
         <parameter property="posY" jdbcType="DOUBLE"></parameter>
         <parameter property="tacheId" jdbcType="INTEGER"></parameter>
         <parameter property="regionCode" jdbcType="INTEGER"></parameter>
-        <parameter property="cost" jdbcType="DOUBLE"></parameter>
+        <parameter property="cost" jdbcType="INTEGER"></parameter>
     </parameterMap>
 
     <resultMap id="OrderVO" type="com.hubidaauto.carservice.wxapp.core.entity.OrderVO">

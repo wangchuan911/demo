@@ -337,6 +337,12 @@ public class OperationService extends AbstractBaseService<OperationVO> {
 //            userOperRecordDao.add(newOrderVO.setCustId(orderVO.getCustId()));
 
 			userOperRecordService.handle(CustomConst.USER_RECORD.ORDER, newOrderVO.setCustId(orderVO.getCustId()));
+		} else if (CustomConst.FUNCTION.PAYMENT.equals(CustomConst.TACHE.TACHE_MAP.get(tacheId).getCode())) {
+			if (orderVO.getCost().intValue() == 0) {
+				//直接下一环节
+				newOrderVO.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT);
+				orderDao.set(newOrderVO);
+			}
 		}
 	}
 

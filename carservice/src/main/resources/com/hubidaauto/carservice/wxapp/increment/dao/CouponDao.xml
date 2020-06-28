@@ -16,6 +16,7 @@
         <result property="off" column="off"></result>
         <result property="lv" column="lv"></result>
         <result property="id" column="inst_id"></result>
+        <result property="defineType" column="define_type"></result>
     </resultMap>
 
     <parameterMap id="CouponVO" type="com.hubidaauto.carservice.wxapp.increment.entity.CouponVO">
