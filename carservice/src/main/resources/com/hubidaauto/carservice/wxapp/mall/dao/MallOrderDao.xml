@@ -28,6 +28,9 @@
         <if test="id!=null and id>0">
             and id=#{id,jdbcType=INTEGER}
         </if>
+        <if test="goodsId!=null and goodsId>0">
+            and goods_id=#{goodsId,jdbcType=INTEGER}
+        </if>
         <if test="code!=null and code!=''.toString()">
             and code=#{code,jdbcType=VARCHAR}
         </if>
