@@ -67,7 +67,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 	ICommonAsynService commonAsynService;
 
 	IWechatPayHandler orderService;
-	IWechatUserHandler userHandler;
+	//	IWechatUserHandler userHandler;
 	OperationService operationService;
 
 	@Value("${temp.filePath}")
@@ -85,7 +85,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 	public void initValue() throws Throwable {
 		TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
 		orderService = ApplicationContextProvider.getBean(IWechatPayHandler.class);
-		userHandler = (IWechatUserHandler) ApplicationContextProvider.getBean(IWechatUserHandler.class);
+//		userHandler = (IWechatUserHandler) ApplicationContextProvider.getBean(IWechatUserHandler.class);
 		operationService = ApplicationContextProvider.getBean(OperationService.class);
 		CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
 		super.initValue();
@@ -137,8 +137,8 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 //        final String PATH_WX_APP = "/wxApp";
 //        final String PATH_WX_APP_PAY = "/wxAppPay";
 //        final String PATH_WX_APP_UPLOAD = "/imgUpd";
-		final String URL_CODE_2_SESSION = this.getUrls().get(CommonConst.WecharUrlKeys.CODE_2_SESSION).toString();
-		final String URL_UNIFIEDORDERON = this.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString();
+//		final String URL_CODE_2_SESSION = this.getUrls().get(CommonConst.WecharUrlKeys.CODE_2_SESSION).toString();
+//		final String URL_UNIFIEDORDERON = this.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString();
 
 		RequsetOption option = new RequsetOption()
 				.setMethodNameKey(CommonConst.WebParamsKeys.BEAN_METHOD)
@@ -152,7 +152,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
 
-		this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
+		this.initAccessTokenSyncTimer(vertx, objectMessage -> {
 			this.tokenHandler(objectMessage, accessToken -> {
 				this.getWechatAsyncMeassger().setToken(accessToken);
 			}, s -> {
@@ -170,14 +170,14 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 				switch (code) {
 					//获取登陆信息
 					case CustomConst.OTHER.LOGIN:
-						webClient.getAbs(URL_CODE_2_SESSION + value)
+						/*webClient.getAbs(URL_CODE_2_SESSION + value)
 								.send(httpResponseAsyncResult -> {
 									if (httpResponseAsyncResult.succeeded()) {
 										HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
 										JsonObject jsonObject = httpResponse.body().toJsonObject();
-/*                                        String key = jsonObject.remove("session_key").toString();
+*//*                                        String key = jsonObject.remove("session_key").toString();
                                         logger.info(key);
-                                        String userId = jsonObject.getString("openid");*/
+                                        String userId = jsonObject.getString("openid");*//*
 //                                        jsonObject.mergeIn((JsonObject) requestService.login(userId));
 										logger.info(jsonObject.toString());
 										jsonObject.mergeIn((JsonObject) userHandler
@@ -192,7 +192,12 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 									} else {
 										routingContext.fail(httpResponseAsyncResult.cause());
 									}
-								});
+								});*/
+						this.getWeChatCode2session(value, entries -> {
+							routingContext.response().end(entries.toBuffer());
+						}, throwable -> {
+							routingContext.fail(throwable);
+						});
 						break;
 					//获取支付信息
 					case CustomConst.OTHER.PRE_PAY:
@@ -218,7 +223,8 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 									.setOpenid(orderVo.getCustId())
 									.setSign(this.getMchKey())
 							));*/
-							PrePayRequsetMesseage prePayRequsetMesseage = orderService.prePayRequset(new WeChatPayOrder().setId(orderId).setUserId(custId));
+							/*WeChatPayOrder weChatPayOrder = new WeChatPayOrder().setId(orderId).setUserId(custId).setNonce(nonce).setTimeStamp(timeStamp);
+							PrePayRequsetMesseage prePayRequsetMesseage = orderService.prePayRequset(weChatPayOrder);
 							Buffer buffer = Buffer.buffer(JAXBUtils.toXML(prePayRequsetMesseage
 									.setAppId(this.getAppID())
 									.setMchId(this.getMchId())
@@ -265,7 +271,14 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 										} else {
 											routingContext.fail(httpResponseAsyncResult.cause());
 										}
-									});
+									});*/
+							WeChatPayOrder weChatPayOrder = new WeChatPayOrder().setId(orderId).setUserId(custId).setNonce(nonce).setTimeStamp(timeStamp);
+							this.getWechatPrePayInfo(weChatPayOrder, entries -> {
+								routingContext.response()
+										.end(entries.toBuffer());
+							}, throwable -> {
+								routingContext.fail(throwable);
+							});
 						} catch (Throwable t) {
 							routingContext.fail(t);
 						}
@@ -281,45 +294,46 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 			});
 
 			//支付信息微信回调
-			router.post(this.getPath().getPay()).handler(routingContext -> {
-				routingContext.response().setChunked(true);
-				logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
-				try {
-					PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
-					/*OrderVO orderVO = new OrderVO()
-							.setOrderCode(payBillRequsetMesseage.getOutTradeNo())
-							.setCustId(payBillRequsetMesseage.getOpenId());
-					orderVO = (OrderVO) orderService
-							.handle(CustomConst.GET,
-									JsonObject.mapFrom(orderVO).getMap());
-					PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
-					String code;
-					String msg;
-					if (orderVO.getOrderId() != null) {
-						code = "SUCCESS";
-						msg = "OK";
-						if (orderVO.getOrderState() == CustomConst.ORDER.STATE.RUNNING) {
-							orderService.handle(CustomConst.MODIFY, new OrderVO()
-									.setOrderId(orderVO.getOrderId())
-									.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT)
-									.setCustId(orderVO.getCustId()));
-						}
-					} else {
-						code = "FAIL";
-						msg = "定单不存在";
-					}
-					payBillResponseMesseage.setReturnCode(code);
-					payBillResponseMesseage.setReturnMsg(msg);*/
-
-					PayBillResponseMesseage payBillResponseMesseage = orderService.payBillCallBack(payBillRequsetMesseage);
-					routingContext.response()
-							.end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
-				} catch (JAXBException e) {
-					logger.error(e.getMessage(), e);
-					routingContext.fail(e);
-				}
-
-			});
+			router.get(this.getPath().getPay()).handler(this::weChatPayBillCallBack);
+//			router.post(this.getPath().getPay()).handler(routingContext -> {
+//				routingContext.response().setChunked(true);
+//				logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
+//				try {
+//					PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
+//					/*OrderVO orderVO = new OrderVO()
+//							.setOrderCode(payBillRequsetMesseage.getOutTradeNo())
+//							.setCustId(payBillRequsetMesseage.getOpenId());
+//					orderVO = (OrderVO) orderService
+//							.handle(CustomConst.GET,
+//									JsonObject.mapFrom(orderVO).getMap());
+//					PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
+//					String code;
+//					String msg;
+//					if (orderVO.getOrderId() != null) {
+//						code = "SUCCESS";
+//						msg = "OK";
+//						if (orderVO.getOrderState() == CustomConst.ORDER.STATE.RUNNING) {
+//							orderService.handle(CustomConst.MODIFY, new OrderVO()
+//									.setOrderId(orderVO.getOrderId())
+//									.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT)
+//									.setCustId(orderVO.getCustId()));
+//						}
+//					} else {
+//						code = "FAIL";
+//						msg = "定单不存在";
+//					}
+//					payBillResponseMesseage.setReturnCode(code);
+//					payBillResponseMesseage.setReturnMsg(msg);*/
+//
+//					PayBillResponseMesseage payBillResponseMesseage = orderService.payBillCallBack(payBillRequsetMesseage);
+//					routingContext.response()
+//							.end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
+//				} catch (JAXBException e) {
+//					logger.error(e.getMessage(), e);
+//					routingContext.fail(e);
+//				}
+//
+//			});
 			//请求总入口
 			router.post(this.getPath().getApp()).handler(routingContext -> {
 				routingContext.response().setChunked(true);

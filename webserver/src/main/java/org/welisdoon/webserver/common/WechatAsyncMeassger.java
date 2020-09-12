@@ -132,4 +132,8 @@ public class WechatAsyncMeassger {
 			url.replace(idx, idx + colmn.length(), value);
 		}
 	}
+
+	public WebClient getWebClient() {
+		return webClient;
+	}
 }

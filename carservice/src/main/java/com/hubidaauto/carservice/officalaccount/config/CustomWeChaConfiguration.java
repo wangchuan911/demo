@@ -49,7 +49,7 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
 		WebClient webClient = WebClient.create(vertx);
 		setWechatAsyncMeassger(webClient);
 
-		this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
+		this.initAccessTokenSyncTimer(vertx, objectMessage -> {
 			this.tokenHandler(objectMessage, accessToken -> {
 				this.getWechatAsyncMeassger().setToken(accessToken);
 			}, s -> {
