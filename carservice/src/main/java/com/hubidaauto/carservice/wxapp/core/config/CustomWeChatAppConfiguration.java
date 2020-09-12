@@ -40,6 +40,8 @@ import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesse
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PrePayResponseMesseage;
+import org.welisdoon.webserver.entity.wechat.user.WeChatUser;
+import org.welisdoon.webserver.service.wechat.intf.IWechatUserHandler;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
@@ -55,8 +57,6 @@ import java.util.function.Consumer;
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 	//    final static String REQUEST_NAME = "requestService";
-	private static final Logger logger = LoggerFactory.getLogger(CustomWeChatAppConfiguration.class);
-
 	private int orderCycleTime;
 
 	public Integer getOrderCycleTime() {
@@ -70,7 +70,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 	ICommonAsynService commonAsynService;
 
 	OrderService orderService;
-	UserService userService;
+	IWechatUserHandler userHandler;
 	OperationService operationService;
 
 	@Value("${temp.filePath}")
@@ -88,7 +88,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 	public void initValue() throws Throwable {
 		TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
 		orderService = ApplicationContextProvider.getBean(OrderService.class);
-		userService = ApplicationContextProvider.getBean(UserService.class);
+		userHandler = (IWechatUserHandler) ApplicationContextProvider.getBean(IWechatUserHandler.class);
 		operationService = ApplicationContextProvider.getBean(OperationService.class);
 		CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
 		super.initValue();
@@ -183,8 +183,8 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                                         String userId = jsonObject.getString("openid");*/
 //                                        jsonObject.mergeIn((JsonObject) requestService.login(userId));
 										logger.info(jsonObject.toString());
-										jsonObject.mergeIn((JsonObject) userService
-												.login(new UserVO()
+										jsonObject.mergeIn((JsonObject) userHandler
+												.login(new WeChatUser()
 														.setId(jsonObject.getString("openid"))
 														.setSessionKey(jsonObject.getString("session_key"))
 														.setUnionid(jsonObject.getString("unionid"))));

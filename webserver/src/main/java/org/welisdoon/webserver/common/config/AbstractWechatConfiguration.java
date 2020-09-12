@@ -15,29 +15,23 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.WechatAsyncMeassger;
 import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
-import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 
 import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public abstract class AbstractWechatConfiguration {
-	private static final Logger logger = LoggerFactory.getLogger(AbstractWechatConfiguration.class);
+	public final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private String appID;
 	private String appsecret;
@@ -55,6 +49,7 @@ public abstract class AbstractWechatConfiguration {
 	private WXBizMsgCrypt wxBizMsgCrypt;
 	private WechatAsyncMeassger wechatAsyncMeassger;
 	private boolean readOnly = false;
+	private String classPath;
 
 	public String getAppID() {
 		return appID;
@@ -186,7 +181,7 @@ public abstract class AbstractWechatConfiguration {
 		String pay;
 		String app;
 		String push;
-		String index;
+		String appIndex;
 		Map<String, String> other;
 
 		public String getPay() {
@@ -213,12 +208,12 @@ public abstract class AbstractWechatConfiguration {
 			this.push = push;
 		}
 
-		public String getIndex() {
-			return index;
+		public String getAppIndex() {
+			return appIndex;
 		}
 
-		public void setIndex(String index) {
-			this.index = index;
+		public void setAppIndex(String appIndex) {
+			this.appIndex = appIndex;
 		}
 
 		public Map<String, String> getOther() {
@@ -410,5 +405,13 @@ public abstract class AbstractWechatConfiguration {
 		if (readOnly) {
 			throw new RuntimeException("configuration is init finish! please don't change it");
 		}
+	}
+
+	public String getClassPath() {
+		return classPath;
+	}
+
+	public void setClassPath(String classPath) {
+		this.classPath = classPath;
 	}
 }

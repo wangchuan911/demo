@@ -29,7 +29,6 @@ import java.util.function.Consumer;
 @Configuration
 @ConditionalOnProperty(prefix = "wechat-public-hubida", name = "appID")
 public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
-	private static final Logger logger = LoggerFactory.getLogger(CustomWeChaConfiguration.class);
 
 	private Long wechatAliveTimerId = null;
 

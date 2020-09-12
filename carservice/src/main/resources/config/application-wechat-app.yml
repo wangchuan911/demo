@@ -13,7 +13,7 @@ wechat-app-hubida:
     pay: /wxAppPay
     app: /wxApp
     push: /wxPush
-    index: /pages/index2/index/index
+    appIndex: /pages/index2/index/index
     other:
       invite: /pages/home/mime/mine
       mallPay: /wxMallPay
@@ -22,6 +22,7 @@ wechat-app-hubida:
     code2Session: https://api.weixin.qq.com/sns/jscode2session?appid=${wechat-app-hubida.appID}&secret=${wechat-app-hubida.appsecret}&grant_type=authorization_code&js_code=
     unifiedorder: https://api.mch.weixin.qq.com/pay/unifiedorder
     subscribeSend: https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token={{ACCESS_TOKEN}}
+  classPath: com.hubidaauto.carservice.wxapp
 temp:
   filePath: /opt/wechat/tempPic
 

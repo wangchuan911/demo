@@ -41,7 +41,6 @@ import java.util.function.Consumer;
 @Configuration
 @ConditionalOnProperty(prefix = "wechat", name = "appID")
 public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
-    private static final Logger logger = LoggerFactory.getLogger(WeChatServiceConfiguration.class);
 
     private Long wechatAliveTimerId = null;
 
