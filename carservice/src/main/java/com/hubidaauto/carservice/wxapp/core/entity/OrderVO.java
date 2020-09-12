@@ -3,6 +3,7 @@ package com.hubidaauto.carservice.wxapp.core.entity;
 import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.annotation.EntityObjectKey;
+import org.welisdoon.webserver.entity.wechat.WeChatPayOrder;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -35,6 +36,15 @@ public class OrderVO {
 	private CarVO carVO;
 	private Integer regionCode;
 	private Integer cost;
+
+	public OrderVO() {
+
+	}
+
+	public OrderVO(WeChatPayOrder payOrder) {
+		this.orderId = Integer.parseInt(payOrder.getId());
+		this.custId = payOrder.getUserId();
+	}
 
 	public Integer getOrderId() {
 		return orderId;

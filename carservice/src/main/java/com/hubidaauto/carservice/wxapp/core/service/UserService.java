@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
-import org.welisdoon.webserver.entity.wechat.user.WeChatUser;
+import org.welisdoon.webserver.entity.wechat.WeChatUser;
 import org.welisdoon.webserver.service.wechat.intf.IWechatUserHandler;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 

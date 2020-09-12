@@ -1,4 +1,4 @@
-package org.welisdoon.webserver.entity.wechat.user;
+package org.welisdoon.webserver.entity.wechat;
 
 public class WeChatUser {
 	private String id;

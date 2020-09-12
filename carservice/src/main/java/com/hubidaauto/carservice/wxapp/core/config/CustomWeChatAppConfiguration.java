@@ -3,10 +3,7 @@ package com.hubidaauto.carservice.wxapp.core.config;
 import com.hubidaauto.carservice.wxapp.core.dao.TacheDao;
 import com.hubidaauto.carservice.wxapp.core.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.core.entity.TacheVO;
-import com.hubidaauto.carservice.wxapp.core.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.core.service.OperationService;
-import com.hubidaauto.carservice.wxapp.core.service.OrderService;
-import com.hubidaauto.carservice.wxapp.core.service.UserService;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -23,8 +20,6 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -36,11 +31,13 @@ import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.common.web.RequsetOption;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
+import org.welisdoon.webserver.entity.wechat.WeChatPayOrder;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.response.PrePayResponseMesseage;
-import org.welisdoon.webserver.entity.wechat.user.WeChatUser;
+import org.welisdoon.webserver.entity.wechat.WeChatUser;
+import org.welisdoon.webserver.service.wechat.intf.IWechatPayHandler;
 import org.welisdoon.webserver.service.wechat.intf.IWechatUserHandler;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
@@ -69,7 +66,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 
 	ICommonAsynService commonAsynService;
 
-	OrderService orderService;
+	IWechatPayHandler orderService;
 	IWechatUserHandler userHandler;
 	OperationService operationService;
 
@@ -87,7 +84,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 	@Override
 	public void initValue() throws Throwable {
 		TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
-		orderService = ApplicationContextProvider.getBean(OrderService.class);
+		orderService = ApplicationContextProvider.getBean(IWechatPayHandler.class);
 		userHandler = (IWechatUserHandler) ApplicationContextProvider.getBean(IWechatUserHandler.class);
 		operationService = ApplicationContextProvider.getBean(OperationService.class);
 		CustomConst.TACHE.initTacheMapValue(tacheDao.listAll(new TacheVO().setTampalateId(1)));
@@ -206,7 +203,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 							String timeStamp = value.substring(++offset, (offset = value.indexOf('.', offset)));
 							String custId = value.substring(++offset);
 
-							OrderVO orderVo = (OrderVO) orderService
+							/*OrderVO orderVo = (OrderVO) orderService
 									.handle(CustomConst.GET, Map.of("orderId", orderId, "custId", custId));
 							Buffer buffer = Buffer.buffer(JAXBUtils.toXML(new PrePayRequsetMesseage()
 									.setAppId(this.getAppID())
@@ -219,6 +216,16 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 									.setNotifyUrl(this.getAddress() + this.getPath().getPay())
 									.setTradeType("JSAPI")
 									.setOpenid(orderVo.getCustId())
+									.setSign(this.getMchKey())
+							));*/
+							PrePayRequsetMesseage prePayRequsetMesseage = orderService.prePayRequset(new WeChatPayOrder().setId(orderId).setUserId(custId));
+							Buffer buffer = Buffer.buffer(JAXBUtils.toXML(prePayRequsetMesseage
+									.setAppId(this.getAppID())
+									.setMchId(this.getMchId())
+									.setNonceStr(nonce)
+									.setSpbillCreateIp(this.getNetIp())
+									.setNotifyUrl(this.getAddress() + this.getPath().getPay())
+									.setTradeType("JSAPI")
 									.setSign(this.getMchKey())
 							));
 							webClient.postAbs(URL_UNIFIEDORDERON)
@@ -279,7 +286,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 				logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
 				try {
 					PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
-					OrderVO orderVO = new OrderVO()
+					/*OrderVO orderVO = new OrderVO()
 							.setOrderCode(payBillRequsetMesseage.getOutTradeNo())
 							.setCustId(payBillRequsetMesseage.getOpenId());
 					orderVO = (OrderVO) orderService
@@ -302,7 +309,9 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 						msg = "定单不存在";
 					}
 					payBillResponseMesseage.setReturnCode(code);
-					payBillResponseMesseage.setReturnMsg(msg);
+					payBillResponseMesseage.setReturnMsg(msg);*/
+
+					PayBillResponseMesseage payBillResponseMesseage = orderService.payBillCallBack(payBillRequsetMesseage);
 					routingContext.response()
 							.end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
 				} catch (JAXBException e) {

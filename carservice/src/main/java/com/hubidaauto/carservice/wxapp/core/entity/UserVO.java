@@ -3,7 +3,7 @@ package com.hubidaauto.carservice.wxapp.core.entity;
 import com.hubidaauto.carservice.wxapp.increment.entity.CouponVO;
 import io.vertx.core.json.JsonObject;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;
-import org.welisdoon.webserver.entity.wechat.user.WeChatUser;
+import org.welisdoon.webserver.entity.wechat.WeChatUser;
 
 import java.sql.Timestamp;
 import java.util.List;
