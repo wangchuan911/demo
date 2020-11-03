@@ -220,9 +220,6 @@
             <if test="carAddress!=null and carAddress!=''.toString()">
                 car_address = #{carAddress,jdbcType=VARCHAR},
             </if>
-            <if test="createDate!=null">
-                create_date = #{createDate,jdbcType=TIMESTAMP},
-            </if>
             <if test="finishDate!=null">
                 finish_date = #{finishDate,jdbcType=TIMESTAMP},
             </if>
@@ -241,9 +238,9 @@
             <if test="orderAppointPhone!=null and orderAppointPhone!=''.toString()">
                 order_appoint_phone= #{orderAppointPhone,jdbcType=VARCHAR},
             </if>
-            <if test="orderArrangeDate!=null">
+            <!--<if test="orderArrangeDate!=null">
                 order_arrange_date = #{orderArrangeDate,jdbcType=TIMESTAMP},
-            </if>
+            </if>-->
             <if test="custId!=null and custId!=''.toString()">
                 cust_id = #{custId,jdbcType=VARCHAR},
             </if>
@@ -402,9 +399,6 @@
                 </if>
                 <if test="vo.carAddress!=null and vo.carAddress!=''.toString()">
                     car_address= #{vo.carAddress,jdbcType=VARCHAR} ,
-                </if>
-                <if test="vo.createDate!=null ">
-                    create_date= #{vo.createDate,jdbcType=TIMESTAMP} ,
                 </if>
                 <if test="vo.finishDate!=null ">
                     finish_date= #{vo.finishDate,jdbcType=TIMESTAMP} ,

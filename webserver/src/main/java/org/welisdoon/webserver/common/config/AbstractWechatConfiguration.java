@@ -46,7 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractWechatConfiguration {
-	public final Logger logger = LoggerFactory.getLogger(this.getClass());
+	public final Logger logger = LoggerFactory.getLogger(ApplicationContextProvider.getRealClass(this.getClass()));
 
 	private String appID;
 	private String appsecret;
@@ -279,12 +279,12 @@ public abstract class AbstractWechatConfiguration {
 		final String URL_REQUSET = this.getUrls().get("getAccessToken").toString();
 		EventBus eventBus = vertx1.eventBus();
 		SharedData sharedData = vertx1.sharedData();
-
+		WebClient webClient = WebClient.create(vertx1);
 		Handler<Long> longHandler = avoid -> {
 			sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
 				if (lockAsyncResult.succeeded()) {
 //                    logger.info(URL_REQUSET);
-					this.wechatAsyncMeassger.getWebClient().getAbs(URL_REQUSET)
+					webClient.getAbs(URL_REQUSET)
 							/*.addQueryParam("grant_type", "client_credential")
 							.addQueryParam("appid", this.getAppID())
 							.addQueryParam("secret", this.getAppsecret())*/
@@ -312,8 +312,8 @@ public abstract class AbstractWechatConfiguration {
 
 		MessageConsumer<T> messageConsumer = eventBus.consumer(URL_TOCKEN_UPDATE);
 		messageConsumer.handler(var1);
-		//启动就运行运行
-		longHandler.handle(null);
+		/*//启动就运行运行
+		longHandler.handle(null);*/
 		//开始循环
 		vertx1.setPeriodic(this.getAfterUpdateTokenTime() * 1000, longHandler);
 
