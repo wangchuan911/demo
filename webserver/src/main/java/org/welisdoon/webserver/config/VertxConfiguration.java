@@ -89,6 +89,7 @@ public class VertxConfiguration {
                 CollectUrl.addAll(ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()));
             }
             configurationBuilder.setUrls(CollectUrl);
+            configurationBuilder.setInputsFilter(s -> s.toLowerCase().endsWith(".class") || s.toLowerCase().endsWith(".java"));
         }
         return new Reflections(configurationBuilder);
     }

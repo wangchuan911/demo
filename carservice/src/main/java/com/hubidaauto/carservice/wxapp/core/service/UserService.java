@@ -87,7 +87,7 @@ public class UserService extends AbstractBaseService<UserVO> implements IWechatU
                             JsonObject jsonObject = new JsonObject(json = WXBizMsgCrypt.wxDecrypt(userEncryptedData, cacheInfo.openData(false).getSessionKey(), useriv));
                             logger.info(json);
                             userVO.setUnionid(jsonObject.getString("unionId", null)).openData(false);*/
-							cacheInfo.userDecrypted(userEncryptedData, useriv).openData(false);
+							cacheInfo.userDecrypted(userEncryptedData, useriv);
 						}
 					}
 				} catch (Throwable e) {

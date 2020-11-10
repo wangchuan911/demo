@@ -44,6 +44,13 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
 	@VertxRegister(StandaredVerticle.class)
 	public Consumer<Router> routeMapping(Vertx vertx) {
 
+		this.initAccessTokenSyncTimer(vertx, objectMessage -> {
+			this.tokenHandler(objectMessage, accessToken -> {
+				this.getWechatAsyncMeassger().setToken(accessToken);
+			}, s -> {
+			});
+		});
+
 		commonAsynService = ICommonAsynService.createProxy(vertx, this.getAppID());
 
 		this.setWechatAsyncMeassger(WebClient.create(vertx));
@@ -81,13 +88,6 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
 	public Consumer<Vertx> createAsyncService() {
 		Consumer<Vertx> vertxConsumer = vertx1 -> {
 			ICommonAsynService.create(vertx1, this.getAppID());
-
-			this.initAccessTokenSyncTimer(vertx1, objectMessage -> {
-				this.tokenHandler(objectMessage, accessToken -> {
-					this.getWechatAsyncMeassger().setToken(accessToken);
-				}, s -> {
-				});
-			});
 		};
 		return vertxConsumer;
 	}

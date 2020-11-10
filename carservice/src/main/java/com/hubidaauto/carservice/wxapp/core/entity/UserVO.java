@@ -200,13 +200,13 @@ public class UserVO extends WeChatUser {
 
 	public UserVO userDecrypted(String userEncryptedData, String useriv) throws Throwable {
 		String json;
-		JsonObject jsonObject = new JsonObject(json = WXBizMsgCrypt.wxDecrypt(userEncryptedData, this.getSessionKey(), useriv));
+		JsonObject jsonObject = new JsonObject(json = WXBizMsgCrypt.wxDecrypt(userEncryptedData, super.getSessionKey(), useriv));
 		this.setUnionid(jsonObject.getString("unionId", null));
 		return this;
 	}
 
 	public UserVO phoneDecrypted(String phoneEncryptedData, String phoneEncryptedIv) throws Throwable {
-		JsonObject jsonObject = new JsonObject(WXBizMsgCrypt.wxDecrypt(phoneEncryptedData, this.getSessionKey(), phoneEncryptedIv));
+		JsonObject jsonObject = new JsonObject(WXBizMsgCrypt.wxDecrypt(phoneEncryptedData, super.getSessionKey(), phoneEncryptedIv));
 		this.phone = (jsonObject.getString("phoneNumber", jsonObject.getString("purePhoneNumber", null)));
 		return this;
 	}
