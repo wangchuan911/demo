@@ -29,7 +29,6 @@ import java.util.function.Consumer;
 @Configuration
 @ConditionalOnProperty(prefix = "wechat-public-hubida", name = "appID")
 public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
-	private static final Logger logger = LoggerFactory.getLogger(CustomWeChaConfiguration.class);
 
 	private Long wechatAliveTimerId = null;
 
@@ -45,17 +44,17 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
 	@VertxRegister(StandaredVerticle.class)
 	public Consumer<Router> routeMapping(Vertx vertx) {
 
-		commonAsynService = ICommonAsynService.createProxy(vertx, this.getAppID());
-
-		WebClient webClient = WebClient.create(vertx);
-		setWechatAsyncMeassger(webClient);
-
-		this.initAccessTokenSyncTimer(vertx, webClient, objectMessage -> {
+		this.initAccessTokenSyncTimer(vertx, objectMessage -> {
 			this.tokenHandler(objectMessage, accessToken -> {
 				this.getWechatAsyncMeassger().setToken(accessToken);
 			}, s -> {
 			});
 		});
+
+		commonAsynService = ICommonAsynService.createProxy(vertx, this.getAppID());
+
+		this.setWechatAsyncMeassger(WebClient.create(vertx));
+
 
 		Consumer<Router> routerConsumer = router -> {
 			router.get(this.getPath().getPush()).handler(this::wechatMsgCheck);

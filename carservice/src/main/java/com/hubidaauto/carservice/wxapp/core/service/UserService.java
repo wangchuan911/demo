@@ -9,20 +9,21 @@ import com.hubidaauto.carservice.wxapp.core.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.increment.service.CouponService;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
+import org.welisdoon.webserver.entity.wechat.WeChatUser;
+import org.welisdoon.webserver.service.wechat.intf.IWechatUserHandler;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class UserService extends AbstractBaseService<UserVO> {
+public class UserService extends AbstractBaseService<UserVO> implements IWechatUserHandler {
 //	private static final Logger logger = logger(UserService.class);
 	@Autowired
 	UserDao userDao;
@@ -86,7 +87,7 @@ public class UserService extends AbstractBaseService<UserVO> {
                             JsonObject jsonObject = new JsonObject(json = WXBizMsgCrypt.wxDecrypt(userEncryptedData, cacheInfo.openData(false).getSessionKey(), useriv));
                             logger.info(json);
                             userVO.setUnionid(jsonObject.getString("unionId", null)).openData(false);*/
-							cacheInfo.userDecrypted(userEncryptedData, useriv).openData(false);
+							cacheInfo.userDecrypted(userEncryptedData, useriv);
 						}
 					}
 				} catch (Throwable e) {
@@ -116,7 +117,8 @@ public class UserService extends AbstractBaseService<UserVO> {
 	}
 
 	@Transactional(rollbackFor = Throwable.class)
-	public Object login(UserVO wxUserInfo) {
+	public Object login(WeChatUser weChatUser) {
+		UserVO wxUserInfo=new UserVO(weChatUser);
 		JsonObject jsonObject = new JsonObject();
 		if (wxUserInfo != null && !StringUtils.isEmpty(wxUserInfo.getId())) {
 			Object o = handle(CustomConst.GET, Map.of("id", wxUserInfo.getId()));

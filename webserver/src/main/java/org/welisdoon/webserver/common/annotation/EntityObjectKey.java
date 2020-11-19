@@ -9,4 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EntityObjectKey {
     String name();
+
+    Class<? extends EntitySpecialType> specialType() default EntitySpecialType.class;
+
 }

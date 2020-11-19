@@ -183,7 +183,7 @@
             )
           JOIN car_user a
             ON a.car_user_id = b.USER_ID
-            AND a.car_user_max_role=1
+            AND a.car_user_role=1
         WHERE a1.order_id = #{orderId,jdbcType=INTEGER}
     </select>
 

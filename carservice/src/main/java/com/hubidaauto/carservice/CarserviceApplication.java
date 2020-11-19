@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.welisdoon.webserver.WebserverApplication;
 
 @SpringBootApplication
-@EnableTransactionManagement
+@EnableTransactionManagement(proxyTargetClass=true)
 @MapperScan(basePackageClasses = CarserviceApplication.class, annotationClass = Repository.class)
 @ComponentScan(basePackageClasses = {WebserverApplication.class, CarserviceApplication.class})
 public class CarserviceApplication {

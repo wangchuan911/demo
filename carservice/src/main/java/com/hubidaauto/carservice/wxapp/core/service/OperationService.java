@@ -451,7 +451,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
 				.post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
 						.setMiniprogram(new PublicTamplateMessage.MiniProgram()
 								.setAppid(appConfiguration.getAppID())
-								.setPagepath(appConfiguration.getPath().getIndex()))
+								.setPagepath(appConfiguration.getPath().getAppIndex()))
 						.setTemplate_id(pushConfig.getTemplateId())
 						.addDatas(entrys)
 						.setTouser(userVO

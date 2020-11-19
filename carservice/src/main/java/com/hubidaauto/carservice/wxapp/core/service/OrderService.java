@@ -1,6 +1,7 @@
 package com.hubidaauto.carservice.wxapp.core.service;
 
 import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
+import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.carservice.wxapp.core.dao.*;
 import com.hubidaauto.carservice.wxapp.increment.entity.CouponVO;
 import com.hubidaauto.carservice.wxapp.core.entity.OrderVO;
@@ -17,7 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
+import org.welisdoon.webserver.entity.wechat.WeChatPayOrder;
+import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
+import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
+import org.welisdoon.webserver.entity.wechat.payment.response.PayBillResponseMesseage;
+import org.welisdoon.webserver.service.wechat.intf.IWechatPayHandler;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 
 import java.sql.Timestamp;
@@ -26,7 +33,7 @@ import java.util.Map;
 
 @Service
 @Transactional(rollbackFor = Throwable.class)
-public class OrderService extends AbstractBaseService<OrderVO> {
+public class OrderService extends AbstractBaseService<OrderVO> implements IWechatPayHandler {
 
 //	private static final Logger logger = logger(OrderService.class);
 
@@ -185,4 +192,45 @@ public class OrderService extends AbstractBaseService<OrderVO> {
 		return resultObj;
 	}
 
+	@Override
+	public PayBillResponseMesseage payBillCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+		OrderVO orderVO = new OrderVO()
+				.setOrderCode(payBillRequsetMesseage.getOutTradeNo())
+				.setCustId(payBillRequsetMesseage.getOpenId());
+		orderVO = (OrderVO) this
+				.handle(CustomConst.GET,
+						JsonObject.mapFrom(orderVO).getMap());
+		PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
+		String code;
+		String msg;
+		if (orderVO.getOrderId() != null) {
+			code = "SUCCESS";
+			msg = "OK";
+			if (orderVO.getOrderState() == CustomConst.ORDER.STATE.RUNNING) {
+				this.handle(CustomConst.MODIFY, new OrderVO()
+						.setOrderId(orderVO.getOrderId())
+						.setOrderState(CustomConst.ORDER.STATE.WAIT_NEXT)
+						.setCustId(orderVO.getCustId()));
+			}
+		} else {
+			code = "FAIL";
+			msg = "定单不存在";
+		}
+		payBillResponseMesseage.setReturnCode(code);
+		payBillResponseMesseage.setReturnMsg(msg);
+		return payBillResponseMesseage;
+	}
+
+	@Override
+	public PrePayRequsetMesseage prePayRequset(WeChatPayOrder payOrder) {
+
+		OrderVO orderVo = orderDao.get(new OrderVO(payOrder));
+		CustomWeChatAppConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);
+		PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
+				.setBody(String.format("%s-服务费用结算:\n定单编号：%s\n金额%s", customWeChatAppConfiguration.getAppName(), orderVo.getOrderCode(), orderVo.getCost() / 100))
+				.setOutTradeNo(orderVo.getOrderCode())
+				.setTotalFee(orderVo.getCost())
+				.setOpenid(orderVo.getCustId());
+		return messeage;
+	}
 }

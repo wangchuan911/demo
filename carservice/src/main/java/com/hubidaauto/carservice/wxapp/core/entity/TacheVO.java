@@ -167,11 +167,11 @@ public class TacheVO {
                     StringBuilder value = new StringBuilder(s.substring(i + 1));
                     if (value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"') {
 
-                    } else if ((j = value.indexOf(".")) > 0) {
+                    } /*else if ((j = value.indexOf(".")) > 0) {
                         int k = j + 1, l = j + 2;
                         String word = value.substring(k, l);
                         value = value.replace(k, l, word.toUpperCase());
-                    }
+                    }*/
                     return Map.entry(s.substring(0, i), value.toString());
                 }).toArray(Map.Entry[]::new));
             }

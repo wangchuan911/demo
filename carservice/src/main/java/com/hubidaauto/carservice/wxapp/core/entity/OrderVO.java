@@ -1,8 +1,10 @@
 package com.hubidaauto.carservice.wxapp.core.entity;
 
+import com.hubidaauto.carservice.assign.utils.IntegerMoneyValueType;
 import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.annotation.EntityObjectKey;
+import org.welisdoon.webserver.entity.wechat.WeChatPayOrder;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -11,269 +13,280 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class OrderVO {
-	private Integer orderId;
-	private String orderCode;
-	private String carLicenseNumber;
-	private String carAddress;
-	private Timestamp createDate;
-	private Timestamp finishDate;
-	private Integer orderState;
-	private String orderControlPerson;
-	private String orderAppointPerson;
-	private String orderAppointPersonName;
-	private String orderAppointPhone;
-	private Timestamp orderArrangeDate;
-	private String custId;
-	private String custName;
-	private String custPhone;
-	private String passTache;
-	private String orderNote;
-	private Integer tacheId;
-	private Double posX;
-	private Double posY;
-	private List<PictureVO> pictureVOS;
-	private CarVO carVO;
-	private Integer regionCode;
-	private Integer cost;
+    private Integer orderId;
+    private String orderCode;
+    private String carLicenseNumber;
+    private String carAddress;
+    private Timestamp createDate;
+    private Timestamp finishDate;
+    private Integer orderState;
+    private String orderControlPerson;
+    private String orderAppointPerson;
+    private String orderAppointPersonName;
+    private String orderAppointPhone;
+    private Timestamp orderArrangeDate;
+    private String custId;
+    private String custName;
+    private String custPhone;
+    private String passTache;
+    private String orderNote;
+    private Integer tacheId;
+    private Double posX;
+    private Double posY;
+    private List<PictureVO> pictureVOS;
+    private CarVO carVO;
+    private Integer regionCode;
+    private Integer cost;
 
-	public Integer getOrderId() {
-		return orderId;
-	}
+    public OrderVO() {
 
-	public OrderVO setOrderId(Integer orderId) {
-		this.orderId = orderId;
-		return this;
-	}
+    }
 
-	public String getOrderCode() {
-		return orderCode;
-	}
+    public OrderVO(WeChatPayOrder payOrder) {
+        this.orderId = Integer.parseInt(payOrder.getId());
+        this.custId = payOrder.getUserId();
+    }
 
-	public OrderVO setOrderCode(String orderCode) {
-		this.orderCode = orderCode;
-		return this;
-	}
+    public Integer getOrderId() {
+        return orderId;
+    }
 
-	public String getCarLicenseNumber() {
-		return carLicenseNumber;
-	}
+    public OrderVO setOrderId(Integer orderId) {
+        this.orderId = orderId;
+        return this;
+    }
 
-	public OrderVO setCarLicenseNumber(String carLicenseNumber) {
-		this.carLicenseNumber = carLicenseNumber;
-		return this;
-	}
+    public String getOrderCode() {
+        return orderCode;
+    }
 
-	public String getCarAddress() {
-		return carAddress;
-	}
+    public OrderVO setOrderCode(String orderCode) {
+        this.orderCode = orderCode;
+        return this;
+    }
 
-	public OrderVO setCarAddress(String carAddress) {
-		this.carAddress = carAddress;
-		return this;
-	}
+    public String getCarLicenseNumber() {
+        return carLicenseNumber;
+    }
 
-	public Timestamp getCreateDate() {
-		return createDate;
-	}
+    public OrderVO setCarLicenseNumber(String carLicenseNumber) {
+        this.carLicenseNumber = carLicenseNumber;
+        return this;
+    }
 
-	public OrderVO setCreateDate(Timestamp createDate) {
-		this.createDate = createDate;
-		return this;
-	}
+    public String getCarAddress() {
+        return carAddress;
+    }
 
-	public Timestamp getFinishDate() {
-		return finishDate;
-	}
+    public OrderVO setCarAddress(String carAddress) {
+        this.carAddress = carAddress;
+        return this;
+    }
 
-	public OrderVO setFinishDate(Timestamp finishDate) {
-		this.finishDate = finishDate;
-		return this;
-	}
+    public Timestamp getCreateDate() {
+        return createDate;
+    }
 
-	public Integer getOrderState() {
-		return orderState;
-	}
+    public OrderVO setCreateDate(Timestamp createDate) {
+        this.createDate = createDate;
+        return this;
+    }
 
-	public OrderVO setOrderState(Integer orderState) {
-		this.orderState = orderState;
-		return this;
-	}
+    public Timestamp getFinishDate() {
+        return finishDate;
+    }
 
-	public String getOrderControlPerson() {
-		return orderControlPerson;
-	}
+    public OrderVO setFinishDate(Timestamp finishDate) {
+        this.finishDate = finishDate;
+        return this;
+    }
 
-	public OrderVO setOrderControlPerson(String orderControlPerson) {
-		this.orderControlPerson = orderControlPerson;
-		return this;
-	}
+    public Integer getOrderState() {
+        return orderState;
+    }
 
-	public String getOrderAppointPerson() {
-		return orderAppointPerson;
-	}
+    public OrderVO setOrderState(Integer orderState) {
+        this.orderState = orderState;
+        return this;
+    }
 
-	public OrderVO setOrderAppointPerson(String orderAppointPerson) {
-		this.orderAppointPerson = orderAppointPerson;
-		return this;
-	}
+    public String getOrderControlPerson() {
+        return orderControlPerson;
+    }
 
-	public Timestamp getOrderArrangeDate() {
-		return orderArrangeDate;
-	}
+    public OrderVO setOrderControlPerson(String orderControlPerson) {
+        this.orderControlPerson = orderControlPerson;
+        return this;
+    }
 
-	public OrderVO setOrderArrangeDate(Timestamp orderArrangeDate) {
-		this.orderArrangeDate = orderArrangeDate;
-		return this;
-	}
+    public String getOrderAppointPerson() {
+        return orderAppointPerson;
+    }
 
-	public String getCustId() {
-		return custId;
-	}
+    public OrderVO setOrderAppointPerson(String orderAppointPerson) {
+        this.orderAppointPerson = orderAppointPerson;
+        return this;
+    }
 
-	public OrderVO setCustId(String custId) {
-		this.custId = custId;
-		return this;
-	}
+    public Timestamp getOrderArrangeDate() {
+        return orderArrangeDate;
+    }
 
-	public String getPassTache() {
-		return passTache;
-	}
+    public OrderVO setOrderArrangeDate(Timestamp orderArrangeDate) {
+        this.orderArrangeDate = orderArrangeDate;
+        return this;
+    }
 
-	public OrderVO setPassTache(String passTache) {
-		this.passTache = passTache;
-		return this;
-	}
+    public String getCustId() {
+        return custId;
+    }
 
-	public Double getPosX() {
-		return posX;
-	}
+    public OrderVO setCustId(String custId) {
+        this.custId = custId;
+        return this;
+    }
 
-	public OrderVO setPosX(Double posX) {
-		this.posX = posX;
-		return this;
-	}
+    public String getPassTache() {
+        return passTache;
+    }
 
-	public Double getPosY() {
-		return posY;
-	}
+    public OrderVO setPassTache(String passTache) {
+        this.passTache = passTache;
+        return this;
+    }
 
-	public OrderVO setPosY(Double posY) {
-		this.posY = posY;
-		return this;
-	}
+    public Double getPosX() {
+        return posX;
+    }
 
-	public String getOrderNote() {
-		return orderNote;
-	}
+    public OrderVO setPosX(Double posX) {
+        this.posX = posX;
+        return this;
+    }
 
-	public OrderVO setOrderNote(String orderNote) {
-		this.orderNote = orderNote;
-		return this;
-	}
+    public Double getPosY() {
+        return posY;
+    }
 
-	public Integer getTacheId() {
-		return tacheId;
-	}
+    public OrderVO setPosY(Double posY) {
+        this.posY = posY;
+        return this;
+    }
 
-	public OrderVO setTacheId(Integer tacheId) {
-		this.tacheId = tacheId;
-		return this;
-	}
+    public String getOrderNote() {
+        return orderNote;
+    }
 
-	public List<PictureVO> getPictureVOS() {
-		return pictureVOS;
-	}
+    public OrderVO setOrderNote(String orderNote) {
+        this.orderNote = orderNote;
+        return this;
+    }
 
-	public OrderVO setPictureVOS(List<PictureVO> pictureVOS) {
-		this.pictureVOS = pictureVOS;
-		return this;
-	}
+    public Integer getTacheId() {
+        return tacheId;
+    }
 
-	public CarVO getCarVO() {
-		return carVO;
-	}
+    public OrderVO setTacheId(Integer tacheId) {
+        this.tacheId = tacheId;
+        return this;
+    }
 
-	public OrderVO setCarVO(CarVO carVO) {
-		this.carVO = carVO;
-		return this;
-	}
+    public List<PictureVO> getPictureVOS() {
+        return pictureVOS;
+    }
 
-	public String getOrderAppointPersonName() {
-		return orderAppointPersonName;
-	}
+    public OrderVO setPictureVOS(List<PictureVO> pictureVOS) {
+        this.pictureVOS = pictureVOS;
+        return this;
+    }
 
-	public OrderVO setOrderAppointPersonName(String orderAppointPersonName) {
-		this.orderAppointPersonName = orderAppointPersonName;
-		return this;
-	}
+    public CarVO getCarVO() {
+        return carVO;
+    }
 
-	public String getCustName() {
-		return custName;
-	}
+    public OrderVO setCarVO(CarVO carVO) {
+        this.carVO = carVO;
+        return this;
+    }
 
-	public OrderVO setCustName(String custName) {
-		this.custName = custName;
-		return this;
-	}
+    public String getOrderAppointPersonName() {
+        return orderAppointPersonName;
+    }
 
-	public String getCustPhone() {
-		return custPhone;
-	}
+    public OrderVO setOrderAppointPersonName(String orderAppointPersonName) {
+        this.orderAppointPersonName = orderAppointPersonName;
+        return this;
+    }
 
-	public OrderVO setCustPhone(String custPhone) {
-		this.custPhone = custPhone;
-		return this;
-	}
+    public String getCustName() {
+        return custName;
+    }
 
-	public String getOrderAppointPhone() {
-		return orderAppointPhone;
-	}
+    public OrderVO setCustName(String custName) {
+        this.custName = custName;
+        return this;
+    }
 
-	public OrderVO setOrderAppointPhone(String orderAppointPhone) {
-		this.orderAppointPhone = orderAppointPhone;
-		return this;
-	}
+    public String getCustPhone() {
+        return custPhone;
+    }
 
-	public Integer getRegionCode() {
-		return regionCode;
-	}
+    public OrderVO setCustPhone(String custPhone) {
+        this.custPhone = custPhone;
+        return this;
+    }
 
-	public OrderVO setRegionCode(Integer regionCode) {
-		this.regionCode = regionCode;
-		return this;
-	}
+    public String getOrderAppointPhone() {
+        return orderAppointPhone;
+    }
 
-	public Integer getCost() {
-		return cost;
-	}
+    public OrderVO setOrderAppointPhone(String orderAppointPhone) {
+        this.orderAppointPhone = orderAppointPhone;
+        return this;
+    }
 
-	public void setCost(Integer cost) {
-		this.cost = cost;
-	}
+    public Integer getRegionCode() {
+        return regionCode;
+    }
 
-	public String orderPersonIdByRole(Integer roleId) {
-		switch (roleId) {
-			case CustomConst.ROLE.CUSTOMER:
-				return (this.getCustId());
-			case CustomConst.ROLE.WOCKER:
-				return (this.getOrderAppointPerson());
-			case CustomConst.ROLE.DISTRIBUTOR:
-				return (this.getOrderControlPerson());
-			default:
-				return null;
-		}
-	}
+    public OrderVO setRegionCode(Integer regionCode) {
+        this.regionCode = regionCode;
+        return this;
+    }
 
-	private final static Integer[] ENABLE_PASS_TACHE = new Integer[]{8, 9};
+    @EntityObjectKey(name = "cost", specialType = IntegerMoneyValueType.class)
+    public Integer getCost() {
+        return cost;
+    }
 
-	@EntityObjectKey(name = "ServerType")
-	public String ServerType() {
-		if (StringUtils.isEmpty(this.getPassTache())) return "";
-		Set<Integer> passIds = Arrays
-				.stream(this.getPassTache().split(","))
-				.map(s -> Integer.parseInt(s))
-				.collect(Collectors.toSet());
-		return Arrays.stream(ENABLE_PASS_TACHE).filter(value -> !passIds.contains(value)).map(value -> CustomConst.TACHE.TACHE_MAP.get(value).getTacheName()).collect(Collectors.joining(","));
-	}
+    public OrderVO setCost(Integer cost) {
+        this.cost = cost;
+        return this;
+    }
+
+    public String orderPersonIdByRole(Integer roleId) {
+        switch (roleId) {
+            case CustomConst.ROLE.CUSTOMER:
+                return (this.getCustId());
+            case CustomConst.ROLE.WOCKER:
+                return (this.getOrderAppointPerson());
+            case CustomConst.ROLE.DISTRIBUTOR:
+                return (this.getOrderControlPerson());
+            default:
+                return null;
+        }
+    }
+
+    private final static Integer[] ENABLE_PASS_TACHE = new Integer[]{8, 9};
+
+    @EntityObjectKey(name = "serverType")
+    public String serverType() {
+        if (StringUtils.isEmpty(this.getPassTache())) return "";
+        Set<Integer> passIds = Arrays
+                .stream(this.getPassTache().split(","))
+                .map(s -> Integer.parseInt(s))
+                .collect(Collectors.toSet());
+        return Arrays.stream(ENABLE_PASS_TACHE).filter(value -> !passIds.contains(value)).map(value -> CustomConst.TACHE.TACHE_MAP.get(value).getTacheName()).collect(Collectors.joining(","));
+    }
 }
 
