@@ -4,12 +4,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.web.AsyncProxyUtils;
 import org.welisdoon.webserver.common.web.Requset;
@@ -50,7 +47,7 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
             });
         });
 
-        commonAsynService = AsyncProxyUtils.createProxy(vertx, this.getAppID(), ICommonAsynService.class);
+        commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
 
         this.setWechatAsyncMeassger(WebClient.create(vertx));
 
@@ -86,7 +83,7 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            AsyncProxyUtils.create(vertx1, this.getAppID(), ICommonAsynService.class);
+            AsyncProxyUtils.createServiceBinder(vertx1, this.getAppID(), ICommonAsynService.class);
         };
         return vertxConsumer;
     }

@@ -118,7 +118,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         final String KEY = ApplicationContextProvider.getRealClass(this.getClass()).getName().toUpperCase();
         final String URL_TOCKEN_LOCK = KEY + ".LOCK";
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            AsyncProxyUtils.create(vertx1, this.getAppID(), ICommonAsynService.class);
+            AsyncProxyUtils.createServiceBinder(vertx1, this.getAppID(), ICommonAsynService.class);
             SharedData sharedData = vertx1.sharedData();
             Handler<Long> longHandler = aLong -> {
                 /*集群锁，防止重复处理和锁表*/
@@ -162,7 +162,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         WebClient webClient = WebClient.create(vertx);
         setWechatAsyncMeassger(webClient);
 
-        commonAsynService = AsyncProxyUtils.createProxy(vertx, this.getAppID(), ICommonAsynService.class);
+        commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
 

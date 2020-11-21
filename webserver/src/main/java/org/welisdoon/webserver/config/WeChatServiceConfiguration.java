@@ -104,14 +104,14 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            AsyncProxyUtils.create(vertx1, this.getAppID(), ICommonAsynService.class);
+            AsyncProxyUtils.createServiceBinder(vertx1, this.getAppID(), ICommonAsynService.class);
         };
         return vertxConsumer;
     }
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
-        commonAsynService = AsyncProxyUtils.createProxy(vertx, this.getAddress(), ICommonAsynService.class);
+        commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAddress(), ICommonAsynService.class);
         setWechatAsyncMeassger(WebClient.create(vertx));
 
         this.initAccessTokenSyncTimer(vertx, objectMessage -> {

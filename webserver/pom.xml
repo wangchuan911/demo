@@ -17,34 +17,33 @@
 
     <dependencies>
 
-        <!-- vert.x -->
+        <!-- vert.x web-->
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
         </dependency>
+
+        <!-- 服务代理proxy -->
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-service-proxy</artifactId>
             <classifier>processor</classifier>
         </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-service-discovery</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-codegen</artifactId>
         </dependency>
+        <!--webclient-->
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web-client</artifactId>
         </dependency>
-        <!-- 服务代理proxy -->
-        <!--<dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-service-proxy</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-codegen</artifactId>
-            <scope>provided</scope>
-        </dependency>-->
         <!-- 集群-->
         <dependency>
             <groupId>io.vertx</groupId>

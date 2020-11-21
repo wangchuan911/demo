@@ -15,20 +15,20 @@ import org.welisdoon.webserver.common.ApplicationContextProvider;
  * @Date 2020/11/21 11:41
  */
 public interface AsyncProxyUtils {
-    static <T> T create(Vertx vertx, String address, Class<T> type) {
+    static <T> T createServiceBinder(Vertx vertx, String address, Class<T> type) {
         T bean = ApplicationContextProvider.getBean(type);
         new ServiceBinder(vertx).setAddress(address = name(type, address))
                 .register(type, bean)
                 .completionHandler(Promise.promise());
-        LoggerFactory.getLogger(AsyncProxyUtils.class).info(String.format("create Service:%s", address));
+        LoggerFactory.getLogger(AsyncProxyUtils.class).info(String.format("create ServiceBinder:%s", address));
         return bean;
     }
 
-    static <T> T createProxy(Vertx vertx, String address, Class<T> type) {
+    static <T> T createServiceProxyBuilder(Vertx vertx, String address, Class<T> type) {
         T bean = new ServiceProxyBuilder(vertx)
                 .setAddress(address = name(type, address))
                 .build(type);
-        LoggerFactory.getLogger(AsyncProxyUtils.class).info(String.format("create Service Proxy:%s", address));
+        LoggerFactory.getLogger(AsyncProxyUtils.class).info(String.format("create ServiceProxyBuilder:%s", address));
         return bean;
     }
 

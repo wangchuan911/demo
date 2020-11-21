@@ -235,7 +235,7 @@ public class VertxConfiguration {
     @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            logger.info(String.format("create AsyncService:%s", AsyncProxyUtils.create(vertx1, null, ICommonAsynService.class)));
+            logger.info(String.format("create AsyncService:%s", AsyncProxyUtils.createServiceBinder(vertx1, null, ICommonAsynService.class)));
         };
         return vertxConsumer;
     }
