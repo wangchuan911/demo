@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.web.AsynProxyUtils;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.common.web.Response;
 import org.welisdoon.webserver.config.WeChatServiceConfiguration;
@@ -19,20 +20,23 @@ import org.welisdoon.webserver.config.WeChatServiceConfiguration;
 public interface ICommonAsynService {
 
     static ICommonAsynService create(Vertx vertx, String address) {
-        ICommonAsynService ICommonAsynService = ApplicationContextProvider.getBean(ICommonAsynService.class);
+        /*ICommonAsynService ICommonAsynService = ApplicationContextProvider.getBean(ICommonAsynService.class);
         new ServiceBinder(vertx).setAddress(address = name(ICommonAsynService.class, address))
                 .register(ICommonAsynService.class, ICommonAsynService)
                 .completionHandler(Promise.promise());
         LoggerFactory.getLogger(ICommonAsynService.class).info(String.format("create Service:%s", address));
-        return ICommonAsynService;
+        return ICommonAsynService;*/
+        return AsynProxyUtils.create(vertx, address, ICommonAsynService.class);
     }
 
     static ICommonAsynService createProxy(Vertx vertx, String address) {
-        ICommonAsynService service = new ServiceProxyBuilder(vertx)
+        /*ICommonAsynService service = new ServiceProxyBuilder(vertx)
                 .setAddress(address = name(ICommonAsynService.class, address))
                 .build(ICommonAsynService.class);
         LoggerFactory.getLogger(ICommonAsynService.class).info(String.format("create Service Proxy:%s", address));
-        return service;
+        return service;*/
+
+        return AsynProxyUtils.createProxy(vertx, address, ICommonAsynService.class);
     }
 
     private static String name(Class<?> clz, String key) {
