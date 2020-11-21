@@ -4,7 +4,6 @@ import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.increment.service.CouponService;
 import com.hubidaauto.carservice.wxapp.mall.common.AbstractAutoAssign;
 import com.hubidaauto.carservice.wxapp.mall.common.annotation.AutoAssign;
-import com.hubidaauto.carservice.wxapp.mall.entity.MallDto;
 import com.hubidaauto.carservice.wxapp.mall.entity.MallOrderDto;
 import com.hubidaauto.carservice.wxapp.mall.subunit.entity.CouponAssignDto;
 import io.vertx.core.json.JsonObject;

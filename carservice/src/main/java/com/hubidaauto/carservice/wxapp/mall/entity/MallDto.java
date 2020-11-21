@@ -8,7 +8,6 @@ import org.welisdoon.webserver.common.ApplicationContextProvider;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Optional;
 
 public class MallDto {

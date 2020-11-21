@@ -82,7 +82,7 @@ public class CommonAsynService implements ICommonAsynService {
 
 
     @Override
-    public void requsetCall(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler) {
+    public void callService(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler) {
         Promise<Response> promise = Promise.promise();
         promise.future().onComplete(outputBodyHandler);
         Response response = new Response();

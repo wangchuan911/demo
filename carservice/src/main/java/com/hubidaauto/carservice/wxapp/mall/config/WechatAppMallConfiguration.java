@@ -2,7 +2,6 @@ package com.hubidaauto.carservice.wxapp.mall.config;
 
 import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
-import com.hubidaauto.carservice.wxapp.mall.common.AbstractAutoAssign;
 import com.hubidaauto.carservice.wxapp.mall.entity.AssignDto;
 import com.hubidaauto.carservice.wxapp.mall.entity.MallDto;
 import com.hubidaauto.carservice.wxapp.mall.entity.MallOrderDto;

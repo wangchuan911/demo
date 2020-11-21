@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.webserver.WebserverApplication;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.web.AsyncProxyUtils;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.vertx.SpringVerticleFactory;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
@@ -28,12 +29,10 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -236,7 +235,7 @@ public class VertxConfiguration {
     @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            logger.info(String.format("create AsyncService:%s", ICommonAsynService.create(vertx1, null)));
+            logger.info(String.format("create AsyncService:%s", AsyncProxyUtils.create(vertx1, null, ICommonAsynService.class)));
         };
         return vertxConsumer;
     }

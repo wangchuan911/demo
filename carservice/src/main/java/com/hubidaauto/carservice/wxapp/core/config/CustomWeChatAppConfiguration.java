@@ -1,7 +1,6 @@
 package com.hubidaauto.carservice.wxapp.core.config;
 
 import com.hubidaauto.carservice.wxapp.core.dao.TacheDao;
-import com.hubidaauto.carservice.wxapp.core.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.core.entity.TacheVO;
 import com.hubidaauto.carservice.wxapp.core.service.OperationService;
 import io.vertx.core.Handler;
@@ -15,36 +14,26 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.CommonConst;
-import org.welisdoon.webserver.common.JAXBUtils;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
+import org.welisdoon.webserver.common.web.AsyncProxyUtils;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.common.web.RequsetOption;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.entity.wechat.WeChatPayOrder;
-import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
-import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
-import org.welisdoon.webserver.entity.wechat.payment.response.PayBillResponseMesseage;
-import org.welisdoon.webserver.entity.wechat.payment.response.PrePayResponseMesseage;
-import org.welisdoon.webserver.entity.wechat.WeChatUser;
-import org.welisdoon.webserver.service.wechat.intf.IWechatPayHandler;
-import org.welisdoon.webserver.service.wechat.intf.IWechatUserHandler;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import org.welisdoon.webserver.vertx.verticle.WorkerVerticle;
 
-import javax.xml.bind.JAXBException;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -129,7 +118,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         final String KEY = ApplicationContextProvider.getRealClass(this.getClass()).getName().toUpperCase();
         final String URL_TOCKEN_LOCK = KEY + ".LOCK";
         Consumer<Vertx> vertxConsumer = vertx1 -> {
-            ICommonAsynService.create(vertx1, this.getAppID());
+            AsyncProxyUtils.create(vertx1, this.getAppID(), ICommonAsynService.class);
             SharedData sharedData = vertx1.sharedData();
             Handler<Long> longHandler = aLong -> {
                 /*集群锁，防止重复处理和锁表*/
@@ -173,7 +162,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         WebClient webClient = WebClient.create(vertx);
         setWechatAsyncMeassger(webClient);
 
-        commonAsynService = ICommonAsynService.createProxy(vertx, this.getAppID());
+        commonAsynService = AsyncProxyUtils.createProxy(vertx, this.getAppID(), ICommonAsynService.class);
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
 
@@ -364,7 +353,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             router.post(this.getPath().getApp()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 Requset requset = Requset.newInstance(routingContext, option);
-                commonAsynService.requsetCall(requset, stringAsyncResult -> {
+                commonAsynService.callService(requset, stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
                     } else {
@@ -398,7 +387,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                                         .add(Map.of("name", fileName.substring(1))).toString())
                                 .putParams(httpServerRequest.params())
                                 .putSession(routingContext.session());
-                        commonAsynService.requsetCall(requset, responseAsyncResult -> {
+                        commonAsynService.callService(requset, responseAsyncResult -> {
                             if (responseAsyncResult.failed()) {
                                 routingContext.fail(500, responseAsyncResult.cause());
                                 return;
