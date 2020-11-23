@@ -14,6 +14,7 @@ import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.web.AsyncProxyUtils;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
 import org.welisdoon.webserver.vertx.SpringVerticleFactory;
+import org.welisdoon.webserver.vertx.annotation.Verticle;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 import org.welisdoon.webserver.vertx.verticle.AbstractCustomVerticle;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
@@ -33,12 +34,10 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 @Configuration
-@AutoConfigureAfter({WeChatServiceConfiguration.class, ClusterConfiguration.class})
+@AutoConfigureAfter({ClusterConfiguration.class})
 @org.welisdoon.webserver.vertx.annotation.VertxConfiguration
 public class VertxConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(VertxConfiguration.class);
@@ -153,11 +152,32 @@ public class VertxConfiguration {
     }
 
     private Consumer<Vertx> deployVerticles() {
-        AbstractCustomVerticle.scanRegister(ApplicationContextProvider.getBean(Reflections.class));
+        Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
+        AbstractCustomVerticle.scanRegister(reflections);
         Consumer<Vertx> runner = vertx -> {
             // The verticle factory is registered manually because it is created by the Spring container
             vertx.registerVerticleFactory(verticleFactory);
-            //多线程计数
+
+            reflections.getTypesAnnotatedWith(Verticle.class).stream().forEach(clz -> {
+                Verticle verticle = clz.getAnnotation(Verticle.class);
+                DeploymentOptions options = new DeploymentOptions();
+                String verticleName = verticleFactory.naming(clz.getName());
+                if (verticle.worker()) {
+                    options.setWorker(true)
+                            // As worker verticles are never executed concurrently by Vert.x by more than one thread,
+                            // deploy multiple instances to avoid serializing requests.
+                            .setInstances(workerInstancesMax);
+                }
+                vertx.deployVerticle(verticleName, options, ar -> {
+                    if (ar.failed()) {
+                        logger.error("Failed to deploy book verticle", ar.cause());
+                    } else {
+                        logger.info("deploy success!{}", verticleName);
+                    }
+                });
+            });
+
+            /*//多线程计数
             CountDownLatch deployLatch = new CountDownLatch(1);
             //多线程时使用该类可以提供原子性操作
             AtomicBoolean failed = new AtomicBoolean(false);
@@ -189,44 +209,6 @@ public class VertxConfiguration {
                     //发布成功计数减1
                     deployLatch.countDown();
                 });
-            }
-       /*
-        String restApiVerticleName = verticleFactory.prefix() + ":" + RestApi.class.getName();
-        vertx.deployVerticle(restApiVerticleName, ar -> {
-            if (ar.failed()) {
-                Logger.error("Failed to deploy book verticle", ar.cause());
-                //如果failed的值是false则置为true
-                failed.compareAndSet(false, true);
-            }
-            //发布成功计数减1
-            deployLatch.countDown();
-        });
-
-        DeploymentOptions workerDeploymentOptions = new DeploymentOptions()
-                .setWorker(true)
-                // As worker verticles are never executed concurrently by Vert.x by more than one thread,
-                // deploy multiple instances to avoid serializing requests.
-                .setInstances(springWorkerInstances);
-        String workerVerticleName = verticleFactory.prefix() + ":" + SpringWorker.class.getName();
-        vertx.deployVerticle(workerVerticleName, workerDeploymentOptions, ar -> {
-            if (ar.failed()) {
-                logger.error("Failed to deploy verticle", ar.cause());
-                //如果failed的值是false则置为true
-                failed.compareAndSet(false, true);
-            }
-            //发布成功计数减1
-            deployLatch.countDown();
-        });
-        */
-            /*try {
-                //如果10秒还未发布成功则超时，抛出异常
-                if (!deployLatch.await(10, TimeUnit.SECONDS)) {
-                    throw new RuntimeException("Timeout waiting for verticle deployments");
-                } else if (failed.get()) {
-                    throw new RuntimeException("Failure while deploying verticles");
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
             }*/
         };
         return runner;

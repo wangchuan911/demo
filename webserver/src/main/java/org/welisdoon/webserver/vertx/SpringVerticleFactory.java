@@ -31,6 +31,10 @@ public class SpringVerticleFactory implements VerticleFactory, ApplicationContex
         return "myapp";
     }
 
+    public String naming(String name) {
+        return String.format("%s:%s", prefix(), name);
+    }
+
     @Override
     public Verticle createVerticle(String verticleName, ClassLoader classLoader) throws Exception {
         // Our convention in this example is to give the class name as verticle name

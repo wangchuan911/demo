@@ -28,7 +28,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
     private Router router;
 
     @Override
-    void registedBefore(Promise startFuture) {
+    void deployBefore(Promise startFuture) {
         router = Router.router(vertx);
         router.route().handler(BodyHandler.create());
         logger.info("create router");
@@ -37,7 +37,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
     }
 
     @Override
-    void registedAfter(Promise startFuture) {
+    void deployAfter(Promise startFuture) {
         if (router != null) {
             //开启https
             HttpServerOptions httpServerOptions = new HttpServerOptions();
