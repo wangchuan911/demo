@@ -9,11 +9,13 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.reflections.ReflectionUtils;
+import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.JAXBUtils;
+import org.welisdoon.webserver.common.JNIFieldDescriptors;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.entity.wechat.messeage.request.RequestMesseageBody;
 import org.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
@@ -37,6 +39,7 @@ public class CommonAsynService implements ICommonAsynService {
     private static final Logger logger = LoggerFactory.getLogger(CommonAsynService.class);
 
     final static Map<Class, Class> CLASS_ALIAS_MAP;
+    final static Map<Method, MethodProxy> METHOD_PROXY_MAP;
 
     static {
         Class[] classes = new Class[]{byte.class, Byte.class,
@@ -61,7 +64,7 @@ public class CommonAsynService implements ICommonAsynService {
             CLASS_ALIAS_MAP.put(classes[a], classes[b]);
         }
 //        CLASS_ALIAS_MAP = Map.ofEntries(entrys);
-
+        METHOD_PROXY_MAP = new HashMap<>();
     }
 
     /*@Override
@@ -117,7 +120,23 @@ public class CommonAsynService implements ICommonAsynService {
                                     ).findFirst();
                             if (optionalMethod.isPresent()) {
                                 this.setPage(params);
-                                response.setResult(optionalMethod.get().invoke(sprngService, args));
+                                if (ApplicationContextProvider.isGCLIBProxy(sprngService.getClass())) {
+                                    MethodProxy proxy;
+                                    if (METHOD_PROXY_MAP.containsKey(optionalMethod.get())) {
+                                        proxy = METHOD_PROXY_MAP.get(optionalMethod.get());
+                                    } else {
+                                        proxy = MethodProxy.create(
+                                                sprngService.getClass(),
+                                                sprngService.getClass(),
+                                                JNIFieldDescriptors.TO_JNI_STRING(optionalMethod.get()),
+                                                requset.getMethod(),
+                                                requset.getMethod() + "$$Proxy");
+                                        METHOD_PROXY_MAP.put(optionalMethod.get(), proxy);
+                                    }
+                                    response.setResult(proxy.invoke(sprngService, args));
+                                } else {
+                                    response.setResult(optionalMethod.get().invoke(sprngService, args));
+                                }
                                 return;
                             }
                         }
@@ -147,6 +166,8 @@ public class CommonAsynService implements ICommonAsynService {
         if (throwable instanceof NullPointerException) {
             StackTraceElement s = throwable.getStackTrace()[0];
             return String.format("NULL_DATA:[%s][%d]", s.getClassName(), s.getLineNumber());
+        } else if (throwable == null) {
+            return "没有数据返回";
         } else {
             return throwable.getMessage();
         }

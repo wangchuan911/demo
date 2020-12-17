@@ -65,7 +65,10 @@ public class ApplicationContextProvider implements ApplicationContextAware {
     }
 
     public static Class<?> getRealClass(Class cls) {
-        return cls.getName().indexOf("EnhancerBySpringCGLIB") > 0 ? cls.getSuperclass() : cls;
+        return /*cls.getName().indexOf("EnhancerBySpringCGLIB") > 0*/isGCLIBProxy(cls) ? cls.getSuperclass() : cls;
     }
 
+    public static boolean isGCLIBProxy(Class aClass) {
+        return aClass.getName().indexOf("EnhancerBySpringCGLIB") > 0;
+    }
 }
