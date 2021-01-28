@@ -25,7 +25,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
     String sslKeyType;
     String sslKeyPath;
 
-    private Router router;
+    Router router;
 
     @Override
     void deployBefore(Promise startFuture) {
@@ -43,6 +43,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
             HttpServerOptions httpServerOptions = new HttpServerOptions();
             if (!new File(sslKeyStore).exists()) {
                 logger.warn(String.format("sslKeyStore:%s is not exists!", sslKeyStore));
+                this.sslEnable = false;
             } else if (sslEnable) {
                 httpServerOptions.setSsl(true);
                 switch (this.sslKeyType.toLowerCase()) {
@@ -66,7 +67,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                     .listen(port, httpServerAsyncResult -> {
                         if (httpServerAsyncResult.succeeded()) {
                             startFuture.complete();
-                            logger.info("HTTP server started on http" + (sslEnable ? "s" : "") + "://localhost:" + port);
+                            logger.info(String.format("HTTP server started on http%s://localhost:%s", sslEnable ? "s" : "", port));
                         } else {
                             startFuture.fail(httpServerAsyncResult.cause());
                         }

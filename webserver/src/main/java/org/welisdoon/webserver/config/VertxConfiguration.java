@@ -17,7 +17,6 @@ import org.welisdoon.webserver.vertx.SpringVerticleFactory;
 import org.welisdoon.webserver.vertx.annotation.Verticle;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 import org.welisdoon.webserver.vertx.verticle.AbstractCustomVerticle;
-import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import org.welisdoon.webserver.vertx.verticle.WorkerVerticle;
 
 import org.slf4j.Logger;
@@ -153,7 +152,7 @@ public class VertxConfiguration {
 
     private Consumer<Vertx> deployVerticles() {
         Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
-        AbstractCustomVerticle.scanRegister(reflections);
+        AbstractCustomVerticle.initVertxInSpring(new AbstractCustomVerticle.Options().setReflections(reflections));
         Consumer<Vertx> runner = vertx -> {
             // The verticle factory is registered manually because it is created by the Spring container
             vertx.registerVerticleFactory(verticleFactory);
