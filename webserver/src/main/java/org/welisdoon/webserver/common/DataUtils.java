@@ -189,7 +189,7 @@ public class DataUtils {
             }
         }
 
-        static void toString(Map<Line.Section.Point, Line.Section.Point> lines, Set<Line.Section.Point> lineHaed) {
+        /*static void toString(Map<Line.Section.Point, Line.Section.Point> lines, Set<Line.Section.Point> lineHaed) {
             System.out.println(Arrays.toString(lineHaed.stream().map(point1 -> {
                 List<Line.Section.Point> list = new LinkedList<>();
                 Line.Section.Point point = point1;
@@ -200,7 +200,7 @@ public class DataUtils {
                 return new Line().setPoints(list.toArray(Line.Section.Point[]::new)).setLineId(point1.lineId);
             }).toArray(Line[]::new)));
             ;
-        }
+        }*/
 
         public static Line[] toLine(Line.Section[] sections) {
             Map<Line.Section.Point, Line.Section.Point> lines = new HashMap<>();
@@ -263,8 +263,8 @@ public class DataUtils {
             } else {
                 return false;
             }
-            toString(lines, lineHaed);
-            System.out.println("----------------------");
+            /*toString(lines, lineHaed);
+            System.out.println("----------------------");*/
             return true;
         }
 
