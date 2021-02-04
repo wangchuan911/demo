@@ -187,6 +187,21 @@ public class DataUtils {
                     return Objects.hash(pointId, lineId, salt);
                 }
             }
+
+            public static Line.Section[] toSection(Line.Section.Point[] points) {
+                Map<String, Line.Section> s = new HashMap<>();
+                Arrays.stream(points).forEach(point -> {
+                    if (StringUtils.isEmpty(point.sectionId)) return;
+                    String key = String.format("%s_%s", point.lineId, point.sectionId);
+                    if (s.containsKey(key)) {
+                        if (s.get(key).getFoot() == null)
+                            s.get(key).setFoot(point);
+                    } else {
+                        s.put(key, new Line.Section().setHead(point));
+                    }
+                });
+                return s.entrySet().stream().map(stringSectionEntry -> stringSectionEntry.getValue()).toArray(Line.Section[]::new);
+            }
         }
 
         /*static void toString(Map<Line.Section.Point, Line.Section.Point> lines, Set<Line.Section.Point> lineHaed) {
@@ -248,8 +263,10 @@ public class DataUtils {
                 lines.put(end, start);
             } else if (START_LINE_CONTAINS && START_LINE_END) {
                 // （1） Z端 存在 更新 Z端
-                if (END_LINE_CONTAINS && !END_LINE_END)
+                // （2）如果z端存在其他线中，调整end的hash,作为新的节点
+                while (lines.containsKey(end)) {
                     end.salt++;
+                }
                 lines.put(end, lines.put(start, end));
             } else if (!START_CONTAINS_HEAD && START_LINE_CONTAINS && START_LINE_END) {
                 // （1） 点 不在 AZ端， 则新增一个独立的线
@@ -269,22 +286,8 @@ public class DataUtils {
         }
 
         public static Line[] toLine(Line.Section.Point[] points) {
-            return toLine(toSection(points));
+            return toLine(Section.toSection(points));
         }
 
-        public static Line.Section[] toSection(Line.Section.Point[] points) {
-            Map<String, Line.Section> s = new HashMap<>();
-            Arrays.stream(points).forEach(point -> {
-                if (StringUtils.isEmpty(point.sectionId)) return;
-                String key = String.format("%s_%s", point.lineId, point.sectionId);
-                if (s.containsKey(key)) {
-                    if (s.get(key).getFoot() == null)
-                        s.get(key).setFoot(point);
-                } else {
-                    s.put(key, new Line.Section().setHead(point));
-                }
-            });
-            return s.entrySet().stream().map(stringSectionEntry -> stringSectionEntry.getValue()).toArray(Line.Section[]::new);
-        }
     }
 }
