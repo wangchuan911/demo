@@ -7,7 +7,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.welisdoon.webserver.common.StreamUtils;
+import org.welisdoon.common.StreamUtils;
 import org.welisdoon.webserver.common.web.AbstractBaseService;
 import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
 

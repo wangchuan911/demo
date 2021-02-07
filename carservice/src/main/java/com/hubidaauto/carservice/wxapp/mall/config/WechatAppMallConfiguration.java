@@ -21,7 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.CommonConst;
-import org.welisdoon.webserver.common.JAXBUtils;
+import org.welisdoon.common.JAXBUtils;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.webserver.entity.wechat.payment.requset.PrePayRequsetMesseage;
