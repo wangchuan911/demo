@@ -181,22 +181,26 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                         try {
                             Class vertCls = annotation.value();
                             Type retunType = (method.getGenericReturnType());
-                            Type innertype = retunType == null ? null : ((ParameterizedType) retunType).getActualTypeArguments()[0];
-                            if (vertCls == null || vertCls == Verticle.class || retunType == null) return;
-                            VertxRegisterEntry vertxRegisterEntry;
-                            String key = Entry.key(this.getClass(), vertCls, innertype, aClass);
-                            if (map.containsKey(key)) {
-                                vertxRegisterEntry = (VertxRegisterEntry) map.get(key);
-                                int len = vertxRegisterEntry.methods.length;
-                                vertxRegisterEntry.methods = Arrays.copyOf(vertxRegisterEntry.methods, len + 1);
-                                vertxRegisterEntry.methods[len] = method;
-                            } else {
-                                vertxRegisterEntry = new VertxRegisterEntry();
-                                vertxRegisterEntry.verticleClass = vertCls;
-                                vertxRegisterEntry.VertxRegisterInnerType = innertype;
-                                vertxRegisterEntry.ServiceClass = aClass;
-                                vertxRegisterEntry.methods = new Method[]{method};
-                                map.put(key, vertxRegisterEntry);
+                            if (retunType != null) {
+                                if (retunType instanceof ParameterizedType) {
+                                    Type innertype = retunType == null ? null : ((ParameterizedType) retunType).getActualTypeArguments()[0];
+                                    if (vertCls == null || vertCls == Verticle.class) return;
+                                    VertxRegisterEntry vertxRegisterEntry;
+                                    String key = Entry.key(this.getClass(), vertCls, innertype, aClass);
+                                    if (map.containsKey(key)) {
+                                        vertxRegisterEntry = (VertxRegisterEntry) map.get(key);
+                                        int len = vertxRegisterEntry.methods.length;
+                                        vertxRegisterEntry.methods = Arrays.copyOf(vertxRegisterEntry.methods, len + 1);
+                                        vertxRegisterEntry.methods[len] = method;
+                                    } else {
+                                        vertxRegisterEntry = new VertxRegisterEntry();
+                                        vertxRegisterEntry.verticleClass = vertCls;
+                                        vertxRegisterEntry.VertxRegisterInnerType = innertype;
+                                        vertxRegisterEntry.ServiceClass = aClass;
+                                        vertxRegisterEntry.methods = new Method[]{method};
+                                        map.put(key, vertxRegisterEntry);
+                                    }
+                                }
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
