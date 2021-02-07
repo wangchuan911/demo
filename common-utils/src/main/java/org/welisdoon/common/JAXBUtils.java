@@ -1,4 +1,4 @@
-package org.welisdoon.webserver.common;
+package org.welisdoon.common;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
