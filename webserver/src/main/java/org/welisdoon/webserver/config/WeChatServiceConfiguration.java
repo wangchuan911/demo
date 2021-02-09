@@ -1,8 +1,8 @@
 package org.welisdoon.webserver.config;
 
+import io.netty.handler.codec.http.HttpMethod;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -168,31 +168,38 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         return routerConsumer;
     }*/
 
-    @VertxRouter(path = "/wx", method = HttpMethod.GET)
-    RoutingContextChain wxGet = new RoutingContextChain()
-            .add(this::wechatMsgCheck);
-    @VertxRouter(path = "/wx", method = HttpMethod.POST)
-    RoutingContextChain wxPost = new RoutingContextChain()
-            .add(this::wechatDecryptMsg)
-            .add(routingContext -> {
-                Buffer requestbuffer = routingContext.getBody();
-                commonAsynService.callService(new Requset()
-                        .setService("weChatService")
-                        .setBody(requestbuffer.toString())
-                        .setMode(Requset.WECHAT), responseAsyncResult -> {
-                    if (responseAsyncResult.succeeded()) {
-                        Buffer buffer = Buffer.buffer(responseAsyncResult.result().getResult().toString());
-                        routingContext.setBody(buffer);
-                        routingContext.next();
-                    } else {
-                        logger.error(responseAsyncResult.cause().getMessage(), responseAsyncResult.cause());
-                        routingContext.response().end(MesseageTypeValue.MSG_REPLY);
-                    }
-                });
+    @VertxRouter(path = "/wx", method = "GET")
+    void wxGet(RoutingContextChain chain) {
+        chain.handler(this::wechatMsgCheck);
+    }
 
-            }).add(this::wechatEncryptMsg).fail(routingContext -> {
-                routingContext.response().end(MesseageTypeValue.MSG_REPLY);
-            });
+    @VertxRouter(path = "/wx", method = "POST")
+    void wxPost(RoutingContextChain chain) {
+        chain.handler(this::wechatDecryptMsg)
+                .handler(routingContext -> {
+                    Buffer requestbuffer = routingContext.getBody();
+                    commonAsynService.callService(new Requset()
+                            .setService("weChatService")
+                            .setBody(requestbuffer.toString())
+                            .setMode(Requset.WECHAT), responseAsyncResult -> {
+                        if (responseAsyncResult.succeeded()) {
+                            Buffer buffer = Buffer.buffer(responseAsyncResult.result().getResult().toString());
+                            routingContext.setBody(buffer);
+                            routingContext.next();
+                        } else {
+                            logger.error(responseAsyncResult.cause().getMessage(), responseAsyncResult.cause());
+                            routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+                        }
+                    });
+
+                })
+                .handler(this::wechatEncryptMsg)
+                .failureHandler(routingContext -> {
+                    routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+                });
+        logger.warn("insert handler!");
+    }
+
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> initStandaredVerticle() {
