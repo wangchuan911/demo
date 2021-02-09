@@ -27,7 +27,6 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-service-proxy</artifactId>
-            <classifier>processor</classifier>
         </dependency>
 
         <dependency>
@@ -38,6 +37,7 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-codegen</artifactId>
+            <classifier>processor</classifier>
         </dependency>
         <!--webclient-->
         <dependency>
@@ -178,6 +178,9 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>utf-8</encoding>
+                    <annotationProcessors>
+                        <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
+                    </annotationProcessors>
                 </configuration>
             </plugin>
             <plugin>

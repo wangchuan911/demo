@@ -1,10 +1,11 @@
 package org.welisdoon.webserver.vertx.utils;
 
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.ext.web.Route;
 import io.vertx.ext.web.RoutingContext;
-import org.welisdoon.webserver.common.Chain;
 
-import java.lang.ref.SoftReference;
+import java.util.function.Function;
 
 /**
  * @Classname RoutingContextChain
@@ -12,28 +13,52 @@ import java.lang.ref.SoftReference;
  * @Author wang.zhidong
  * @Date 2021/1/27 18:49
  */
-public class RoutingContextChain extends Chain<Handler<RoutingContext>> {
+public class RoutingContextChain {
 
-    Handler<RoutingContext> failureHandler;
+    Route route;
 
-    @Override
-    public RoutingContextChain add(Handler<RoutingContext> fun) {
-        return (RoutingContextChain) super.add(fun);
+    public RoutingContextChain(Route route) {
+        this.route = route;
     }
 
-    public RoutingContextChain fail(Handler<RoutingContext> fun) {
-        this.failureHandler = fun;
+
+    public <T> RoutingContextChain respond(Function<RoutingContext, Future<T>> function) {
+        route.respond(function);
         return this;
     }
 
-    public Handler<RoutingContext> getFailureHandler() {
-        return failureHandler;
+
+    public RoutingContextChain order(int i) {
+        route.order(i);
+        return this;
     }
 
-    @Override
-    public void release() {
-        super.release();
-        failureHandler = null;
-        SoftReference<RoutingContextChain> reference=new SoftReference<>(this);
+
+    public RoutingContextChain last() {
+        route.last();
+        return this;
+    }
+
+
+    public RoutingContextChain handler(Handler<RoutingContext> handler) {
+        route.handler(handler);
+        return this;
+    }
+
+
+    public RoutingContextChain blockingHandler(Handler<RoutingContext> handler) {
+        route.blockingHandler(handler);
+        return this;
+    }
+
+    public RoutingContextChain blockingHandler(Handler<RoutingContext> handler, boolean b) {
+        route.blockingHandler(handler, b);
+        return this;
+    }
+
+
+    public RoutingContextChain failureHandler(Handler<RoutingContext> handler) {
+        route.failureHandler(handler);
+        return this;
     }
 }

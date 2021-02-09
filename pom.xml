@@ -13,13 +13,14 @@
         <module>webserver</module>
         <module>view</module>
         <module>carservice</module>
+        <module>common-utils</module>
     </modules>
 
     <properties>
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <vertx.version>3.9.4</vertx.version>
+        <vertx.version>4.0.2</vertx.version>
         <springboot.version>2.2.11.RELEASE</springboot.version>
 
         <maven.compiler.source>11</maven.compiler.source>

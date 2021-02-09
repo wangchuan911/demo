@@ -1,6 +1,6 @@
 package org.welisdoon.webserver.vertx.annotation;
 
-import io.vertx.core.http.HttpMethod;
+import io.netty.handler.codec.http.HttpMethod;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,14 +13,20 @@ import java.lang.annotation.Target;
  * @Author wang.zhidong
  * @Date 2021/1/27 01:45
  */
-@Target({ElementType.FIELD})
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface VertxRouter {
     String path();
 
-    HttpMethod[] method() default {};
+    String[] method() default {};
 
     boolean pathRegex() default false;
+
+    String produces() default "";
+
+    String consumes() default "";
+
+    String virtualHost() default "";
 
 
 }

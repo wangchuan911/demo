@@ -6,6 +6,7 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 
 import io.vertx.ext.web.RoutingContext;
+import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.welisdoon.webserver.vertx.annotation.VertxRouter;
 import org.welisdoon.webserver.vertx.utils.RoutingContextChain;
 
+import java.lang.ref.SoftReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
@@ -262,47 +264,38 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     }
 
     final public static class VertxRouterEntry extends Entry implements Register {
-        Field[] fields;
+        Method[] routeMethod;
         int fieldsSize;
         static int createLength = 4;
 
         @Override
         public void scan(Class<?> aClass, Map<String, Entry> map) {
-            ReflectionUtils.getFields(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
+            ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
                     .stream()
-                    .filter(field -> field.getType() == RoutingContextChain.class)
-                    .forEach(field -> {
+                    .filter(method -> method.getParameterTypes().length == 1
+                            && method.getParameterTypes()[0] == RoutingContextChain.class)
+                    .forEach(method -> {
                         String key = Entry.key(this.getClass(), aClass);
                         VertxRouterEntry routerEntry;
                         if (map.containsKey(key)) {
                             routerEntry = (VertxRouterEntry) map.get(key);
                             int len = routerEntry.fieldsSize;
-                            if (len == routerEntry.fields.length) {
-                                routerEntry.fields = Arrays.copyOf(routerEntry.fields, len + createLength);
+                            if (len == routerEntry.routeMethod.length) {
+                                routerEntry.routeMethod = Arrays.copyOf(routerEntry.routeMethod, len + createLength);
                             }
-                            routerEntry.fields[len] = field;
+                            routerEntry.routeMethod[len] = method;
                             routerEntry.fieldsSize++;
                         } else {
                             routerEntry = new VertxRouterEntry();
                             routerEntry.ServiceClass = aClass;
-                            routerEntry.fields = new Field[createLength];
-                            routerEntry.fields[0] = field;
+                            routerEntry.routeMethod = new Method[createLength];
+                            routerEntry.routeMethod[0] = method;
                             routerEntry.fieldsSize = 1;
                             map.put(key, routerEntry);
                         }
                     });
         }
 
-        private void setRouteChain(Route route, RoutingContextChain routingContextChain) {
-            Iterator<Handler<RoutingContext>> iterator = routingContextChain.iterator();
-            while (iterator.hasNext()) {
-                route.handler(iterator.next());
-            }
-            if (routingContextChain.getFailureHandler() != null) {
-                route.failureHandler(routingContextChain.getFailureHandler());
-            }
-            logger.info(String.format("%s[%s]", route.methods(), route.getPath()));
-        }
 
         @Override
         void inject(Vertx vertx, AbstractCustomVerticle verticle) {
@@ -314,29 +307,52 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                 return;
             }
             if (verticle instanceof AbstractWebVerticle) {
-                Arrays.stream(this.fields).filter(Objects::nonNull).forEach(field -> {
-                    RoutingContextChain chain;
-                    try {
-                        field.setAccessible(true);
-                        chain = (RoutingContextChain) field.get(serviceBean);
-                    } catch (IllegalArgumentException | IllegalAccessException e) {
-                        logger.error(e.getMessage(), e);
-                        return;
-                    }
-                    VertxRouter vertxRouter = field.getAnnotation(VertxRouter.class);
+                Arrays.stream(this.routeMethod).filter(Objects::nonNull).forEach(routeMethod -> {
+                    VertxRouter vertxRouter = routeMethod.getAnnotation(VertxRouter.class);
                     Route route = ((AbstractWebVerticle) verticle).router.route();
+                    RoutingContextChain chain = new RoutingContextChain(route);
                     if (vertxRouter.method() != null && vertxRouter.method().length > 0) {
-                        Arrays.stream(vertxRouter.method()).forEach(httpMethod -> {
+                        /*Arrays.stream(vertxRouter.method()).forEach(httpMethod -> {
                             route.method(httpMethod);
+                        });*/
+
+                        Arrays.stream(vertxRouter.method()).filter(httpMethodString -> {
+                                    Optional<HttpMethod> optional = HttpMethod
+                                            .values()
+                                            .stream()
+                                            .filter(httpMethod ->
+                                                    httpMethod.name().equals(httpMethodString))
+                                            .findFirst();
+                                    boolean flag = optional.isPresent();
+                                    if (flag) {
+                                        route.method(optional.get());
+                                    }
+                                    return !flag;
+                                }
+                        ).forEach(s -> {
+                            if (StringUtils.isEmpty(s)) return;
+                            route.method(new HttpMethod(s));
                         });
+
                     }
                     if (vertxRouter.pathRegex()) {
                         route.pathRegex(vertxRouter.path());
                     } else {
                         route.path(vertxRouter.path());
                     }
-                    this.setRouteChain(route, chain);
-                    chain.release();
+
+                    try {
+                        routeMethod.setAccessible(true);
+                        routeMethod.invoke(serviceBean, chain);
+                        logger.info(String.format("%s[%s]", route.methods(), route.getPath()));
+                    } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+                        logger.error(e.getMessage(), e);
+                        return;
+                    } finally {
+                        SoftReference<RoutingContextChain> reference = new SoftReference<>(chain);
+                        chain = null;
+                    }
+
                 });
             }
         }
