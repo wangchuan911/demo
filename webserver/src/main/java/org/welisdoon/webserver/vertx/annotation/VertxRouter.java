@@ -28,6 +28,7 @@ public @interface VertxRouter {
 
     String virtualHost() default "";
 
+    boolean matchWechatPath() default false;
 
 }
 

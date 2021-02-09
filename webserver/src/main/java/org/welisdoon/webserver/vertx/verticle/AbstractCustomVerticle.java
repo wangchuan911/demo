@@ -8,6 +8,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxRegister;
 
@@ -335,7 +336,27 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                         });
 
                     }
-                    if (vertxRouter.pathRegex()) {
+                    if (vertxRouter.matchWechatPath() && serviceBean instanceof AbstractWechatConfiguration) {
+                        AbstractWechatConfiguration.Path path = ((AbstractWechatConfiguration) serviceBean).getPath();
+                        String pathString;
+                        switch (vertxRouter.path()) {
+                            case "app":
+                                pathString = path.getApp();
+                                break;
+                            case "pay":
+                                pathString = path.getPay();
+                                break;
+                            case "appIndex":
+                                pathString = path.getAppIndex();
+                                break;
+                            case "push":
+                                pathString = path.getPush();
+                                break;
+                            default:
+                                pathString = path.getOther().get(vertxRouter.path());
+                        }
+                        route.path(StringUtils.isEmpty(pathString) ? vertxRouter.path() : pathString);
+                    } else if (vertxRouter.pathRegex()) {
                         route.pathRegex(vertxRouter.path());
                     } else {
                         route.path(vertxRouter.path());
