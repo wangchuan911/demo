@@ -25,9 +25,9 @@ import javax.annotation.PostConstruct;
 import java.util.function.Consumer;
 
 @VertxConfiguration
-@ConfigurationProperties("wechat")
+@ConfigurationProperties("wechat-app")
 @Configuration
-@ConditionalOnProperty(prefix = "wechat", name = "appID")
+@ConditionalOnProperty(prefix = "wechat-app", name = "appID")
 public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
 
     private Long wechatAliveTimerId = null;
@@ -168,12 +168,12 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         return routerConsumer;
     }*/
 
-    @VertxRouter(path = "/wx", method = "GET")
+    @VertxRouter(path = "{wechat-app.path.app}", method = "GET")
     void wxGet(RoutingContextChain chain) {
         chain.handler(this::wechatMsgCheck);
     }
 
-    @VertxRouter(path = "/wx", method = "POST")
+    @VertxRouter(path = "{wechat-app.path.app}", method = "POST")
     void wxPost(RoutingContextChain chain) {
         chain.handler(this::wechatDecryptMsg)
                 .handler(routingContext -> {

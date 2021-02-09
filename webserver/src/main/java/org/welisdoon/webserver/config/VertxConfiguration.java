@@ -152,7 +152,7 @@ public class VertxConfiguration {
 
     private Consumer<Vertx> deployVerticles() {
         Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
-        AbstractCustomVerticle.initVertxInSpring(new AbstractCustomVerticle.Options().setReflections(reflections));
+        AbstractCustomVerticle.initVertxInSpring(new AbstractCustomVerticle.Options());
         Consumer<Vertx> runner = vertx -> {
             // The verticle factory is registered manually because it is created by the Spring container
             vertx.registerVerticleFactory(verticleFactory);

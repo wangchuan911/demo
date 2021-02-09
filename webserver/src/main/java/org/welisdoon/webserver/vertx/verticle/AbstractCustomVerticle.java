@@ -6,6 +6,8 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 
 import io.vertx.ext.web.RoutingContext;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
@@ -31,6 +33,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
     private static Entry[] ENTRYS;
 
+    private static String REGEX_PATH = "\\{([\\w\\-]+)\\.path\\.(\\w+)\\}(.*)";
 
     @Override
     final public void start(Promise<Void> startPromise) {
@@ -87,7 +90,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                 return null;
             }
         }).filter(Objects::nonNull).toArray(Register[]::new);
-        options.reflections.getTypesAnnotatedWith(VertxConfiguration.class)
+        ApplicationContextProvider.getBean(Reflections.class).getTypesAnnotatedWith(VertxConfiguration.class)
                 .stream()
                 .forEach(aClass -> {
                     Arrays.stream(initEntry).forEach(entry -> {
@@ -268,6 +271,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         Method[] routeMethod;
         int fieldsSize;
         static int createLength = 4;
+        Set<Class<?>> configBeans;
 
         @Override
         public void scan(Class<?> aClass, Map<String, Entry> map) {
@@ -336,23 +340,37 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                         });
 
                     }
-                    if (vertxRouter.matchWechatPath() && serviceBean instanceof AbstractWechatConfiguration) {
-                        AbstractWechatConfiguration.Path path = ((AbstractWechatConfiguration) serviceBean).getPath();
-                        String pathString;
-                        switch (vertxRouter.path()) {
+                    String pathString = vertxRouter.path(), part0, part1, part2;
+                    final String replaceFormat = "%s$3";
+                    if (pathString.matches(REGEX_PATH)) {
+                        part0 = pathString.replaceFirst(REGEX_PATH, "$1");
+                        Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
+                        if (configBeans == null || configBeans.size() == 0)
+                            configBeans = reflections.getTypesAnnotatedWith(ConfigurationProperties.class);
+                        Class<AbstractWechatConfiguration> configClass =
+                                (Class<AbstractWechatConfiguration>) configBeans.stream().filter(aClass -> {
+                                    ConfigurationProperties properties = aClass.getAnnotation(ConfigurationProperties.class);
+                                    return AbstractWechatConfiguration.class.isAssignableFrom(aClass)
+                                            && (part0.equals(properties.value()) || part0.equals(properties.prefix()));
+                                }).findFirst().get();
+                        AbstractWechatConfiguration.Path path = AbstractWechatConfiguration.getConfig(configClass).getPath();
+                        part1 = pathString.replaceFirst(REGEX_PATH, "$2");
+                        switch (part1) {
                             case "app":
-                                pathString = path.getApp();
+                                part2 = path.getApp();
                                 break;
                             case "pay":
-                                pathString = path.getPay();
+                                part2 = path.getPay();
                                 break;
                             case "push":
-                                pathString = path.getPush();
+                                part2 = path.getPush();
                                 break;
                             default:
-                                pathString = path.getOther().get(vertxRouter.path());
+                                part2 = path.getOther().get(vertxRouter.path());
                         }
-                        route.path(StringUtils.isEmpty(pathString) ? vertxRouter.path() : pathString);
+                        route.path(StringUtils.isEmpty(part2)
+                                ? vertxRouter.path()
+                                : pathString.replaceFirst(REGEX_PATH, String.format(replaceFormat, part2)));
                     } else if (vertxRouter.pathRegex()) {
                         route.pathRegex(vertxRouter.path());
                     } else {
@@ -369,6 +387,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     } finally {
                         SoftReference<RoutingContextChain> reference = new SoftReference<>(chain);
                         chain = null;
+                        configBeans.clear();
+                        configBeans = null;
                     }
 
                 });
@@ -378,20 +398,11 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
 
     public static class Options {
-        Reflections reflections;
         Class<? extends Register>[] register;
 
-        public Options setReflections(Reflections reflections) {
-            this.reflections = reflections;
-            return this;
-        }
 
         public void setRegister(Class<? extends Register>... register) {
             this.register = register;
-        }
-
-        public Reflections getReflections() {
-            return reflections;
         }
 
         public Class<? extends Register>[] getRegister() {
