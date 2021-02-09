@@ -33,8 +33,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
     private static Entry[] ENTRYS;
 
-    private static String REGEX_PATH = "\\{([\\w\\-]+)\\.path\\.(\\w+)\\}(.*)";
-
     @Override
     final public void start(Promise<Void> startPromise) {
         Promise<Void> promise = Promise.promise();
@@ -272,6 +270,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         int fieldsSize;
         static int createLength = 4;
         Set<Class<?>> configBeans;
+        private static String REGEX_PATH = "\\{([\\w\\-]+)\\.path\\.(\\w+)\\}(.*)";
 
         @Override
         public void scan(Class<?> aClass, Map<String, Entry> map) {
