@@ -346,9 +346,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                             case "pay":
                                 pathString = path.getPay();
                                 break;
-                            case "appIndex":
-                                pathString = path.getAppIndex();
-                                break;
                             case "push":
                                 pathString = path.getPush();
                                 break;
