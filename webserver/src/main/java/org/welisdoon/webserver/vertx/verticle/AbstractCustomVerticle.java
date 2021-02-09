@@ -84,8 +84,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
             try {
                 return aClass.getConstructor().newInstance();
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-                e.printStackTrace();
-                return null;
+                return ApplicationContextProvider.getBean(aClass);
             }
         }).filter(Objects::nonNull).toArray(Register[]::new);
         ApplicationContextProvider.getBean(Reflections.class).getTypesAnnotatedWith(VertxConfiguration.class)
@@ -276,8 +275,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         public void scan(Class<?> aClass, Map<String, Entry> map) {
             ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
                     .stream()
-                    .filter(method -> method.getParameterTypes().length == 1
-                            && method.getParameterTypes()[0] == RoutingContextChain.class)
+                    .filter(method -> Arrays.stream(method.getParameterTypes())
+                            .filter(bClass -> bClass == RoutingContextChain.class).findFirst().isPresent())
                     .forEach(method -> {
                         String key = Entry.key(this.getClass(), aClass);
                         VertxRouterEntry routerEntry;
@@ -377,15 +376,24 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     }
 
                     try {
+                        Object[] paramaters = Arrays.stream(routeMethod.getParameterTypes()).map(aClass -> {
+                            Object value = null;
+                            if (aClass == Vertx.class) {
+                                value = vertx;
+                            } else if (aClass == RoutingContextChain.class) {
+                                value = chain;
+                            }
+                            return value;
+                        }).toArray();
+
                         routeMethod.setAccessible(true);
-                        routeMethod.invoke(serviceBean, chain);
+                        routeMethod.invoke(serviceBean, paramaters);
                         logger.info(String.format("%s[%s]", route.methods(), route.getPath()));
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
                         return;
                     } finally {
                         SoftReference<RoutingContextChain> reference = new SoftReference<>(chain);
-                        chain = null;
                         configBeans.clear();
                         configBeans = null;
                     }
