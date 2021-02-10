@@ -7,7 +7,6 @@ import io.vertx.ext.web.Router;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.StringUtils;
-import org.welisdoon.common.GCUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
@@ -385,8 +384,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     }
 
                 });
-                this.routeMethod = GCUtils.release(this.routeMethod);
-                this.configBeans = GCUtils.release(this.configBeans);
             }
         }
     }
