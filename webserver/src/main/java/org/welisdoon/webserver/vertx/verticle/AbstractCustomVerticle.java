@@ -157,7 +157,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     final public static class VertxRegisterEntry extends Entry implements Register {
         Class<? extends AbstractCustomVerticle> verticleClass;
         Type VertxRegisterInnerType;
-        Method[] methods;
+        Set<Method> methods;
 
         @Override
         public boolean equals(Object obj) {
@@ -192,15 +192,14 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                                     String key = Entry.key(this.getClass(), vertCls, innertype, aClass);
                                     if (map.containsKey(key)) {
                                         vertxRegisterEntry = (VertxRegisterEntry) map.get(key);
-                                        int len = vertxRegisterEntry.methods.length;
-                                        vertxRegisterEntry.methods = Arrays.copyOf(vertxRegisterEntry.methods, len + 1);
-                                        vertxRegisterEntry.methods[len] = method;
+                                        vertxRegisterEntry.methods.add(method);
                                     } else {
                                         vertxRegisterEntry = new VertxRegisterEntry();
                                         vertxRegisterEntry.verticleClass = vertCls;
                                         vertxRegisterEntry.VertxRegisterInnerType = innertype;
                                         vertxRegisterEntry.ServiceClass = aClass;
-                                        vertxRegisterEntry.methods = new Method[]{method};
+                                        vertxRegisterEntry.methods = new HashSet<>();
+                                        vertxRegisterEntry.methods.add(method);
                                         map.put(key, vertxRegisterEntry);
                                     }
                                 }
@@ -234,7 +233,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     return;
                 }
                 final Object finalValue = value;
-                Arrays.stream(this.methods).forEach(method -> {
+                this.methods.stream().forEach(method -> {
                     try {
                         Class<?>[] parameterTypesClasses = method.getParameterTypes();
                         Object[] parameterValue = null;
@@ -259,6 +258,8 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                         e.printStackTrace();
                     }
                 });
+                this.methods.clear();
+                this.methods = null;
             }
 
         }
