@@ -28,6 +28,6 @@ public @interface VertxRouter {
 
     String virtualHost() default "";
 
-
+    int order() default 0;
 }
 

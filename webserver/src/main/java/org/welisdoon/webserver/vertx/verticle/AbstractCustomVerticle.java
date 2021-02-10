@@ -366,15 +366,16 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                             default:
                                 part2 = path.getOther().get(vertxRouter.path());
                         }
-                        route.path(StringUtils.isEmpty(part2)
+                        pathString = (StringUtils.isEmpty(part2)
                                 ? vertxRouter.path()
                                 : pathString.replaceFirst(REGEX_PATH, String.format(replaceFormat, part2)));
-                    } else if (vertxRouter.pathRegex()) {
-                        route.pathRegex(vertxRouter.path());
-                    } else {
-                        route.path(vertxRouter.path());
                     }
-
+                    if (vertxRouter.pathRegex()) {
+                        route.pathRegex(pathString);
+                    } else {
+                        route.path(pathString);
+                    }
+                    route.order(vertxRouter.order());
                     try {
                         Object[] paramaters = Arrays.stream(routeMethod.getParameterTypes()).map(aClass -> {
                             Object value = null;
@@ -388,7 +389,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
                         routeMethod.setAccessible(true);
                         routeMethod.invoke(serviceBean, paramaters);
-                        logger.info(String.format("%s[%s]", route.methods(), route.getPath()));
+                        logger.info(String.format("%s[%s]", route.methods(), pathString));
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
                         return;

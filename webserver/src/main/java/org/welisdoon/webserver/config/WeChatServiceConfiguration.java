@@ -173,30 +173,42 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         chain.handler(this::wechatMsgCheck);
     }
 
-    @VertxRouter(path = "{wechat-app.path.app}", method = "POST")
-    void wxPost(RoutingContextChain chain) {
-        chain.handler(this::wechatDecryptMsg)
-                .handler(routingContext -> {
-                    Buffer requestbuffer = routingContext.getBody();
-                    commonAsynService.callService(new Requset()
-                            .setService("weChatService")
-                            .setBody(requestbuffer.toString())
-                            .setMode(Requset.WECHAT), responseAsyncResult -> {
-                        if (responseAsyncResult.succeeded()) {
-                            Buffer buffer = Buffer.buffer(responseAsyncResult.result().getResult().toString());
-                            routingContext.setBody(buffer);
-                            routingContext.next();
-                        } else {
-                            logger.error(responseAsyncResult.cause().getMessage(), responseAsyncResult.cause());
-                            routingContext.response().end(MesseageTypeValue.MSG_REPLY);
-                        }
-                    });
+    @VertxRouter(path = "{wechat-app.path.app}/.*", method = "POST", pathRegex = true, order = Integer.MIN_VALUE)
+    void wxPostDecryptMsg(RoutingContextChain chain) {
+        chain
+                .handler(this::wechatDecryptMsg)
+                .failureHandler(routingContext -> {
+                    routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+                });
+    }
 
-                })
+    @VertxRouter(path = "{wechat-app.path.app}/.*", method = "POST", pathRegex = true, order = Integer.MAX_VALUE)
+    void wxPostEncryptMsg(RoutingContextChain chain) {
+        chain
                 .handler(this::wechatEncryptMsg)
                 .failureHandler(routingContext -> {
                     routingContext.response().end(MesseageTypeValue.MSG_REPLY);
                 });
+    }
+
+    @VertxRouter(path = "{wechat-app.path.app}/.*", method = "POST", pathRegex = true)
+    void wxPost(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            Buffer requestbuffer = routingContext.getBody();
+            commonAsynService.callService(new Requset()
+                    .setService("weChatService")
+                    .setBody(requestbuffer.toString())
+                    .setMode(Requset.WECHAT), responseAsyncResult -> {
+                if (responseAsyncResult.succeeded()) {
+                    Buffer buffer = Buffer.buffer(responseAsyncResult.result().getResult().toString());
+                    routingContext.setBody(buffer);
+                    routingContext.next();
+                } else {
+                    logger.error(responseAsyncResult.cause().getMessage(), responseAsyncResult.cause());
+                    routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+                }
+            });
+        });
         logger.warn("insert handler!");
     }
 
