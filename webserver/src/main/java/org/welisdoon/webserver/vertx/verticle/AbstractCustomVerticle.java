@@ -5,10 +5,9 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 
-import io.vertx.ext.web.RoutingContext;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
+import org.welisdoon.common.GCUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.vertx.annotation.VertxConfiguration;
@@ -21,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.welisdoon.webserver.vertx.annotation.VertxRouter;
 import org.welisdoon.webserver.vertx.utils.RoutingContextChain;
 
-import java.lang.ref.SoftReference;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
@@ -176,7 +174,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         }
 
         @Override
-        public void scan(Class<?> aClass, Map<String, Entry> map) {
+        public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
             ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class))
                     .stream()
                     .forEach(method -> {
@@ -258,22 +256,18 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                         e.printStackTrace();
                     }
                 });
-                this.methods.clear();
-                this.methods = null;
             }
 
         }
     }
 
     final public static class VertxRouterEntry extends Entry implements Register {
-        Method[] routeMethod;
-        int fieldsSize;
-        static int createLength = 4;
+        Set<Method> routeMethod;
         Set<Class<?>> configBeans;
         private static String REGEX_PATH = "\\{([\\w\\-]+)\\.path\\.(\\w+)\\}(.*)";
 
         @Override
-        public void scan(Class<?> aClass, Map<String, Entry> map) {
+        public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
             ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
                     .stream()
                     .filter(method -> Arrays.stream(method.getParameterTypes())
@@ -283,18 +277,12 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                         VertxRouterEntry routerEntry;
                         if (map.containsKey(key)) {
                             routerEntry = (VertxRouterEntry) map.get(key);
-                            int len = routerEntry.fieldsSize;
-                            if (len == routerEntry.routeMethod.length) {
-                                routerEntry.routeMethod = Arrays.copyOf(routerEntry.routeMethod, len + createLength);
-                            }
-                            routerEntry.routeMethod[len] = method;
-                            routerEntry.fieldsSize++;
+                            routerEntry.routeMethod.add(method);
                         } else {
                             routerEntry = new VertxRouterEntry();
                             routerEntry.ServiceClass = aClass;
-                            routerEntry.routeMethod = new Method[createLength];
-                            routerEntry.routeMethod[0] = method;
-                            routerEntry.fieldsSize = 1;
+                            routerEntry.routeMethod = new HashSet<>();
+                            routerEntry.routeMethod.add(method);
                             map.put(key, routerEntry);
                         }
                     });
@@ -302,7 +290,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
 
         @Override
-        void inject(Vertx vertx, AbstractCustomVerticle verticle) {
+        synchronized void inject(Vertx vertx, AbstractCustomVerticle verticle) {
             final Object serviceBean;
             try {
                 serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
@@ -311,7 +299,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                 return;
             }
             if (verticle instanceof AbstractWebVerticle) {
-                Arrays.stream(this.routeMethod).filter(Objects::nonNull).forEach(routeMethod -> {
+                this.routeMethod.stream().filter(Objects::nonNull).forEach(routeMethod -> {
                     VertxRouter vertxRouter = routeMethod.getAnnotation(VertxRouter.class);
                     Route route = ((AbstractWebVerticle) verticle).router.route();
                     RoutingContextChain chain = new RoutingContextChain(route);
@@ -394,13 +382,11 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
                         return;
-                    } finally {
-                        SoftReference<RoutingContextChain> reference = new SoftReference<>(chain);
-                        configBeans.clear();
-                        configBeans = null;
                     }
 
                 });
+                this.routeMethod = GCUtils.release(this.routeMethod);
+                this.configBeans = GCUtils.release(this.configBeans);
             }
         }
     }
