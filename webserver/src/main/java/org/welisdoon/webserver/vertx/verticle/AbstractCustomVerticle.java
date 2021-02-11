@@ -341,19 +341,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                                 }).findFirst().get();
                         AbstractWechatConfiguration.Path path = AbstractWechatConfiguration.getConfig(configClass).getPath();
                         part1 = pathString.replaceFirst(REGEX_PATH, "$2");
-                        switch (part1) {
-                            case "app":
-                                part2 = path.getApp();
-                                break;
-                            case "pay":
-                                part2 = path.getPay();
-                                break;
-                            case "push":
-                                part2 = path.getPush();
-                                break;
-                            default:
-                                part2 = path.getOther().get(vertxRouter.path());
-                        }
+                        part2 = path.path(part1);
                         pathString = (StringUtils.isEmpty(part2)
                                 ? vertxRouter.path()
                                 : pathString.replaceFirst(REGEX_PATH, String.format(replaceFormat, part2)));
