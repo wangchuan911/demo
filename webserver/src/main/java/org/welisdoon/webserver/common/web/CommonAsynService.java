@@ -10,6 +10,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.reflections.ReflectionUtils;
 import org.springframework.cglib.proxy.MethodProxy;
+import org.springframework.cglib.reflect.FastClass;
+import org.springframework.cglib.reflect.FastMethod;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -39,7 +41,8 @@ public class CommonAsynService implements ICommonAsynService {
     private static final Logger logger = LoggerFactory.getLogger(CommonAsynService.class);
 
     final static Map<Class, Class> CLASS_ALIAS_MAP;
-    final static Map<Method, MethodProxy> METHOD_PROXY_MAP;
+    /*final static Map<Method, MethodProxy> METHOD_PROXY_MAP;*/
+    final static Map<Class<?>, ClassMapper> CLASS_MAPPER_MAP;
 
     static {
         Class[] classes = new Class[]{byte.class, Byte.class,
@@ -64,7 +67,9 @@ public class CommonAsynService implements ICommonAsynService {
             CLASS_ALIAS_MAP.put(classes[a], classes[b]);
         }
 //        CLASS_ALIAS_MAP = Map.ofEntries(entrys);
-        METHOD_PROXY_MAP = new HashMap<>();
+        /*METHOD_PROXY_MAP = new HashMap<>();*/
+
+        CLASS_MAPPER_MAP = new HashMap<>();
     }
 
     /*@Override
@@ -107,37 +112,55 @@ public class CommonAsynService implements ICommonAsynService {
                     Object input = requset.bodyAsJson();
                     if (input instanceof JsonArray) {
                         List body = ((JsonArray) input).getList();
-                        Set<Method> methods = ReflectionUtils.getMethods(sprngService.getClass(), method ->
-                                method != null && AnnotationUtils.findAnnotation(method, VertxWebApi.class) != null
-                                        && method.getName().equals(requset.getMethod())
-                                        && method.getParameterCount() == body.size()
-                        );
-                        if (!CollectionUtils.isEmpty(methods)) {
+                        Method[] methods;
+                        Class<?> springBeanClass = sprngService.getClass();
+                        /*if (!CLASS_MAPPER_MAP.containsKey(springBeanClass)) {
+                            methods = ReflectionUtils.getMethods(springBeanClass, method ->
+                                    method != null && AnnotationUtils.findAnnotation(method, VertxWebApi.class) != null
+                            ).toArray(Method[]::new);
+                            CLASS_MAPPER_MAP.put(springBeanClass, methods);
+                        } else {
+                            methods = CLASS_MAPPER_MAP.get(springBeanClass);
+                        }*/
+                        ClassMapper classMapper;
+                        if (!CLASS_MAPPER_MAP.containsKey(springBeanClass)) {
+                            classMapper = new ClassMapper(sprngService);
+                            CLASS_MAPPER_MAP.put(springBeanClass, classMapper);
+                        } else {
+                            classMapper = CLASS_MAPPER_MAP.get(springBeanClass);
+                        }
+
+                        if (classMapper.methods.length > 0) {
                             Object[] args = new Object[body.size()];
-                            Optional<Method> optionalMethod = methods.stream()
-                                    .filter(method ->
-                                            setValueAndCheck(method.getParameterTypes(), args, body)
-                                    ).findFirst();
-                            if (optionalMethod.isPresent()) {
+                            FastMethod fastMethod = null;
+                            for (int i = 0, len = classMapper.methods.length; i < len; i++) {
+                                if (/*method.getName().equals(requset.getMethod())
+                                        && method.getParameterCount() == body.size()
+                                        && setValueAndCheck(method.getParameterTypes(), args, body)*/
+                                        classMapper.macth(classMapper.methods[i], requset, body, args)) {
+                                    fastMethod = classMapper.fastMethods[i];
+                                    break;
+                                }
+                            }
+
+                            if (fastMethod != null) {
                                 this.setPage(params);
-                                if (ApplicationContextProvider.isGCLIBProxy(sprngService.getClass())) {
+                                /*if (ApplicationContextProvider.isGCLIBProxy(springBeanClass)) {
+
                                     MethodProxy proxy;
-                                    if (METHOD_PROXY_MAP.containsKey(optionalMethod.get())) {
-                                        proxy = METHOD_PROXY_MAP.get(optionalMethod.get());
+                                    if (METHOD_PROXY_MAP.containsKey(method)) {
+                                        proxy = METHOD_PROXY_MAP.get(method);
                                     } else {
-                                        proxy = MethodProxy.create(
-                                                sprngService.getClass(),
-                                                sprngService.getClass(),
-                                                JNIFieldDescriptors.TO_JNI_STRING(optionalMethod.get()),
-                                                requset.getMethod(),
-                                                requset.getMethod() + "$$Proxy");
-                                        METHOD_PROXY_MAP.put(optionalMethod.get(), proxy);
+                                        proxy = getMethodProxy(sprngService, method);
+                                        METHOD_PROXY_MAP.put(method, proxy);
                                     }
                                     response.setResult(proxy.invoke(sprngService, args));
+
                                 } else {
-                                    response.setResult(optionalMethod.get().invoke(sprngService, args));
-                                }
-                                return;
+                                    response.setResult(method.invoke(sprngService, args));
+                                }*/
+                                response.setResult(fastMethod.invoke(sprngService, args));
+                                break;
                             }
                         }
                     }
@@ -161,6 +184,7 @@ public class CommonAsynService implements ICommonAsynService {
             }
         }
     }
+
 
     private String isNullPoiontException(Throwable throwable) {
         if (throwable instanceof NullPointerException) {
@@ -203,6 +227,43 @@ public class CommonAsynService implements ICommonAsynService {
             }
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
+        }
+    }
+
+
+    class ClassMapper {
+        Class<?> aClass;
+        Method[] methods;
+        //MethodProxy[] methodProxies;
+        FastClass fastClass;
+        FastMethod[] fastMethods;
+
+        ClassMapper(Object springBean) {
+            Class<?> springBeanClass = springBean.getClass();
+            this.aClass = springBeanClass;
+            this.methods = ReflectionUtils.getMethods(springBeanClass, method ->
+                    method != null && AnnotationUtils.findAnnotation(method, VertxWebApi.class) != null
+            ).toArray(Method[]::new);
+            this.fastClass = FastClass.create(ApplicationContextProvider.getRealClass(springBeanClass));
+            //this.methodProxies = Arrays.stream(this.methods).map(method -> getMethodProxy(springBean, method)).toArray(MethodProxy[]::new);
+            this.fastMethods = Arrays.stream(this.methods).map(method ->
+                    this.fastClass.getMethod(method)
+            ).toArray(FastMethod[]::new);
+        }
+
+        MethodProxy getMethodProxy(Object sprngService, Method method) {
+            return MethodProxy.create(
+                    sprngService.getClass(),
+                    sprngService.getClass(),
+                    JNIFieldDescriptors.TO_JNI_STRING(method),
+                    method.getName(),
+                    method.getName() + "$$Proxy");
+        }
+
+        boolean macth(Method method, Requset requset, List body, Object[] args) {
+            return method.getName().equals(requset.getMethod())
+                    && method.getParameterCount() == body.size()
+                    && setValueAndCheck(method.getParameterTypes(), args, body);
         }
     }
 }

@@ -173,7 +173,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         chain.handler(this::wechatMsgCheck);
     }
 
-    @VertxRouter(path = "{wechat-app.path.app}/.*", method = "POST", pathRegex = true, order = Integer.MIN_VALUE)
+    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", pathRegex = true, order = Integer.MIN_VALUE)
     void wxPostDecryptMsg(RoutingContextChain chain) {
         chain
                 .handler(this::wechatDecryptMsg)
@@ -182,7 +182,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 });
     }
 
-    @VertxRouter(path = "{wechat-app.path.app}/.*", method = "POST", pathRegex = true, order = Integer.MAX_VALUE)
+    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", pathRegex = true, order = Integer.MAX_VALUE)
     void wxPostEncryptMsg(RoutingContextChain chain) {
         chain
                 .handler(this::wechatEncryptMsg)
@@ -191,7 +191,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 });
     }
 
-    @VertxRouter(path = "{wechat-app.path.app}/.*", method = "POST", pathRegex = true)
+    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", pathRegex = true)
     void wxPost(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             Buffer requestbuffer = routingContext.getBody();
@@ -216,7 +216,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> initStandaredVerticle() {
         Consumer<Vertx> vertxConsumer = vertx -> {
-            commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAddress(), ICommonAsynService.class);
+            commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
             setWechatAsyncMeassger(WebClient.create(vertx));
 
             this.initAccessTokenSyncTimer(vertx, objectMessage -> {
