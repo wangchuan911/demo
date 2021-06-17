@@ -7,7 +7,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.*;
 
 /**
@@ -47,7 +46,7 @@ public class RowsData<E> {
             }
         }
         cache = classMap.get(collections.getClass());*/
-        cache = ObjectUtils.getMapValueOrNew(classMap, eClass, () -> new DataCache(eClass));
+        cache = ObjectUtils.getMapValueOrNewSafe(classMap, eClass, () -> new DataCache(eClass));
         this.headers = cache.headers;
         this.rows = new Object[collections.size()][];
         this.rows = collections.stream().map(item ->

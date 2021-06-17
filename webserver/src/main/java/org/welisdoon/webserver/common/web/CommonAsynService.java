@@ -123,7 +123,7 @@ public class CommonAsynService implements ICommonAsynService {
                         } else {
                             methods = CLASS_MAPPER_MAP.get(springBeanClass);
                         }*/
-                        ClassMapper classMapper = ObjectUtils.getObjInMapSafe(CLASS_MAPPER_MAP, springBeanClass, () -> new ClassMapper(sprngService));
+                        ClassMapper classMapper = ObjectUtils.getMapValueOrNewSafe(CLASS_MAPPER_MAP, springBeanClass, () -> new ClassMapper(sprngService));
 
                         if (classMapper.methods.length > 0) {
                             Object[] args = new Object[body.size()];
