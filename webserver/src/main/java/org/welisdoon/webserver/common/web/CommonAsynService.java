@@ -15,6 +15,7 @@ import org.springframework.cglib.reflect.FastMethod;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.common.JAXBUtils;
 import org.welisdoon.common.JNIFieldDescriptors;
@@ -122,13 +123,7 @@ public class CommonAsynService implements ICommonAsynService {
                         } else {
                             methods = CLASS_MAPPER_MAP.get(springBeanClass);
                         }*/
-                        ClassMapper classMapper;
-                        if (!CLASS_MAPPER_MAP.containsKey(springBeanClass)) {
-                            classMapper = new ClassMapper(sprngService);
-                            CLASS_MAPPER_MAP.put(springBeanClass, classMapper);
-                        } else {
-                            classMapper = CLASS_MAPPER_MAP.get(springBeanClass);
-                        }
+                        ClassMapper classMapper = ObjectUtils.getObjInMapSafe(CLASS_MAPPER_MAP, springBeanClass, () -> new ClassMapper(sprngService));
 
                         if (classMapper.methods.length > 0) {
                             Object[] args = new Object[body.size()];

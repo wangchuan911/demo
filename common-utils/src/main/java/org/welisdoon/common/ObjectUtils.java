@@ -44,6 +44,23 @@ public class ObjectUtils {
 
     }
 
+    @FunctionalInterface
+    public static interface MapHandler<T> {
+        T handle();
+    }
+
+    public static <K, V> V getObjInMapSafe(Map<K, V> map, K key, MapHandler<V> mapHandler) {
+        if (!map.containsKey(key)) {
+            synchronized (map) {
+                if (!map.containsKey(key)) {
+                    V value = mapHandler.handle();
+                    map.put(key, value);
+                }
+            }
+        }
+        return map.get(key);
+    }
+
     public static void main(String[] args) throws InterruptedException {
         Map map = new HashMap<String, Integer>();
         /*final int[] j = {0};
