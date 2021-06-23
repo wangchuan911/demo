@@ -1,6 +1,7 @@
 package org.welisdoon.webserver.vertx.annotation;
 
 import io.netty.handler.codec.http.HttpMethod;
+import org.welisdoon.webserver.vertx.enums.VertxRouteType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -20,14 +21,16 @@ public @interface VertxRouter {
 
     String[] method() default {};
 
-    boolean pathRegex() default false;
-
     String produces() default "";
 
     String consumes() default "";
 
-    String virtualHost() default "";
+    VertxRouteType mode() default VertxRouteType.Path;
 
     int order() default 0;
+
+    public enum Path {
+
+    }
 }
 

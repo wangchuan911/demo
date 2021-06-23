@@ -224,10 +224,18 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                                 ? vertxRouter.path()
                                 : pathString.replaceFirst(REGEX_PATH, String.format(replaceFormat, part2)));
                     }
-                    if (vertxRouter.pathRegex()) {
-                        route.pathRegex(pathString);
-                    } else {
-                        route.path(pathString);
+                    switch (vertxRouter.mode()) {
+                        case Path:
+                            route.path(pathString);
+                            break;
+                        case PathRegex:
+                            route.pathRegex(pathString);
+                            break;
+                        case VirtualHost:
+                            route.virtualHost(pathString);
+                            break;
+                        default:
+                            throw new RuntimeException(String.format("no support mode[%s]", vertxRouter.mode().toString()));
                     }
 
                     route.order(vertxRouter.order() + (vertxRouter.order() == Integer.MAX_VALUE ? 0 : 1));

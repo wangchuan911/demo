@@ -10,6 +10,7 @@ import org.welisdoon.webserver.common.web.AsyncProxyUtils;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.webserver.vertx.annotation.VertxRouter;
+import org.welisdoon.webserver.vertx.enums.VertxRouteType;
 import org.welisdoon.webserver.vertx.utils.RoutingContextChain;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
@@ -173,7 +174,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         chain.handler(this::wechatMsgCheck);
     }
 
-    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", pathRegex = true, order = Integer.MIN_VALUE)
+    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", mode = VertxRouteType.PathRegex, order = Integer.MIN_VALUE)
     void wxPostDecryptMsg(RoutingContextChain chain) {
         chain
                 .handler(this::wechatDecryptMsg)
@@ -182,7 +183,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 });
     }
 
-    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", pathRegex = true, order = Integer.MAX_VALUE)
+    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", mode = VertxRouteType.PathRegex, order = Integer.MAX_VALUE)
     void wxPostEncryptMsg(RoutingContextChain chain) {
         chain
                 .handler(this::wechatEncryptMsg)
@@ -191,7 +192,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 });
     }
 
-    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", pathRegex = true)
+    @VertxRouter(path = "{wechat-app.path.app}.*", method = "POST", mode = VertxRouteType.PathRegex)
     void wxPost(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             Buffer requestbuffer = routingContext.getBody();
