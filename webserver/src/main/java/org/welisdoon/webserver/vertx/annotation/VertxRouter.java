@@ -29,8 +29,5 @@ public @interface VertxRouter {
 
     int order() default 0;
 
-    public enum Path {
-
-    }
 }
 
