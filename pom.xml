@@ -14,6 +14,7 @@
         <module>view</module>
         <module>car-service</module>
         <module>common-utils</module>
+        <module>service-market</module>
     </modules>
 
     <properties>
