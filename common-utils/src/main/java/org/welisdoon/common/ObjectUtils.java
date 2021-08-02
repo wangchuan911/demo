@@ -3,6 +3,7 @@ package org.welisdoon.common;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @Classname ObjectUtils
@@ -16,13 +17,18 @@ public class ObjectUtils {
         T create();
     }
 
+    final static ReentrantLock REENTRANT_LOCK = new ReentrantLock();
+
     public static <K, V> V getMapValueOrNewSafe(Map<K, V> map, K key, newObjectFunction<V> function) {
         if (!map.containsKey(key)) {
-            synchronized (map) {
+            REENTRANT_LOCK.lock();
+            try {
                 if (!map.containsKey(key)) {
                     V v = function.create();
                     map.put(key, v);
                 }
+            } finally {
+                REENTRANT_LOCK.unlock();
             }
         }
         return map.get(key);
