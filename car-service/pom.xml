@@ -9,16 +9,16 @@
         <!--<relativePath>../pom.xml</relativePath>  lookup parent from repository-->
     </parent>
     <groupId>com.hubidaauto</groupId>
-    <artifactId>carservice</artifactId>
+    <artifactId>car-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>carservice</name>
+    <name>car-service</name>
     <description>Demo project for Spring Boot</description>
 
 
     <dependencies>
         <dependency>
             <groupId>org.welisdoon</groupId>
-            <artifactId>webserver</artifactId>
+            <artifactId>web-server</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 

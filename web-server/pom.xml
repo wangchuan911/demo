@@ -8,8 +8,8 @@
         <version>1.0-SNAPSHOT</version>
         <!--<relativePath>../pom.xml</relativePath>  lookup parent from repository-->
     </parent>
-    <artifactId>webserver</artifactId>
-    <name>webserver</name>
+    <artifactId>web-server</artifactId>
+    <name>web-server</name>
     <description>web service (restful/webservice)</description>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
@@ -216,7 +216,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${springboot.version}</version>
                 <configuration>
-                    <mainClass>org.welisdoon.webserver.WebserverApplication</mainClass>
+                    <mainClass>org.welisdoon.web.WebserverApplication</mainClass>
                     <classifier>exec</classifier>
                 </configuration>
             </plugin>
@@ -228,7 +228,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>org.welisdoon.webserver.WebserverApplication</mainClass>
+                            <mainClass>org.welisdoon.web.WebserverApplication</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

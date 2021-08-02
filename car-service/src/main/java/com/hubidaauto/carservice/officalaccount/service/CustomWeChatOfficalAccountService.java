@@ -15,13 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.welisdoon.webserver.common.ApplicationContextProvider;
-import org.welisdoon.webserver.common.CommonConst;
-import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
-import org.welisdoon.webserver.entity.wechat.custom.CustomTextMessage;
-import org.welisdoon.webserver.entity.wechat.messeage.request.TextMesseage;
-import org.welisdoon.webserver.entity.wechat.messeage.response.ResponseMesseage;
-import org.welisdoon.webserver.service.wechat.service.AbstractWeChatService;
+import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.common.CommonConst;
+import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.entity.wechat.custom.CustomTextMessage;
+import org.welisdoon.web.entity.wechat.messeage.request.TextMesseage;
+import org.welisdoon.web.entity.wechat.messeage.response.ResponseMesseage;
+import org.welisdoon.web.service.wechat.service.AbstractWeChatService;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
@@ -63,8 +63,8 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
 									});
 					text = "同步成功";
 				}
-				to = new org.welisdoon.webserver.entity.wechat.messeage.response.TextMesseage(msg);
-				((org.welisdoon.webserver.entity.wechat.messeage.response.TextMesseage) to).setContent(text);
+				to = new org.welisdoon.web.entity.wechat.messeage.response.TextMesseage(msg);
+				((org.welisdoon.web.entity.wechat.messeage.response.TextMesseage) to).setContent(text);
 			}
 			break;
 			default: {

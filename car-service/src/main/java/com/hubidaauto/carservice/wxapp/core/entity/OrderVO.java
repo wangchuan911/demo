@@ -3,8 +3,8 @@ package com.hubidaauto.carservice.wxapp.core.entity;
 import com.hubidaauto.carservice.assign.utils.IntegerMoneyValueType;
 import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import org.springframework.util.StringUtils;
-import org.welisdoon.webserver.common.annotation.EntityObjectKey;
-import org.welisdoon.webserver.entity.wechat.WeChatPayOrder;
+import org.welisdoon.web.common.annotation.EntityObjectKey;
+import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 
 import java.sql.Timestamp;
 import java.util.Arrays;

@@ -6,9 +6,8 @@ import com.hubidaauto.carservice.wxapp.mall.common.AbstractAutoAssign;
 import com.hubidaauto.carservice.wxapp.mall.common.annotation.AutoAssign;
 import com.hubidaauto.carservice.wxapp.mall.entity.MallOrderDto;
 import com.hubidaauto.carservice.wxapp.mall.subunit.entity.CouponAssignDto;
-import io.vertx.core.json.JsonObject;
 import org.springframework.stereotype.Component;
-import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;

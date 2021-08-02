@@ -13,11 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.welisdoon.webserver.common.ApplicationContextProvider;
-import org.welisdoon.webserver.common.web.AbstractBaseService;
-import org.welisdoon.webserver.entity.wechat.WeChatUser;
-import org.welisdoon.webserver.service.wechat.intf.IWechatUserHandler;
-import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
+import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.common.web.AbstractBaseService;
+import org.welisdoon.web.entity.wechat.WeChatUser;
+import org.welisdoon.web.service.wechat.intf.IWechatUserHandler;
+import org.welisdoon.web.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;

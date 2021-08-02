@@ -7,12 +7,11 @@ import com.hubidaauto.carservice.wxapp.increment.dao.CouponDao;
 import com.hubidaauto.carservice.wxapp.increment.dao.UserOperRecordDao;
 import com.hubidaauto.carservice.wxapp.increment.entity.CouponVO;
 import org.apache.commons.collections4.MapUtils;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.welisdoon.webserver.common.web.AbstractBaseService;
-import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
+import org.welisdoon.web.common.web.AbstractBaseService;
+import org.welisdoon.web.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;

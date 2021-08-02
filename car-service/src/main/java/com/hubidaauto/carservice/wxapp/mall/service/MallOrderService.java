@@ -7,7 +7,7 @@ import com.hubidaauto.carservice.wxapp.mall.entity.MallOrderDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.welisdoon.webserver.common.web.AbstractBaseService;
+import org.welisdoon.web.common.web.AbstractBaseService;
 
 import java.util.Map;
 

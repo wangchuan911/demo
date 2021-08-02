@@ -4,7 +4,7 @@ import com.hubidaauto.carservice.wxapp.mall.common.AbstractAutoAssign;
 import com.hubidaauto.carservice.wxapp.mall.common.annotation.AutoAssign;
 import io.vertx.core.json.JsonObject;
 import org.reflections.Reflections;
-import org.welisdoon.webserver.common.ApplicationContextProvider;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

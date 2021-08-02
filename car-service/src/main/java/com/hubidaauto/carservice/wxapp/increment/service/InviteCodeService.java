@@ -9,14 +9,13 @@ import com.hubidaauto.carservice.wxapp.core.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.increment.dao.InviteCodeDao;
 import com.hubidaauto.carservice.wxapp.increment.entity.InviteCodeDto;
 import org.apache.commons.collections4.MapUtils;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.welisdoon.webserver.common.ApplicationContextProvider;
-import org.welisdoon.webserver.common.web.AbstractBaseService;
-import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
+import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.common.web.AbstractBaseService;
+import org.welisdoon.web.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;

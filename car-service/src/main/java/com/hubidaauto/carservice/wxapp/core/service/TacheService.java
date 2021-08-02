@@ -6,8 +6,8 @@ import com.hubidaauto.carservice.wxapp.core.entity.TacheVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.welisdoon.webserver.common.web.AbstractBaseService;
-import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
+import org.welisdoon.web.common.web.AbstractBaseService;
+import org.welisdoon.web.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;

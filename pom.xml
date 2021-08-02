@@ -10,9 +10,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>webserver</module>
+        <module>web-server</module>
         <module>view</module>
-        <module>carservice</module>
+        <module>car-service</module>
         <module>common-utils</module>
     </modules>
 

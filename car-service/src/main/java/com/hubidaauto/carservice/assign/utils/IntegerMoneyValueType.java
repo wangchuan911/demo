@@ -1,7 +1,7 @@
 package com.hubidaauto.carservice.assign.utils;
 
 import org.springframework.stereotype.Component;
-import org.welisdoon.webserver.common.annotation.EntitySpecialType;
+import org.welisdoon.web.common.annotation.EntitySpecialType;
 
 import java.math.BigDecimal;
 

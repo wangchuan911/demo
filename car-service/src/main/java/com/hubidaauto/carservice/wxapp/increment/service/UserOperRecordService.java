@@ -4,11 +4,10 @@ import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.core.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.core.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.increment.dao.UserOperRecordDao;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.welisdoon.webserver.common.web.AbstractBaseService;
-import org.welisdoon.webserver.vertx.annotation.VertxWebApi;
+import org.welisdoon.web.common.web.AbstractBaseService;
+import org.welisdoon.web.vertx.annotation.VertxWebApi;
 
 import java.util.Map;
 

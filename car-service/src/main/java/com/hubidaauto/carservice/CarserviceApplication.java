@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.welisdoon.webserver.WebserverApplication;
+import org.welisdoon.web.WebserverApplication;
 
 @SpringBootApplication
 @EnableTransactionManagement(proxyTargetClass=true)

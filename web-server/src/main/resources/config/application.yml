@@ -20,7 +20,7 @@ vertx:
   workerVerticle:
     instances: 2
   clusterMode: hazelcast1
-  scanPath: org.welisdoon.webserver
+  scanPath: org.welisdoon.web
   dns:
     enable: false
     ip: 134.192.232.18,134.192.232.17

@@ -22,7 +22,7 @@ vertx:
   workerVerticle:
     instances: 2
   clusterMode: hazelcast1
-  scanPath: org.welisdoon.webserver,com.hubidaauto.carservice
+  scanPath: org.welisdoon.web,com.hubidaauto.carservice
   dns:
     enable: false
     ip: 134.192.232.18,134.192.232.17
