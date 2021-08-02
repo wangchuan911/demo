@@ -214,6 +214,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${springboot.version}</version>
                 <configuration>
                     <mainClass>org.welisdoon.webserver.WebserverApplication</mainClass>
                     <classifier>exec</classifier>
