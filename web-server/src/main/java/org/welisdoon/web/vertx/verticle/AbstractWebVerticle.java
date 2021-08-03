@@ -1,0 +1,267 @@
+package org.welisdoon.web.vertx.verticle;
+
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.net.JksOptions;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PfxOptions;
+import io.vertx.core.net.SelfSignedCertificate;
+import io.vertx.ext.web.Route;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
+
+import org.reflections.ReflectionUtils;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.util.StringUtils;
+import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.vertx.annotation.VertxRouter;
+import org.welisdoon.web.vertx.utils.RoutingContextChain;
+
+public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractWebVerticle.class);
+
+    int port;
+    boolean sslEnable;
+    String sslKeyStore;
+    String sslPassword;
+    String sslKeyType;
+    String sslKeyPath;
+
+    Router router;
+
+    @Override
+    void deployBefore(Promise startFuture) {
+        router = Router.router(vertx);
+        router.route().order(Integer.MIN_VALUE).handler(BodyHandler.create());
+        logger.info("create router");
+        startFuture.complete();
+
+    }
+
+    @Override
+    void deployAfter(Promise startFuture) {
+        if (router != null) {
+            //开启https
+            HttpServerOptions httpServerOptions = new HttpServerOptions();
+            if (!new File(sslKeyStore).exists()) {
+                logger.warn(String.format("sslKeyStore:%s is not exists!", sslKeyStore));
+                this.sslEnable = false;
+            } else if (sslEnable) {
+                httpServerOptions.setSsl(true);
+                switch (this.sslKeyType.toLowerCase()) {
+                    case "pem":
+                        httpServerOptions.setPemKeyCertOptions(new PemKeyCertOptions().setCertPath(sslKeyStore).setKeyPath(sslKeyPath));
+                        break;
+                    case "jks":
+                        httpServerOptions.setKeyCertOptions(new JksOptions().setPath(sslKeyStore).setPassword(sslPassword));
+                        break;
+                    case "pfx":
+                        httpServerOptions.setPfxKeyCertOptions(new PfxOptions().setPath(sslKeyStore).setPassword(sslPassword));
+                        break;
+                    default:
+                        SelfSignedCertificate certificate = SelfSignedCertificate.create();
+                        httpServerOptions.setKeyCertOptions(certificate.keyCertOptions())
+                                .setTrustOptions(certificate.trustOptions());
+                }
+            }
+            vertx.createHttpServer(httpServerOptions)
+                    .requestHandler(router)
+                    .listen(port, httpServerAsyncResult -> {
+                        if (httpServerAsyncResult.succeeded()) {
+                            startFuture.complete();
+                            logger.info(String.format("HTTP server started on http%s://localhost:%s", sslEnable ? "s" : "", port));
+                        } else {
+                            startFuture.fail(httpServerAsyncResult.cause());
+                        }
+                    });
+        }
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public boolean isSslEnable() {
+        return sslEnable;
+    }
+
+    public void setSslEnable(boolean sslEnable) {
+        this.sslEnable = sslEnable;
+    }
+
+    public String getSslKeyStore() {
+        return sslKeyStore;
+    }
+
+    public void setSslKeyStore(String sslKeyStore) {
+        this.sslKeyStore = sslKeyStore;
+    }
+
+    public String getSslPassword() {
+        return sslPassword;
+    }
+
+    public void setSslPassword(String sslPassword) {
+        this.sslPassword = sslPassword;
+    }
+
+    public String getSslKeyType() {
+        return sslKeyType;
+    }
+
+    public void setSslKeyType(String sslKeyType) {
+        this.sslKeyType = sslKeyType;
+    }
+
+    public String getSslKeyPath() {
+        return sslKeyPath;
+    }
+
+    public void setSslKeyPath(String sslKeyPath) {
+        this.sslKeyPath = sslKeyPath;
+    }
+
+
+    final public static class VertxRouterEntry extends Entry implements Register {
+        Set<Method> routeMethod;
+        Set<Class<?>> configBeans;
+        private static String REGEX_PATH = "\\{([\\w\\-]+)\\.path\\.(\\w+)\\}(.*)";
+
+        @Override
+        public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
+            ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
+                    .stream()
+                    .filter(method -> Arrays.stream(method.getParameterTypes())
+                            .filter(bClass -> bClass == RoutingContextChain.class).findFirst().isPresent())
+                    .forEach(method -> {
+                        String key = Entry.key(this.getClass(), aClass);
+                        VertxRouterEntry routerEntry;
+                        if (map.containsKey(key)) {
+                            routerEntry = (VertxRouterEntry) map.get(key);
+                            routerEntry.routeMethod.add(method);
+                        } else {
+                            routerEntry = new VertxRouterEntry();
+                            routerEntry.ServiceClass = aClass;
+                            routerEntry.routeMethod = new HashSet<>();
+                            routerEntry.routeMethod.add(method);
+                            map.put(key, routerEntry);
+                        }
+                    });
+        }
+
+
+        @Override
+        synchronized void inject(Vertx vertx, AbstractCustomVerticle verticle) {
+            final Object serviceBean;
+            try {
+                serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
+            } catch (Throwable t) {
+                logger.warn(t.getMessage());
+                return;
+            }
+            if (verticle instanceof AbstractWebVerticle) {
+                this.routeMethod.stream().filter(Objects::nonNull).forEach(routeMethod -> {
+                    VertxRouter vertxRouter = routeMethod.getAnnotation(VertxRouter.class);
+                    Route route = ((AbstractWebVerticle) verticle).router.route();
+                    RoutingContextChain chain = new RoutingContextChain(route);
+                    if (vertxRouter.method() != null && vertxRouter.method().length > 0) {
+                        /*Arrays.stream(vertxRouter.method()).forEach(httpMethod -> {
+                            route.method(httpMethod);
+                        });*/
+
+                        Arrays.stream(vertxRouter.method()).filter(httpMethodString -> {
+                                    Optional<HttpMethod> optional = HttpMethod
+                                            .values()
+                                            .stream()
+                                            .filter(httpMethod ->
+                                                    httpMethod.name().equals(httpMethodString))
+                                            .findFirst();
+                                    boolean flag = optional.isPresent();
+                                    if (flag) {
+                                        route.method(optional.get());
+                                    }
+                                    return !flag;
+                                }
+                        ).forEach(s -> {
+                            if (StringUtils.isEmpty(s)) return;
+                            route.method(new HttpMethod(s));
+                        });
+
+                    }
+                    String pathString = vertxRouter.path(), part0, part1, part2;
+                    final String replaceFormat = "%s$3";
+                    if (pathString.matches(REGEX_PATH)) {
+                        part0 = pathString.replaceFirst(REGEX_PATH, "$1");
+                        Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
+                        if (configBeans == null || configBeans.size() == 0)
+                            configBeans = reflections.getTypesAnnotatedWith(ConfigurationProperties.class);
+                        Class<AbstractWechatConfiguration> configClass =
+                                (Class<AbstractWechatConfiguration>) configBeans.stream().filter(aClass -> {
+                                    ConfigurationProperties properties = aClass.getAnnotation(ConfigurationProperties.class);
+                                    return AbstractWechatConfiguration.class.isAssignableFrom(aClass)
+                                            && (part0.equals(properties.value()) || part0.equals(properties.prefix()));
+                                }).findFirst().get();
+                        AbstractWechatConfiguration.Path path = AbstractWechatConfiguration.getConfig(configClass).getPath();
+                        part1 = pathString.replaceFirst(REGEX_PATH, "$2");
+                        part2 = path.path(part1);
+                        pathString = (StringUtils.isEmpty(part2)
+                                ? vertxRouter.path()
+                                : pathString.replaceFirst(REGEX_PATH, String.format(replaceFormat, part2)));
+                    }
+                    switch (vertxRouter.mode()) {
+                        case Path:
+                            route.path(pathString);
+                            break;
+                        case PathRegex:
+                            route.pathRegex(pathString);
+                            break;
+                        case VirtualHost:
+                            route.virtualHost(pathString);
+                            break;
+                        default:
+                            throw new RuntimeException(String.format("no support mode[%s]", vertxRouter.mode().toString()));
+                    }
+
+                    route.order(vertxRouter.order() + (vertxRouter.order() == Integer.MAX_VALUE ? 0 : 1));
+                    try {
+                        Object[] paramaters = Arrays.stream(routeMethod.getParameterTypes()).map(aClass -> {
+                            Object value = null;
+                            if (aClass == Vertx.class) {
+                                value = vertx;
+                            } else if (aClass == RoutingContextChain.class) {
+                                value = chain;
+                            }
+                            return value;
+                        }).toArray();
+
+                        routeMethod.setAccessible(true);
+                        routeMethod.invoke(serviceBean, paramaters);
+                        logger.info(String.format("%s[%s]", route.methods(), pathString));
+                    } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+                        logger.error(e.getMessage(), e);
+                        return;
+                    }
+
+                });
+            }
+        }
+    }
+}
+
+
