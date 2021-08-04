@@ -240,7 +240,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                             route.path(pathString);
                             break;
                         case PathRegex:
-                            route.pathRegex(pathString = prefix.replaceAll("\\/g", "\\\\/") + suffix);
+                            route.pathRegex(pathString = prefix.replaceAll("\\/", "\\\\/") + suffix);
                             break;
                         case VirtualHost:
                             route.virtualHost(pathString);

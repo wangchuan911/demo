@@ -1,9 +1,12 @@
 package com.hubidaauto.servmarket.module.goods.page;
 
+import com.github.pagehelper.PageHelper;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
 import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
+import com.hubidaauto.servmarket.module.goods.service.ItemService;
 import io.vertx.core.json.Json;
+import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
@@ -16,29 +19,59 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 import java.util.List;
 
+/**
+ * @author Septem
+ */
 @Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/goods")
 public class ItemPage {
-    @Autowired
     ItemDao itemDao;
+    ItemService itemService;
 
-    @VertxRouter(path = "/:id",
+    @Autowired
+    public void setItemDao(ItemDao itemDao) {
+        this.itemDao = itemDao;
+    }
+
+    @Autowired
+    public void setItemService(ItemService itemService) {
+        this.itemService = itemService;
+    }
+
+    @VertxRouter(path = "/*", order = -1)
+    public void all(RoutingContextChain chain) {
+        chain.handler(BodyHandler.create());
+    }
+
+
+    @VertxRouter(path = "\\/(?<id>\\d+)",
             method = "GET",
-            order = Integer.MIN_VALUE)
+            mode = VertxRouteType.PathRegex)
     public void get(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             routingContext.end(Json.encodeToBuffer(itemDao.get(Long.parseLong(routingContext.pathParam("id")))));
         });
     }
 
-    @VertxRouter(path = "/list",
+    @VertxRouter(path = "\\/list(?:\\/(?<page>\\d+))?",
             method = "POST",
-            order = Integer.MIN_VALUE)
+            mode = VertxRouteType.PathRegex)
     public void list(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            routingContext.end(Json.encodeToBuffer(itemDao.list(routingContext.getBodyAsJson().mapTo(ItemCondition.class))));
+            System.out.println(routingContext.pathParam("page"));
+            ItemCondition itemCondition = routingContext.getBody() == null ? new ItemCondition() :
+                    routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+            routingContext.end(Json.encodeToBuffer(itemDao.list(itemCondition)));
+        });
+    }
+
+    @VertxRouter(path = "/",
+            method = "PUT")
+    public void put(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            routingContext.end(Json.encodeToBuffer(itemDao.put(routingContext.getBodyAsJson().mapTo(ItemVO.class))));
         });
     }
 
