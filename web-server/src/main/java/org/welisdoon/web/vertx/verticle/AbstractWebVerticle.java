@@ -22,9 +22,11 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
@@ -44,7 +46,6 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
     @Override
     void deployBefore(Promise startFuture) {
         router = Router.router(vertx);
-        router.route().order(Integer.MIN_VALUE).handler(BodyHandler.create());
         logger.info("create router");
         startFuture.complete();
 
@@ -176,10 +177,13 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                 return;
             }
             if (verticle instanceof AbstractWebVerticle) {
-                this.routeMethod.stream().filter(Objects::nonNull).forEach(routeMethod -> {
+                this.routeMethod.stream().filter(Objects::nonNull).sorted((o1, o2) ->
+                        o1.getAnnotation(VertxRouter.class).order() > o2.getAnnotation(VertxRouter.class).order() ? 1 : -1
+                ).forEach(routeMethod -> {
                     VertxRouter vertxRouter = routeMethod.getAnnotation(VertxRouter.class);
                     Route route = ((AbstractWebVerticle) verticle).router.route();
                     RoutingContextChain chain = new RoutingContextChain(route);
+
                     if (vertxRouter.method() != null && vertxRouter.method().length > 0) {
                         /*Arrays.stream(vertxRouter.method()).forEach(httpMethod -> {
                             route.method(httpMethod);
@@ -204,7 +208,14 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                         });
 
                     }
-                    String pathString = vertxRouter.path(), part0, part1, part2;
+                    VertxRoutePath routePath = routeMethod.getDeclaringClass().getAnnotation(VertxRoutePath.class);
+                    String suffix = getRegexPath(vertxRouter.path()),
+                            prefix = (routePath != null && !StringUtils.isEmpty(routePath.value()))
+                                    ? getRegexPath(routePath.value())
+                                    : "",
+                            pathString = prefix + suffix;
+
+                    /*String pathString = vertxRouter.path(), part0, part1, part2;
                     final String replaceFormat = "%s$3";
                     if (pathString.matches(REGEX_PATH)) {
                         part0 = pathString.replaceFirst(REGEX_PATH, "$1");
@@ -223,13 +234,13 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                         pathString = (StringUtils.isEmpty(part2)
                                 ? vertxRouter.path()
                                 : pathString.replaceFirst(REGEX_PATH, String.format(replaceFormat, part2)));
-                    }
+                    }*/
                     switch (vertxRouter.mode()) {
                         case Path:
                             route.path(pathString);
                             break;
                         case PathRegex:
-                            route.pathRegex(pathString);
+                            route.pathRegex(pathString = prefix.replaceAll("\\/g", "\\\\/") + suffix);
                             break;
                         case VirtualHost:
                             route.virtualHost(pathString);
@@ -237,8 +248,6 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                         default:
                             throw new RuntimeException(String.format("no support mode[%s]", vertxRouter.mode().toString()));
                     }
-
-                    route.order(vertxRouter.order() + (vertxRouter.order() == Integer.MAX_VALUE ? 0 : 1));
                     try {
                         Object[] paramaters = Arrays.stream(routeMethod.getParameterTypes()).map(aClass -> {
                             Object value = null;
@@ -252,7 +261,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
 
                         routeMethod.setAccessible(true);
                         routeMethod.invoke(serviceBean, paramaters);
-                        logger.info(String.format("%s[%s]", route.methods(), pathString));
+                        logger.info(String.format("%s[%s]", route.methods() == null ? "ALL" : route.methods(), pathString));
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
                         return;
@@ -260,6 +269,35 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
 
                 });
             }
+        }
+
+        String getRegexPath(final String routePath) {
+            String pathString = routePath, part0, part1, part2;
+            final String replaceFormat = "%s$3";
+            if (pathString.matches(REGEX_PATH)) {
+                part0 = pathString.replaceFirst(REGEX_PATH, "$1");
+                part1 = pathString.replaceFirst(REGEX_PATH, "$2");
+                Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
+                /*if (configBeans == null || configBeans.size() == 0)
+                    configBeans = reflections.getTypesAnnotatedWith(ConfigurationProperties.class);
+                Class<AbstractWechatConfiguration> configClass =
+                        (Class<AbstractWechatConfiguration>) configBeans.stream().filter(aClass -> {
+                            ConfigurationProperties properties = aClass.getAnnotation(ConfigurationProperties.class);
+                            return AbstractWechatConfiguration.class.isAssignableFrom(aClass)
+                                    && (part0.equals(properties.value()) || part0.equals(properties.prefix()));
+                        }).findFirst().get();
+
+                AbstractWechatConfiguration.Path path = AbstractWechatConfiguration.getConfig(configClass).getPath();
+                part2 = path.path(part1);*/
+
+                Environment environment = ApplicationContextProvider.getBean(Environment.class);
+                part2 = environment.getProperty(String.format("%s.path.%s", part0, part1));
+                return (StringUtils.isEmpty(part2)
+                        ? routePath
+                        : pathString.replaceFirst(REGEX_PATH, String.format(replaceFormat, part2)));
+
+            }
+            return routePath;
         }
     }
 }

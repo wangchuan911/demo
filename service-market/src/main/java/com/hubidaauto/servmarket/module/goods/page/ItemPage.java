@@ -7,6 +7,7 @@ import io.vertx.core.json.Json;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -15,7 +16,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 import java.util.List;
 
-@Configuration
+@Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/goods")
@@ -31,6 +32,7 @@ public class ItemPage {
             routingContext.end(Json.encodeToBuffer(itemDao.get(Long.parseLong(routingContext.pathParam("id")))));
         });
     }
+
     @VertxRouter(path = "/list",
             method = "POST",
             order = Integer.MIN_VALUE)

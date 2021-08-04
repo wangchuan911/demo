@@ -22,16 +22,16 @@ vertx:
   workerVerticle:
     instances: 2
   clusterMode: hazelcast1
-  scanPath: org.welisdoon.web,com.hubidaauto.carservice
+  scanPath: org.welisdoon.web,com.hubidaauto
   dns:
     enable: false
     ip: 134.192.232.18,134.192.232.17
     maxQueries: 10
 
 
-logging:
-  level:
-    root: "debug"
-    appdao: "error"
-  group:
-    appdao: "com.hubidaauto.carservice.wxapp.core.dao,com.hubidaauto.carservice.officalaccount.dao,com.hubidaauto.carservice.wxapp.increment.dao,com.hubidaauto.carservice.wxapp.mall.dao,org.springframework.jdbc,org.mybatis"
+#logging:
+#  level:
+#    root: "debug"
+#    appdao: "error"
+#  group:
+#    appdao: "com.hubidaauto.carservice.wxapp.core.dao,com.hubidaauto.carservice.officalaccount.dao,com.hubidaauto.carservice.wxapp.increment.dao,com.hubidaauto.carservice.wxapp.mall.dao,org.springframework.jdbc,org.mybatis"
