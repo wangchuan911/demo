@@ -8,7 +8,7 @@ import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.util.CollectionUtils;
+import org.springframework.context.annotation.ComponentScan;
 import org.welisdoon.web.WebserverApplication;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
@@ -30,9 +30,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Configuration
@@ -60,8 +58,8 @@ public class VertxConfiguration {
     @Value("${vertx.workerVerticle.instances}")
     int workerInstancesMax;
 
-    @Value("${vertx.scanPath}")
-    private String[] scanPath;
+    @Value("${vertx.extraScanPath}")
+    private String[] extraScanPath;
 
     @Autowired
     ClusterConfiguration clusterConfiguration;
@@ -79,12 +77,18 @@ public class VertxConfiguration {
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
         {
             final Collection<URL> CollectUrl = new LinkedList<>();
-            Arrays.stream(scanPath).forEach(path -> {
+            ApplicationContextProvider.getApplicationContext()
+                    .getBeansWithAnnotation(ComponentScan.class).entrySet().stream().map(Map.Entry::getValue).flatMap(o ->
+                    Arrays.stream(ApplicationContextProvider.getRealClass(o.getClass()).getAnnotation(ComponentScan.class).basePackageClasses())
+            ).forEach(aClass -> {
+                CollectUrl.addAll(ClasspathHelper.forPackage(aClass.getPackageName()));
+            });
+            Arrays.stream(extraScanPath).forEach(path -> {
                 CollectUrl.addAll(ClasspathHelper.forPackage(path));
             });
-            if (CollectionUtils.isEmpty(CollectUrl)) {
-                CollectUrl.addAll(ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()));
-            }
+
+            CollectUrl.addAll(ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()));
+
             configurationBuilder.setUrls(CollectUrl);
             configurationBuilder.setInputsFilter(s -> s.toLowerCase().endsWith(".class") || s.toLowerCase().endsWith(".java"));
         }
