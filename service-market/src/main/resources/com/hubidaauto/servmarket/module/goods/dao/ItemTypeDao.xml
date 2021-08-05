@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao">
+    <select id="get" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeCondition"
+            resultType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO">
+        select * from mall_item_type a where a.id=#{items.get(0).id}
+    </select>
+
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeCondition"
+            resultType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO">
+        select * from mall_item_type a
+        <where>
+            <if test="itemTypes!=null and itemTypes.size()>0">
+                and exists (
+                <foreach collection="itemTypes" item="type" separator="union all">
+                    select 1 from dual
+                    <where>
+                        <include refid="condition"></include>
+                    </where>
+                </foreach>
+                )
+            </if>
+        </where>
+    </select>
+    <sql id="condition">
+        and a.item_id=#{type.itemId}
+    </sql>
+
+</mapper>

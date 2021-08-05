@@ -2,7 +2,7 @@ package org.welisdoon.web.common.dao;
 
 import java.util.List;
 
-public interface ITemplateDao<K,E,C extends E> {
+public interface ITemplateDao<K, E, C> {
     E get(K key);
 
     E find(C condition);

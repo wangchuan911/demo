@@ -2,7 +2,9 @@ package com.hubidaauto.servmarket.module.goods.page;
 
 import com.github.pagehelper.PageHelper;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
+import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
+import com.hubidaauto.servmarket.module.goods.entity.ItemTypeCondition;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import com.hubidaauto.servmarket.module.goods.service.ItemService;
 import io.vertx.core.json.Json;
@@ -28,6 +30,7 @@ import java.util.List;
 @VertxRoutePath("{wechat-app-hubida.path.app}/goods")
 public class ItemPage {
     ItemDao itemDao;
+    ItemTypeDao itemTypeDao;
     ItemService itemService;
 
     @Autowired
@@ -38,6 +41,11 @@ public class ItemPage {
     @Autowired
     public void setItemService(ItemService itemService) {
         this.itemService = itemService;
+    }
+
+    @Autowired
+    public void setItemTypeDao(ItemTypeDao itemTypeDao) {
+        this.itemTypeDao = itemTypeDao;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -67,12 +75,32 @@ public class ItemPage {
         });
     }
 
-    @VertxRouter(path = "/",
+    @VertxRouter(path = "\\/type\\/(?<id>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void getType(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            routingContext.end(Json.encodeToBuffer(itemTypeDao.get(Long.parseLong(routingContext.pathParam("id")))));
+        });
+    }
+
+    @VertxRouter(path = "/type/list",
+            method = "POST")
+    public void listTypes(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            System.out.println(routingContext.pathParam("page"));
+            ItemTypeCondition itemTypeCondition = routingContext.getBody() == null ? new ItemTypeCondition() :
+                    routingContext.getBodyAsJson().mapTo(ItemTypeCondition.class);
+            routingContext.end(Json.encodeToBuffer(itemTypeDao.list(itemTypeCondition)));
+        });
+    }
+
+    /*@VertxRouter(path = "/",
             method = "PUT")
     public void put(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             routingContext.end(Json.encodeToBuffer(itemDao.put(routingContext.getBodyAsJson().mapTo(ItemVO.class))));
         });
-    }
+    }*/
 
 }

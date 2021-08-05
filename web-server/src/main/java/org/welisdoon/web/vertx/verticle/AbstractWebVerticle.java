@@ -277,8 +277,8 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
             if (pathString.matches(REGEX_PATH)) {
                 part0 = pathString.replaceFirst(REGEX_PATH, "$1");
                 part1 = pathString.replaceFirst(REGEX_PATH, "$2");
-                Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
-                /*if (configBeans == null || configBeans.size() == 0)
+                /*Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
+                if (configBeans == null || configBeans.size() == 0)
                     configBeans = reflections.getTypesAnnotatedWith(ConfigurationProperties.class);
                 Class<AbstractWechatConfiguration> configClass =
                         (Class<AbstractWechatConfiguration>) configBeans.stream().filter(aClass -> {
