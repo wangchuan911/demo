@@ -35,6 +35,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
 
     ICommonAsynService commonAsynService;
 
+    @Override
     @PostConstruct
     public void initValue() throws Throwable {
         super.initValue();

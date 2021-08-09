@@ -328,10 +328,11 @@ public abstract class AbstractWechatConfiguration {
         MessageConsumer<T> messageConsumer = eventBus.consumer(URL_TOCKEN_UPDATE);
         messageConsumer.handler(var1);
         //启动就运行运行
-        longHandler.handle(null);
-        //开始循环
-        vertx1.setPeriodic(this.getAfterUpdateTokenTime() * 1000, longHandler);
-
+        if (this.getAfterUpdateTokenTime() > 0) {
+            longHandler.handle(null);
+            //开始循环
+            vertx1.setPeriodic(this.getAfterUpdateTokenTime() * 1000, longHandler);
+        }
     }
 
     public void wechatDecryptMsg(RoutingContext routingContext) {

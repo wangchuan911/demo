@@ -13,6 +13,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.handler.BodyHandler;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,12 +59,13 @@ public class WechatAppMallConfiguration {
 
 	@VertxRegister(StandaredVerticle.class)
 	public Consumer<Router> routeMapping(Vertx vertx) {
+		BodyHandler bodyHandler=BodyHandler.create();
 		final String URL_UNIFIEDORDERON = configuration.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString();
 		final String PAY_ADDRESS = configuration.getPath().getOther().get("mallPay"), PAY_CALLBACK = PAY_ADDRESS + "back";
 		webClient = WebClient.create(vertx);
 		Consumer<Router> routerConsumer = router -> {
 			//get请求入口
-			router.get(PAY_ADDRESS).handler(routingContext -> {
+			router.get(PAY_ADDRESS).handler(bodyHandler).handler(routingContext -> {
 				routingContext.response().setChunked(true);
 				MultiMap multiMap = routingContext.request().params();
 				int code = Integer.parseInt(multiMap.get(CommonConst.WebParamsKeys.GET_CODE));
@@ -159,7 +161,7 @@ public class WechatAppMallConfiguration {
 			});
 
 			//支付信息微信回调
-			router.post(PAY_CALLBACK).handler(routingContext -> {
+			router.post(PAY_CALLBACK).handler(bodyHandler).handler(routingContext -> {
 				routingContext.response().setChunked(true);
 				logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
 				try {

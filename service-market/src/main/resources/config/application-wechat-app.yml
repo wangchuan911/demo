@@ -3,7 +3,7 @@ wechat-app-hubida:
   appsecret: db69bf9effa3fbb0b53483565a7e1baa
   token: 9dvL9Kze96Oc76XhMUeI03LTZ29
   key: AC32OLzYAjjkPqzxilsPiMPbqYCHESnOuPzyYpjFyVw
-  afterUpdateTokenTime: 6000
+  afterUpdateTokenTime: -6000
   orderCycleTime: 0
   mchId: xxxx
   mchKey: xxx
@@ -31,7 +31,7 @@ wechat-public-hubida:
   appsecret: 54fd8dfe57c9369966cb5da7afa2936f
   token: 20191230dashanhuaquanfuhubida888
   key: VgkCcmCwMec0jKqoJBGe6nG9PW0ecauq5ZogVzEsDbU
-  afterUpdateTokenTime: 6000
+  afterUpdateTokenTime: -6000
   orderCycleTime: 0
   mchId: xxxx
   mchKey: xxx

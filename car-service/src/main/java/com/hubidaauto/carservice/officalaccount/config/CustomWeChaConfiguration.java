@@ -4,6 +4,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,7 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
     ICommonAsynService commonAsynService;
 
 
+    @Override
     @PostConstruct
     public void initValue() throws Throwable {
         super.initValue();
@@ -53,9 +55,10 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
 
 
         Consumer<Router> routerConsumer = router -> {
-            router.get(this.getPath().getPush()).handler(this::wechatMsgCheck);
+            BodyHandler bodyHandler = BodyHandler.create();
+            router.get(this.getPath().getPush()).handler(bodyHandler).handler(this::wechatMsgCheck);
 
-            router.post(this.getPath().getPush()).handler(this::wechatDecryptMsg)
+            router.post(this.getPath().getPush()).handler(bodyHandler).handler(this::wechatDecryptMsg)
                     .handler(routingContext -> {
                         Buffer requestbuffer = routingContext.getBody();
                         commonAsynService.callService(new Requset()

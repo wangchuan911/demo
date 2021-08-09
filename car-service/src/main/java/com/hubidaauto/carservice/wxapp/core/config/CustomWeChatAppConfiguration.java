@@ -15,6 +15,7 @@ import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
 import org.springframework.beans.factory.annotation.Value;
@@ -176,7 +177,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 
         Consumer<Router> routerConsumer = router -> {
             //get请求入口
-            router.get(this.getPath().getApp()).handler(routingContext -> {
+            router.get(this.getPath().getApp()).handler(BodyHandler.create()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 MultiMap multiMap = routingContext.request().params();
                 int code = Integer.parseInt(multiMap.get(CommonConst.WebParamsKeys.GET_CODE));
@@ -309,7 +310,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             });
 
             //支付信息微信回调
-            router.post(this.getPath().getPay()).handler(this::weChatPayBillCallBack);
+            router.post(this.getPath().getPay()).handler(BodyHandler.create()).handler(this::weChatPayBillCallBack);
 //			router.post(this.getPath().getPay()).handler(routingContext -> {
 //				routingContext.response().setChunked(true);
 //				logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
@@ -350,7 +351,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 //
 //			});
             //请求总入口
-            router.post(this.getPath().getApp()).handler(routingContext -> {
+            router.post(this.getPath().getApp()).handler(BodyHandler.create()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 Requset requset = Requset.newInstance(routingContext, option);
                 commonAsynService.callService(requset, stringAsyncResult -> {
@@ -372,7 +373,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 //            staticHandler.setDirectoryListing(true);
 //            staticHandler.setFilesReadOnly(false);
             //图片服务
-            router.get("/pic/*").handler(routingContext -> {
+            router.get("/pic/*").handler(BodyHandler.create()).handler(routingContext -> {
                 HttpServerRequest httpServerRequest = routingContext.request();
                 final String fileName = Utils.pathOffset(httpServerRequest.path(), routingContext);
                 final String file = staticPath + fileName;
@@ -418,7 +419,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             }).handler(staticHandler);
 
 
-            router.get(this.getPath().getPush()).handler(this::wechatMsgCheck);
+            router.get(this.getPath().getPush()).handler(BodyHandler.create()).handler(this::wechatMsgCheck);
 
             router.route("/*").failureHandler(routingContext -> {
                 logger.error(routingContext.failure().getMessage(), routingContext.failure());

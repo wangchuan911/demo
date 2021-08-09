@@ -7,12 +7,12 @@
     <select id="get"
             parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemCondition"
             resultType="com.hubidaauto.servmarket.module.goods.entity.ItemVO">
-        select * from mall_item a where a.id=#{item.get(0).id}
+        select * from MALL_ITEM a where a.id=#{item.get(0).id}
     </select>
 
     <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemCondition"
             resultType="com.hubidaauto.servmarket.module.goods.entity.ItemVO">
-        select * from mall_item a
+        select * from MALL_ITEM a
         <where>
             <if test="items!=null and items.size()>0">
                 and exists (
@@ -25,6 +25,7 @@
                 )
             </if>
         </where>
+        limit ${page.start},${page.size}
     </select>
     <sql id="condition">
         and a.type=#{item.type}
