@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -68,9 +69,11 @@ public class ItemPage {
             mode = VertxRouteType.PathRegex)
     public void list(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            System.out.println(routingContext.pathParam("page"));
             ItemCondition itemCondition = routingContext.getBody() == null ? new ItemCondition() :
                     routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+            String page = routingContext.pathParam("page");
+            if (!StringUtils.isEmpty(page))
+                itemCondition.page(Integer.parseInt(page));
             routingContext.end(Json.encodeToBuffer(itemDao.list(itemCondition)));
         });
     }
