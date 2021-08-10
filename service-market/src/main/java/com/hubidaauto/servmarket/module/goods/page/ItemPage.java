@@ -1,17 +1,15 @@
 package com.hubidaauto.servmarket.module.goods.page;
 
-import com.github.pagehelper.PageHelper;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
+import com.hubidaauto.servmarket.module.goods.dao.ItemDetailDao;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
-import com.hubidaauto.servmarket.module.goods.entity.ItemTypeCondition;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import com.hubidaauto.servmarket.module.goods.service.ItemService;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -33,6 +31,7 @@ public class ItemPage {
     ItemDao itemDao;
     ItemTypeDao itemTypeDao;
     ItemService itemService;
+    ItemDetailDao itemDetailDao;
 
     @Autowired
     public void setItemDao(ItemDao itemDao) {
@@ -49,6 +48,11 @@ public class ItemPage {
         this.itemTypeDao = itemTypeDao;
     }
 
+    @Autowired
+    public void setItemDetailDao(ItemDetailDao itemDetailDao) {
+        this.itemDetailDao = itemDetailDao;
+    }
+
     @VertxRouter(path = "/*", order = -1)
     public void all(RoutingContextChain chain) {
         chain.handler(BodyHandler.create());
@@ -58,16 +62,18 @@ public class ItemPage {
     @VertxRouter(path = "\\/(?<id>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
-    public void get(RoutingContextChain chain) {
+    public void getItem(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            routingContext.end(Json.encodeToBuffer(itemDao.get(Long.parseLong(routingContext.pathParam("id")))));
+            ItemVO itemVO = itemDao.get(Long.parseLong(routingContext.pathParam("id")));
+            itemVO.setDetail(itemDetailDao.get(itemVO.getId()));
+            routingContext.end(Json.encodeToBuffer(itemVO));
         });
     }
 
     @VertxRouter(path = "\\/list(?:\\/(?<page>\\d+))?",
             method = "POST",
             mode = VertxRouteType.PathRegex)
-    public void list(RoutingContextChain chain) {
+    public void listItem(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             ItemCondition itemCondition = routingContext.getBody() == null ? new ItemCondition() :
                     routingContext.getBodyAsJson().mapTo(ItemCondition.class);
@@ -78,25 +84,17 @@ public class ItemPage {
         });
     }
 
-    @VertxRouter(path = "\\/type\\/(?<id>\\d+)",
-            method = "GET",
-            mode = VertxRouteType.PathRegex)
-    public void getType(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
-            routingContext.end(Json.encodeToBuffer(itemTypeDao.get(Long.parseLong(routingContext.pathParam("id")))));
-        });
-    }
 
     @VertxRouter(path = "/type/list",
             method = "POST")
     public void listTypes(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            System.out.println(routingContext.pathParam("page"));
-            ItemTypeCondition itemTypeCondition = routingContext.getBody() == null ? new ItemTypeCondition() :
-                    routingContext.getBodyAsJson().mapTo(ItemTypeCondition.class);
-            routingContext.end(Json.encodeToBuffer(itemTypeDao.list(itemTypeCondition)));
+            ItemCondition itemCondition = routingContext.getBody() == null ? new ItemCondition() :
+                    routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+            routingContext.end(Json.encodeToBuffer(itemTypeDao.list(itemCondition)));
         });
     }
+
 
     /*@VertxRouter(path = "/",
             method = "PUT")

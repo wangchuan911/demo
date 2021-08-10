@@ -2,11 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao">
+<mapper namespace="com.hubidaauto.servmarket.module.goods.dao.ItemDetailDao">
 
-    <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeCondition"
-            resultType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO">
-        select * from MALL_ITEM_TYPES a
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.goods.entity.ItemDetailVO">
+        select * from MALL_ITEM_DETAIL a where a.item_id=#{value}
+    </select>
+
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemCondition"
+            resultType="com.hubidaauto.servmarket.module.goods.entity.ItemDetailVO">
+        select * from MALL_ITEM_DETAIL a
         <where>
             <choose>
                 <when test="id!=null">
@@ -28,7 +33,7 @@
         </where>
     </select>
     <sql id="condition">
-        and a.item_id=#{data.itemId}
+        and a.item_id=#{data.id}
     </sql>
 
 </mapper>

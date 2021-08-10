@@ -14,7 +14,9 @@
     <name>service-market</name>
     <description>Demo project for Spring Boot</description>
     <packaging>jar</packaging>
-
+    <properties>
+        <mainClass>com.hubidaauto.servmarket.ServiceMarketApplication</mainClass>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -64,7 +66,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${springboot.version}</version>
                 <configuration>
-                    <mainClass>com.hubidaauto.carservice.CarserviceApplication</mainClass>
+                    <mainClass>${mainClass}</mainClass>
                     <classifier>exec</classifier>
                 </configuration>
             </plugin>
@@ -76,7 +78,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.hubidaauto.carservice.CarserviceApplication</mainClass>
+                            <mainClass>${mainClass}</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

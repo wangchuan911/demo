@@ -1,8 +1,12 @@
 package com.hubidaauto.servmarket.module.goods.entity;
 
+import java.util.List;
+
 public class ItemVO {
     Long id, type, price;
-    String name, content;
+    String name;
+    ItemDetailVO detail;
+    List<ItemTypeVO> types;
 
     public Long getId() {
         return id;
@@ -40,12 +44,21 @@ public class ItemVO {
         return this;
     }
 
-    public String getContent() {
-        return content;
+    public ItemDetailVO getDetail() {
+        return detail;
     }
 
-    public ItemVO setContent(String content) {
-        this.content = content;
+    public ItemVO setDetail(ItemDetailVO detail) {
+        this.detail = detail;
         return this;
     }
+
+    public List<ItemTypeVO> getTypes() {
+        return types;
+    }
+
+    public void setTypes(List<ItemTypeVO> types) {
+        this.types = types;
+    }
+
 }

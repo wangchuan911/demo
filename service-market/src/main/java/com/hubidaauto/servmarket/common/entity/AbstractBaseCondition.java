@@ -2,7 +2,6 @@ package com.hubidaauto.servmarket.common.entity;
 
 import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
-import com.sun.istack.NotNull;
 import org.springframework.util.Assert;
 
 import java.util.LinkedList;
@@ -17,13 +16,18 @@ import java.util.List;
 public class AbstractBaseCondition<K, R> {
     Page page;
 
-    List<R> items;
+    List<R> datas;
 
-    public AbstractBaseCondition add(@NotNull R r) {
+    K id;
+
+    R data;
+
+
+    public AbstractBaseCondition add(R r) {
         Assert.notNull(r, "[itemVO] must not null");
-        if (items == null)
-            items = new LinkedList<>();
-        items.add(r);
+        if (datas == null)
+            datas = new LinkedList<>();
+        datas.add(r);
         return this;
     }
 
@@ -48,11 +52,27 @@ public class AbstractBaseCondition<K, R> {
         this.page = page;
     }
 
-    public List<R> getItems() {
-        return items;
+    public List<R> getDatas() {
+        return datas;
     }
 
-    public void setItems(List<R> items) {
-        this.items = items;
+    public void setDatas(List<R> datas) {
+        this.datas = datas;
+    }
+
+    public K getId() {
+        return id;
+    }
+
+    public void setId(K id) {
+        this.id = id;
+    }
+
+    public R getData() {
+        return data;
+    }
+
+    public void setData(R data) {
+        this.data = data;
     }
 }

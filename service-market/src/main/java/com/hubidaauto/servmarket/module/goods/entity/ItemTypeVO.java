@@ -14,31 +14,36 @@ public class ItemTypeVO {
         return id;
     }
 
-    public void setId(Long id) {
+    public ItemTypeVO setId(Long id) {
         this.id = id;
+        return this;
     }
 
     public Long getItemId() {
         return itemId;
     }
 
-    public void setItemId(Long itemId) {
+    public ItemTypeVO setItemId(Long itemId) {
         this.itemId = itemId;
+        return this;
     }
 
     public Long getPrice() {
         return price;
     }
 
-    public void setPrice(Long price) {
+    public ItemTypeVO setPrice(Long price) {
         this.price = price;
+        return this;
     }
 
     public String getDesc() {
         return desc;
     }
 
-    public void setDesc(String desc) {
+    public ItemTypeVO setDesc(String desc) {
         this.desc = desc;
+        return this;
     }
+
 }

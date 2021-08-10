@@ -16,7 +16,7 @@ public class Page {
     public Page(int page, int size) {
         this.size = size;
         this.page = page;
-        this.start = (page - 1) * size + 1;
+        this.start = (page - 1) * size;
     }
 
     public int getSize() {
