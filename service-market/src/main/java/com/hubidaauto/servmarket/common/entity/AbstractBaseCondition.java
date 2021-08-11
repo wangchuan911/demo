@@ -48,31 +48,35 @@ public class AbstractBaseCondition<K, R> {
         return page;
     }
 
-    public void setPage(Page page) {
+    public AbstractBaseCondition setPage(Page page) {
         this.page = page;
+        return this;
     }
 
     public List<R> getDatas() {
         return datas;
     }
 
-    public void setDatas(List<R> datas) {
+    public AbstractBaseCondition setDatas(List<R> datas) {
         this.datas = datas;
+        return this;
     }
 
     public K getId() {
         return id;
     }
 
-    public void setId(K id) {
+    public AbstractBaseCondition setId(K id) {
         this.id = id;
+        return this;
     }
 
     public R getData() {
         return data;
     }
 
-    public void setData(R data) {
+    public AbstractBaseCondition setData(R data) {
         this.data = data;
+        return this;
     }
 }

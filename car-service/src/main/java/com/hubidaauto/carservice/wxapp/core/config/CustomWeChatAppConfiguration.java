@@ -3,6 +3,7 @@ package com.hubidaauto.carservice.wxapp.core.config;
 import com.hubidaauto.carservice.wxapp.core.dao.TacheDao;
 import com.hubidaauto.carservice.wxapp.core.entity.TacheVO;
 import com.hubidaauto.carservice.wxapp.core.service.OperationService;
+import com.hubidaauto.carservice.wxapp.core.service.UserService;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -208,7 +209,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 										routingContext.fail(httpResponseAsyncResult.cause());
 									}
 								});*/
-                        this.getWeChatCode2session(value, entries -> {
+                        this.getWeChatCode2session(value, UserService.class, entries -> {
                             routingContext.response().end(entries.toBuffer());
                         }, throwable -> {
                             routingContext.fail(throwable);

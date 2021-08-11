@@ -4,7 +4,7 @@
 
 <mapper namespace="com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao">
 
-    <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeCondition"
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemCondition"
             resultType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO">
         select * from MALL_ITEM_TYPES a
         <where>

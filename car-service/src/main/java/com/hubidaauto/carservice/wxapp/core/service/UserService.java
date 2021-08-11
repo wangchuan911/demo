@@ -116,8 +116,9 @@ public class UserService extends AbstractBaseService<UserVO> implements IWechatU
 		return login(new UserVO().setId(userId));
 	}
 
+	@Override
 	@Transactional(rollbackFor = Throwable.class)
-	public Object login(WeChatUser weChatUser) {
+	public JsonObject login(WeChatUser weChatUser) {
 		UserVO wxUserInfo=new UserVO(weChatUser);
 		JsonObject jsonObject = new JsonObject();
 		if (wxUserInfo != null && !StringUtils.isEmpty(wxUserInfo.getId())) {

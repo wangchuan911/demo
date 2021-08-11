@@ -1,16 +1,16 @@
 package org.welisdoon.web.entity.wechat;
 
 public class WeChatUser {
-	private String id;
+	private String openId;
 	private String sessionKey;
 	private String unionid;
 
-	public String getId() {
-		return id;
+	public String getOpenId() {
+		return openId;
 	}
 
-	public WeChatUser setId(String id) {
-		this.id = id;
+	public WeChatUser setOpenId(String openId) {
+		this.openId = openId;
 		return this;
 	}
 

@@ -442,18 +442,18 @@ public abstract class AbstractWechatConfiguration {
         this.classPath = classPath;
     }
 
-    public void getWeChatCode2session(String jsCode, Handler<JsonObject> success, Handler<Throwable> error) {
+    public void getWeChatCode2session(String jsCode, Class<? extends IWechatUserHandler> type, Handler<JsonObject> success, Handler<Throwable> error) {
         this.wechatAsyncMeassger.getWebClient().getAbs(this.getUrls().get(CommonConst.WecharUrlKeys.CODE_2_SESSION).toString() + jsCode)
                 .send(httpResponseAsyncResult -> {
                     if (httpResponseAsyncResult.succeeded()) {
                         HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
                         JsonObject jsonObject = httpResponse.body().toJsonObject();
                         logger.info(jsonObject.toString());
-                        jsonObject.mergeIn((JsonObject) ApplicationContextProvider.getBean(IWechatUserHandler.class)
+                        jsonObject.mergeIn(JsonObject.mapFrom(ApplicationContextProvider.getBean(type)
                                 .login(new WeChatUser()
-                                        .setId(jsonObject.getString("openid"))
+                                        .setOpenId(jsonObject.getString("openid"))
                                         .setSessionKey(jsonObject.getString("session_key"))
-                                        .setUnionid(jsonObject.getString("unionid"))));
+                                        .setUnionid(jsonObject.getString("unionid")))));
                         //安全问题
                         jsonObject.remove("session_key");
                         jsonObject.remove("unionid");

@@ -1,7 +1,7 @@
 package com.hubidaauto.servmarket.module.goods.page;
 
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
-import com.hubidaauto.servmarket.module.goods.dao.ItemDetailDao;
+import com.hubidaauto.servmarket.module.common.dao.TextContentDao;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
@@ -18,8 +18,6 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import java.util.List;
-
 /**
  * @author Septem
  */
@@ -31,7 +29,7 @@ public class ItemPage {
     ItemDao itemDao;
     ItemTypeDao itemTypeDao;
     ItemService itemService;
-    ItemDetailDao itemDetailDao;
+    TextContentDao itemDetailDao;
 
     @Autowired
     public void setItemDao(ItemDao itemDao) {
@@ -49,7 +47,7 @@ public class ItemPage {
     }
 
     @Autowired
-    public void setItemDetailDao(ItemDetailDao itemDetailDao) {
+    public void setItemDetailDao(TextContentDao itemDetailDao) {
         this.itemDetailDao = itemDetailDao;
     }
 
@@ -65,7 +63,7 @@ public class ItemPage {
     public void getItem(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             ItemVO itemVO = itemDao.get(Long.parseLong(routingContext.pathParam("id")));
-            itemVO.setDetail(itemDetailDao.get(itemVO.getId()));
+            itemVO.setDetail(itemDetailDao.get(itemVO.getContentId()));
             routingContext.end(Json.encodeToBuffer(itemVO));
         });
     }
