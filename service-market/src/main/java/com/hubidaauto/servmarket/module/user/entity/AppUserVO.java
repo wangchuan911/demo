@@ -1,6 +1,7 @@
 package com.hubidaauto.servmarket.module.user.entity;
 
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
+import org.welisdoon.web.entity.wechat.WeChatUser;
 
 /**
  * @Classname User
@@ -12,6 +13,14 @@ public class AppUserVO {
     Long id, defAddrId;
     String appId, session, name;
     Integer type;
+
+    public AppUserVO() {
+    }
+
+    public AppUserVO(WeChatUser weChatUser) {
+        this.setAppId(weChatUser.getOpenId());
+        this.setSession(weChatUser.getSessionKey());
+    }
 
     public Long getId() {
         return id;
@@ -34,8 +43,9 @@ public class AppUserVO {
         return session;
     }
 
-    public void setSession(String session) {
+    public AppUserVO setSession(String session) {
         this.session = session;
+        return this;
     }
 
     public String getName() {

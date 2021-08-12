@@ -5,7 +5,7 @@
 <mapper namespace="com.hubidaauto.servmarket.module.user.dao.AddressDao">
     <select id="get" parameterType="long"
             resultType="com.hubidaauto.servmarket.module.user.entity.AddressVO">
-        select * from ADDRESS a where a.USER_ID=#{value}
+        select * from ADDRESS a where a.ID=#{value}
     </select>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.user.entity.UserCondition"
             resultType="com.hubidaauto.servmarket.module.user.entity.AddressVO">
@@ -13,10 +13,13 @@
         <where>
             <choose>
                 <when test="id!=null">
-                    and id=#{id}
+                    and USER_ID=#{id}
                 </when>
                 <when test="datas!=null and datas.size()>0">
                     <include refid="datas"></include>
+                </when>
+                <when test="data!=null ">
+                    <include refid="condition"></include>
                 </when>
                 <otherwise>
                     and 1=2
@@ -25,7 +28,12 @@
         </where>
     </select>
     <sql id="condition">
-        and a.id=#{data.id}
+        <if test="data.id!=null">
+            and a.id=#{data.id}
+        </if>
+        <if test="data.userId!=null">
+            and a.user_Id=#{data.userId}
+        </if>
     </sql>
     <sql id="datas">
         and exists (
@@ -39,13 +47,13 @@
     </sql>
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.user.entity.AddressVO"
             useGeneratedKeys="true" keyProperty="id">
-        insert into ADDRESS(ID,DESC,PHONE,MAN,USER_ID,REGION,LNG,LAT)
-        values (#{id},#{desc},#{phone},#{man},#{userId},#{region},#{lng},#{lat})
+        INSERT INTO ADDRESS ( `DESC`, PHONE, MAN, USER_ID, REGION, LNG, LAT)
+        VALUES ( #{desc}, #{phone}, #{man}, #{userId}, #{region}, #{lng}, #{lat})
     </insert>
 
     <update id="put" parameterType="com.hubidaauto.servmarket.module.user.entity.AddressVO">
-        update ADDRESS set DESC=#{desc},PHONE=#{phone},MAN=#{man},USER_ID=#{userId},REGION=#{region},LNG=#{lng},LAT=#{lat}
-        where ID=#{id}
+        update ADDRESS set `DESC`=#{desc},PHONE=#{phone},MAN=#{man},REGION=#{region},LNG=#{lng},LAT=#{lat}
+        where ID=#{id} AND USER_ID=#{userId}
     </update>
 
 </mapper>
