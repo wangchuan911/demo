@@ -56,4 +56,9 @@
         where ID=#{id} AND USER_ID=#{userId}
     </update>
 
+    <delete id="delete" parameterType="long">
+        delete from ADDRESS
+        where ID=#{id}
+    </delete>
+
 </mapper>

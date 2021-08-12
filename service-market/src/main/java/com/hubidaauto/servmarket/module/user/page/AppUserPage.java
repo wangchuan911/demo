@@ -146,6 +146,34 @@ public class AppUserPage {
         });
     }
 
+    @VertxRouter(path = "\\/addr\\/def(?<id>\\d+)",
+            mode = VertxRouteType.PathRegex,
+            method = "POST")
+    public void addrDefault(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            AddressVO addressVO = addressDao.get(Long.parseLong(routingContext.pathParam("id")));
+            AppUserVO userVO = appUserDao.get(addressVO.getUserId());
+            if (appUserDao.put(userVO.setDefAddrId(addressVO.getId())) == 0) {
+                routingContext.response().setStatusCode(404).end("没有数据");
+                return;
+            }
+            routingContext.end("ok");
+        });
+    }
+
+    @VertxRouter(path = "\\/addr\\/(?<id>\\d+)",
+            mode = VertxRouteType.PathRegex,
+            method = "DELETE")
+    public void delAddr(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            if (addressDao.delete(Long.parseLong(routingContext.pathParam("id"))) == 0) {
+                routingContext.response().setStatusCode(404).end("没有数据");
+                return;
+            }
+            routingContext.end("ok");
+        });
+    }
+
 
     /*@VertxRouter(path = "/",
             method = "PUT")
