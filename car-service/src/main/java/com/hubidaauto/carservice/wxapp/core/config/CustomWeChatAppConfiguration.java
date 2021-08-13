@@ -209,9 +209,10 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 										routingContext.fail(httpResponseAsyncResult.cause());
 									}
 								});*/
-                        this.getWeChatCode2session(value, UserService.class, entries -> {
-                            routingContext.response().end(entries.toBuffer());
-                        }, throwable -> {
+                        this.getWeChatCode2session(value, ApplicationContextProvider.getBean(UserService.class))
+                                .onSuccess(entries -> {
+                                    routingContext.response().end(entries.toBuffer());
+                                }).onFailure(throwable -> {
                             routingContext.fail(throwable);
                         });
                         break;
@@ -289,13 +290,15 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 										}
 									});*/
                             WeChatPayOrder weChatPayOrder = new WeChatPayOrder().setId(orderId).setUserId(custId).setNonce(nonce).setTimeStamp(timeStamp);
-                            this.getWechatPrePayInfo(weChatPayOrder, entries -> {
-                                routingContext.response()
-                                        .end(entries.toBuffer());
-                            }, throwable -> {
-                                logger.error(throwable.getMessage(), throwable);
-                                routingContext.fail(throwable);
-                            });
+                            this.getWechatPrePayInfo(weChatPayOrder).
+                                    onSuccess(entries -> {
+                                        routingContext.response()
+                                                .end(entries.toBuffer());
+                                    })
+                                    .onFailure(throwable -> {
+                                        logger.error(throwable.getMessage(), throwable);
+                                        routingContext.fail(throwable);
+                                    });
                         } catch (Throwable t) {
                             routingContext.fail(t);
                         }

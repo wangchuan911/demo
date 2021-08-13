@@ -1,5 +1,6 @@
 package org.welisdoon.web.common.config;
 
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -442,77 +443,91 @@ public abstract class AbstractWechatConfiguration {
         this.classPath = classPath;
     }
 
-    public void getWeChatCode2session(String jsCode, Class<? extends IWechatUserHandler> type, Handler<JsonObject> success, Handler<Throwable> error) {
-        this.wechatAsyncMeassger.getWebClient().getAbs(this.getUrls().get(CommonConst.WecharUrlKeys.CODE_2_SESSION).toString() + jsCode)
-                .send(httpResponseAsyncResult -> {
-                    if (httpResponseAsyncResult.succeeded()) {
-                        HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
-                        JsonObject jsonObject = httpResponse.body().toJsonObject();
-                        logger.info(jsonObject.toString());
-                        jsonObject.mergeIn(JsonObject.mapFrom(ApplicationContextProvider.getBean(type)
-                                .login(new WeChatUser()
+    public Future<JsonObject> getWeChatCode2session(String jsCode, IWechatUserHandler wechatUserHandler) {
+        return Future.future(jsonObjectPromise -> {
+            this.wechatAsyncMeassger.getWebClient().getAbs(this.getUrls().get(CommonConst.WecharUrlKeys.CODE_2_SESSION).toString() + jsCode)
+                    .send(httpResponseAsyncResult -> {
+                        try {
+                            if (httpResponseAsyncResult.succeeded()) {
+                                HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
+                                JsonObject jsonObject = httpResponse.body().toJsonObject();
+                                logger.info(jsonObject.toString());
+                                jsonObject.mergeIn(JsonObject.mapFrom(wechatUserHandler.login(new WeChatUser()
                                         .setOpenId(jsonObject.getString("openid"))
                                         .setSessionKey(jsonObject.getString("session_key"))
                                         .setUnionid(jsonObject.getString("unionid")))));
-                        //安全问题
-                        jsonObject.remove("session_key");
-                        jsonObject.remove("unionid");
-                        success.handle(jsonObject);
-                    } else {
-                        error.handle(httpResponseAsyncResult.cause());
-                    }
-                });
+                                //安全问题
+                                jsonObject.remove("session_key");
+                                jsonObject.remove("unionid");
+                                jsonObjectPromise.complete(jsonObject);
+                            } else {
+                                jsonObjectPromise.fail(httpResponseAsyncResult.cause());
+                            }
+                        } catch (Throwable e) {
+                            logger.error(e.getMessage(), e);
+                            jsonObjectPromise.fail(e);
+                        }
+                    });
+        });
     }
 
-    public void getWechatPrePayInfo(WeChatPayOrder weChatPayOrder, Handler<JsonObject> success, Handler<Throwable> error) throws Throwable {
-        IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(IWechatPayHandler.class);
-        PrePayRequsetMesseage prePayRequsetMesseage = iWechatPayHandler.prePayRequset(weChatPayOrder);
-        Buffer buffer = Buffer.buffer(JAXBUtils.toXML(prePayRequsetMesseage
-                .setAppId(this.getAppID())
-                .setMchId(this.getMchId())
-                .setNonceStr(weChatPayOrder.getNonce())
-                .setSpbillCreateIp(this.getNetIp())
-                .setNotifyUrl(this.getAddress() + this.getPath().getPay())
-                .setTradeType("JSAPI")
-                .setSign(this.getMchKey())
-        ));
-        this.wechatAsyncMeassger.getWebClient().postAbs(this.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString())
-                .sendBuffer(buffer, httpResponseAsyncResult -> {
-                    if (httpResponseAsyncResult.succeeded()) {
-                        JsonObject resultBodyJson = new JsonObject();
-                        try {
-                            PrePayResponseMesseage prePayResponseMesseage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), PrePayResponseMesseage.class);
-                            System.out.println(prePayResponseMesseage);
-                            if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getResultCode())) {
-                                resultBodyJson
-                                        .put("error", String.format("支付失败:%s[%s]",
-                                                prePayResponseMesseage.getErrCodeDes(),
-                                                prePayResponseMesseage.getErrCode()));
-                            } else if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getReturnCode())) {
-                                resultBodyJson
-                                        .put("error", String.format("支付失败:%s[%s]",
-                                                prePayResponseMesseage.getReturnMsg(),
-                                                prePayResponseMesseage.getErrCode()));
+    public Future<JsonObject> getWechatPrePayInfo(WeChatPayOrder weChatPayOrder) {
+        return Future.future(jsonObjectPromise -> {
+            try {
+                IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(IWechatPayHandler.class);
+                PrePayRequsetMesseage prePayRequsetMesseage = iWechatPayHandler.prePayRequset(weChatPayOrder);
+                Buffer buffer = Buffer.buffer(JAXBUtils.toXML(prePayRequsetMesseage
+                        .setAppId(this.getAppID())
+                        .setMchId(this.getMchId())
+                        .setNonceStr(weChatPayOrder.getNonce())
+                        .setSpbillCreateIp(this.getNetIp())
+                        .setNotifyUrl(this.getAddress() + this.getPath().getPay())
+                        .setTradeType("JSAPI")
+                        .setSign(this.getMchKey())
+                ));
+                this.wechatAsyncMeassger.getWebClient().postAbs(this.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString())
+                        .sendBuffer(buffer, httpResponseAsyncResult -> {
+                            if (httpResponseAsyncResult.succeeded()) {
+                                JsonObject resultBodyJson = new JsonObject();
+                                try {
+                                    PrePayResponseMesseage prePayResponseMesseage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), PrePayResponseMesseage.class);
+                                    System.out.println(prePayResponseMesseage);
+                                    if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getResultCode())) {
+                                        resultBodyJson
+                                                .put("error", String.format("支付失败:%s[%s]",
+                                                        prePayResponseMesseage.getErrCodeDes(),
+                                                        prePayResponseMesseage.getErrCode()));
+                                    } else if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getReturnCode())) {
+                                        resultBodyJson
+                                                .put("error", String.format("支付失败:%s[%s]",
+                                                        prePayResponseMesseage.getReturnMsg(),
+                                                        prePayResponseMesseage.getErrCode()));
+                                    } else {
+                                        String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s&key=%s"
+                                                , this.getAppID()
+                                                , weChatPayOrder.getNonce()
+                                                , prePayResponseMesseage.getPrepayId()
+                                                , weChatPayOrder.getTimeStamp()
+                                                , this.getMchKey());
+                                        String prePayId = prePayResponseMesseage.getPrepayId();
+                                        resultBodyJson
+                                                .put("sign", DigestUtils.md5Hex(sign))
+                                                .put("prePayId", prePayId);
+                                    }
+                                    jsonObjectPromise.complete(resultBodyJson);
+                                } catch (Throwable t) {
+                                    jsonObjectPromise.fail(httpResponseAsyncResult.cause());
+                                }
                             } else {
-                                String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s&key=%s"
-                                        , this.getAppID()
-                                        , weChatPayOrder.getNonce()
-                                        , prePayResponseMesseage.getPrepayId()
-                                        , weChatPayOrder.getTimeStamp()
-                                        , this.getMchKey());
-                                String prePayId = prePayResponseMesseage.getPrepayId();
-                                resultBodyJson
-                                        .put("sign", DigestUtils.md5Hex(sign))
-                                        .put("prePayId", prePayId);
+                                jsonObjectPromise.fail(httpResponseAsyncResult.cause());
                             }
-                            success.handle(resultBodyJson);
-                        } catch (Throwable t) {
-                            error.handle(httpResponseAsyncResult.cause());
-                        }
-                    } else {
-                        error.handle(httpResponseAsyncResult.cause());
-                    }
-                });
+                        });
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+                jsonObjectPromise.fail(e);
+            }
+        });
+
     }
 
     public void weChatPayBillCallBack(RoutingContext routingContext) {
