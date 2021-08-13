@@ -34,6 +34,7 @@ import java.util.List;
 public class AppUserPage {
     AppUserDao appUserDao;
     AddressDao addressDao;
+    AppUserService appUserService;
 
     @Autowired
     public void setAppUserDao(AppUserDao appUserDao) {
@@ -43,6 +44,11 @@ public class AppUserPage {
     @Autowired
     public void setAddressDao(AddressDao addressDao) {
         this.addressDao = addressDao;
+    }
+
+    @Autowired
+    public void setAppUserService(AppUserService appUserService) {
+        this.appUserService = appUserService;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -87,7 +93,7 @@ public class AppUserPage {
             mode = VertxRouteType.PathRegex)
     public void getAddr(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            AppUserVO appUser = appUserDao.get(Long.parseLong(routingContext.pathParam("id")));
+            AddressVO appUser = addressDao.get(Long.parseLong(routingContext.pathParam("id")));
             routingContext.end(Json.encodeToBuffer(appUser));
         });
     }
@@ -138,9 +144,11 @@ public class AppUserPage {
             String code = routingContext.getBodyAsJson().getString("code");
             AbstractWechatConfiguration
                     .getConfig(CustomWeChatAppConfiguration.class)
-                    .getWeChatCode2session(code, AppUserService.class, entries -> {
+                    .getWeChatCode2session(code, appUserService)
+                    .onSuccess(entries -> {
                         routingContext.end(entries.toBuffer());
-                    }, throwable -> {
+                    })
+                    .onFailure(throwable -> {
                         routingContext.fail(throwable);
                     });
         });
