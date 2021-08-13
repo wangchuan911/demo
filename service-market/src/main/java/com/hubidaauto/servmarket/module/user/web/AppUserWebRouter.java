@@ -1,4 +1,4 @@
-package com.hubidaauto.servmarket.module.user.page;
+package com.hubidaauto.servmarket.module.user.web;
 
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
@@ -13,7 +13,6 @@ import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -22,8 +21,6 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import java.util.List;
-
 /**
  * @author Septem
  */
@@ -31,7 +28,7 @@ import java.util.List;
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/user")
-public class AppUserPage {
+public class AppUserWebRouter {
     AppUserDao appUserDao;
     AddressDao addressDao;
     AppUserService appUserService;

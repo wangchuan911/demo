@@ -1,4 +1,4 @@
-package com.hubidaauto.servmarket.module.goods.page;
+package com.hubidaauto.servmarket.module.goods.web;
 
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
 import com.hubidaauto.servmarket.module.common.dao.TextContentDao;
@@ -25,7 +25,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/goods")
-public class ItemPage {
+public class GoodsWebRouter {
     ItemDao itemDao;
     ItemTypeDao itemTypeDao;
     ItemService itemService;
