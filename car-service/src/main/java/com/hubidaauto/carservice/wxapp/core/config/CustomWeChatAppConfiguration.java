@@ -169,10 +169,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
 
         this.initAccessTokenSyncTimer(vertx, objectMessage -> {
-            this.tokenHandler(objectMessage, accessToken -> {
-                this.getWechatAsyncMeassger().setToken(accessToken);
-            }, s -> {
-            });
+            this.getWechatAsyncMeassger().setToken(this.getTokenFromMessage(objectMessage));
         });
 
 
