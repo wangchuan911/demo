@@ -9,6 +9,7 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.welisdoon.web.WebserverApplication;
+import org.welisdoon.web.vertx.proxy.factory.VertxServiceProxyScan;
 
 @SpringBootApplication
 @EnableTransactionManagement(proxyTargetClass = true)
@@ -19,6 +20,8 @@ import org.welisdoon.web.WebserverApplication;
                 @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {WebserverApplication.class, CarserviceApplication.class})
         }
 )
+
+@VertxServiceProxyScan(basePackageClasses = {ServiceMarketApplication.class, CarserviceApplication.class})
 public class ServiceMarketApplication {
 
     public static void main(String[] args) {

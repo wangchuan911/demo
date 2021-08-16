@@ -1,4 +1,4 @@
-package org.welisdoon.web.service.wechat.service;
+package org.welisdoon.web.vertx.service;
 
 import io.vertx.core.Future;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;

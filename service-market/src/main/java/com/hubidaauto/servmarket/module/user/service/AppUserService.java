@@ -39,10 +39,16 @@ import java.util.List;
 @DS("shop")
 public class AppUserService implements IWechatUserHandler {
     AppUserDao appUserDao;
+    AbstractWechatConfiguration abstractWechatConfiguration;
 
     @Autowired
     public void setAppUserDao(AppUserDao appUserDao) {
         this.appUserDao = appUserDao;
+    }
+
+    @Autowired
+    public void setAbstractWechatConfiguration(CustomWeChatAppConfiguration abstractWechatConfiguration) {
+        this.abstractWechatConfiguration = abstractWechatConfiguration;
     }
 
     @Override
@@ -71,6 +77,7 @@ public class AppUserService implements IWechatUserHandler {
         AppUserDao appUserDao;
         AddressDao addressDao;
         AppUserService appUserService;
+        AbstractWechatConfiguration abstractWechatConfiguration;
 
         @Autowired
         public void setAppUserDao(AppUserDao appUserDao) {
@@ -178,8 +185,7 @@ public class AppUserService implements IWechatUserHandler {
         public void wxLogin(RoutingContextChain chain) {
             chain.handler(routingContext -> {
                 String code = routingContext.getBodyAsJson().getString("code");
-                AbstractWechatConfiguration
-                        .getConfig(CustomWeChatAppConfiguration.class)
+                this.abstractWechatConfiguration
                         .getWeChatCode2session(code, appUserService)
                         .onSuccess(entries -> {
                             routingContext.end(entries.toBuffer());

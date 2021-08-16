@@ -30,14 +30,14 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
         Promise<Void> promise = Promise.promise();
         promise.future().onComplete(voidAsyncResult -> {
             handleRegist();
-            deployAfter(startPromise);
+            deployComplete(startPromise);
         });
-        deployBefore(promise);
+        deploying(promise);
     }
 
-    abstract void deployBefore(Promise future);
+    abstract void deploying(Promise future);
 
-    abstract void deployAfter(Promise future);
+    abstract void deployComplete(Promise future);
 
     /*public static synchronized <T> void registeredHandler(Class<? extends AbstractCustomVerticle> verticle, Class<T> t, Handler<T> handler) {
         try {

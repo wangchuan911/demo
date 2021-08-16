@@ -32,6 +32,7 @@ public class AppUserWebRouter {
     AppUserDao appUserDao;
     AddressDao addressDao;
     AppUserService appUserService;
+    AbstractWechatConfiguration abstractWechatConfiguration;
 
     @Autowired
     public void setAppUserDao(AppUserDao appUserDao) {
@@ -48,6 +49,11 @@ public class AppUserWebRouter {
         this.appUserService = appUserService;
     }
 
+    @Autowired
+    public void setAbstractWechatConfiguration(CustomWeChatAppConfiguration abstractWechatConfiguration) {
+        this.abstractWechatConfiguration = abstractWechatConfiguration;
+    }
+
     @VertxRouter(path = "/*", order = -1)
     public void all(RoutingContextChain chain) {
         chain.handler(BodyHandler.create());
@@ -58,7 +64,7 @@ public class AppUserWebRouter {
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void getUser(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             AppUserVO appUser = appUserDao.get(Long.parseLong(routingContext.pathParam("id")));
             if (appUser == null) {
                 routingContext.response().setStatusCode(404).end("没有数据");
@@ -72,7 +78,7 @@ public class AppUserWebRouter {
             method = "POST",
             mode = VertxRouteType.PathRegex)
     public void listUser(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             UserCondition userCondition = JsonUtils.jsonToObject(routingContext.getBodyAsString(), UserCondition.class, () -> null);
             if (userCondition == null) {
                 routingContext.response().setStatusCode(404).end("没有数据");
@@ -89,7 +95,7 @@ public class AppUserWebRouter {
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void getAddr(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             AddressVO appUser = addressDao.get(Long.parseLong(routingContext.pathParam("id")));
             routingContext.end(Json.encodeToBuffer(appUser));
         });
@@ -98,7 +104,7 @@ public class AppUserWebRouter {
     @VertxRouter(path = "/addr/list",
             method = "POST")
     public void listAddr(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             UserCondition userCondition = JsonUtils.jsonToObject(routingContext.getBodyAsString(), UserCondition.class, () -> null);
             if (userCondition == null) {
                 routingContext.response().setStatusCode(404).end("没有数据");
@@ -111,7 +117,7 @@ public class AppUserWebRouter {
     @VertxRouter(path = "/addr",
             method = "PUT")
     public void updateAddr(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             AddressVO addressVO = JsonUtils.jsonToObject(routingContext.getBodyAsString(), AddressVO.class, () -> null);
             if (addressVO == null || addressDao.put(addressVO) == 0) {
                 routingContext.response().setStatusCode(404).end("没有数据");
@@ -124,7 +130,7 @@ public class AppUserWebRouter {
     @VertxRouter(path = "/addr",
             method = "POST")
     public void addAddr(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             AddressVO addressVO = JsonUtils.jsonToObject(routingContext.getBodyAsString(), AddressVO.class, () -> null);
             if (addressVO == null || addressDao.add(addressVO) == 0) {
                 routingContext.response().setStatusCode(404).end("没有数据");
@@ -137,10 +143,9 @@ public class AppUserWebRouter {
     @VertxRouter(path = "/wx",
             method = "POST")
     public void wxLogin(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             String code = routingContext.getBodyAsJson().getString("code");
-            AbstractWechatConfiguration
-                    .getConfig(CustomWeChatAppConfiguration.class)
+            abstractWechatConfiguration
                     .getWeChatCode2session(code, appUserService)
                     .onSuccess(entries -> {
                         routingContext.end(entries.toBuffer());
@@ -155,7 +160,7 @@ public class AppUserWebRouter {
             mode = VertxRouteType.PathRegex,
             method = "POST")
     public void addrDefault(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             AddressVO addressVO = addressDao.get(Long.parseLong(routingContext.pathParam("id")));
             AppUserVO userVO = appUserDao.get(addressVO.getUserId());
             if (appUserDao.put(userVO.setDefAddrId(addressVO.getId())) == 0) {
@@ -170,7 +175,7 @@ public class AppUserWebRouter {
             mode = VertxRouteType.PathRegex,
             method = "DELETE")
     public void delAddr(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             if (addressDao.delete(Long.parseLong(routingContext.pathParam("id"))) == 0) {
                 routingContext.response().setStatusCode(404).end("没有数据");
                 return;
@@ -183,7 +188,7 @@ public class AppUserWebRouter {
     /*@VertxRouter(path = "/",
             method = "PUT")
     public void put(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             routingContext.end(Json.encodeToBuffer(itemDao.put(routingContext.getBodyAsJson().mapTo(ItemVO.class))));
         });
     }*/

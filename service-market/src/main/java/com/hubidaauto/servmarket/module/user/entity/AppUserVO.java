@@ -1,5 +1,6 @@
 package com.hubidaauto.servmarket.module.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import org.welisdoon.web.entity.wechat.WeChatUser;
 
@@ -30,6 +31,7 @@ public class AppUserVO {
         this.id = id;
     }
 
+    @JsonIgnore
     public String getAppId() {
         return appId;
     }
