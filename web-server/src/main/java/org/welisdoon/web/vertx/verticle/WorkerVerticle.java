@@ -20,10 +20,6 @@ public class WorkerVerticle extends AbstractCustomVerticle {
 
     @Override
     void deploying(Promise future) {
-        if (ApplicationContextProvider.getApplicationContext()
-                .getBeansWithAnnotation(VertxServiceProxy.class).size() > 0) {
-            AsyncProxyUtils.createServiceBinder(getVertx(), "common", IVertxInvoker.class);
-        }
         future.complete();
     }
 

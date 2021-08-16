@@ -24,6 +24,7 @@ import org.welisdoon.common.JAXBUtils;
 import org.welisdoon.web.common.WechatAsyncMeassger;
 import org.welisdoon.web.common.encrypt.AesException;
 import org.welisdoon.web.common.encrypt.WXBizMsgCrypt;
+import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.entity.wechat.WeChatUser;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
@@ -33,6 +34,9 @@ import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PrePayResponseMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 import org.welisdoon.web.service.wechat.intf.IWechatUserHandler;
+import org.welisdoon.web.vertx.annotation.VertxRegister;
+import org.welisdoon.web.vertx.proxy.IVertxInvoker;
+import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
@@ -42,6 +46,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public abstract class AbstractWechatConfiguration {
     public final Logger logger = LoggerFactory.getLogger(ApplicationContextProvider.getRealClass(this.getClass()));
@@ -288,6 +293,13 @@ public abstract class AbstractWechatConfiguration {
         }
     }
 
+    @VertxRegister(WorkerVerticle.class)
+    public Consumer<Vertx> initVertxServiceProxy() {
+        return (verix) -> {
+            AsyncProxyUtils.createServiceBinder(verix, this.getAppID(), IVertxInvoker.class);
+        };
+    }
+
     public <T> void initAccessTokenSyncTimer(Vertx vertx1, Handler<Message<T>> var1) {
         final String key = "WX.TOKEN";
         final String URL_TOCKEN_LOCK = String.format("%s.%s.LOCK", key, this.getAppID());
@@ -382,17 +394,17 @@ public abstract class AbstractWechatConfiguration {
 
     }
 
-    public <T> void tokenHandler(Message<T> var1, Handler<String> token, Handler<String> failHandler) {
+    public <T> String getTokenFromMessage(Message<T> var1) {
         JsonObject tokenJson = (JsonObject) var1.body();
         if (tokenJson.getInteger("errcode") != null) {
             String error;
             logger.info(String.format("[%s]errcode:%s", this.getAppID(), tokenJson.getInteger("errcode")));
             logger.info(String.format("[%s]errmsg:%s", this.getAppID(), error = tokenJson.getString("errmsg")));
-            failHandler.handle(error);
+            throw new RuntimeException(error);
         } else {
             String accessToken = tokenJson.getString("access_token");
-            token.handle(accessToken);
             logger.info(String.format("[%s]Token:%s[%s]", this.getAppID(), accessToken, tokenJson.getLong("expires_in")));
+            return token;
         }
     }
 

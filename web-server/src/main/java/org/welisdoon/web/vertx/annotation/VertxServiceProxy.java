@@ -19,4 +19,6 @@ public @interface VertxServiceProxy {
 
     String targetClassName() default "";
 
+    String address();
+
 }
