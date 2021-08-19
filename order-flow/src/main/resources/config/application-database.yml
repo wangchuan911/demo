@@ -1,0 +1,103 @@
+#spring:
+#  datasource:
+#    enabled: true
+#    username: hubidaauto
+#              #welisdoon
+#    password: Mengyan209810$$
+#              #We1i$d00n
+#    #驱动
+#    driver-class-name: com.mysql.jdbc.Driver
+#    #数据库连接路径
+#    url: jdbc:mysql://123.207.114.46/hubidaauto?&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true
+#    #连接池类型
+#    type: com.alibaba.druid.pool.DruidDataSource
+#    #连接池配置，因为springboot默认是开启了连接池的，它有默认配置，这一段可以忽略
+#    #初始化大小，最小，最大
+#    initialSize: 5
+#    minIdle: 5
+#    maxActive: 20
+#    #配置获取连接等待超时的时间
+#    maxWait: 60000
+#    #配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+#    timeBetweenEvictionRunsMillis: 60000
+#    #配置一个连接在池中最小生存的时间，单位是毫秒
+#    minEvictableIdleTimeMillis: 300000
+#    validationQuery: SELECT 1 FROM DUAL
+#    testWhileIdle: true
+#    testOnBorrow: false
+#    testOnReturn: false
+#    #打开PSCache，并且指定每个连接上PSCache的大小
+#    poolPreparedStatements: true
+#    maxPoolPreparedStatementPerConnectionSize: 20
+#    #配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+#    filters: stat,wall,log4j
+#    #通过connectProperties属性来打开mergeSql功能；慢SQL记录
+#    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+values:
+  db:
+    jdbc: jdbc:mysql://123.207.114.46/
+    param: serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true
+    username: hubidaauto
+    password: Mengyan209810$$
+  db2:
+    jdbc: jdbc:mysql://47.112.217.148/
+    param: serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true
+    username: root
+    password: Jx@@114805
+
+
+spring:
+  datasource:
+    dynamic:
+      primary: flow #设置默认的数据源或者数据源组,默认值即为master
+      strict: false #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
+      datasource:
+        flow:
+          url: ${values.db2.jdbc}flow?${values.db2.param}
+          username: ${values.db2.username}
+          password: ${values.db2.password}
+          driver-class-name: com.mysql.jdbc.Driver # 3.2.0开始支持SPI可省略此配置
+          #连接池类型
+          type: com.alibaba.druid.pool.DruidDataSource
+          #连接池配置，因为springboot默认是开启了连接池的，它有默认配置，这一段可以忽略
+          #初始化大小，最小，最大
+          initialSize: 5
+          minIdle: 5
+          maxActive: 20
+          #配置获取连接等待超时的时间
+          maxWait: 60000
+          #配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+          timeBetweenEvictionRunsMillis: 60000
+          #配置一个连接在池中最小生存的时间，单位是毫秒
+          minEvictableIdleTimeMillis: 300000
+          validationQuery: SELECT 1 FROM DUAL
+          testWhileIdle: true
+          testOnBorrow: false
+          testOnReturn: false
+          #打开PSCache，并且指定每个连接上PSCache的大小
+          poolPreparedStatements: true
+          maxPoolPreparedStatementPerConnectionSize: 20
+          #配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+          filters: stat,wall,log4j
+          #通过connectProperties属性来打开mergeSql功能；慢SQL记录
+          connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+#        slave_2:
+#          url: ENC(xxxxx) # 内置加密,使用请查看详细文档
+#          username: ENC(xxxxx)
+#          password: ENC(xxxxx)
+#          driver-class-name: com.mysql.jdbc.Driver
+#配置mybatis
+mybatis:
+  mapper-locations: classpath:pers.welisdoon.webserver.service.**/**/*Dao.xml
+  #全局的映射，不用在xml文件写实体类的全路径
+  type-aliases-package: pers.welisdoon.web.service
+  configuration:
+    #开启驼峰映射
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+pagehelper:
+  helperDialect: mysql                           #分页插件方言选择
+  #reasonable: true                               #合理化参数，设为true时pageNum<=0 时会查第一页， pageNum>pages（超过总数时），会查询最后一页
+  supportMethodsArguments: true
+
