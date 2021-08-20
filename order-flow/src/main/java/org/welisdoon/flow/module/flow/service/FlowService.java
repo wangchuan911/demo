@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
+import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.template.dao.NodeDao;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
@@ -13,7 +14,9 @@ import org.welisdoon.flow.module.flow.entity.Flow;
 import org.welisdoon.flow.module.flow.entity.FlowCondition;
 import org.welisdoon.flow.module.template.entity.Link;
 import org.welisdoon.flow.module.flow.entity.Stream;
+import org.welisdoon.flow.module.template.entity.Node;
 import org.welisdoon.flow.module.template.entity.TemplateCondition;
+import org.welisdoon.flow.module.template.service.AbstractNodeService;
 
 import javax.annotation.PostConstruct;
 import java.util.LinkedList;
@@ -59,7 +62,10 @@ public class FlowService {
     public void a() {
         Flow flow = new Flow();
         flow.setId(1L);
-        this.initFlow(flow);
+        Stream stream = this.initFlow(flow);
+        stream.setStatusId(StreamStatus.READY.statusId());
+        AbstractNodeService abstractNodeService = AbstractNodeService.getInstance(stream.getNodeId());
+        abstractNodeService.start(stream);
 
         FlowCondition condition1 = new FlowCondition();
         condition1.setFlowId(1L);
@@ -76,9 +82,10 @@ public class FlowService {
         Link rootLink = linkDao.find(condition);
         Stream stream = new Stream();
         stream.setFlowId(flow.getId());
-        stream.setLinkId(rootLink.getId());
+        stream.setNodeId(rootLink.getNodeId());
         stream.setFunctionId(rootLink.getFunctionId());
         stream.setSeq(rootLink.getSeq());
+        stream.setStatusId(StreamStatus.FUTURE.statusId());
         streamDao.add(stream);
         this.initStreamData(rootLink, stream);
         System.out.println(JSONArray.toJSONString(rootLink));
@@ -91,11 +98,12 @@ public class FlowService {
         for (Link currentLink : superLink.getSubTree()) {
             currentStream = new Stream();
             currentStream.setFlowId(superStream.getFlowId());
-            currentStream.setLinkId(currentLink.getId());
+            currentStream.setNodeId(currentLink.getNodeId());
             currentStream.setFunctionId(currentLink.getFunctionId());
             currentStream.setSeq(currentLink.getSeq());
             currentStream.setSuperId(superStream.getId());
-            streamDao.add(currentStream);
+            currentStream.setStatusId(StreamStatus.FUTURE.statusId());
+            AbstractNodeService.getInstance(currentLink.getNodeId()).createStream(currentStream);
             superStream.getSubTree().add(currentStream);
             this.initStreamData(currentLink, currentStream);
         }

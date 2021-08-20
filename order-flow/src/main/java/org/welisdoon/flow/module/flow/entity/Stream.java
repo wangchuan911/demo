@@ -9,7 +9,7 @@ import org.welisdoon.flow.module.template.entity.struct.Tree;
  * @Date 2021/8/16 23:35
  */
 public class Stream extends Tree<Stream> {
-    Long flowId, linkId, statusId;
+    Long flowId, statusId;
 
     public Long getFlowId() {
         return flowId;
@@ -19,13 +19,6 @@ public class Stream extends Tree<Stream> {
         this.flowId = flowId;
     }
 
-    public Long getLinkId() {
-        return linkId;
-    }
-
-    public void setLinkId(Long linkId) {
-        this.linkId = linkId;
-    }
 
     public Long getStatusId() {
         return statusId;
@@ -34,4 +27,5 @@ public class Stream extends Tree<Stream> {
     public void setStatusId(Long statusId) {
         this.statusId = statusId;
     }
+
 }

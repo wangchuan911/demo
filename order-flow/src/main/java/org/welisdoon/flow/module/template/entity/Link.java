@@ -11,7 +11,7 @@ import java.util.List;
  * @Date 2021/8/17 19:27
  */
 public class Link extends Tree<Link> {
-    Long templateId, nodeId;
+    Long templateId;
 
     public Long getTemplateId() {
         return templateId;
@@ -21,11 +21,4 @@ public class Link extends Tree<Link> {
         this.templateId = templateId;
     }
 
-    public Long getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(Long nodeId) {
-        this.nodeId = nodeId;
-    }
 }

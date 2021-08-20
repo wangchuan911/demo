@@ -9,7 +9,8 @@ import java.util.List;
  * @Date 2021/8/19 23:36
  */
 public abstract class Tree<T> {
-    Long id, superId,  seq, functionId;
+    Long id, superId, functionId, nodeId;
+    int seq;
     List<T> subTree;
 
     public Long getId() {
@@ -29,13 +30,11 @@ public abstract class Tree<T> {
     }
 
 
-
-
-    public Long getSeq() {
+    public Integer getSeq() {
         return seq;
     }
 
-    public void setSeq(Long seq) {
+    public void setSeq(Integer seq) {
         this.seq = seq;
     }
 
@@ -57,5 +56,17 @@ public abstract class Tree<T> {
 
     public boolean isLeaf() {
         return this.subTree == null || this.subTree.size() == 0;
+    }
+
+    public Long getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(Long nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public void setSeq(int seq) {
+        this.seq = seq;
     }
 }
