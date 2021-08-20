@@ -56,29 +56,36 @@ public class FlowService {
     }
 
     @PostConstruct
-    public void initFlow() {
-        TemplateCondition condition = new TemplateCondition();
-        condition.setTemplateId(1L);
-        condition.setShowTree(true);
-        Link rootLink = linkDao.find(condition);
-        Stream stream = new Stream();
-        stream.setFlowId(0L);
-        stream.setLinkId(rootLink.getId());
-        stream.setFunctionId(rootLink.getFunctionId());
-        stream.setSeq(rootLink.getSeq());
-        streamDao.add(stream);
-        this.initStreamData(rootLink, stream);
+    public void a() {
+        Flow flow = new Flow();
+        flow.setId(1L);
+        this.initFlow(flow);
 
         FlowCondition condition1 = new FlowCondition();
         condition1.setFlowId(1L);
         condition1.setShowTree(true);
         List<Stream> b = streamDao.list(condition1);
-        System.out.println(JSONArray.toJSONString(rootLink));
         System.out.println(JSONArray.toJSONString(b));
         streamDao.clear(condition1);
     }
 
-    public void initStreamData(Link superLink, Stream superStream) {
+    public Stream initFlow(Flow flow) {
+        TemplateCondition condition = new TemplateCondition();
+        condition.setTemplateId(flow.getTemplateId());
+        condition.setShowTree(true);
+        Link rootLink = linkDao.find(condition);
+        Stream stream = new Stream();
+        stream.setFlowId(flow.getId());
+        stream.setLinkId(rootLink.getId());
+        stream.setFunctionId(rootLink.getFunctionId());
+        stream.setSeq(rootLink.getSeq());
+        streamDao.add(stream);
+        this.initStreamData(rootLink, stream);
+        System.out.println(JSONArray.toJSONString(rootLink));
+        return stream;
+    }
+
+    void initStreamData(Link superLink, Stream superStream) {
         Stream currentStream;
         superStream.setSubTree(new LinkedList<>());
         for (Link currentLink : superLink.getSubTree()) {
@@ -160,8 +167,6 @@ public class FlowService {
 */
         return stream;
     }
-
-
 
 
 }
