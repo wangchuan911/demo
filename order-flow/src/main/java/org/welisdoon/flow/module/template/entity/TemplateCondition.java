@@ -6,8 +6,8 @@ package org.welisdoon.flow.module.template.entity;
  * @Author wang.zhidong
  * @Date 2021/8/17 19:35
  */
-public class FlowCondition {
-    Long nodeId, flowId, superLinkId, linkId, streamId, templateId, statusId, superStreamId;
+public class TemplateCondition {
+    Long nodeId, superLinkId, linkId, templateId;
     boolean showTree;
 
     public boolean isShowTree() {
@@ -26,13 +26,6 @@ public class FlowCondition {
         this.nodeId = nodeId;
     }
 
-    public Long getFlowId() {
-        return flowId;
-    }
-
-    public void setFlowId(Long flowId) {
-        this.flowId = flowId;
-    }
 
     public Long getSuperLinkId() {
         return superLinkId;
@@ -50,13 +43,6 @@ public class FlowCondition {
         this.linkId = linkId;
     }
 
-    public Long getStreamId() {
-        return streamId;
-    }
-
-    public void setStreamId(Long streamId) {
-        this.streamId = streamId;
-    }
 
     public Long getTemplateId() {
         return templateId;
@@ -66,19 +52,5 @@ public class FlowCondition {
         this.templateId = templateId;
     }
 
-    public Long getStatusId() {
-        return statusId;
-    }
 
-    public void setStatusId(Long statusId) {
-        this.statusId = statusId;
-    }
-
-    public Long getSuperStreamId() {
-        return superStreamId;
-    }
-
-    public void setSuperStreamId(Long superStreamId) {
-        this.superStreamId = superStreamId;
-    }
 }

@@ -1,19 +1,19 @@
-package org.welisdoon.flow.module.template.service;
+package org.welisdoon.flow.module.flow.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-import org.welisdoon.flow.module.template.dao.FlowDao;
+import org.welisdoon.flow.module.flow.dao.FlowDao;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.template.dao.NodeDao;
-import org.welisdoon.flow.module.template.dao.StreamDao;
-import org.welisdoon.flow.module.template.entity.Flow;
-import org.welisdoon.flow.module.template.entity.FlowCondition;
+import org.welisdoon.flow.module.flow.dao.StreamDao;
+import org.welisdoon.flow.module.flow.entity.Flow;
+import org.welisdoon.flow.module.flow.entity.FlowCondition;
 import org.welisdoon.flow.module.template.entity.Link;
-import org.welisdoon.flow.module.template.entity.Stream;
+import org.welisdoon.flow.module.flow.entity.Stream;
+import org.welisdoon.flow.module.template.entity.TemplateCondition;
 
 import javax.annotation.PostConstruct;
 import java.util.LinkedList;
@@ -57,11 +57,10 @@ public class FlowService {
 
     @PostConstruct
     public void initFlow() {
-        FlowCondition condition = new FlowCondition();
-        condition.setFlowId(1L);
+        TemplateCondition condition = new TemplateCondition();
         condition.setTemplateId(1L);
         condition.setShowTree(true);
-        Link rootLink = linkDao.list(condition).get(0);
+        Link rootLink = linkDao.find(condition);
         Stream stream = new Stream();
         stream.setFlowId(0L);
         stream.setLinkId(rootLink.getId());
@@ -70,10 +69,13 @@ public class FlowService {
         streamDao.add(stream);
         this.initStreamData(rootLink, stream);
 
-        List<Stream> b = streamDao.list(condition);
+        FlowCondition condition1 = new FlowCondition();
+        condition1.setFlowId(1L);
+        condition1.setShowTree(true);
+        List<Stream> b = streamDao.list(condition1);
         System.out.println(JSONArray.toJSONString(rootLink));
         System.out.println(JSONArray.toJSONString(b));
-        streamDao.clear(condition);
+        streamDao.clear(condition1);
     }
 
     public void initStreamData(Link superLink, Stream superStream) {
@@ -159,12 +161,7 @@ public class FlowService {
         return stream;
     }
 
-    List<Link> getLinks(Long templateId, Long superLinkId) {
-        FlowCondition flowCondition = new FlowCondition();
-        flowCondition.setTemplateId(templateId);
-        flowCondition.setSuperLinkId(superLinkId);
-        return linkDao.list(flowCondition);
-    }
+
 
 
 }

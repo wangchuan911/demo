@@ -1,11 +1,5 @@
 package org.welisdoon.flow.module.template.dao;
 
-import org.springframework.stereotype.Repository;
-import org.welisdoon.flow.module.template.entity.Flow;
-import org.welisdoon.flow.module.template.entity.FlowCondition;
-import org.welisdoon.flow.module.template.entity.Template;
-import org.welisdoon.web.common.dao.ITemplateDao;
-
 /**
  * @Classname FlowDao
  * @Description TODO
@@ -13,5 +7,5 @@ import org.welisdoon.web.common.dao.ITemplateDao;
  * @Date 2021/8/17 00:03
  */
 //@Repository
-public interface TemplateDao /*extends ITemplateDao<Long, Template, FlowCondition>*/ {
+public interface TemplateDao /*extends ITemplateDao<Long, Template, TemplateCondition>*/ {
 }

@@ -15,27 +15,34 @@
                     select="list" column="{superLinkId=QWERTYU_ID,templateId=TEMPLATE_ID}"></collection>
     </resultMap>
     <sql id="showTree">
-        <include refid="org.welisdoon.flow.module.template.dao.StreamDao.showTree"/>
+        <include refid="org.welisdoon.flow.module.flow.dao.StreamDao.showTree"/>
     </sql>
-    <select id="list" parameterType="org.welisdoon.flow.module.template.entity.FlowCondition" resultMap="rm_Link">
-        select A.*,
-        <include refid="showTree"></include>
-        from F_LINK A
-        <where>
-            <choose>
-                <when test="superLinkId!=null">
-                    and SUPER_ID=#{superLinkId}
-                </when>
-                <otherwise>
-                    and SUPER_ID is null
-                </otherwise>
-            </choose>
-            and TEMPLATE_ID=#{templateId}
-        </where>
+
+   <sql id="selectByCondition">
+       select A.*,
+       <include refid="showTree"></include>
+       from F_LINK A
+       <where>
+           <choose>
+               <when test="superLinkId!=null">
+                   and SUPER_ID=#{superLinkId}
+               </when>
+               <otherwise>
+                   and SUPER_ID is null
+               </otherwise>
+           </choose>
+           and TEMPLATE_ID=#{templateId}
+       </where>
+   </sql>
+    <select id="find" parameterType="org.welisdoon.flow.module.template.entity.TemplateCondition" resultMap="rm_Link">
+        <include refid="selectByCondition"></include>
+    </select>
+    <select id="list" parameterType="org.welisdoon.flow.module.template.entity.TemplateCondition" resultMap="rm_Link">
+        <include refid="selectByCondition"></include>
         order by SEQ
     </select>
 
-    <select id="get" parameterType="org.welisdoon.flow.module.template.entity.FlowCondition" resultMap="rm_Link">
+    <select id="get" parameterType="org.welisdoon.flow.module.template.entity.TemplateCondition" resultMap="rm_Link">
         select a.*,<include refid="showTree"></include> from F_LINK a
         WHERE id=#{linkId}
     </select>

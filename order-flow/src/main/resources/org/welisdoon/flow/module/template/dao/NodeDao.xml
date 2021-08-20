@@ -5,7 +5,7 @@
 <mapper namespace="org.welisdoon.flow.module.template.dao.NodeDao">
 
 
-    <select id="get" parameterType="org.welisdoon.flow.module.template.entity.FlowCondition"
+    <select id="get" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition"
             resultType="org.welisdoon.flow.module.template.entity.Node">
         select * from F_NODE
         WHERE id=#{nodeId}

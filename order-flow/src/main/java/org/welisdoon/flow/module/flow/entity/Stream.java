@@ -1,4 +1,4 @@
-package org.welisdoon.flow.module.template.entity;
+package org.welisdoon.flow.module.flow.entity;
 
 import org.welisdoon.flow.module.template.entity.struct.Tree;
 

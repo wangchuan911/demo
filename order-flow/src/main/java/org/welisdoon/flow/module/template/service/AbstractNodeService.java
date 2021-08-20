@@ -1,8 +1,7 @@
 package org.welisdoon.flow.module.template.service;
 
 import org.welisdoon.flow.module.template.dao.LinkDao;
-import org.welisdoon.flow.module.template.dao.StreamDao;
-import org.welisdoon.flow.module.template.entity.Stream;
+import org.welisdoon.flow.module.flow.dao.StreamDao;
 
 /**
  * @Classname AbstractNodeService

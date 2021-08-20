@@ -1,9 +1,8 @@
-package org.welisdoon.flow.module.template.dao;
+package org.welisdoon.flow.module.flow.dao;
 
 import org.springframework.stereotype.Repository;
-import org.welisdoon.flow.module.template.entity.Flow;
-import org.welisdoon.flow.module.template.entity.FlowCondition;
-import org.welisdoon.flow.module.template.entity.Stream;
+import org.welisdoon.flow.module.flow.entity.FlowCondition;
+import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.dao.ITemplateDao;
 
 /**

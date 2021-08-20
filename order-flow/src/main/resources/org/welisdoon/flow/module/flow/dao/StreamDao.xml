@@ -2,22 +2,22 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="org.welisdoon.flow.module.template.dao.StreamDao">
+<mapper namespace="org.welisdoon.flow.module.flow.dao.StreamDao">
 
-    <resultMap id="rm_Stream" type="org.welisdoon.flow.module.template.entity.Stream">
+    <resultMap id="rm_Stream" type="org.welisdoon.flow.module.flow.entity.Stream">
         <id column="ID" ></id>
         <result column="SUPER_ID" ></result>
         <result column="NODE_ID" ></result>
         <result column="SEQ" ></result>
         <result column="FLOW_ID" ></result>
         <result column="FUNCTION_ID" ></result>
-        <collection property="subTree" ofType="org.welisdoon.flow.module.template.entity.Stream"
+        <collection property="subTree" ofType="org.welisdoon.flow.module.flow.entity.Stream"
                     select="list" column="{superStreamId=QWERTYU_ID,flowId=FLOW_ID}"></collection>
     </resultMap>
     <sql id="showTree">
         <choose><when test="showTree==true">A.id</when><otherwise>-1</otherwise></choose>QWERTYU_ID
     </sql>
-    <select id="list" parameterType="org.welisdoon.flow.module.template.entity.FlowCondition" resultMap="rm_Stream">
+    <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
         select A.*,<include refid="showTree"></include>
          from F_STREAM A
         <where>
@@ -34,10 +34,10 @@
         order by SEQ
     </select>
 
-    <select id="get" parameterType="org.welisdoon.flow.module.template.entity.FlowCondition" resultMap="rm_Stream">
+    <select id="get" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
         select a.*,<include refid="showTree"></include>
-         from F_LINK
-        WHERE id=#{linkId}
+         from F_STREAM
+        WHERE id=#{streamId}
     </select>
 
 
