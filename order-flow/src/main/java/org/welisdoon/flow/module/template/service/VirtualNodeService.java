@@ -8,7 +8,7 @@ import org.welisdoon.flow.module.template.annotation.NodeType;
 import org.welisdoon.flow.module.template.dao.LinkFunctionDao;
 import org.welisdoon.flow.module.template.entity.Link;
 import org.welisdoon.flow.module.template.entity.LinkFunction;
-import org.welisdoon.flow.module.template.intf.VirtualNodeProcessor;
+import org.welisdoon.flow.module.template.intf.VirtualNodeInitializer;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
@@ -20,15 +20,10 @@ import java.util.List;
  * @Date 2021/8/20 16:22
  */
 
-@NodeType(10005)
+@NodeType(10000)
 @Service
 public class VirtualNodeService extends SimpleNodeService {
-    LinkFunctionDao linkFunctionDao;
 
-    @Autowired
-    public void setLinkFunctionDao(LinkFunctionDao linkFunctionDao) {
-        this.linkFunctionDao = linkFunctionDao;
-    }
 
     @Override
     public void start(Stream stream) {
@@ -42,8 +37,8 @@ public class VirtualNodeService extends SimpleNodeService {
 
     @Override
     public List<Stream> createSubStreams(Stream superStream, Link currentLink) {
-        LinkFunction function = linkFunctionDao.get(currentLink.getFunctionId());
-        VirtualNodeProcessor processor = ApplicationContextProvider.getBean(function.targetClass());
+        LinkFunction function = this.getFunction(currentLink);
+        VirtualNodeInitializer processor = ApplicationContextProvider.getBean(function.targetClass());
         Stream currentStream = new Stream();
         currentStream.setFlowId(superStream.getFlowId());
         currentStream.setNodeId(currentLink.getNodeId());
@@ -51,7 +46,8 @@ public class VirtualNodeService extends SimpleNodeService {
         currentStream.setSeq(currentLink.getSeq());
         currentStream.setSuperId(superStream.getId());
         currentStream.setStatusId(StreamStatus.FUTURE.statusId());
-        return processor.create(currentStream);
+        currentStream.setName(currentLink.getName());
+        return processor.createStream(currentStream);
     }
 
 

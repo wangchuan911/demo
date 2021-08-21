@@ -3,24 +3,22 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.welisdoon.flow.module.flow.dao.FlowDao">
-
+    <sql id="select">
+        select * from F_FLOW
+    </sql>
 
     <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.Flow" resultType="org.welisdoon.flow.module.flow.entity.Flow">
         <include refid="select"></include>
-        <where>
-            <include refid="condition"></include>
-        </where>
+
     </select>
 
-    <select id="get" parameterType="org.welisdoon.flow.module.flow.entity.Flow" resultType="org.welisdoon.flow.module.flow.entity.Flow">
+    <select id="get" parameterType="long" resultType="org.welisdoon.flow.module.flow.entity.Flow">
         <include refid="select"></include>
-        <where>
-            <include refid="condition"></include>
-        </where>
+        where a.id=#{id}
     </select>
 
-    <insert id="add">
-        insert into
+    <insert id="add" parameterType="org.welisdoon.flow.module.flow.entity.Flow" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO F_FLOW (TEMPLATE_ID, STATUS_ID) VALUES (#{templateId}, #{statusId})
     </insert>
 
 

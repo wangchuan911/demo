@@ -59,6 +59,11 @@ public class FlowService {
         this.streamDao = streamDao;
     }
 
+    @Autowired
+    public void setFlowDao(FlowDao flowDao) {
+        this.flowDao = flowDao;
+    }
+
     @PostConstruct
     public void a() {
         /*Flow flow = new Flow();
@@ -97,10 +102,11 @@ public class FlowService {
 
     void initStreamData(Link superLink, Stream superStream) {
         superStream.setSubTree(new LinkedList<>());
+        System.out.println(superLink);
         for (Link currentLink : superLink.getSubTree()) {
             for (Stream currentStream : AbstractNodeService.getInstance(currentLink.getNodeId()).createSubStreams(superStream, currentLink)) {
                 currentStream.setStatusId(StreamStatus.FUTURE.statusId());
-                this.streamDao.put(currentStream);
+                this.streamDao.add(currentStream);
                 superStream.getSubTree().add(currentStream);
                 this.initStreamData(currentLink, currentStream);
             }
@@ -109,7 +115,7 @@ public class FlowService {
     }
 
     public Flow flow(Flow flow) {
-        flow.setTemplateId(0L);
+        flow.setTemplateId(1L);
         flowDao.add(flow);
         Stream stream = initFlow(flow);
         return flow;

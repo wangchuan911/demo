@@ -5,17 +5,19 @@
 <mapper namespace="org.welisdoon.flow.module.flow.dao.StreamDao">
 
     <resultMap id="rm_Stream" type="org.welisdoon.flow.module.flow.entity.Stream">
-        <id column="ID" ></id>
-        <result column="SUPER_ID" ></result>
-        <result column="NODE_ID" ></result>
-        <result column="SEQ" ></result>
-        <result column="FLOW_ID" ></result>
-        <result column="FUNCTION_ID" ></result>
+        <id column="ID"  property="id"></id>
+        <result column="SUPER_ID"  property="superId"></result>
+        <result column="NODE_ID"  property="nodeId"></result>
+        <result column="SEQ"  property="seq"></result>
+        <result column="FLOW_ID"  property="flowId"></result>
+        <result column="FUNCTION_ID" property="functionId" ></result>
+        <result column="NAME" property="name"></result>
         <collection property="subTree" ofType="org.welisdoon.flow.module.flow.entity.Stream"
-                    select="list" column="{superStreamId=QWERTYU_ID,flowId=FLOW_ID}"></collection>
+                    select="list" column="{superStreamId=SUB_SELECT_ID,flowId=FLOW_ID,showTree=SHOW_TREE}"></collection>
     </resultMap>
     <sql id="showTree">
-        <choose><when test="showTree==true">A.id</when><otherwise>-1</otherwise></choose>QWERTYU_ID
+        <choose><when test="showTree==true">A.id</when><otherwise>-1</otherwise></choose>SUB_SELECT_ID,
+        <choose><when test="showTree==true">true</when><otherwise>false</otherwise></choose> SHOW_TREE
     </sql>
     <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
         select A.*,<include refid="showTree"></include>
@@ -40,5 +42,20 @@
         WHERE id=#{streamId}
     </select>
 
+    <update id="update" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition">
+        update F_STREAM a
+        <set>
+            <choose>
+                <when test="update=='STREAM_STATUS'">
+                    STATUS_ID=#{statusId},
+                </when>
+            </choose>
+        </set>
+         where a.ID=#{streamId}
+    </update>
 
+    <insert id="add" parameterType="org.welisdoon.flow.module.flow.entity.Stream" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO F_STREAM (STATUS_ID, FLOW_ID, NODE_ID, SUPER_ID, SEQ, FUNCTION_ID,NAME)
+        VALUES (#{statusId}, #{flowId}, #{nodeId}, #{superId}, #{seq}, #{functionId},#{name})
+    </insert>
 </mapper>
