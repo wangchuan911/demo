@@ -7,14 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
-import org.welisdoon.flow.module.flow.entity.StreamStatus;
+import org.welisdoon.flow.module.flow.entity.*;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.template.dao.NodeDao;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
-import org.welisdoon.flow.module.flow.entity.Flow;
-import org.welisdoon.flow.module.flow.entity.FlowCondition;
 import org.welisdoon.flow.module.template.entity.Link;
-import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.template.entity.Node;
 import org.welisdoon.flow.module.template.entity.TemplateCondition;
 import org.welisdoon.flow.module.template.service.AbstractNodeService;
@@ -85,6 +82,7 @@ public class FlowService {
 //    }
 
     public void flow(Flow flow) {
+        flow.setStatusId(FlowStatus.FUTURE.statusId());
         flowDao.add(flow);
         TemplateCondition condition = new TemplateCondition();
         condition.setTemplateId(flow.getTemplateId());
@@ -127,15 +125,19 @@ public class FlowService {
             flowCondition.setFlowId(stream.getFlowId());
             stream.setSubTree(this.streamDao.list(flowCondition));
         }*/
-        if (stream.getStatusId() == StreamStatus.FUTURE.statusId())
-            AbstractNodeService.getInstance(stream.getNodeId()).start(stream);
-        else
+        if (flow.getStatusId() == FlowStatus.FUTURE.statusId() && stream.getStatusId() == StreamStatus.FUTURE.statusId()) {
+            AbstractNodeService nodeService = AbstractNodeService.getInstance(stream.getNodeId());
+            nodeService.setFlowStatus(flow, FlowStatus.READY);
+            nodeService.start(stream);
+        } else {
             throw new RuntimeException("当前环节已结束");
+        }
     }
 
     public Stream stream(Stream stream) {
-        if (stream.getStatusId() != StreamStatus.READY.statusId())
+        if (stream.getStatusId() != StreamStatus.READY.statusId()) {
             throw new RuntimeException("当前环节已结束");
+        }
         /*if (CollectionUtils.isEmpty(stream.getSubTree())) {
             FlowCondition flowCondition = new FlowCondition();
             flowCondition.setSuperStreamId(stream.getId());

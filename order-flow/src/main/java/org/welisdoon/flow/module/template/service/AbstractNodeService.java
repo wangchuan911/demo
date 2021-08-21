@@ -3,9 +3,8 @@ package org.welisdoon.flow.module.template.service;
 import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.welisdoon.flow.module.flow.entity.FlowCondition;
-import org.welisdoon.flow.module.flow.entity.Stream;
-import org.welisdoon.flow.module.flow.entity.StreamStatus;
+import org.welisdoon.flow.module.flow.dao.FlowDao;
+import org.welisdoon.flow.module.flow.entity.*;
 import org.welisdoon.flow.module.template.annotation.NodeType;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
@@ -33,6 +32,7 @@ public abstract class AbstractNodeService {
     StreamDao streamDao;
     NodeDao nodeDao;
     LinkFunctionDao linkFunctionDao;
+    FlowDao flowDao;
 
     public static Reflections getReflections() {
         return reflections;
@@ -53,6 +53,15 @@ public abstract class AbstractNodeService {
 
     public LinkFunctionDao getLinkFunctionDao() {
         return linkFunctionDao;
+    }
+
+    public FlowDao getFlowDao() {
+        return flowDao;
+    }
+
+    @Autowired
+    public void setFlowDao(FlowDao flowDao) {
+        this.flowDao = flowDao;
     }
 
     @Autowired
@@ -143,6 +152,14 @@ public abstract class AbstractNodeService {
         flowCondition.setStatusId(status.statusId());
         flowCondition.setUpdate("STREAM_STATUS");
         this.getStreamDao().update(flowCondition);
+    }
+
+    public void setFlowStatus(Flow flow, FlowStatus status) {
+        FlowCondition flowCondition = new FlowCondition();
+        flowCondition.setFlowId(flow.getId());
+        flowCondition.setStatusId(status.statusId());
+        flowCondition.setUpdate("STREAM_STATUS");
+        this.getFlowDao().update(flowCondition);
     }
 
     LinkFunction getFunction(Tree<?> tree) {

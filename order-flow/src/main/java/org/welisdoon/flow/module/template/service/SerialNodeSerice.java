@@ -3,6 +3,7 @@ package org.welisdoon.flow.module.template.service;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.welisdoon.flow.module.flow.entity.FlowCondition;
+import org.welisdoon.flow.module.flow.entity.FlowStatus;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
@@ -48,6 +49,7 @@ public class SerialNodeSerice extends AbstractComplexNodeService {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(stream.getFlowId());
         if (stream.getSuperId() == null) {
+            this.setFlowStatus(flowDao.get(stream.getFlowId()), FlowStatus.COMPLETE);
             return;
         }
         Stream superStream = this.getStreamDao().get(stream.getSuperId());
