@@ -4,7 +4,7 @@
 
 <mapper namespace="org.welisdoon.flow.module.flow.dao.FlowDao">
     <sql id="select">
-        select * from F_FLOW
+        select * from F_FLOW a
     </sql>
 
     <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.Flow" resultType="org.welisdoon.flow.module.flow.entity.Flow">
@@ -14,7 +14,7 @@
 
     <select id="get" parameterType="long" resultType="org.welisdoon.flow.module.flow.entity.Flow">
         <include refid="select"></include>
-        where a.id=#{id}
+        where a.ID=#{id}
     </select>
 
     <insert id="add" parameterType="org.welisdoon.flow.module.flow.entity.Flow" useGeneratedKeys="true" keyProperty="id">

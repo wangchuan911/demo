@@ -19,9 +19,9 @@
         <choose><when test="showTree==true">A.id</when><otherwise>-1</otherwise></choose>SUB_SELECT_ID,
         <choose><when test="showTree==true">true</when><otherwise>false</otherwise></choose> SHOW_TREE
     </sql>
-    <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
+    <sql id="selectList">
         select A.*,<include refid="showTree"></include>
-         from F_STREAM A
+        from F_STREAM A
         <where>
             <choose>
                 <when test="superStreamId!=null">
@@ -33,12 +33,19 @@
             </choose>
             and FLOW_ID=#{flowId}
         </where>
+    </sql>
+    <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
+        <include refid="selectList"></include>
         order by SEQ
     </select>
 
+    <select id="find" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
+        <include refid="selectList"></include>
+    </select>
+
     <select id="get" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
-        select a.*,<include refid="showTree"></include>
-         from F_STREAM
+        select A.*,<include refid="showTree"></include>
+         from F_STREAM A
         WHERE id=#{streamId}
     </select>
 

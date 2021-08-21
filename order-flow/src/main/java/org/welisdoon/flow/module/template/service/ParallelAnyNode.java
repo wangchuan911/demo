@@ -20,7 +20,7 @@ import java.util.List;
 public class ParallelAnyNode extends AbstractComplexNodeService {
     @Override
     public void start(Stream stream) {
-        List<Stream> subStreams = stream.getSubTree();
+        List<Stream> subStreams = this.getSubStreams(stream);
         AbstractNodeService abstractNodeService;
         this.setStreamStatus(stream,StreamStatus.WAIT);
 

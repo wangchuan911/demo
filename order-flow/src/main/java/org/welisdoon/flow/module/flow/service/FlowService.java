@@ -5,6 +5,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.dao.LinkDao;
@@ -64,26 +65,27 @@ public class FlowService {
         this.flowDao = flowDao;
     }
 
-    @PostConstruct
-    public void a() {
-        /*Flow flow = new Flow();
-        flow.setId(1L);
-        Stream stream = this.initFlow(flow);
-        stream.setStatusId(StreamStatus.READY.statusId());
-        AbstractNodeService abstractNodeService = AbstractNodeService.getInstance(stream.getNodeId());
-        abstractNodeService.start(stream);
+//    @PostConstruct
+//    public void a() {
+//        /*Flow flow = new Flow();
+//        flow.setId(1L);
+//        Stream stream = this.initFlow(flow);
+//        stream.setStatusId(StreamStatus.READY.statusId());
+//        AbstractNodeService abstractNodeService = AbstractNodeService.getInstance(stream.getNodeId());
+//        abstractNodeService.start(stream);
+//
+//        FlowCondition condition1 = new FlowCondition();
+//        condition1.setFlowId(1L);
+//        condition1.setShowTree(true);
+//        List<Stream> b = streamDao.list(condition1);
+//        System.out.println(JSONArray.toJSONString(b));
+//        streamDao.clear(condition1);*/
+//        this.flow(new Flow());
+//
+//    }
 
-        FlowCondition condition1 = new FlowCondition();
-        condition1.setFlowId(1L);
-        condition1.setShowTree(true);
-        List<Stream> b = streamDao.list(condition1);
-        System.out.println(JSONArray.toJSONString(b));
-        streamDao.clear(condition1);*/
-        this.flow(new Flow());
-
-    }
-
-    public Stream initFlow(Flow flow) {
+    public void flow(Flow flow) {
+        flowDao.add(flow);
         TemplateCondition condition = new TemplateCondition();
         condition.setTemplateId(flow.getTemplateId());
         condition.setShowTree(true);
@@ -97,7 +99,7 @@ public class FlowService {
         streamDao.add(stream);
         this.initStreamData(rootLink, stream);
         System.out.println(JSONArray.toJSONString(rootLink));
-        return stream;
+        flow.setStream(stream);
     }
 
     void initStreamData(Link superLink, Stream superStream) {
@@ -114,19 +116,34 @@ public class FlowService {
         }
     }
 
-    public Flow flow(Flow flow) {
-        flow.setTemplateId(1L);
-        flowDao.add(flow);
-        Stream stream = initFlow(flow);
-        return flow;
-    }
 
+    public void start(Flow flow) {
+        FlowCondition flowCondition = new FlowCondition();
+        flowCondition.setFlowId(flow.getId());
+        Stream stream = this.streamDao.find(flowCondition);
+        /*if (CollectionUtils.isEmpty(stream.getSubTree())) {
+            flowCondition.setSuperStreamId(stream.getId());
+            flowCondition.setShowTree(true);
+            flowCondition.setFlowId(stream.getFlowId());
+            stream.setSubTree(this.streamDao.list(flowCondition));
+        }*/
+        if (stream.getStatusId() == StreamStatus.FUTURE.statusId())
+            AbstractNodeService.getInstance(stream.getNodeId()).start(stream);
+        else
+            throw new RuntimeException("当前环节已结束");
+    }
 
     public Stream stream(Stream stream) {
         if (stream.getStatusId() != StreamStatus.READY.statusId())
-            AbstractNodeService.getInstance(stream.getNodeId()).finish(stream);
-        else
             throw new RuntimeException("当前环节已结束");
+        /*if (CollectionUtils.isEmpty(stream.getSubTree())) {
+            FlowCondition flowCondition = new FlowCondition();
+            flowCondition.setSuperStreamId(stream.getId());
+            flowCondition.setFlowId(stream.getFlowId());
+            flowCondition.setShowTree(true);
+            stream.setSubTree(this.streamDao.list(flowCondition));
+        }*/
+        AbstractNodeService.getInstance(stream.getNodeId()).finish(stream);
         return stream;
     }
 

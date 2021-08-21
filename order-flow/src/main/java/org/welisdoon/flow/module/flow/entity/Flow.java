@@ -10,6 +10,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
  */
 public class Flow {
     Long id, templateId, statusId;
+    Stream stream;
 
     public Long getId() {
         return id;
@@ -33,5 +34,13 @@ public class Flow {
 
     public void setStatusId(Long statusId) {
         this.statusId = statusId;
+    }
+
+    public Stream getStream() {
+        return stream;
+    }
+
+    public void setStream(Stream stream) {
+        this.stream = stream;
     }
 }
