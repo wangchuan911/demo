@@ -79,7 +79,10 @@ public class VertxConfiguration {
             final Collection<URL> CollectUrl = new LinkedList<>();
             ApplicationContextProvider.getApplicationContext()
                     .getBeansWithAnnotation(ComponentScan.class).entrySet().stream().map(Map.Entry::getValue).flatMap(o ->
-                    Arrays.stream(ApplicationContextProvider.getRealClass(o.getClass()).getAnnotation(ComponentScan.class).basePackageClasses())
+                    Arrays.stream(ApplicationContextProvider
+                            .getRealClass(o.getClass())
+                            .getAnnotation(ComponentScan.class)
+                            .basePackageClasses())
             ).forEach(aClass -> {
                 CollectUrl.addAll(ClasspathHelper.forPackage(aClass.getPackageName()));
             });

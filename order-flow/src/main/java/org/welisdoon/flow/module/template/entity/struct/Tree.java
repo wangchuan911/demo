@@ -11,6 +11,7 @@ import java.util.List;
 public abstract class Tree<T> {
     Long id, superId, functionId, nodeId;
     int seq;
+    String name;
     List<T> subTree;
 
     public Long getId() {
@@ -68,5 +69,27 @@ public abstract class Tree<T> {
 
     public void setSeq(int seq) {
         this.seq = seq;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Tree{");
+        sb.append("id=").append(id);
+        sb.append(", superId=").append(superId);
+        sb.append(", functionId=").append(functionId);
+        sb.append(", nodeId=").append(nodeId);
+        sb.append(", seq=").append(seq);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", subTree=").append(subTree);
+        sb.append('}');
+        return sb.toString();
     }
 }

@@ -1,5 +1,6 @@
 package org.welisdoon.flow.module.template.service;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
@@ -15,13 +16,13 @@ import java.util.List;
  */
 @NodeType(10003)
 @Service
+@Primary
 public class ParallelAnyNode extends AbstractComplexNodeService {
     @Override
     public void start(Stream stream) {
         List<Stream> subStreams = stream.getSubTree();
         AbstractNodeService abstractNodeService;
-        stream.setStatusId(StreamStatus.WAIT.statusId());
-        this.getStreamDao().put(stream);
+        this.setStreamStatus(stream,StreamStatus.WAIT);
 
         for (Stream subStream : subStreams) {
             abstractNodeService = getInstance(subStream.getNodeId());
@@ -38,8 +39,7 @@ public class ParallelAnyNode extends AbstractComplexNodeService {
         }
         this.skip(subStreams);
 
-        stream.setStatusId(StreamStatus.COMPLETE.statusId());
-        this.getStreamDao().put(stream);
+        this.setStreamStatus(stream,StreamStatus.COMPLETE);
         Stream superStream = this.getStreamDao().get(stream.getSuperId());
         AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
     }

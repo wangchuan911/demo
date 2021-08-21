@@ -21,35 +21,29 @@ import java.util.function.Predicate;
 @NodeType(10004)
 @Service
 public class ConditionAnyNodeService extends ParallelAnyNode {
-    LinkFunctionDao linkFunctionDao;
 
-    @Autowired
-    public void setLinkFunctionDao(LinkFunctionDao linkFunctionDao) {
-        this.linkFunctionDao = linkFunctionDao;
-    }
+
 
     @Override
     public void start(Stream stream) {
         List<Stream> subStreams = this.getSubStreams(stream);
-        stream.setStatusId(StreamStatus.WAIT.statusId());
-        this.getStreamDao().put(stream);
+        this.setStreamStatus(stream, StreamStatus.WAIT);
 
-        LinkFunction function = linkFunctionDao.get(stream.getFunctionId());
+        LinkFunction function = this.getFunction(stream);
         StreamStatus status;
         boolean hasReady = false;
-        Predicate<Stream> predicate;
+        Predicate<Stream> predicate = ApplicationContextProvider.getBean(function.targetClass());
         for (Stream subStream : subStreams) {
-            predicate = ApplicationContextProvider.getBean(function.targetClass());
             status = predicate.test(subStream) ? StreamStatus.READY : StreamStatus.SKIP;
             switch (status) {
                 case SKIP:
-                    subStream.setStatusId(status.statusId());
-                    this.getStreamDao().put(subStream);
+                    this.setStreamStatus(stream, status);
+                    break;
                 case READY:
                     hasReady = true;
                     AbstractNodeService abstractNodeService = getInstance(subStream.getNodeId());
                     abstractNodeService.start(subStream);
-
+                    break;
             }
 
         }

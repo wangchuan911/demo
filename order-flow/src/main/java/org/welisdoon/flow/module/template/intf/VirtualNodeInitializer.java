@@ -11,6 +11,6 @@ import java.util.List;
  * @Author wang.zhidong
  * @Date 2021/8/21 00:58
  */
-public interface VirtualNodeProcessor {
-    List<Stream> create(Stream templateStream);
+public interface VirtualNodeInitializer {
+    List<Stream> createStream(Stream templateStream);
 }

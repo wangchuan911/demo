@@ -9,9 +9,12 @@ import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
+import org.welisdoon.flow.module.template.dao.LinkFunctionDao;
 import org.welisdoon.flow.module.template.dao.NodeDao;
 import org.welisdoon.flow.module.template.entity.Link;
+import org.welisdoon.flow.module.template.entity.LinkFunction;
 import org.welisdoon.flow.module.template.entity.Node;
+import org.welisdoon.flow.module.template.entity.struct.Tree;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
@@ -29,6 +32,7 @@ public abstract class AbstractNodeService {
     LinkDao linkDao;
     StreamDao streamDao;
     NodeDao nodeDao;
+    LinkFunctionDao linkFunctionDao;
 
     public static Reflections getReflections() {
         return reflections;
@@ -40,6 +44,15 @@ public abstract class AbstractNodeService {
 
     public boolean isComplexNode() {
         return this instanceof AbstractComplexNodeService;
+    }
+
+    @Autowired
+    public void setLinkFunctionDao(LinkFunctionDao linkFunctionDao) {
+        this.linkFunctionDao = linkFunctionDao;
+    }
+
+    public LinkFunctionDao getLinkFunctionDao() {
+        return linkFunctionDao;
     }
 
     @Autowired
@@ -85,7 +98,11 @@ public abstract class AbstractNodeService {
     public static AbstractNodeService getInstance(Node node) {
         Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
         Set<Class<?>> classes = reflections.getTypesAnnotatedWith(NodeType.class);
-        return (AbstractNodeService) ApplicationContextProvider.getBean(classes.stream().filter(aClass -> aClass.isAssignableFrom(AbstractNodeService.class) && aClass.getAnnotation(NodeType.class).value() == node.getTypeId()).findFirst().get());
+        return (AbstractNodeService) ApplicationContextProvider
+                .getBean(classes.stream()
+                        .filter(aClass -> AbstractNodeService.class.isAssignableFrom(aClass)
+                                && aClass.getAnnotation(NodeType.class).value() == node.getTypeId())
+                        .findFirst().get());
     }
 
     public List<Stream> getSubStreams(Stream stream) {
@@ -103,7 +120,8 @@ public abstract class AbstractNodeService {
         currentStream.setFunctionId(currentLink.getFunctionId());
         currentStream.setSeq(currentLink.getSeq());
         currentStream.setSuperId(superStream.getId());
-        return List.of(currentStream, currentStream);
+        currentStream.setName(currentLink.getName());
+        return List.of(currentStream);
     }
 
     public static class SubStreamStatusCount {
@@ -119,11 +137,15 @@ public abstract class AbstractNodeService {
 
     }
 
-    public void setStreamStatus(Stream stream,StreamStatus status){
+    public void setStreamStatus(Stream stream, StreamStatus status) {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setStreamId(stream.getId());
         flowCondition.setStatusId(status.statusId());
         flowCondition.setUpdate("STREAM_STATUS");
         this.getStreamDao().update(flowCondition);
+    }
+
+    LinkFunction getFunction(Tree<?> tree) {
+        return linkFunctionDao.get(tree.getFunctionId());
     }
 }

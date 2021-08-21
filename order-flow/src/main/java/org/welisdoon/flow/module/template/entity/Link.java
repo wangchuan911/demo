@@ -21,4 +21,5 @@ public class Link extends Tree<Link> {
         this.templateId = templateId;
     }
 
+
 }
