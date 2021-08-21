@@ -19,6 +19,7 @@ import org.welisdoon.flow.module.template.entity.TemplateCondition;
 import org.welisdoon.flow.module.template.service.AbstractNodeService;
 
 import javax.annotation.PostConstruct;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -60,7 +61,7 @@ public class FlowService {
 
     @PostConstruct
     public void a() {
-        Flow flow = new Flow();
+        /*Flow flow = new Flow();
         flow.setId(1L);
         Stream stream = this.initFlow(flow);
         stream.setStatusId(StreamStatus.READY.statusId());
@@ -72,7 +73,9 @@ public class FlowService {
         condition1.setShowTree(true);
         List<Stream> b = streamDao.list(condition1);
         System.out.println(JSONArray.toJSONString(b));
-        streamDao.clear(condition1);
+        streamDao.clear(condition1);*/
+        this.flow(new Flow());
+
     }
 
     public Stream initFlow(Flow flow) {
@@ -93,86 +96,31 @@ public class FlowService {
     }
 
     void initStreamData(Link superLink, Stream superStream) {
-        Stream currentStream;
         superStream.setSubTree(new LinkedList<>());
         for (Link currentLink : superLink.getSubTree()) {
-            currentStream = new Stream();
-            currentStream.setFlowId(superStream.getFlowId());
-            currentStream.setNodeId(currentLink.getNodeId());
-            currentStream.setFunctionId(currentLink.getFunctionId());
-            currentStream.setSeq(currentLink.getSeq());
-            currentStream.setSuperId(superStream.getId());
-            currentStream.setStatusId(StreamStatus.FUTURE.statusId());
-            AbstractNodeService.getInstance(currentLink.getNodeId()).createStream(currentStream);
-            superStream.getSubTree().add(currentStream);
-            this.initStreamData(currentLink, currentStream);
+            for (Stream currentStream : AbstractNodeService.getInstance(currentLink.getNodeId()).createSubStreams(superStream, currentLink)) {
+                currentStream.setStatusId(StreamStatus.FUTURE.statusId());
+                this.streamDao.put(currentStream);
+                superStream.getSubTree().add(currentStream);
+                this.initStreamData(currentLink, currentStream);
+            }
+
         }
     }
 
     public Flow flow(Flow flow) {
         flow.setTemplateId(0L);
-        /*flowDao.add(flow);
-
-        flow.getTemplateId();
-
-        List<Link> lists = this.getLinks(flow.getTemplateId(), null);
-        Link link = lists.get(0);
-        Stream stream = new Stream();
-        stream.setLinkId(link.getId());
-        streamDao.add(stream);*/
-
+        flowDao.add(flow);
+        Stream stream = initFlow(flow);
         return flow;
     }
 
 
     public Stream stream(Stream stream) {
-        /*stream.setStatusId(0L);
-        Link link = linkDao.get(stream.getLinkId());
-//        List<Link> sublists = this.getLinks(link.getTemplateId(), link.getNodeId());
-
-        //同级别节点
-        List<Link> braotherLinks = this.getLinks(link.getTemplateId(), link.getSuperId());
-        long working = braotherLinks.stream().filter(brotherLink -> {
-            if (brotherLink.getId().equals(link.getId())) {
-                return false;
-            }
-            FlowCondition flowCondition = new FlowCondition();
-            flowCondition.setLinkId(brotherLink.getId());
-            List<Stream> otherStreams = streamDao.list(flowCondition);
-            if (!CollectionUtils.isEmpty(otherStreams)) {
-                //其他stream也完成了
-                if (otherStreams.get(0).getStatusId().equals(stream.getStatusId())) {
-                    return false;
-                }
-            }
-
-            return true;
-        }).count();
-
-        if (working == 0L) {
-            //当前 link.getSuperLinkId() 下的节点都完成了
-            //找更上一级别的link节点
-            Link superLink = linkDao.get(link.getId());
-            List<Link> parantLinks = this.getLinks(link.getTemplateId(), link.getSuperId());
-            if (superLink.getSuperId() == null) {
-                //是顶级节点
-                for (int i = 0; i < parantLinks.size(); i++) {
-                    if (parantLinks.get(i).getSeq().equals(superLink.getSeq())) {
-                        if (i + 1 < parantLinks.size()) {
-                            //开始下一节点
-                            Link nextLink = parantLinks.get(i + 1);
-                            List<Link> nextLinks = this.getLinks(nextLink.getTemplateId(), nextLink.getId());
-                        } else {
-                            //没有后续了，结束
-                            Flow flow = flowDao.get(stream.getFlowId());
-                            flow.setStatusId(0L);
-                            flowDao.put(flow);
-                        }
-                    }
-                }
-            }
-        }
-*/
+        if (stream.getStatusId() != StreamStatus.READY.statusId())
+            AbstractNodeService.getInstance(stream.getNodeId()).finish(stream);
+        else
+            throw new RuntimeException("当前环节已结束");
         return stream;
     }
 

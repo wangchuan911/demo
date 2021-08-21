@@ -16,22 +16,20 @@ import java.util.List;
  */
 @NodeType(10002)
 @Service
-public class ParallelAllNode extends AbstractComplexNodeService {
-    @Override
-    public void start(Stream stream) {
-        List<Stream> subStreams = stream.getSubTree();
-        AbstractNodeService abstractNodeService;
-        stream.setStatusId(StreamStatus.WAIT.statusId());
-        this.getStreamDao().put(stream);
+public class ParallelAllNode extends ParallelAnyNode {
 
-        for (Stream subStream : subStreams) {
-            abstractNodeService = getInstance(subStream.getNodeId());
-            abstractNodeService.start(subStream);
-        }
-    }
 
     @Override
     public void finish(Stream stream) {
 
+        List<Stream> subStreams = this.getSubStreams(stream);
+        SubStreamStatusCount countResult = this.countStreamStatus(subStreams);
+        if (countResult.COMPLETE != subStreams.size()) {
+            return;
+        }
+        stream.setStatusId(StreamStatus.COMPLETE.statusId());
+        this.getStreamDao().put(stream);
+        Stream superStream = this.getStreamDao().get(stream.getSuperId());
+        AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
     }
 }

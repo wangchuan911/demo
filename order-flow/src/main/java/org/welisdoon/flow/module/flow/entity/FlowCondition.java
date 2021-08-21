@@ -9,6 +9,7 @@ package org.welisdoon.flow.module.flow.entity;
 public class FlowCondition {
     Long nodeId, flowId, linkId, streamId, templateId, statusId, superStreamId;
     boolean showTree;
+    String update;
 
     public boolean isShowTree() {
         return showTree;
@@ -75,5 +76,12 @@ public class FlowCondition {
         this.superStreamId = superStreamId;
     }
 
+    public String getUpdate() {
+        return update;
+    }
+
+    public void setUpdate(String update) {
+        this.update = update;
+    }
 
 }

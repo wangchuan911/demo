@@ -5,6 +5,7 @@ import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.welisdoon.flow.module.flow.entity.FlowCondition;
 import org.welisdoon.flow.module.flow.entity.Stream;
+import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
@@ -14,6 +15,7 @@ import org.welisdoon.flow.module.template.entity.Node;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -94,7 +96,34 @@ public abstract class AbstractNodeService {
         return subStreams;
     }
 
-    public void createStream(Stream stream) {
-        this.getStreamDao().add(stream);
+    public List<Stream> createSubStreams(Stream superStream, Link currentLink) {
+        Stream currentStream = new Stream();
+        currentStream.setFlowId(superStream.getFlowId());
+        currentStream.setNodeId(currentLink.getNodeId());
+        currentStream.setFunctionId(currentLink.getFunctionId());
+        currentStream.setSeq(currentLink.getSeq());
+        currentStream.setSuperId(superStream.getId());
+        return List.of(currentStream, currentStream);
+    }
+
+    public static class SubStreamStatusCount {
+        final public int WAIT, READY, SKIP, FUTURE, COMPLETE;
+
+        SubStreamStatusCount(int WAIT, int READY, int SKIP, int FUTURE, int COMPLETE) {
+            this.WAIT = WAIT;
+            this.READY = READY;
+            this.SKIP = SKIP;
+            this.FUTURE = FUTURE;
+            this.COMPLETE = COMPLETE;
+        }
+
+    }
+
+    public void setStreamStatus(Stream stream,StreamStatus status){
+        FlowCondition flowCondition = new FlowCondition();
+        flowCondition.setStreamId(stream.getId());
+        flowCondition.setStatusId(status.statusId());
+        flowCondition.setUpdate("STREAM_STATUS");
+        this.getStreamDao().update(flowCondition);
     }
 }

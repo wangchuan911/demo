@@ -20,14 +20,14 @@ import java.util.List;
 public class SimpleNodeService extends AbstractSimpleNodeSerivce {
     @Override
     public void start(Stream stream) {
-        FlowCondition condition = new FlowCondition();
-        condition.setStreamId(stream.getId());
-        condition.setStatusId(StreamStatus.READY.statusId());
-        this.getStreamDao().update(condition);
+        setStreamStatus(stream, StreamStatus.READY);
     }
 
     @Override
     public void finish(Stream stream) {
-
+        stream.setStatusId(StreamStatus.COMPLETE.statusId());
+        this.getStreamDao().put(stream);
+        Stream superStream = this.getStreamDao().get(stream.getSuperId());
+        AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
     }
 }

@@ -1,8 +1,15 @@
 package org.welisdoon.flow.module.template.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.welisdoon.flow.module.flow.entity.Stream;
+import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
+import org.welisdoon.flow.module.template.dao.LinkFunctionDao;
+import org.welisdoon.flow.module.template.entity.Link;
+import org.welisdoon.flow.module.template.entity.LinkFunction;
+import org.welisdoon.flow.module.template.intf.VirtualNodeProcessor;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
 
@@ -16,6 +23,12 @@ import java.util.List;
 @NodeType(10005)
 @Service
 public class VirtualNodeService extends SimpleNodeService {
+    LinkFunctionDao linkFunctionDao;
+
+    @Autowired
+    public void setLinkFunctionDao(LinkFunctionDao linkFunctionDao) {
+        this.linkFunctionDao = linkFunctionDao;
+    }
 
     @Override
     public void start(Stream stream) {
@@ -28,7 +41,18 @@ public class VirtualNodeService extends SimpleNodeService {
     }
 
     @Override
-    public void createStream(Stream stream) {
-        super.createStream(stream);
+    public List<Stream> createSubStreams(Stream superStream, Link currentLink) {
+        LinkFunction function = linkFunctionDao.get(currentLink.getFunctionId());
+        VirtualNodeProcessor processor = ApplicationContextProvider.getBean(function.targetClass());
+        Stream currentStream = new Stream();
+        currentStream.setFlowId(superStream.getFlowId());
+        currentStream.setNodeId(currentLink.getNodeId());
+        currentStream.setFunctionId(currentLink.getFunctionId());
+        currentStream.setSeq(currentLink.getSeq());
+        currentStream.setSuperId(superStream.getId());
+        currentStream.setStatusId(StreamStatus.FUTURE.statusId());
+        return processor.create(currentStream);
     }
+
+
 }

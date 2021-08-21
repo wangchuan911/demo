@@ -19,5 +19,9 @@
         </where>
     </select>
 
+    <insert id="add">
+        insert into
+    </insert>
+
 
 </mapper>

@@ -7,7 +7,7 @@ package org.welisdoon.flow.module.template.entity;
  * @Date 2021/8/17 19:35
  */
 public class TemplateCondition {
-    Long nodeId, superLinkId, linkId, templateId;
+    Long nodeId, superLinkId, linkId, templateId, functionId;
     boolean showTree;
 
     public boolean isShowTree() {
@@ -52,5 +52,11 @@ public class TemplateCondition {
         this.templateId = templateId;
     }
 
+    public Long getFunctionId() {
+        return functionId;
+    }
 
+    public void setFunctionId(Long functionId) {
+        this.functionId = functionId;
+    }
 }

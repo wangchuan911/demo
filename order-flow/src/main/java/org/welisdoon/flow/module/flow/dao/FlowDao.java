@@ -1,5 +1,9 @@
 package org.welisdoon.flow.module.flow.dao;
 
+import org.welisdoon.flow.module.flow.entity.Flow;
+import org.welisdoon.flow.module.flow.entity.FlowCondition;
+import org.welisdoon.web.common.dao.ITemplateDao;
+
 /**
  * @Classname FlowDao
  * @Description TODO
@@ -7,5 +11,5 @@ package org.welisdoon.flow.module.flow.dao;
  * @Date 2021/8/17 00:03
  */
 //@Repository
-public interface FlowDao /*extends ITemplateDao<Long, Flow, FlowCondition>*/ {
+public interface FlowDao extends ITemplateDao<Long, Flow, FlowCondition> {
 }

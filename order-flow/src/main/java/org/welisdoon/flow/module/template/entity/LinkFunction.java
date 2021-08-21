@@ -1,8 +1,6 @@
 package org.welisdoon.flow.module.template.entity;
 
-import org.welisdoon.flow.module.flow.entity.Stream;
-
-import java.util.function.Predicate;
+import org.reflections.ReflectionUtils;
 
 /**
  * @Classname LinkFunction
@@ -12,17 +10,26 @@ import java.util.function.Predicate;
  */
 public class LinkFunction {
     Long id;
-    Predicate<Stream> predicate;
+    String className;
+
 
     public void setId(Long id) {
         this.id = id;
     }
 
-    public Predicate<Stream> getPredicate() {
-        return predicate;
+    public Long getId() {
+        return id;
     }
 
-    public void setPredicate(Predicate<Stream> predicate) {
-        this.predicate = predicate;
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public <T> Class<T> targetClass() {
+        return (Class<T>) ReflectionUtils.forName(this.className, LinkFunction.class.getClassLoader());
     }
 }
