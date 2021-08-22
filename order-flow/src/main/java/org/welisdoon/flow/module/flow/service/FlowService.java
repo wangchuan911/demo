@@ -11,6 +11,7 @@ import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.template.dao.NodeDao;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
 import org.welisdoon.flow.module.template.entity.Link;
+import org.welisdoon.flow.module.template.entity.Template;
 import org.welisdoon.flow.module.template.entity.TemplateCondition;
 import org.welisdoon.flow.module.template.service.AbstractNodeService;
 
@@ -111,6 +112,14 @@ public class FlowService {
             }
 
         }
+    }
+
+    public void appendExtraStream(Template template, Stream superStream) {
+        TemplateCondition condition = new TemplateCondition();
+        condition.setTemplateId(template.getId());
+        condition.setShowTree(true);
+        Link rootLink = linkDao.find(condition);
+        this.initStreamData(rootLink, superStream);
     }
 
 
