@@ -31,7 +31,7 @@ public abstract class AbstractNodeService {
     LinkDao linkDao;
     StreamDao streamDao;
     static NodeDao nodeDao;
-    LinkFunctionDao linkFunctionDao;
+    static LinkFunctionDao linkFunctionDao;
     FlowDao flowDao;
 
     public static Reflections getReflections() {
@@ -48,7 +48,9 @@ public abstract class AbstractNodeService {
 
     @Autowired
     public void setLinkFunctionDao(LinkFunctionDao linkFunctionDao) {
-        this.linkFunctionDao = linkFunctionDao;
+        if (AbstractNodeService.linkFunctionDao == null) {
+            AbstractNodeService.linkFunctionDao = linkFunctionDao;
+        }
     }
 
     public LinkFunctionDao getLinkFunctionDao() {
@@ -66,8 +68,9 @@ public abstract class AbstractNodeService {
 
     @Autowired
     public void setReflections(Reflections reflections) {
-        if (AbstractNodeService.reflections == null)
+        if (AbstractNodeService.reflections == null) {
             AbstractNodeService.reflections = reflections;
+        }
     }
 
     public LinkDao getLinkDao() {
@@ -173,7 +176,7 @@ public abstract class AbstractNodeService {
         return linkFunctionDao.get(tree.getFunctionId());
     }
 
-    public <T> T getFunctionObject(Long functionId) {
+    public static <T> T getFunctionObject(Long functionId) {
         return ApplicationContextProvider.getBean(linkFunctionDao.get(functionId).targetClass());
     }
 

@@ -7,7 +7,7 @@ package org.welisdoon.flow.module.flow.entity;
  * @Date 2021/8/16 23:35
  */
 public class Flow {
-    Long id, templateId, statusId;
+    Long id, templateId, statusId, functionId;
     Stream start;
 
     public Long getId() {
@@ -40,5 +40,13 @@ public class Flow {
 
     public void setStart(Stream start) {
         this.start = start;
+    }
+
+    public Long getFunctionId() {
+        return functionId;
+    }
+
+    public void setFunctionId(Long functionId) {
+        this.functionId = functionId;
     }
 }

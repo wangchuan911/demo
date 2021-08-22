@@ -21,5 +21,17 @@
         INSERT INTO F_FLOW (TEMPLATE_ID, STATUS_ID) VALUES (#{templateId}, #{statusId})
     </insert>
 
+    <update id="update" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" >
+        update F_FLOW a
+        <set>
+            <choose>
+                <when test="update=='STREAM_STATUS'">
+                    STATUS_ID=#{statusId},
+                </when>
+            </choose>
+        </set>
+        where a.ID=#{flowId}
+    </update>
+
 
 </mapper>

@@ -14,6 +14,7 @@ import org.welisdoon.flow.module.template.entity.Link;
 import org.welisdoon.flow.module.template.entity.TemplateCondition;
 import org.welisdoon.flow.module.template.service.AbstractNodeService;
 
+import javax.annotation.PostConstruct;
 import java.util.LinkedList;
 
 /**
@@ -24,7 +25,7 @@ import java.util.LinkedList;
  */
 @Service
 @DS("flow")
-@Transactional
+@Transactional(rollbackFor = Throwable.class)
 public class FlowService {
 
     FlowDao flowDao;
@@ -74,6 +75,7 @@ public class FlowService {
 //        streamDao.clear(condition1);*/
 //        this.flow(new Flow());
 //
+//        hehe();
 //    }
 
     public void flow(Flow flow) {
@@ -145,6 +147,7 @@ public class FlowService {
         AbstractNodeService.getInstance(stream.getNodeId()).finish(stream);
         return stream;
     }
+
 
 
 }
