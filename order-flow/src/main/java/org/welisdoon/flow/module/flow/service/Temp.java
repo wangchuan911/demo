@@ -2,7 +2,9 @@ package org.welisdoon.flow.module.flow.service;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.welisdoon.flow.module.flow.entity.Flow;
 import org.welisdoon.flow.module.flow.entity.Stream;
+import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.flow.module.template.intf.VirtualNodeInitializer;
 
 import java.util.List;
@@ -15,11 +17,51 @@ import java.util.List;
  */
 @Component
 @ConditionalOnProperty(prefix = "demo", name = "router")
-public class Temp implements VirtualNodeInitializer {
+public class Temp implements VirtualNodeInitializer, FlowEvent {
     @Override
     public List<Stream> createStream(Stream templateStream) {
         templateStream.setNodeId(6L);
         templateStream.setFunctionId(null);
-        return List.of(templateStream,templateStream);
+        return List.of(templateStream, templateStream);
+    }
+
+    @Override
+    public void onPreCreate(Flow flow) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
+
+    @Override
+    public void onCreated(Flow flow, Stream stream) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
+
+    @Override
+    public void onFinished(Flow flow, Stream stream) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
+
+    @Override
+    public void onPreStart(Stream stream) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
+
+    @Override
+    public void onStarted(Stream stream) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
+
+    @Override
+    public void onPreFinish(Stream stream) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
+
+    @Override
+    public void onFinished(Stream stream) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
+
+    @Override
+    public void onError(Flow flow, Stream stream, Throwable e) {
+        e.printStackTrace();
     }
 }

@@ -91,6 +91,7 @@ public class FlowService {
         stream.setFunctionId(rootLink.getFunctionId());
         stream.setSeq(rootLink.getSeq());
         stream.setStatusId(StreamStatus.FUTURE.statusId());
+        stream.setFlow(flow);
         streamDao.add(stream);
         this.initStreamData(rootLink, stream);
         System.out.println(JSONArray.toJSONString(rootLink));
@@ -103,6 +104,7 @@ public class FlowService {
         for (Link currentLink : superLink.getSubTree()) {
             for (Stream currentStream : AbstractNodeService.getInstance(currentLink.getNodeId()).createSubStreams(superStream, currentLink)) {
                 currentStream.setStatusId(StreamStatus.FUTURE.statusId());
+                currentStream.setFlow(superStream.getFlow());
                 this.streamDao.add(currentStream);
                 superStream.getSubTree().add(currentStream);
                 this.initStreamData(currentLink, currentStream);
@@ -113,9 +115,7 @@ public class FlowService {
 
 
     public void start(Flow flow) {
-        FlowCondition flowCondition = new FlowCondition();
-        flowCondition.setFlowId(flow.getId());
-        Stream stream = this.streamDao.find(flowCondition);
+        Stream stream = this.getStartStream(flow.getId());
         stream.setFlow(this.flowDao.get(stream.getFlowId()));
         /*if (CollectionUtils.isEmpty(stream.getSubTree())) {
             flowCondition.setSuperStreamId(stream.getId());
@@ -124,9 +124,8 @@ public class FlowService {
             stream.setSubTree(this.streamDao.list(flowCondition));
         }*/
         if (flow.getStatusId() == FlowStatus.FUTURE.statusId() && stream.getStatusId() == StreamStatus.FUTURE.statusId()) {
-            AbstractNodeService nodeService = AbstractNodeService.getInstance(stream.getNodeId());
-            nodeService.setFlowStatus(flow, FlowStatus.READY);
-            nodeService.start(stream);
+            this.setFlowStatus(flow, FlowStatus.READY);
+            AbstractNodeService.getInstance(stream.getNodeId()).start(stream);
         } else {
             throw new RuntimeException("当前环节已结束");
         }
@@ -145,9 +144,34 @@ public class FlowService {
             stream.setSubTree(this.streamDao.list(flowCondition));
         }*/
         AbstractNodeService.getInstance(stream.getNodeId()).finish(stream);
+        if (isFinish(stream))
+            this.finish(stream);
         return stream;
     }
 
+    Stream getStartStream(long flowId) {
+        FlowCondition flowCondition = new FlowCondition();
+        flowCondition.setFlowId(flowId);
+        return this.streamDao.find(flowCondition);
+    }
 
+    boolean isFinish(Stream stream) {
+        return stream.getFlow().getStatusId() == FlowStatus.READY.statusId()
+                && getStartStream(stream.getFlowId()).getStatusId() == StreamStatus.COMPLETE.statusId();
+    }
 
+    public void finish(Stream stream) {
+        if (this.isFinish(stream))
+            this.setFlowStatus(stream.getFlow(), FlowStatus.COMPLETE);
+        else
+            throw new RuntimeException("流程已结束");
+    }
+
+    public void setFlowStatus(Flow flow, FlowStatus status) {
+        FlowCondition flowCondition = new FlowCondition();
+        flowCondition.setFlowId(flow.getId());
+        flowCondition.setStatusId(status.statusId());
+        flowCondition.setUpdate("STREAM_STATUS");
+        this.flowDao.update(flowCondition);
+    }
 }

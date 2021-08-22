@@ -125,7 +125,7 @@ public abstract class AbstractNodeService {
         flowCondition.setSuperStreamId(stream.getId());
         List<Stream> subStreams = getStreamDao().list(flowCondition);
         for (Stream subStream : subStreams) {
-            subStream.setFlow(stream.getFlow());
+            this.sync(stream, subStream);
         }
         return subStreams;
     }
@@ -164,13 +164,6 @@ public abstract class AbstractNodeService {
         this.getStreamDao().update(flowCondition);
     }
 
-    public void setFlowStatus(Flow flow, FlowStatus status) {
-        FlowCondition flowCondition = new FlowCondition();
-        flowCondition.setFlowId(flow.getId());
-        flowCondition.setStatusId(status.statusId());
-        flowCondition.setUpdate("STREAM_STATUS");
-        this.getFlowDao().update(flowCondition);
-    }
 
     LinkFunction getFunction(Tree<?> tree) {
         return linkFunctionDao.get(tree.getFunctionId());
@@ -182,8 +175,12 @@ public abstract class AbstractNodeService {
 
     public Stream getSuperStream(Stream stream) {
         Stream superStream = this.getStreamDao().get(stream.getSuperId());
-        superStream.setFlow(superStream.getFlow());
+        this.sync(stream, superStream);
         return superStream;
+    }
+
+    void sync(Stream source, Stream target) {
+        target.setFlow(source.getFlow());
     }
 
 }

@@ -49,7 +49,6 @@ public class SerialNodeSerice extends AbstractComplexNodeService {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(stream.getFlowId());
         if (stream.getSuperId() == null) {
-            this.setFlowStatus(flowDao.get(stream.getFlowId()), FlowStatus.COMPLETE);
             return;
         }
         Stream superStream = this.getSuperStream(stream);

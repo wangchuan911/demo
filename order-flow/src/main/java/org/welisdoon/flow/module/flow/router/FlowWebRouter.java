@@ -57,6 +57,7 @@ public class FlowWebRouter {
         context.handler(routingContext -> {
             Flow flow = new Flow();
             flow.setTemplateId(1L);
+            flow.setFunctionId(1L);
             flowService.flow(flow);
             routingContext.end(JSONObject.toJSONString(flow));
         });
