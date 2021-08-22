@@ -29,6 +29,8 @@ public class SerialNodeSerice extends AbstractComplexNodeService {
         List<Stream> subStreams = this.getSubStreams(stream);
         AbstractNodeService abstractNodeService;
         this.setStreamStatus(stream, StreamStatus.WAIT);
+        if (stream.getSuperId() == null)
+            this.setFlowStatus(stream.getFlow(), FlowStatus.READY);
 
         Stream subStream = subStreams.get(0);
         abstractNodeService = getInstance(subStream.getNodeId());
@@ -49,6 +51,7 @@ public class SerialNodeSerice extends AbstractComplexNodeService {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(stream.getFlowId());
         if (stream.getSuperId() == null) {
+            this.setFlowStatus(stream.getFlow(), FlowStatus.COMPLETE);
             return;
         }
         Stream superStream = this.getSuperStream(stream);

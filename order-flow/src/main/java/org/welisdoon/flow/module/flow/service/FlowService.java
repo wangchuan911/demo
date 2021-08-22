@@ -124,7 +124,6 @@ public class FlowService {
             stream.setSubTree(this.streamDao.list(flowCondition));
         }*/
         if (flow.getStatusId() == FlowStatus.FUTURE.statusId() && stream.getStatusId() == StreamStatus.FUTURE.statusId()) {
-            this.setFlowStatus(flow, FlowStatus.READY);
             AbstractNodeService.getInstance(stream.getNodeId()).start(stream);
         } else {
             throw new RuntimeException("当前环节已结束");
@@ -144,8 +143,6 @@ public class FlowService {
             stream.setSubTree(this.streamDao.list(flowCondition));
         }*/
         AbstractNodeService.getInstance(stream.getNodeId()).finish(stream);
-        if (isFinish(stream))
-            this.finish(stream);
         return stream;
     }
 
@@ -155,23 +152,5 @@ public class FlowService {
         return this.streamDao.find(flowCondition);
     }
 
-    boolean isFinish(Stream stream) {
-        return stream.getFlow().getStatusId() == FlowStatus.READY.statusId()
-                && getStartStream(stream.getFlowId()).getStatusId() == StreamStatus.COMPLETE.statusId();
-    }
 
-    public void finish(Stream stream) {
-        if (this.isFinish(stream))
-            this.setFlowStatus(stream.getFlow(), FlowStatus.COMPLETE);
-        else
-            throw new RuntimeException("流程已结束");
-    }
-
-    public void setFlowStatus(Flow flow, FlowStatus status) {
-        FlowCondition flowCondition = new FlowCondition();
-        flowCondition.setFlowId(flow.getId());
-        flowCondition.setStatusId(status.statusId());
-        flowCondition.setUpdate("STREAM_STATUS");
-        this.flowDao.update(flowCondition);
-    }
 }

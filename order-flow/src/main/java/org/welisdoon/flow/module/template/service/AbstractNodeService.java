@@ -163,6 +163,13 @@ public abstract class AbstractNodeService {
         flowCondition.setUpdate("STREAM_STATUS");
         this.getStreamDao().update(flowCondition);
     }
+    public void setFlowStatus(Flow flow, FlowStatus status) {
+        FlowCondition flowCondition = new FlowCondition();
+        flowCondition.setFlowId(flow.getId());
+        flowCondition.setStatusId(status.statusId());
+        flowCondition.setUpdate("STREAM_STATUS");
+        this.flowDao.update(flowCondition);
+    }
 
 
     LinkFunction getFunction(Tree<?> tree) {
