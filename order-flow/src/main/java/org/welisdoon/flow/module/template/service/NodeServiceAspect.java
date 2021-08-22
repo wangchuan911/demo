@@ -52,13 +52,25 @@ public class NodeServiceAspect {
 
     }
 
-    @Pointcut("execution( void *..*.finish(org.welisdoon.flow.module.flow.entity.Stream)) && target(org.welisdoon.flow.module.flow.service.FlowService)")
-    public void flowFinish() {
+    @Pointcut("execution( void *..*.setFlowStatus(org.welisdoon.flow.module.flow.entity.Flow,org.welisdoon.flow.module.flow.entity.FlowStatus)) " +
+            "&& target(org.welisdoon.flow.module.template.service.AbstractNodeService)")
+    public void flowStatusChange() {
+
+    }
+    @Pointcut("execution( void *..*.setStreamStatus(org.welisdoon.flow.module.flow.entity.Stream,org.welisdoon.flow.module.flow.entity.StreamStatus)) " +
+            "&& target(org.welisdoon.flow.module.template.service.AbstractNodeService)")
+    public void streamStatusChange() {
 
     }
 
-    @After("flowFinish()")
-    public void afterStart(JoinPoint point) throws Throwable {
+    @After("flowStatusChange()")
+    public void afterFlowStatusChange(JoinPoint point) throws Throwable {
+        Stream stream = (Stream) point.getArgs()[0];
+        FlowEvent flowEvent = this.getFlowEvent(stream);
+        flowEvent.onFinished(stream.getFlow(), stream);
+    }
+    @After("streamStatusChange()")
+    public void afterStreamStatusChange(JoinPoint point) throws Throwable {
         Stream stream = (Stream) point.getArgs()[0];
         FlowEvent flowEvent = this.getFlowEvent(stream);
         flowEvent.onFinished(stream.getFlow(), stream);

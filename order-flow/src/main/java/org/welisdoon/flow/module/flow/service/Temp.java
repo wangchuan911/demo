@@ -64,4 +64,14 @@ public class Temp implements VirtualNodeInitializer, FlowEvent {
     public void onError(Flow flow, Stream stream, Throwable e) {
         e.printStackTrace();
     }
+
+    @Override
+    public void onFlowStatus(Flow flow, Stream stream) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
+
+    @Override
+    public void onStreamStatus(Flow flow, Stream stream) {
+        System.out.println(Thread.currentThread().getStackTrace()[1].toString());
+    }
 }

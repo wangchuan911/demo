@@ -162,6 +162,7 @@ public abstract class AbstractNodeService {
         flowCondition.setStatusId(status.statusId());
         flowCondition.setUpdate("STREAM_STATUS");
         this.getStreamDao().update(flowCondition);
+        stream.setStatusId(status.statusId());
     }
     public void setFlowStatus(Flow flow, FlowStatus status) {
         FlowCondition flowCondition = new FlowCondition();
@@ -169,6 +170,7 @@ public abstract class AbstractNodeService {
         flowCondition.setStatusId(status.statusId());
         flowCondition.setUpdate("STREAM_STATUS");
         this.flowDao.update(flowCondition);
+        flow.setStatusId(status.statusId());
     }
 
 
