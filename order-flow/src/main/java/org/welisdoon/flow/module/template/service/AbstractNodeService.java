@@ -27,10 +27,10 @@ import java.util.Set;
  * @Date 2021/8/19 23:44
  */
 public abstract class AbstractNodeService {
-    private static Reflections reflections;
+    static Reflections reflections;
     LinkDao linkDao;
     StreamDao streamDao;
-    NodeDao nodeDao;
+    static NodeDao nodeDao;
     LinkFunctionDao linkFunctionDao;
     FlowDao flowDao;
 
@@ -65,8 +65,9 @@ public abstract class AbstractNodeService {
     }
 
     @Autowired
-    public static void setReflections(Reflections reflections) {
-        AbstractNodeService.reflections = reflections;
+    public void setReflections(Reflections reflections) {
+        if (AbstractNodeService.reflections == null)
+            AbstractNodeService.reflections = reflections;
     }
 
     public LinkDao getLinkDao() {
@@ -91,8 +92,11 @@ public abstract class AbstractNodeService {
         return nodeDao;
     }
 
+    @Autowired
     public void setNodeDao(NodeDao nodeDao) {
-        this.nodeDao = nodeDao;
+        if (AbstractNodeService.nodeDao == null) {
+            AbstractNodeService.nodeDao = nodeDao;
+        }
     }
 
     public abstract void start(Stream stream);
@@ -100,12 +104,10 @@ public abstract class AbstractNodeService {
     public abstract void finish(Stream stream);
 
     public static AbstractNodeService getInstance(Long nodeId) {
-        NodeDao nodeDao = ApplicationContextProvider.getBean(NodeDao.class);
         return getInstance(nodeDao.get(nodeId));
     }
 
     public static AbstractNodeService getInstance(Node node) {
-        Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
         Set<Class<?>> classes = reflections.getTypesAnnotatedWith(NodeType.class);
         return (AbstractNodeService) ApplicationContextProvider
                 .getBean(classes.stream()
@@ -119,17 +121,22 @@ public abstract class AbstractNodeService {
         flowCondition.setFlowId(stream.getFlowId());
         flowCondition.setSuperStreamId(stream.getId());
         List<Stream> subStreams = getStreamDao().list(flowCondition);
+        for (Stream subStream : subStreams) {
+            subStream.setFlow(stream.getFlow());
+        }
         return subStreams;
     }
 
     public List<Stream> createSubStreams(Stream superStream, Link currentLink) {
         Stream currentStream = new Stream();
-        currentStream.setFlowId(superStream.getFlowId());
+        /*currentStream.setFlowId(superStream.getFlowId());
         currentStream.setNodeId(currentLink.getNodeId());
         currentStream.setFunctionId(currentLink.getFunctionId());
         currentStream.setSeq(currentLink.getSeq());
         currentStream.setSuperId(superStream.getId());
-        currentStream.setName(currentLink.getName());
+        currentStream.setName(currentLink.getName());*/
+        currentStream.sync(superStream);
+        currentStream.sync(currentLink);
         return List.of(currentStream);
     }
 
@@ -165,4 +172,15 @@ public abstract class AbstractNodeService {
     LinkFunction getFunction(Tree<?> tree) {
         return linkFunctionDao.get(tree.getFunctionId());
     }
+
+    public <T> T getFunctionObject(Long functionId) {
+        return ApplicationContextProvider.getBean(linkFunctionDao.get(functionId).targetClass());
+    }
+
+    public Stream getSuperStream(Stream stream) {
+        Stream superStream = this.getStreamDao().get(stream.getSuperId());
+        superStream.setFlow(superStream.getFlow());
+        return superStream;
+    }
+
 }

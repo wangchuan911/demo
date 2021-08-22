@@ -29,8 +29,8 @@ public class ParallelAllNode extends ParallelAnyNode {
         if (countResult.COMPLETE != subStreams.size()) {
             return;
         }
-        this.setStreamStatus(stream,StreamStatus.COMPLETE);
-        Stream superStream = this.getStreamDao().get(stream.getSuperId());
+        this.setStreamStatus(stream, StreamStatus.COMPLETE);
+        Stream superStream = this.getSuperStream(stream);
         AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
     }
 }

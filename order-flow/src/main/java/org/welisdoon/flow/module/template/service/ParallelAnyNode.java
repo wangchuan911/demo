@@ -40,7 +40,7 @@ public class ParallelAnyNode extends AbstractComplexNodeService {
         this.skip(subStreams);
 
         this.setStreamStatus(stream,StreamStatus.COMPLETE);
-        Stream superStream = this.getStreamDao().get(stream.getSuperId());
+        Stream superStream = this.getSuperStream(stream);
         AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
     }
 }

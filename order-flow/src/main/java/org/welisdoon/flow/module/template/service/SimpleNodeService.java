@@ -27,8 +27,8 @@ public class SimpleNodeService extends AbstractSimpleNodeSerivce {
 
     @Override
     public void finish(Stream stream) {
-        this.setStreamStatus(stream,StreamStatus.COMPLETE);
-        Stream superStream = this.getStreamDao().get(stream.getSuperId());
+        this.setStreamStatus(stream, StreamStatus.COMPLETE);
+        Stream superStream = this.getSuperStream(stream);
         AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
     }
 }

@@ -10,19 +10,20 @@ import org.welisdoon.flow.module.flow.entity.Stream;
  * @Date 2021/8/21 11:47
  */
 public interface FlowEvent {
-    void onCreateBefore(Flow flow);
+    void onPreCreate(Flow flow);
 
     void onCreated(Flow flow, Stream stream);
 
-    void onFinish(Flow flow, Stream stream);
+    void onFinished(Flow flow, Stream stream);
 
-    void onStartBefore(Stream stream);
+    void onPreStart(Stream stream);
 
-    void onStartAfter(Stream stream);
+    void onStarted(Stream stream);
 
-    void onFinishBefore(Stream stream);
+    void onPreFinish(Stream stream);
 
-    void onFinishAfter(Stream stream);
+    void onFinished(Stream stream);
 
-    void onError(Stream stream, Throwable e);
+    void onError(Flow flow, Stream stream, Throwable e);
+
 }

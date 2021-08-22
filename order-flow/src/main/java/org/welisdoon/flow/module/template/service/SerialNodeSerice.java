@@ -52,7 +52,7 @@ public class SerialNodeSerice extends AbstractComplexNodeService {
             this.setFlowStatus(flowDao.get(stream.getFlowId()), FlowStatus.COMPLETE);
             return;
         }
-        Stream superStream = this.getStreamDao().get(stream.getSuperId());
+        Stream superStream = this.getSuperStream(stream);
         AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
 
     }

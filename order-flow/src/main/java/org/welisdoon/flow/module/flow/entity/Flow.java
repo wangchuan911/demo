@@ -1,7 +1,5 @@
 package org.welisdoon.flow.module.flow.entity;
 
-import com.baomidou.dynamic.datasource.annotation.DS;
-
 /**
  * @Classname Flow
  * @Description TODO
@@ -10,7 +8,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
  */
 public class Flow {
     Long id, templateId, statusId;
-    Stream stream;
+    Stream start;
 
     public Long getId() {
         return id;
@@ -36,11 +34,11 @@ public class Flow {
         this.statusId = statusId;
     }
 
-    public Stream getStream() {
-        return stream;
+    public Stream getStart() {
+        return start;
     }
 
-    public void setStream(Stream stream) {
-        this.stream = stream;
+    public void setStart(Stream start) {
+        this.start = start;
     }
 }

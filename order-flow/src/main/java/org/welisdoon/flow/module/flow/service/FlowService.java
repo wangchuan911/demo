@@ -5,21 +5,16 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
 import org.welisdoon.flow.module.flow.entity.*;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.template.dao.NodeDao;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
 import org.welisdoon.flow.module.template.entity.Link;
-import org.welisdoon.flow.module.template.entity.Node;
 import org.welisdoon.flow.module.template.entity.TemplateCondition;
 import org.welisdoon.flow.module.template.service.AbstractNodeService;
 
-import javax.annotation.PostConstruct;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * @Classname FlowService
@@ -97,7 +92,7 @@ public class FlowService {
         streamDao.add(stream);
         this.initStreamData(rootLink, stream);
         System.out.println(JSONArray.toJSONString(rootLink));
-        flow.setStream(stream);
+        flow.setStart(stream);
     }
 
     void initStreamData(Link superLink, Stream superStream) {
@@ -119,6 +114,7 @@ public class FlowService {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(flow.getId());
         Stream stream = this.streamDao.find(flowCondition);
+        stream.setFlow(this.flowDao.get(stream.getFlowId()));
         /*if (CollectionUtils.isEmpty(stream.getSubTree())) {
             flowCondition.setSuperStreamId(stream.getId());
             flowCondition.setShowTree(true);
@@ -138,6 +134,7 @@ public class FlowService {
         if (stream.getStatusId() != StreamStatus.READY.statusId()) {
             throw new RuntimeException("当前环节已结束");
         }
+        stream.setFlow(this.flowDao.get(stream.getFlowId()));
         /*if (CollectionUtils.isEmpty(stream.getSubTree())) {
             FlowCondition flowCondition = new FlowCondition();
             flowCondition.setSuperStreamId(stream.getId());

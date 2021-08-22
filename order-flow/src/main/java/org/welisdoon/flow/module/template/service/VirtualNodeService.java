@@ -40,13 +40,16 @@ public class VirtualNodeService extends SimpleNodeService {
         LinkFunction function = this.getFunction(currentLink);
         VirtualNodeInitializer processor = ApplicationContextProvider.getBean(function.targetClass());
         Stream currentStream = new Stream();
-        currentStream.setFlowId(superStream.getFlowId());
+        currentStream.sync(superStream);
+        currentStream.sync(currentLink);
+
+        /*currentStream.setFlowId(superStream.getFlowId());
         currentStream.setNodeId(currentLink.getNodeId());
         currentStream.setFunctionId(currentLink.getFunctionId());
         currentStream.setSeq(currentLink.getSeq());
         currentStream.setSuperId(superStream.getId());
         currentStream.setStatusId(StreamStatus.FUTURE.statusId());
-        currentStream.setName(currentLink.getName());
+        currentStream.setName(currentLink.getName());*/
         return processor.createStream(currentStream);
     }
 
