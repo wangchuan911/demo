@@ -27,7 +27,20 @@ public class VirtualNodeService extends SimpleNodeService {
 
     @Override
     public void start(Stream stream) {
-        throw new RuntimeException("stream not allow link VirtualNode!");
+        LinkFunction function = this.getFunction(stream);
+        VirtualNodeInitializer processor = ApplicationContextProvider.getBean(function.targetClass());
+        if (processor == null)
+            throw new RuntimeException("stream not allow link VirtualNode!");
+        processor.onStart(stream);
+        AbstractNodeService nodeService = getInstance(stream.getNodeId());
+        if (nodeService instanceof VirtualNodeService)
+            throw new RuntimeException("stream not allow link VirtualNode!");
+        if (nodeService instanceof AbstractSimpleNodeSerivce) {
+            this.setStreamStatus(stream, StreamStatus.READY);
+        } else if (nodeService instanceof AbstractComplexNodeService) {
+            this.setStreamStatus(stream, StreamStatus.WAIT);
+        }
+        this.streamDao.put(stream);
     }
 
     @Override
@@ -50,7 +63,7 @@ public class VirtualNodeService extends SimpleNodeService {
         currentStream.setSuperId(superStream.getId());
         currentStream.setStatusId(StreamStatus.FUTURE.statusId());
         currentStream.setName(currentLink.getName());*/
-        return processor.createStream(currentStream);
+        return processor.onCreate(currentStream);
     }
 
 
