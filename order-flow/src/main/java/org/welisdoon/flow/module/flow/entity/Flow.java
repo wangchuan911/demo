@@ -49,4 +49,10 @@ public class Flow {
     public void setFunctionId(Long functionId) {
         this.functionId = functionId;
     }
+
+    public void sync(Flow flow){
+        this.setTemplateId(flow.getTemplateId());
+        this.setStatusId(flow.getStatusId());
+        this.setFunctionId(flow.getFunctionId());
+    }
 }

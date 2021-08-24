@@ -1,11 +1,8 @@
 package org.welisdoon.flow.module.template.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.welisdoon.flow.module.flow.entity.Stream;
-import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
-import org.welisdoon.flow.module.template.dao.LinkFunctionDao;
 import org.welisdoon.flow.module.template.entity.Link;
 import org.welisdoon.flow.module.template.entity.LinkFunction;
 import org.welisdoon.flow.module.template.intf.VirtualNodeInitializer;
@@ -29,18 +26,17 @@ public class VirtualNodeService extends SimpleNodeService {
     public void start(Stream stream) {
         LinkFunction function = this.getFunction(stream);
         VirtualNodeInitializer processor = ApplicationContextProvider.getBean(function.targetClass());
-        if (processor == null)
+        if (processor == null) {
             throw new RuntimeException("stream not allow link VirtualNode!");
+        }
         processor.onStart(stream);
         AbstractNodeService nodeService = getInstance(stream.getNodeId());
-        if (nodeService instanceof VirtualNodeService)
+        if (nodeService instanceof VirtualNodeService) {
             throw new RuntimeException("stream not allow link VirtualNode!");
-        if (nodeService instanceof AbstractSimpleNodeSerivce) {
-            this.setStreamStatus(stream, StreamStatus.READY);
-        } else if (nodeService instanceof AbstractComplexNodeService) {
-            this.setStreamStatus(stream, StreamStatus.WAIT);
         }
+
         this.streamDao.put(stream);
+        AbstractSimpleNodeSerivce.getInstance(stream.getNodeId()).start(stream);
     }
 
     @Override
@@ -63,7 +59,7 @@ public class VirtualNodeService extends SimpleNodeService {
         currentStream.setSuperId(superStream.getId());
         currentStream.setStatusId(StreamStatus.FUTURE.statusId());
         currentStream.setName(currentLink.getName());*/
-        return processor.onCreate(currentStream);
+        return processor.onInstantiated(currentStream);
     }
 
 

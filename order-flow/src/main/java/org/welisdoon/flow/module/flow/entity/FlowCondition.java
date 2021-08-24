@@ -31,8 +31,9 @@ public class FlowCondition {
         return flowId;
     }
 
-    public void setFlowId(Long flowId) {
+    public FlowCondition setFlowId(Long flowId) {
         this.flowId = flowId;
+        return this;
     }
 
 

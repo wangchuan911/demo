@@ -5,6 +5,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
 import org.welisdoon.flow.module.flow.entity.*;
 import org.welisdoon.flow.module.template.dao.LinkDao;
@@ -82,21 +83,7 @@ public class FlowService {
     public void flow(Flow flow) {
         flow.setStatusId(FlowStatus.FUTURE.statusId());
         flowDao.add(flow);
-        TemplateCondition condition = new TemplateCondition();
-        condition.setTemplateId(flow.getTemplateId());
-        condition.setShowTree(true);
-        Link rootLink = linkDao.find(condition);
-        Stream stream = new Stream();
-        stream.setFlowId(flow.getId());
-        stream.setNodeId(rootLink.getNodeId());
-        stream.setFunctionId(rootLink.getFunctionId());
-        stream.setSeq(rootLink.getSeq());
-        stream.setStatusId(StreamStatus.FUTURE.statusId());
-        stream.setFlow(flow);
-        streamDao.add(stream);
-        this.initStreamData(rootLink, stream);
-        System.out.println(JSONArray.toJSONString(rootLink));
-        flow.setStart(stream);
+
     }
 
     void initStreamData(Link superLink, Stream superStream) {
@@ -114,25 +101,47 @@ public class FlowService {
         }
     }
 
-    public void appendExtraStream(Template template, Stream superStream) {
+    public void streamExpandByTemplate(Template template, Stream superStream) {
         TemplateCondition condition = new TemplateCondition();
         condition.setTemplateId(template.getId());
         condition.setShowTree(true);
         Link rootLink = linkDao.find(condition);
+        superStream.setNodeId(rootLink.getNodeId());
+        superStream.setFunctionId(rootLink.getFunctionId());
         this.initStreamData(rootLink, superStream);
     }
 
 
-    public void start(Flow flow) {
-        Stream stream = this.getStartStream(flow.getId());
-        stream.setFlow(this.flowDao.get(stream.getFlowId()));
+    public void start(Flow start) {
+        /*Stream stream = this.getStartStream(flow.getId());
+        stream.setFlow(this.flowDao.get(stream.getFlowId()));*/
         /*if (CollectionUtils.isEmpty(stream.getSubTree())) {
             flowCondition.setSuperStreamId(stream.getId());
             flowCondition.setShowTree(true);
             flowCondition.setFlowId(stream.getFlowId());
             stream.setSubTree(this.streamDao.list(flowCondition));
         }*/
-        if (flow.getStatusId() == FlowStatus.FUTURE.statusId() && stream.getStatusId() == StreamStatus.FUTURE.statusId()) {
+        Flow flow = this.flowDao.get(start.getId());
+        start.sync(flow);
+        if (flow.getStatusId() == FlowStatus.FUTURE.statusId()
+                && CollectionUtils.isEmpty(this.streamDao.list(new FlowCondition().setFlowId(flow.getId())))) {
+
+            TemplateCondition condition = new TemplateCondition();
+            condition.setTemplateId(flow.getTemplateId());
+            condition.setShowTree(true);
+            Link rootLink = linkDao.find(condition);
+            Stream stream = new Stream();
+            stream.setFlowId(flow.getId());
+            stream.setNodeId(rootLink.getNodeId());
+            stream.setFunctionId(rootLink.getFunctionId());
+            stream.setSeq(rootLink.getSeq());
+            stream.setStatusId(StreamStatus.FUTURE.statusId());
+            stream.setFlow(flow);
+            streamDao.add(stream);
+            this.initStreamData(rootLink, stream);
+            System.out.println(JSONArray.toJSONString(rootLink));
+            flow.setStart(stream);
+
             AbstractNodeService.getInstance(stream.getNodeId()).start(stream);
         } else {
             throw new RuntimeException("当前环节已结束");

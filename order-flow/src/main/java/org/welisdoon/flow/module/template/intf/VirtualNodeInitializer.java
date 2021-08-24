@@ -12,7 +12,7 @@ import java.util.List;
  * @Date 2021/8/21 00:58
  */
 public interface VirtualNodeInitializer {
-    List<Stream> onCreate(Stream templateStream);
+    List<Stream> onInstantiated(Stream templateStream);
 
     void onStart(Stream currentStream);
 }

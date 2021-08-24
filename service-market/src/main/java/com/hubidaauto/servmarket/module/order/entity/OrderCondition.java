@@ -15,15 +15,9 @@ import java.util.Map;
  * @Date 2021/8/13 12:14
  */
 public class OrderCondition extends AbstractBaseCondition<Long, OrderVO> {
-    int type;
+    int typeId;
 
-    public void setType(int type) {
-        this.type = type;
-    }
 
-    public int getType() {
-        return type;
-    }
 
 
 }

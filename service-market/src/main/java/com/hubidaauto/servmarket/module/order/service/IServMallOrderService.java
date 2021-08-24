@@ -12,5 +12,5 @@ import org.welisdoon.web.vertx.annotation.VertxServiceProxy;
  */
 @VertxServiceProxy(targetClass = ServMallOrderService.class, address = "{wechat-app-hubida.appID}")
 public interface IServMallOrderService {
-    Future<String> hehe(OrderCondition a);
+    Future<String> newOrder(OrderCondition a);
 }

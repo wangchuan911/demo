@@ -19,7 +19,7 @@ import java.util.List;
 @ConditionalOnProperty(prefix = "demo", name = "router")
 public class Temp implements VirtualNodeInitializer, FlowEvent {
     @Override
-    public List<Stream> onCreate(Stream templateStream) {
+    public List<Stream> onInstantiated(Stream templateStream) {
         templateStream.setNodeId(6L);
         templateStream.setFunctionId(null);
         return List.of(templateStream, templateStream);
