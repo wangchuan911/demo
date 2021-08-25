@@ -18,7 +18,7 @@
     </select>
 
     <insert id="add" parameterType="org.welisdoon.flow.module.flow.entity.Flow" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO F_FLOW (TEMPLATE_ID, STATUS_ID) VALUES (#{templateId}, #{statusId})
+        INSERT INTO F_FLOW (TEMPLATE_ID, STATUS_ID,FUNCTION_ID) VALUES (#{templateId}, #{statusId},#{functionId})
     </insert>
 
     <update id="update" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" >
