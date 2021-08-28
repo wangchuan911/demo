@@ -42,6 +42,7 @@ public class ServiceChoiceOperation implements VirtualNodeService.VirtualNodeIni
             stream.setSeq(i + 1);
             stream.setFunctionId(4L);
             stream.setNodeId(1L);
+            stream.setName(templateStream.getName());
             list.add(stream);
         }
         return list;

@@ -66,6 +66,7 @@ public class WorkToStaffOperation implements VirtualNodeService.VirtualNodeIniti
             stream.setValueId(staffVO.getId());
             stream.setFunctionId(null);
             stream.setNodeId(6L);
+            stream.setName(templateStream.getName());
             return stream;
         }).collect(Collectors.toList());
     }

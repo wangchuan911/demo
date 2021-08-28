@@ -2,17 +2,17 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
+import com.hubidaauto.servmarket.module.order.entity.WorkOrderCondition;
+import com.hubidaauto.servmarket.module.order.entity.WorkOrderVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Flow;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
-import org.welisdoon.flow.module.flow.service.FlowService;
-
-import java.util.Map;
 
 /**
  * @Classname ServMallOrderService
@@ -23,34 +23,39 @@ import java.util.Map;
 @Service
 @DS("shop")
 @Transactional(rollbackFor = Throwable.class)
-public class ServiceClassOrderService implements FlowEvent {
+@OrderClass(id = 1000L)
+public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderVO, WorkOrderVO> {
     static long TEMPLATE_ID = 1L;
-    FlowService flowService;
+    FlowProxyService flowService;
 
     @Autowired
-    public void setFlowService(FlowService flowService) {
+    public void setFlowService(FlowProxyService flowService) {
         this.flowService = flowService;
     }
 
 
+    @Override
     @DS("flow")
-    public String newOrder(Map<String, Object> map) {
+    public void order(OrderCondition<ServiceClassOrderVO> condition) {
         System.out.println(Thread.currentThread());
         Flow flow = new Flow();
         flow.setTemplateId(TEMPLATE_ID);
         flow.setFunctionId(5L);
         this.flowService.flow(flow);
-        return JSONObject.toJSONString(flow);
     }
 
-    @DS("flow")
-    public String start(Long id) {
-        return JSONObject.toJSONString(this.flowService.start(id));
+
+    @Override
+    public void start(OrderCondition<ServiceClassOrderVO> condition) {
+
+        this.flowService.start(condition.getFlowId());
     }
 
-    @DS("flow")
-    public String stream(Long id) {
-        return JSONObject.toJSONString(this.flowService.stream(id));
+
+    @Override
+    public void workOrder(WorkOrderCondition<WorkOrderVO> workOrderCondition) {
+
+        this.flowService.stream(workOrderCondition.getStreamId());
     }
 
     @Override
