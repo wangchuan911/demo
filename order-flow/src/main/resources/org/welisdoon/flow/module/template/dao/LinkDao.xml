@@ -12,6 +12,7 @@
         <result column="TEMPLATE_ID" property="templateId"></result>
         <result column="FUNCTION_ID" property="functionId"></result>
         <result column="NAME" property="name"></result>
+        <result column="VALUE_ID" property="valueId" ></result>
         <collection property="subTree" ofType="org.welisdoon.flow.module.template.entity.Link"
                     select="list" column="{superLinkId=SUB_SELECT_ID,templateId=TEMPLATE_ID,showTree=SHOW_TREE}"></collection>
     </resultMap>

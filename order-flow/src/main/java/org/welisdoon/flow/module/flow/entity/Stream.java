@@ -48,6 +48,7 @@ public class Stream extends Tree<Stream> {
     public void sync(Link currentLink) {
         this.setNodeId(currentLink.getNodeId());
         this.setFunctionId(currentLink.getFunctionId());
+        this.setValueId(currentLink.getValueId());
         this.setSeq(currentLink.getSeq());
         this.setName(currentLink.getName());
 

@@ -2,7 +2,6 @@ package com.hubidaauto.servmarket.module.flow.common;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.order.consts.OrderFlowTemplate;
-import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,20 +10,18 @@ import org.welisdoon.flow.module.flow.service.FlowService;
 import org.welisdoon.flow.module.template.entity.Template;
 import org.welisdoon.flow.module.template.service.VirtualNodeService;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * @Classname SignInOperation
+ * @Classname ServiceChoice
  * @Description TODO
  * @Author wang.zhidong
- * @Date 2021/8/23 23:24
+ * @Date 2021/8/24 00:52
  */
 @Service
-@DS("shop")
 @Transactional(rollbackFor = Throwable.class)
-public class SignInOperation implements VirtualNodeService.VirtualNodeInitializer {
-
-    ServiceClassOrderDao orderDao;
+public class ServiceChoiceOperation implements VirtualNodeService.VirtualNodeInitializer {
 
     FlowService flowService;
 
@@ -33,20 +30,25 @@ public class SignInOperation implements VirtualNodeService.VirtualNodeInitialize
         this.flowService = flowService;
     }
 
-    @Autowired
-    public void setOrderDao(ServiceClassOrderDao orderDao) {
-        this.orderDao = orderDao;
-    }
-
     @Override
+    @DS("shop")
     public List<Stream> onInstantiated(Stream templateStream) {
-        return List.of(templateStream);
+        List<Stream> list = new LinkedList();
+        for (int i = 0; i < 2; i++) {
+            Stream stream = new Stream();
+            stream.setFlow(templateStream.getFlow());
+            stream.setSuperId(templateStream.getSuperId());
+            stream.setFlowId(templateStream.getFlowId());
+            stream.setSeq(i + 1);
+            stream.setFunctionId(4L);
+            stream.setNodeId(1L);
+            list.add(stream);
+        }
+        return list;
     }
 
     @Override
     public void onStart(Stream currentStream) {
-        Template template = new Template();
-        template.setId(OrderFlowTemplate.SIGN_IN.getTemplateId());
-        flowService.streamExpandByTemplate(template, currentStream);
+        throw new RuntimeException("无效节点");
     }
 }

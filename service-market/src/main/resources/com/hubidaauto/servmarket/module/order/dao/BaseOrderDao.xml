@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao">
+    <sql id="columns">
+        A.CODE,A.PRICE,A.FLOW_ID,A.STATUS_ID,A.CUST_ID,A.CLASS_ID
+    </sql>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
+        <include refid="list"></include>
+        LIMIT ${page.start},${page.size}
+    </select>
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
+        <include refid="list"></include>
+    </select>
+    <sql id="list">
+        SELECT A.* FROM BASE_ORDER A
+        <where>
+            <choose>
+                <otherwise>
+                    <if test="flowId!=null">
+                        and A.FLOW_ID=#{flowId}
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+    </sql>
+    <sql id="condition">
+        AND A.ID=#{id}
+    </sql>
+    <select id="get" parameterType="long" resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
+        <include refid="get"></include>
+    </select>
+    <sql id="get">
+        SELECT A.* FROM BASE_ORDER A WHERE A.ID=#{value}
+    </sql>
+
+</mapper>

@@ -10,7 +10,7 @@
         <where>
             <choose>
                 <when test="id!=null">
-                    and item_id=#{id}
+                    and ITEM_ID=#{id}
                 </when>
                 <otherwise>
                     <if test="datas!=null and datas.size()>0">
@@ -28,7 +28,7 @@
         </where>
     </select>
     <sql id="condition">
-        and a.item_id=#{data.itemId}
+        and a.ITEM_ID=#{data.itemId}
     </sql>
 
 </mapper>

@@ -111,12 +111,13 @@ public abstract class AbstractNodeService {
     }
 
     public static AbstractNodeService getInstance(Node node) {
-        Set<Class<?>> classes = reflections.getTypesAnnotatedWith(NodeType.class);
-        return (AbstractNodeService) ApplicationContextProvider
-                .getBean(classes.stream()
-                        .filter(aClass -> AbstractNodeService.class.isAssignableFrom(aClass)
-                                && aClass.getAnnotation(NodeType.class).value() == node.getTypeId())
-                        .findFirst().get());
+        return (AbstractNodeService) ApplicationContextProvider.getApplicationContext().getBeansWithAnnotation(NodeType.class).entrySet().stream().filter(stringObjectEntry -> {
+            Class<?> aClass = ApplicationContextProvider
+                    .getRealClass(stringObjectEntry.getValue().getClass());
+            return AbstractNodeService.class.isAssignableFrom(aClass)
+                    && aClass.getAnnotation(NodeType.class).value() == node.getTypeId();
+
+        }).findFirst().get().getValue();
     }
 
     public List<Stream> getSubStreams(Stream stream) {
@@ -164,6 +165,7 @@ public abstract class AbstractNodeService {
         this.getStreamDao().update(flowCondition);
         stream.setStatusId(status.statusId());
     }
+
     public void setFlowStatus(Flow flow, FlowStatus status) {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(flow.getId());

@@ -1,17 +1,19 @@
 package com.hubidaauto.servmarket.module.order.web;
 
+import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
-import com.hubidaauto.servmarket.module.order.service.IServMallOrderService;
-import com.hubidaauto.servmarket.module.order.service.ServMallOrderService;
+import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
+import com.hubidaauto.servmarket.module.order.service.IServiceClassOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
-import io.vertx.core.json.Json;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.welisdoon.flow.module.flow.entity.Flow;
+import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -19,6 +21,8 @@ import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
+
+import java.util.HashMap;
 
 /**
  * @Classname OrderWebRouter
@@ -33,7 +37,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 public class OrderWebRouter {
     AbstractWechatConfiguration customWeChatAppConfiguration;
     AppUserDao appUserDao;
-    IServMallOrderService iServMallOrderService;
+    IServiceClassOrderService iServMallOrderService;
 
     @Autowired
     public void setAppUserDao(AppUserDao appUserDao) {
@@ -46,7 +50,7 @@ public class OrderWebRouter {
     }
 
     @Autowired
-    public void setiServMallOrderService(IServMallOrderService iServMallOrderService) {
+    public void setiServMallOrderService(IServiceClassOrderService iServMallOrderService) {
         this.iServMallOrderService = iServMallOrderService;
     }
 
@@ -79,11 +83,56 @@ public class OrderWebRouter {
             method = "POST")
     public void newOder(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            iServMallOrderService.newOrder((OrderCondition) new OrderCondition().setData(new OrderVO())).onSuccess(value -> {
+
+            iServMallOrderService.newOrder(new HashMap<>()).onSuccess(value -> {
                 routingContext.end(value);
             }).onFailure(throwable -> {
                 routingContext.end(throwable.getMessage());
             });
+        });
+    }
+
+
+    @VertxRouter(path = "\\/stream\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+    public void stream(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                iServMallOrderService
+                        .stream(Long.parseLong(routingContext.pathParam("id")))
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end(stringAsyncResult.result());
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+                ;
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.fail(e.getCause());
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/start\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+    public void start(RoutingContextChain context) {
+
+        context.handler(routingContext -> {
+            try {
+                iServMallOrderService
+                        .start(Long.parseLong(routingContext.pathParam("id")))
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end(stringAsyncResult.result());
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+                ;
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.fail(e.getCause());
+            }
         });
     }
 

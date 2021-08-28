@@ -5,7 +5,6 @@ import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.template.annotation.NodeType;
 import org.welisdoon.flow.module.template.entity.Link;
 import org.welisdoon.flow.module.template.entity.LinkFunction;
-import org.welisdoon.flow.module.template.intf.VirtualNodeInitializer;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
@@ -62,5 +61,9 @@ public class VirtualNodeService extends SimpleNodeService {
         return processor.onInstantiated(currentStream);
     }
 
+    public interface VirtualNodeInitializer {
+        List<Stream> onInstantiated(Stream templateStream);
 
+        void onStart(Stream currentStream);
+    }
 }

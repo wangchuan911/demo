@@ -26,7 +26,6 @@ import java.util.LinkedList;
  * @Date 2021/8/17 19:56
  */
 @Service
-@DS("flow")
 @Transactional(rollbackFor = Throwable.class)
 public class FlowService {
 
@@ -112,7 +111,7 @@ public class FlowService {
     }
 
 
-    public void start(Flow start) {
+    public Flow start(Long flowId) {
         /*Stream stream = this.getStartStream(flow.getId());
         stream.setFlow(this.flowDao.get(stream.getFlowId()));*/
         /*if (CollectionUtils.isEmpty(stream.getSubTree())) {
@@ -121,8 +120,7 @@ public class FlowService {
             flowCondition.setFlowId(stream.getFlowId());
             stream.setSubTree(this.streamDao.list(flowCondition));
         }*/
-        Flow flow = this.flowDao.get(start.getId());
-        start.sync(flow);
+        Flow flow = this.flowDao.get(flowId);
         if (flow.getStatusId() == FlowStatus.FUTURE.statusId()
                 && CollectionUtils.isEmpty(this.streamDao.list(new FlowCondition().setFlowId(flow.getId())))) {
 
@@ -146,9 +144,11 @@ public class FlowService {
         } else {
             throw new RuntimeException("当前环节已结束");
         }
+        return flow;
     }
 
-    public Stream stream(Stream stream) {
+    public Stream stream(Long id) {
+        Stream stream = streamDao.get(id);
         if (stream.getStatusId() != StreamStatus.READY.statusId()) {
             throw new RuntimeException("当前环节已结束");
         }

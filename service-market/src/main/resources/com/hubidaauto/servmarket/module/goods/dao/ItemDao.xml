@@ -7,7 +7,7 @@
     <select id="get"
             parameterType="long"
             resultType="com.hubidaauto.servmarket.module.goods.entity.ItemVO">
-        select * from MALL_ITEM a where a.id=#{value}
+        select * from MALL_ITEM a where a.ID=#{value}
     </select>
 
     <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemCondition"
@@ -28,7 +28,7 @@
         limit ${page.start},${page.size}
     </select>
     <sql id="condition">
-        and a.type=#{data.type}
+        and a.TYPE=#{data.type}
     </sql>
 
 </mapper>

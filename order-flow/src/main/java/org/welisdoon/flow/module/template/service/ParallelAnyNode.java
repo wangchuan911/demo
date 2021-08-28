@@ -34,7 +34,7 @@ public class ParallelAnyNode extends AbstractComplexNodeService {
     public void finish(Stream stream) {
         List<Stream> subStreams = this.getSubStreams(stream);
         SubStreamStatusCount countResult = this.countStreamStatus(subStreams);
-        if (countResult.COMPLETE > 0) {
+        if (countResult.COMPLETE == 0) {
             return;
         }
         this.skip(subStreams);

@@ -67,8 +67,7 @@ public class FlowWebRouter {
     public void stream(RoutingContextChain context) {
         context.handler(routingContext -> {
             try {
-                Stream stream = streamDao.get(Long.parseLong(routingContext.pathParam("id")));
-                stream = flowService.stream(stream);
+                Stream stream = flowService.stream(Long.parseLong(routingContext.pathParam("id")));
                 routingContext.end(JSONObject.toJSONString(stream));
             } catch (Throwable e) {
                 e.printStackTrace();
@@ -82,8 +81,7 @@ public class FlowWebRouter {
 
         context.handler(routingContext -> {
             try {
-                Flow flow = flowDao.get(Long.parseLong(routingContext.pathParam("id")));
-                flowService.start(flow);
+                Flow flow = flowService.start(Long.parseLong(routingContext.pathParam("id")));
                 routingContext.end(JSONObject.toJSONString(flow));
             } catch (Throwable e) {
                 e.printStackTrace();

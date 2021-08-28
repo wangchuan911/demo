@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao">
+    <sql id="columns">
+        <include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.columns"></include>
+    </sql>
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
+            resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
+
+        SELECT <include refid="columns"></include>,b.*
+        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
+        JOIN SERVICE_CLASS_ORDER B
+        ON A.ID=B.ID
+
+    </select>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
+            resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
+
+        SELECT <include refid="columns"></include>,b.*
+        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
+        JOIN SERVICE_CLASS_ORDER B
+        ON A.ID=B.ID
+
+        limit ${page.start},${page.size}
+    </select>
+    <sql id="condition">
+        and a.id=#{data.ID}
+    </sql>
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
+        SELECT <include refid="columns"></include>,b.*
+        (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.get"></include>) A
+        JOIN SERVICE_CLASS_ORDER B
+        ON A.ID=B.ID
+
+
+    </select>
+
+</mapper>

@@ -14,17 +14,20 @@ import org.welisdoon.flow.module.template.service.VirtualNodeService;
 import java.util.List;
 
 /**
- * @Classname SignInOperation
+ * @Classname AppointWorkOperation
  * @Description TODO
  * @Author wang.zhidong
- * @Date 2021/8/23 23:24
+ * @Date 2021/8/23 23:35
  */
 @Service
-@DS("shop")
 @Transactional(rollbackFor = Throwable.class)
-public class SignInOperation implements VirtualNodeService.VirtualNodeInitializer {
-
+public class AppointWorkOperation implements VirtualNodeService.VirtualNodeInitializer {
     ServiceClassOrderDao orderDao;
+
+    @Autowired
+    public void setOrderDao(ServiceClassOrderDao orderDao) {
+        this.orderDao = orderDao;
+    }
 
     FlowService flowService;
 
@@ -33,12 +36,8 @@ public class SignInOperation implements VirtualNodeService.VirtualNodeInitialize
         this.flowService = flowService;
     }
 
-    @Autowired
-    public void setOrderDao(ServiceClassOrderDao orderDao) {
-        this.orderDao = orderDao;
-    }
-
     @Override
+    @DS("shop")
     public List<Stream> onInstantiated(Stream templateStream) {
         return List.of(templateStream);
     }
@@ -46,7 +45,7 @@ public class SignInOperation implements VirtualNodeService.VirtualNodeInitialize
     @Override
     public void onStart(Stream currentStream) {
         Template template = new Template();
-        template.setId(OrderFlowTemplate.SIGN_IN.getTemplateId());
+        template.setId(OrderFlowTemplate.SERVICE_CHOICE.getTemplateId());
         flowService.streamExpandByTemplate(template, currentStream);
     }
 }

@@ -9,7 +9,7 @@ import java.util.Arrays;
  * @Date 2021/8/24 00:44
  */
 public enum OrderFlowTemplate {
-    CREATE_ORDER(1), SIGN_IN(2), APPIONT_WORKER(3), SERVICE_CHOICE(4);
+    CREATE_ORDER(1), SIGN_IN(2), SERVICE_CHOICE(3), APPIONT_WORKER(4);
 
     private long templateId;
 

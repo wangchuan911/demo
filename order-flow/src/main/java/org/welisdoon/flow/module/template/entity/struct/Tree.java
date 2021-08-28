@@ -9,7 +9,7 @@ import java.util.List;
  * @Date 2021/8/19 23:36
  */
 public abstract class Tree<T> {
-    Long id, superId, functionId, nodeId;
+    Long id, superId, functionId, nodeId, valueId;
     int seq;
     String name;
     List<T> subTree;
@@ -77,6 +77,15 @@ public abstract class Tree<T> {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+
+    public Long getValueId() {
+        return valueId;
+    }
+
+    public void setValueId(Long valueId) {
+        this.valueId = valueId;
     }
 
     @Override

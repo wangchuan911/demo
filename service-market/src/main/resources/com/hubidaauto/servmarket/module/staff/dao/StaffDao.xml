@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.staff.dao.StaffDao">
+    <select id="get"
+            parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.staff.entity.StaffVO">
+        SELECT B.*,A.ROLE_ID,A.ORDER_ID FROM STAFF A
+         JOIN APP_USER B
+         ON A.ID=B.ID
+         A WHERE A.ID=#{value}
+    </select>
+
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffCondition"
+            resultType="com.hubidaauto.servmarket.module.staff.entity.StaffVO">
+        SELECT B.*,A.ROLE_ID,A.ORDER_ID FROM STAFF A
+        JOIN APP_USER B
+        ON A.ID=B.ID
+        <where>
+            <if test="orderId!=null">
+                and A.ORDER_ID=#{orderId}
+            </if>
+
+        </where>
+        <if test="isPage==true">
+            LIMIT ${page.start},${page.size}
+        </if>
+    </select>
+
+</mapper>

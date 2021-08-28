@@ -16,35 +16,63 @@ import java.util.Arrays;
  * @Author wang.zhidong
  * @Date 2021/8/13 12:14
  */
-@DataObject
 public class OrderVO {
-    public OrderVO() {
+    Long id, price, flowId, statusId, custId, classId;
+    String code;
+
+    public Long getId() {
+        return id;
     }
 
-    public OrderVO(JsonObject jsonObject) {
-        OrderVO condition = jsonObject.mapTo(this.getClass());
-        Arrays.stream(this.getClass().getMethods()).filter(method -> {
-            return method.getName().indexOf("set") == 0 && method.getParameterCount() == 1;
-        }).forEach(method -> {
-            char[] chars = method.getName().substring(3).toCharArray();
-            String name = new String(chars), head;
-            if (method.getParameterTypes()[0] == boolean.class || method.getParameterTypes()[0] == Boolean.class) {
-                head = "is";
-            } else {
-                head = "get";
-            }
-            try {
-                method.invoke(this, getClass().getMethod(String.format("%s%s", head, name)).invoke(condition));
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-        });
+    public void setId(Long id) {
+        this.id = id;
     }
-    public JsonObject toJson() {
-        return JsonObject.mapFrom(this);
+
+    public Long getPrice() {
+        return price;
+    }
+
+    public void setPrice(Long price) {
+        this.price = price;
+    }
+
+    public Long getFlowId() {
+        return flowId;
+    }
+
+    public void setFlowId(Long flowId) {
+        this.flowId = flowId;
+    }
+
+    public Long getStatusId() {
+        return statusId;
+    }
+
+    public void setStatusId(Long statusId) {
+        this.statusId = statusId;
+    }
+
+    public Long getCustId() {
+        return custId;
+    }
+
+    public void setCustId(Long custId) {
+        this.custId = custId;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public Long getClassId() {
+        return classId;
+    }
+
+    public void setClassId(Long classId) {
+        this.classId = classId;
     }
 }
