@@ -1,4 +1,4 @@
-package com.hubidaauto.servmarket.module.order.entity;
+package com.hubidaauto.servmarket.module.workorder.entity;
 
 import com.hubidaauto.servmarket.common.entity.AbstractBaseCondition;
 

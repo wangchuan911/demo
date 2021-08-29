@@ -15,6 +15,7 @@
         <module>car-service</module>
         <module>common-utils</module>
         <module>service-market</module>
+        <module>order-flow</module>
     </modules>
 
     <properties>

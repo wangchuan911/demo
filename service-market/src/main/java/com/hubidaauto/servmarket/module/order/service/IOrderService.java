@@ -2,8 +2,8 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
-import com.hubidaauto.servmarket.module.order.entity.WorkOrderCondition;
-import com.hubidaauto.servmarket.module.order.entity.WorkOrderVO;
+import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
+import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 
 /**
  * @Classname OrderService

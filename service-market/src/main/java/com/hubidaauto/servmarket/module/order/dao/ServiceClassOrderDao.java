@@ -3,6 +3,7 @@ package com.hubidaauto.servmarket.module.order.dao;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
+import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
 import org.springframework.stereotype.Repository;
 import org.welisdoon.web.common.dao.ITemplateDao;
@@ -15,6 +16,6 @@ import org.welisdoon.web.common.dao.ITemplateDao;
  */
 @Repository
 @DS("shop")
-public interface ServiceClassOrderDao extends ITemplateDao<Long, ServiceClassOrderVO, OrderCondition<ServiceClassOrderVO>> {
+public interface ServiceClassOrderDao extends ITemplateDao<Long, ServiceClassOrderVO, ServiceClassOrderCondition> {
 
 }

@@ -1,17 +1,20 @@
 package com.hubidaauto.servmarket.module.order.service;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
-import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
-import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
-import com.hubidaauto.servmarket.module.order.entity.WorkOrderCondition;
-import com.hubidaauto.servmarket.module.order.entity.WorkOrderVO;
+import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
+import com.hubidaauto.servmarket.module.order.entity.*;
+import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
+import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
+import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
+import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Flow;
 import org.welisdoon.flow.module.flow.entity.Stream;
+import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 
 /**
@@ -24,9 +27,23 @@ import org.welisdoon.flow.module.flow.intf.FlowEvent;
 @DS("shop")
 @Transactional(rollbackFor = Throwable.class)
 @OrderClass(id = 1000L)
-public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderVO, WorkOrderVO> {
+public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderVO, ServiceClassWorkOrderVO> {
     static long TEMPLATE_ID = 1L;
     FlowProxyService flowService;
+
+    ServiceClassOrderDao orderDao;
+
+    ServiceClassWorkOrderDao workOrderDao;
+
+    @Autowired
+    public void setWorkOrderDao(ServiceClassWorkOrderDao workOrderDao) {
+        this.workOrderDao = workOrderDao;
+    }
+
+    @Autowired
+    public void setOrderDao(ServiceClassOrderDao orderDao) {
+        this.orderDao = orderDao;
+    }
 
     @Autowired
     public void setFlowService(FlowProxyService flowService) {
@@ -35,27 +52,32 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
 
     @Override
-    @DS("flow")
     public void order(OrderCondition<ServiceClassOrderVO> condition) {
         System.out.println(Thread.currentThread());
+        ServiceClassOrderVO orderVO = new ServiceClassOrderVO();
+        orderDao.add(orderVO);
+
         Flow flow = new Flow();
         flow.setTemplateId(TEMPLATE_ID);
         flow.setFunctionId(5L);
         this.flowService.flow(flow);
+
+        orderVO.setFlowId(flow.getId());
+        orderDao.put(orderVO);
     }
 
 
     @Override
     public void start(OrderCondition<ServiceClassOrderVO> condition) {
-
-        this.flowService.start(condition.getFlowId());
+        ServiceClassOrderVO orderVO = orderDao.get(condition.getId());
+        this.flowService.start(orderVO.getFlowId());
     }
 
 
     @Override
-    public void workOrder(WorkOrderCondition<WorkOrderVO> workOrderCondition) {
-
-        this.flowService.stream(workOrderCondition.getStreamId());
+    public void workOrder(WorkOrderCondition<ServiceClassWorkOrderVO> workOrderCondition) {
+        ServiceClassWorkOrderVO workOrderVO=workOrderDao.get(workOrderCondition.getId());
+        this.flowService.stream(workOrderVO.getStreamId());
     }
 
     @Override
@@ -113,8 +135,23 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
+    @Transactional(rollbackFor = Throwable.class,propagation = Propagation.REQUIRES_NEW)
     public void onStreamStatus(Flow flow, Stream stream) {
         System.out.println("onStreamStatus");
-
+        ServiceClassWorkOrderCondition workOrderCondition=new ServiceClassWorkOrderCondition();
+        ServiceClassWorkOrderVO workOrderVO;
+        switch (StreamStatus.getInstance(stream.getStatusId())){
+            case SKIP:
+                workOrderDao.update(workOrderCondition);
+                break;
+            case WAIT:
+            case READY:
+                workOrderVO=new ServiceClassWorkOrderVO();
+                workOrderDao.add(workOrderVO);
+                break;
+            case COMPLETE:
+                workOrderDao.update(workOrderCondition);
+                break;
+        }
     }
 }
