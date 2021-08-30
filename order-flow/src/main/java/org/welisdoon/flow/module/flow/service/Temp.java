@@ -71,7 +71,7 @@ public class Temp implements VirtualNodeService.VirtualNodeInitializer, FlowEven
     }
 
     @Override
-    public void onFlowStatus(Flow flow, Stream stream) {
+    public void onFlowStatus(Flow flow) {
         System.out.println(Thread.currentThread().getStackTrace()[1].toString());
     }
 

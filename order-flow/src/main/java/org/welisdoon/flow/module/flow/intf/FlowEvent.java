@@ -26,7 +26,7 @@ public interface FlowEvent {
 
     void onError(Flow flow, Stream stream, Throwable e);
 
-    void onFlowStatus(Flow flow, Stream stream);
+    void onFlowStatus(Flow flow);
 
     void onStreamStatus(Flow flow, Stream stream);
 

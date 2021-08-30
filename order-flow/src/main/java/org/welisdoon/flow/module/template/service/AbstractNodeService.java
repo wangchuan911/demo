@@ -5,6 +5,7 @@ import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
 import org.welisdoon.flow.module.flow.entity.*;
+import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.flow.module.template.annotation.NodeType;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
@@ -157,22 +158,29 @@ public abstract class AbstractNodeService {
 
     }
 
-    public void setStreamStatus(Stream stream, StreamStatus status) {
+    public final void setStreamStatus(Stream stream, StreamStatus status) {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setStreamId(stream.getId());
         flowCondition.setStatusId(status.statusId());
         flowCondition.setUpdate("STREAM_STATUS");
         this.getStreamDao().update(flowCondition);
         stream.setStatusId(status.statusId());
+
+        FlowEvent flowEvent = AbstractNodeService.getFunctionObject(stream.getFlow().getFunctionId());
+        flowEvent.onStreamStatus(stream.getFlow(), stream);
     }
 
-    public void setFlowStatus(Flow flow, FlowStatus status) {
+    public final void setFlowStatus(Flow flow, FlowStatus status) {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(flow.getId());
         flowCondition.setStatusId(status.statusId());
         flowCondition.setUpdate("STREAM_STATUS");
         this.flowDao.update(flowCondition);
         flow.setStatusId(status.statusId());
+
+        FlowEvent flowEvent = AbstractNodeService.getFunctionObject(flow.getFunctionId());
+        flowEvent.onFlowStatus(flow);
+
     }
 
 

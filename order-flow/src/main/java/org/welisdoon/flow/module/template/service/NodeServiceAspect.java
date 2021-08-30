@@ -52,7 +52,7 @@ public class NodeServiceAspect {
 
     }
 
-    @Pointcut("execution( void *..*.setFlowStatus(org.welisdoon.flow.module.flow.entity.Flow,org.welisdoon.flow.module.flow.entity.FlowStatus)) " +
+    /*@Pointcut("execution( void *..*.setFlowStatus(org.welisdoon.flow.module.flow.entity.Flow,org.welisdoon.flow.module.flow.entity.FlowStatus)) " +
             "&& target(org.welisdoon.flow.module.template.service.AbstractNodeService)")
     public void flowStatusChange() {
 
@@ -67,14 +67,14 @@ public class NodeServiceAspect {
     public void afterFlowStatusChange(JoinPoint point) throws Throwable {
         Stream stream = (Stream) point.getArgs()[0];
         FlowEvent flowEvent = this.getFlowEvent(stream);
-        flowEvent.onFinished(stream.getFlow(), stream);
+        flowEvent.onFlowStatus(stream.getFlow(), stream);
     }
     @After("streamStatusChange()")
     public void afterStreamStatusChange(JoinPoint point) throws Throwable {
         Stream stream = (Stream) point.getArgs()[0];
         FlowEvent flowEvent = this.getFlowEvent(stream);
-        flowEvent.onFinished(stream.getFlow(), stream);
-    }
+        flowEvent.onStreamStatus(stream.getFlow(), stream);
+    }*/
 
 
     @Around("start()") //around 与 下面参数名around对应
