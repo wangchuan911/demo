@@ -2,18 +2,13 @@ package com.hubidaauto.servmarket.module.order.web;
 
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
-import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
-import com.hubidaauto.servmarket.module.order.entity.OrderVO;
-import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
-import com.hubidaauto.servmarket.module.order.service.IServiceClassOrderService;
+import com.hubidaauto.servmarket.module.order.service.IBaseOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.welisdoon.flow.module.flow.entity.Flow;
-import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -37,7 +32,7 @@ import java.util.HashMap;
 public class OrderWebRouter {
     AbstractWechatConfiguration customWeChatAppConfiguration;
     AppUserDao appUserDao;
-    IServiceClassOrderService iServMallOrderService;
+    IBaseOrderService orderService;
 
     @Autowired
     public void setAppUserDao(AppUserDao appUserDao) {
@@ -50,8 +45,8 @@ public class OrderWebRouter {
     }
 
     @Autowired
-    public void setiServMallOrderService(IServiceClassOrderService iServMallOrderService) {
-        this.iServMallOrderService = iServMallOrderService;
+    public void setOrderService(IBaseOrderService orderService) {
+        this.orderService = orderService;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -79,13 +74,13 @@ public class OrderWebRouter {
         });
     }
 
-    @VertxRouter(path = "",
+    @VertxRouter(path = "/",
             method = "POST")
-    public void newOder(RoutingContextChain chain) {
+    public void order(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-
-            iServMallOrderService.newOrder(new HashMap<>()).onSuccess(value -> {
-                routingContext.end(value);
+            System.out.println(routingContext.getBodyAsString());
+            orderService.order(routingContext.getBodyAsString()).onSuccess(value -> {
+                routingContext.end(JSONObject.toJSONString(value));
             }).onFailure(throwable -> {
                 routingContext.end(throwable.getMessage());
             });
@@ -93,15 +88,16 @@ public class OrderWebRouter {
     }
 
 
-    @VertxRouter(path = "\\/stream\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
-    public void stream(RoutingContextChain context) {
+    //    @VertxRouter(path = "\\/stream\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+    @VertxRouter(path = "/stream", method = "POST")
+    public void workOrder(RoutingContextChain context) {
         context.handler(routingContext -> {
             try {
-                iServMallOrderService
-                        .stream(Long.parseLong(routingContext.pathParam("id")))
+                orderService
+                        .workOrder(routingContext.getBodyAsString())
                         .onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
-                                routingContext.end(stringAsyncResult.result());
+                                routingContext.end("成功");
                             } else {
                                 routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
                             }
@@ -114,16 +110,17 @@ public class OrderWebRouter {
         });
     }
 
-    @VertxRouter(path = "\\/start\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+//    @VertxRouter(path = "\\/start\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+@   VertxRouter(path = "/start", method = "POST")
     public void start(RoutingContextChain context) {
 
         context.handler(routingContext -> {
             try {
-                iServMallOrderService
-                        .start(Long.parseLong(routingContext.pathParam("id")))
+                orderService
+                        .start(routingContext.getBodyAsString())
                         .onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
-                                routingContext.end(stringAsyncResult.result());
+                                routingContext.end("成功");
                             } else {
                                 routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
                             }

@@ -9,7 +9,7 @@ import com.hubidaauto.servmarket.common.entity.AbstractBaseCondition;
  * @Date 2021/8/28 18:55
  */
 public class WorkOrderCondition<T extends WorkOrderVO> extends AbstractBaseCondition<Long, T> {
-    Long streamId;
+    Long streamId,classId;
 
     public Long getStreamId() {
         return streamId;
@@ -17,5 +17,13 @@ public class WorkOrderCondition<T extends WorkOrderVO> extends AbstractBaseCondi
 
     public void setStreamId(Long streamId) {
         this.streamId = streamId;
+    }
+
+    public Long getClassId() {
+        return classId;
+    }
+
+    public void setClassId(Long classId) {
+        this.classId = classId;
     }
 }

@@ -9,7 +9,7 @@
     <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
             resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
 
-        SELECT <include refid="columns"></include>,b.*
+        SELECT <include refid="columns"></include>,B.*
         from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
         JOIN SERVICE_CLASS_ORDER B
         ON A.ID=B.ID
@@ -18,7 +18,7 @@
     <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
             resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
 
-        SELECT <include refid="columns"></include>,b.*
+        SELECT <include refid="columns"></include>,B.*
         from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
         JOIN SERVICE_CLASS_ORDER B
         ON A.ID=B.ID
@@ -30,12 +30,26 @@
     </sql>
     <select id="get" parameterType="long"
             resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
-        SELECT <include refid="columns"></include>,b.*
-        (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.get"></include>) A
+        SELECT <include refid="columns"></include>,B.*
+        FROM (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.get"></include>) A
         JOIN SERVICE_CLASS_ORDER B
         ON A.ID=B.ID
 
 
     </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO" >
+        INSERT INTO shop1.SERVICE_CLASS_ORDER (ID, ITEM_ID, REMARK,  FINISH_TIME, BOOK_TIME, TYPE_ID, ADDRESS_ID, PAY_TYPE_ID, WORKER_NUM, WORK_HOUR, ORDER_DESC) 
+        VALUES (#{id},#{itemId},#{remark},#{finishTime},#{bookTime},#{typeId},#{addressId},#{payTypeId},#{workerNum},#{workHour},#{orderDesc})
+
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
+        UPDATE shop1.SERVICE_CLASS_ORDER t
+        SET t.ITEM_ID = #{itemId}, t.REMARK = #{remark}, t.FINISH_TIME = #{finishTime}, t.BOOK_TIME = #{bookTime}, t.TYPE_ID = #{typeId},
+            t.ADDRESS_ID = #{addressId}, t.PAY_TYPE_ID = #{payTypeId}, t.WORKER_NUM = #{workerNum}, t.WORK_HOUR = #{workHour}, t.ORDER_DESC = #{orderDesc}
+            WHERE t.ID = #{id}
+
+    </update>
 
 </mapper>

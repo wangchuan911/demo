@@ -1,9 +1,16 @@
 package com.hubidaauto.servmarket.module.order.service;
 
+import com.hubidaauto.carservice.wxapp.mall.common.AbstractAutoAssign;
+import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
+import org.welisdoon.web.common.ApplicationContextProvider;
+
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Map;
 
 /**
  * @Classname OrderService
@@ -14,11 +21,28 @@ import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 public interface IOrderService<O extends OrderVO, W extends WorkOrderVO> {
     void start(OrderCondition<O> condition);
 
-    void order(OrderCondition<O> condition);
+    OrderVO order(OrderCondition<O> condition);
 
     void workOrder(WorkOrderCondition<W> workOrderCondition);
 
-    public static void getInstance() {
-
-    }
+   /* static void start(final long typeId,String J) {
+        ApplicationContextProvider
+                .getApplicationContext()
+                .getBeansWithAnnotation(OrderClass.class)
+                .entrySet()
+                .stream()
+                .map(Map.Entry::getValue)
+                .filter(o ->
+                        ApplicationContextProvider.getRealClass(o.getClass()).getAnnotation(OrderClass.class).id() == typeId
+                ).findFirst().get();
+        *//*Type type = ApplicationContextProvider.getRealClass(object.getClass()).getGenericSuperclass();
+        if (type == null) return null;
+        if (((ParameterizedType) type).getRawType() != AbstractAutoAssign.class)
+            return null;
+        type = ((ParameterizedType) type).getActualTypeArguments()[0];*//*
+    }*/
+   static OrderClass getClassMeta(Class<?> clz) {
+       return ApplicationContextProvider
+               .getRealClass(clz).getAnnotation(OrderClass.class);
+   }
 }

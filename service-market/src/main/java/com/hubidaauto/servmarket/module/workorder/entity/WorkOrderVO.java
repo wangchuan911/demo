@@ -9,8 +9,9 @@ import java.sql.Timestamp;
  * @Date 2021/8/28 16:40
  */
 public class WorkOrderVO {
-    Long id,streamId,staffId,orderId,statusId;
-    Timestamp createTime,finishTime;
+    Long id, streamId, staffId, orderId, statusId;
+    Timestamp createTime, finishTime;
+    String operation;
 
     public Long getId() {
         return id;
@@ -66,5 +67,13 @@ public class WorkOrderVO {
 
     public void setFinishTime(Timestamp finishTime) {
         this.finishTime = finishTime;
+    }
+
+    public String getOperation() {
+        return operation;
+    }
+
+    public void setOperation(String operation) {
+        this.operation = operation;
     }
 }

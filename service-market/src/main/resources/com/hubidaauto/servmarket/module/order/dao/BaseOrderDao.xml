@@ -37,4 +37,14 @@
         SELECT A.* FROM BASE_ORDER A WHERE A.ID=#{value}
     </sql>
 
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderVO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO shop1.BASE_ORDER (CODE, PRICE, FLOW_ID, STATUS_ID, CUST_ID, CLASS_ID)
+        VALUES (#{code},#{price},#{flowId},#{statusId},#{custId},#{classId})
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
+        UPDATE BASE_ORDER t SET  t.CODE = #{code}, t.PRICE = #{price},t.FLOW_ID=#{flowId},
+         t.FLOW_ID = #{flowId}, t.STATUS_ID =  #{statusId}, t.CUST_ID =  #{custId}, t.CLASS_ID =  #{classId}
+        WHERE t.ID = #{id}
+    </update>
 </mapper>

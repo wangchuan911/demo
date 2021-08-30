@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao">
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
+        SELECT * FROM WORK_ORDER A WHERE A.ID=#{value}
+    </select>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition"
+            resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
+        SELECT * FROM WORK_ORDER A
+        <where>
+            <choose>
+                <when test="id!=null">
+                    AND ID=#{id}
+                </when>
+                <when test="openId!=null">
+                    AND APP_ID=#{openId}
+                </when>
+                <when test="datas!=null and datas.size()>0">
+                    <include refid="datas"></include>
+                </when>
+                <otherwise>
+                    and 1=2
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+    <sql id="condition">
+        and a.id=#{data.id}
+    </sql>
+    <sql id="datas">
+        and exists (
+        <foreach collection="datas" item="data" separator="union all">
+            select 1 from dual
+            <where>
+                <include refid="condition"></include>
+            </where>
+        </foreach>
+        )
+    </sql>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO"
+            useGeneratedKeys="true" keyProperty="id">
+
+        INSERT INTO shop1.WORK_ORDER (ORDER_ID, STREAM_ID, STAFF_ID,  STATUS_ID)
+        VALUES ( #{orderId},  #{streamId},  #{staffId},  #{statusId})
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
+        update WORK_ORDER
+        set STAFF_ID=#{staffId},
+        STATUS_ID=#{statusId}, CREATE_TIME=#{createTime}, FINISH_TIME=#{finishTime}
+        where ID=#{id}
+    </update>
+
+    <update id="update" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition">
+        update WORK_ORDER
+        <set>
+            <if test="update=='finish'">
+                FINISH_TIME=CURRENT_TIMESTAMP,
+                status_id=11002,
+            </if>
+            <if test="update=='skip'">
+                FINISH_TIME=CURRENT_TIMESTAMP,
+                statusId=11003,
+            </if>
+        </set>
+        where ID=#{id}
+    </update>
+
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition"
+            resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
+        SELECT * FROM WORK_ORDER A
+        <where>
+            <choose>
+                <when test="id!=null">
+                    AND ID=#{id}
+                </when>
+                <when test="streamId!=null">
+                    AND STREAM_ID=#{streamId}
+                </when>
+                <otherwise>
+                    and 1=2
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+</mapper>
