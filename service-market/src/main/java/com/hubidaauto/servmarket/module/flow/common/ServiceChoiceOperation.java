@@ -1,14 +1,12 @@
 package com.hubidaauto.servmarket.module.flow.common;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.hubidaauto.servmarket.module.order.consts.OrderFlowTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.service.FlowService;
-import org.welisdoon.flow.module.template.entity.Template;
-import org.welisdoon.flow.module.template.service.VirtualNodeService;
+import org.welisdoon.flow.module.template.service.VirtualNode;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -21,7 +19,7 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Throwable.class)
-public class ServiceChoiceOperation implements VirtualNodeService.VirtualNodeInitializer {
+public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitializer {
 
     FlowService flowService;
 

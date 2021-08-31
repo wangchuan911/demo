@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.service.FlowService;
 import org.welisdoon.flow.module.template.entity.Template;
-import org.welisdoon.flow.module.template.service.VirtualNodeService;
+import org.welisdoon.flow.module.template.service.VirtualNode;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Throwable.class)
-public class AppointWorkOperation implements VirtualNodeService.VirtualNodeInitializer {
+public class AppointWorkOperation implements VirtualNode.VirtualNodeInitializer {
     ServiceClassOrderDao orderDao;
 
     @Autowired

@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.service.FlowService;
 import org.welisdoon.flow.module.template.entity.Template;
-import org.welisdoon.flow.module.template.service.VirtualNodeService;
+import org.welisdoon.flow.module.template.service.VirtualNode;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 @DS("shop")
 @Transactional(rollbackFor = Throwable.class)
-public class SignInOperation implements VirtualNodeService.VirtualNodeInitializer {
+public class SignInOperation implements VirtualNode.VirtualNodeInitializer {
 
     ServiceClassOrderDao orderDao;
 

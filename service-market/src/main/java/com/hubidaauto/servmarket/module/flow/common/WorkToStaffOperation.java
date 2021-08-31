@@ -1,7 +1,6 @@
 package com.hubidaauto.servmarket.module.flow.common;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
@@ -10,13 +9,11 @@ import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.flow.module.flow.entity.Stream;
-import org.welisdoon.flow.module.flow.service.FlowService;
-import org.welisdoon.flow.module.template.service.VirtualNodeService;
+import org.welisdoon.flow.module.template.service.VirtualNode;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Transactional(rollbackFor = Throwable.class)
-public class WorkToStaffOperation implements VirtualNodeService.VirtualNodeInitializer {
+public class WorkToStaffOperation implements VirtualNode.VirtualNodeInitializer {
     BaseOrderDao baseOrderDao;
     StaffDao staffDao;
 
