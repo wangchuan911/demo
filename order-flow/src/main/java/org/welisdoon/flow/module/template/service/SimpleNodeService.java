@@ -2,13 +2,9 @@ package org.welisdoon.flow.module.template.service;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import org.welisdoon.flow.module.flow.entity.FlowCondition;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
-import org.welisdoon.flow.module.template.entity.TemplateCondition;
-
-import java.util.List;
 
 /**
  * @Classname SimpleNodeService
@@ -19,7 +15,7 @@ import java.util.List;
 @NodeType(10005)
 @Service
 @Primary
-public class SimpleNodeService extends AbstractSimpleNodeSerivce {
+public class SimpleNodeService extends AbstractSimpleNode {
     @Override
     public void start(Stream stream) {
         setStreamStatus(stream, StreamStatus.READY);
@@ -29,6 +25,6 @@ public class SimpleNodeService extends AbstractSimpleNodeSerivce {
     public void finish(Stream stream) {
         this.setStreamStatus(stream, StreamStatus.COMPLETE);
         Stream superStream = this.getSuperStream(stream);
-        AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
+        AbstractNode.getInstance(superStream.getNodeId()).finish(superStream);
     }
 }

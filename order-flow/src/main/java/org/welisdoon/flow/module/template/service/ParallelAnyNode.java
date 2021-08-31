@@ -17,11 +17,11 @@ import java.util.List;
 @NodeType(10003)
 @Service
 @Primary
-public class ParallelAnyNode extends AbstractComplexNodeService {
+public class ParallelAnyNode extends AbstractComplexNode {
     @Override
     public void start(Stream stream) {
         List<Stream> subStreams = this.getSubStreams(stream);
-        AbstractNodeService abstractNodeService;
+        AbstractNode abstractNodeService;
         this.setStreamStatus(stream,StreamStatus.WAIT);
 
         for (Stream subStream : subStreams) {
@@ -41,6 +41,6 @@ public class ParallelAnyNode extends AbstractComplexNodeService {
 
         this.setStreamStatus(stream,StreamStatus.COMPLETE);
         Stream superStream = this.getSuperStream(stream);
-        AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
+        AbstractNode.getInstance(superStream.getNodeId()).finish(superStream);
     }
 }

@@ -1,6 +1,5 @@
 package org.welisdoon.flow.module.template.service;
 
-import org.reflections.ReflectionUtils;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
@@ -19,7 +18,7 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @Classname AbstractNodeService
@@ -27,31 +26,26 @@ import java.util.Set;
  * @Author wang.zhidong
  * @Date 2021/8/19 23:44
  */
-public abstract class AbstractNodeService {
-    static Reflections reflections;
+public abstract class AbstractNode {
     LinkDao linkDao;
     StreamDao streamDao;
-    static NodeDao nodeDao;
-    static LinkFunctionDao linkFunctionDao;
+    NodeDao nodeDao;
+    LinkFunctionDao linkFunctionDao;
     FlowDao flowDao;
+    static Map<Integer, AbstractNode> NODE_MAP;
 
-    public static Reflections getReflections() {
-        return reflections;
-    }
 
     public boolean isSimpleNode() {
-        return this instanceof AbstractSimpleNodeSerivce;
+        return this instanceof AbstractSimpleNode;
     }
 
     public boolean isComplexNode() {
-        return this instanceof AbstractComplexNodeService;
+        return this instanceof AbstractComplexNode;
     }
 
     @Autowired
     public void setLinkFunctionDao(LinkFunctionDao linkFunctionDao) {
-        if (AbstractNodeService.linkFunctionDao == null) {
-            AbstractNodeService.linkFunctionDao = linkFunctionDao;
-        }
+        this.linkFunctionDao = linkFunctionDao;
     }
 
     public LinkFunctionDao getLinkFunctionDao() {
@@ -67,12 +61,6 @@ public abstract class AbstractNodeService {
         this.flowDao = flowDao;
     }
 
-    @Autowired
-    public void setReflections(Reflections reflections) {
-        if (AbstractNodeService.reflections == null) {
-            AbstractNodeService.reflections = reflections;
-        }
-    }
 
     public LinkDao getLinkDao() {
         return linkDao;
@@ -98,27 +86,30 @@ public abstract class AbstractNodeService {
 
     @Autowired
     public void setNodeDao(NodeDao nodeDao) {
-        if (AbstractNodeService.nodeDao == null) {
-            AbstractNodeService.nodeDao = nodeDao;
-        }
+        this.nodeDao = nodeDao;
     }
 
     public abstract void start(Stream stream);
 
     public abstract void finish(Stream stream);
 
-    public static AbstractNodeService getInstance(Long nodeId) {
-        return getInstance(nodeDao.get(nodeId));
+    public static AbstractNode getInstance(Long nodeId) {
+        return getInstance(ApplicationContextProvider.getBean(NodeDao.class).get(nodeId));
     }
 
-    public static AbstractNodeService getInstance(Node node) {
-        return (AbstractNodeService) ApplicationContextProvider.getApplicationContext().getBeansWithAnnotation(NodeType.class).entrySet().stream().filter(stringObjectEntry -> {
-            Class<?> aClass = ApplicationContextProvider
-                    .getRealClass(stringObjectEntry.getValue().getClass());
-            return AbstractNodeService.class.isAssignableFrom(aClass)
-                    && aClass.getAnnotation(NodeType.class).value() == node.getTypeId();
-
-        }).findFirst().get().getValue();
+    public static AbstractNode getInstance(Node node) {
+        if (NODE_MAP == null) {
+            NODE_MAP = ApplicationContextProvider.getApplicationContext()
+                    .getBeansWithAnnotation(NodeType.class)
+                    .entrySet().stream().map(stringObjectEntry ->
+                            (AbstractNode) stringObjectEntry.getValue()
+                    ).collect(Collectors
+                            .toMap(abstractNode ->
+                                            ApplicationContextProvider
+                                                    .getRealClass(abstractNode.getClass()).getAnnotation(NodeType.class).value()
+                                    , abstractNode -> abstractNode));
+        }
+        return NODE_MAP.get(node.getTypeId());
     }
 
     public List<Stream> getSubStreams(Stream stream) {
@@ -158,7 +149,7 @@ public abstract class AbstractNodeService {
 
     }
 
-    public final void setStreamStatus(Stream stream, StreamStatus status) {
+    public void setStreamStatus(Stream stream, StreamStatus status) {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setStreamId(stream.getId());
         flowCondition.setStatusId(status.statusId());
@@ -166,11 +157,11 @@ public abstract class AbstractNodeService {
         this.getStreamDao().update(flowCondition);
         stream.setStatusId(status.statusId());
 
-        FlowEvent flowEvent = AbstractNodeService.getFunctionObject(stream.getFlow().getFunctionId());
+        FlowEvent flowEvent = AbstractNode.getFunctionObject(stream.getFlow().getFunctionId());
         flowEvent.onStreamStatus(stream.getFlow(), stream);
     }
 
-    public final void setFlowStatus(Flow flow, FlowStatus status) {
+    public void setFlowStatus(Flow flow, FlowStatus status) {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(flow.getId());
         flowCondition.setStatusId(status.statusId());
@@ -178,7 +169,7 @@ public abstract class AbstractNodeService {
         this.flowDao.update(flowCondition);
         flow.setStatusId(status.statusId());
 
-        FlowEvent flowEvent = AbstractNodeService.getFunctionObject(flow.getFunctionId());
+        FlowEvent flowEvent = AbstractNode.getFunctionObject(flow.getFunctionId());
         flowEvent.onFlowStatus(flow);
 
     }
@@ -189,7 +180,7 @@ public abstract class AbstractNodeService {
     }
 
     public static <T> T getFunctionObject(Long functionId) {
-        return ApplicationContextProvider.getBean(linkFunctionDao.get(functionId).targetClass());
+        return ApplicationContextProvider.getBean(ApplicationContextProvider.getBean(LinkFunctionDao.class).get(functionId).targetClass());
     }
 
     public Stream getSuperStream(Stream stream) {

@@ -1,7 +1,6 @@
 package org.welisdoon.flow.module.flow.service;
 
 import com.alibaba.fastjson.JSONArray;
-import com.baomidou.dynamic.datasource.annotation.DS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +13,8 @@ import org.welisdoon.flow.module.flow.dao.StreamDao;
 import org.welisdoon.flow.module.template.entity.Link;
 import org.welisdoon.flow.module.template.entity.Template;
 import org.welisdoon.flow.module.template.entity.TemplateCondition;
-import org.welisdoon.flow.module.template.service.AbstractNodeService;
+import org.welisdoon.flow.module.template.service.AbstractNode;
 
-import javax.annotation.PostConstruct;
 import java.util.LinkedList;
 
 /**
@@ -89,7 +87,7 @@ public class FlowService {
         superStream.setSubTree(new LinkedList<>());
         System.out.println(superLink);
         for (Link currentLink : superLink.getSubTree()) {
-            for (Stream currentStream : AbstractNodeService.getInstance(currentLink.getNodeId()).createSubStreams(superStream, currentLink)) {
+            for (Stream currentStream : AbstractNode.getInstance(currentLink.getNodeId()).createSubStreams(superStream, currentLink)) {
                 currentStream.setStatusId(StreamStatus.FUTURE.statusId());
                 currentStream.setFlow(superStream.getFlow());
                 this.streamDao.add(currentStream);
@@ -140,7 +138,7 @@ public class FlowService {
             System.out.println(JSONArray.toJSONString(rootLink));
             flow.setStart(stream);
 
-            AbstractNodeService.getInstance(stream.getNodeId()).start(stream);
+            AbstractNode.getInstance(stream.getNodeId()).start(stream);
         } else {
             throw new RuntimeException("当前环节已结束");
         }
@@ -160,7 +158,7 @@ public class FlowService {
             flowCondition.setShowTree(true);
             stream.setSubTree(this.streamDao.list(flowCondition));
         }*/
-        AbstractNodeService.getInstance(stream.getNodeId()).finish(stream);
+        AbstractNode.getInstance(stream.getNodeId()).finish(stream);
         return stream;
     }
 

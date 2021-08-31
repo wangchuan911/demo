@@ -2,7 +2,6 @@ package org.welisdoon.flow.module.template.service;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import org.welisdoon.flow.module.flow.entity.FlowCondition;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
@@ -31,6 +30,6 @@ public class ParallelAllNode extends ParallelAnyNode {
         }
         this.setStreamStatus(stream, StreamStatus.COMPLETE);
         Stream superStream = this.getSuperStream(stream);
-        AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
+        AbstractNode.getInstance(superStream.getNodeId()).finish(superStream);
     }
 }

@@ -7,9 +7,7 @@ import org.welisdoon.flow.module.flow.entity.FlowStatus;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
-import org.welisdoon.flow.module.template.entity.Link;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,12 +20,12 @@ import java.util.Optional;
 @NodeType(10001)
 @Service
 @Primary
-public class SerialNodeSerice extends AbstractComplexNodeService {
+public class SerialNodeSerice extends AbstractComplexNode {
 
     @Override
     public void start(Stream stream) {
         List<Stream> subStreams = this.getSubStreams(stream);
-        AbstractNodeService abstractNodeService;
+        AbstractNode abstractNodeService;
         this.setStreamStatus(stream, StreamStatus.WAIT);
         if (stream.getSuperId() == null)
             this.setFlowStatus(stream.getFlow(), FlowStatus.READY);
@@ -44,7 +42,7 @@ public class SerialNodeSerice extends AbstractComplexNodeService {
         Optional<Stream> optional = subStreams.stream().filter(subStream -> subStream.getStatusId() == StreamStatus.FUTURE.statusId()).findFirst();
         if (optional.isPresent()) {
             Stream nextStream = optional.get();
-            AbstractNodeService.getInstance(nextStream.getNodeId()).start(nextStream);
+            AbstractNode.getInstance(nextStream.getNodeId()).start(nextStream);
             return;
         }
         this.setStreamStatus(stream, StreamStatus.COMPLETE);
@@ -55,7 +53,7 @@ public class SerialNodeSerice extends AbstractComplexNodeService {
             return;
         }
         Stream superStream = this.getSuperStream(stream);
-        AbstractNodeService.getInstance(superStream.getNodeId()).finish(superStream);
+        AbstractNode.getInstance(superStream.getNodeId()).finish(superStream);
 
     }
 }

@@ -29,13 +29,13 @@ public class VirtualNodeService extends SimpleNodeService {
             throw new RuntimeException("stream not allow link VirtualNode!");
         }
         processor.onStart(stream);
-        AbstractNodeService nodeService = getInstance(stream.getNodeId());
+        AbstractNode nodeService = getInstance(stream.getNodeId());
         if (nodeService instanceof VirtualNodeService) {
             throw new RuntimeException("stream not allow link VirtualNode!");
         }
 
         this.streamDao.put(stream);
-        AbstractSimpleNodeSerivce.getInstance(stream.getNodeId()).start(stream);
+        AbstractSimpleNode.getInstance(stream.getNodeId()).start(stream);
     }
 
     @Override

@@ -1,11 +1,9 @@
 package org.welisdoon.flow.module.template.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
-import org.welisdoon.flow.module.template.dao.LinkFunctionDao;
 import org.welisdoon.flow.module.template.entity.LinkFunction;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
@@ -20,7 +18,7 @@ import java.util.function.Predicate;
  */
 @NodeType(10004)
 @Service
-public class ConditionAnyNodeService extends ParallelAnyNode {
+public class ConditionAnyNode extends ParallelAnyNode {
 
 
 
@@ -41,7 +39,7 @@ public class ConditionAnyNodeService extends ParallelAnyNode {
                     break;
                 case READY:
                     hasReady = true;
-                    AbstractNodeService abstractNodeService = getInstance(subStream.getNodeId());
+                    AbstractNode abstractNodeService = getInstance(subStream.getNodeId());
                     abstractNodeService.start(subStream);
                     break;
             }

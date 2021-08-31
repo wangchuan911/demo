@@ -1,6 +1,5 @@
 package org.welisdoon.flow.module.template.service;
 
-import org.welisdoon.flow.module.flow.entity.FlowCondition;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 
@@ -12,7 +11,7 @@ import java.util.List;
  * @Author wang.zhidong
  * @Date 2021/8/20 16:34
  */
-public abstract class AbstractComplexNodeService extends AbstractNodeService {
+public abstract class AbstractComplexNode extends AbstractNode {
     public SubStreamStatusCount countStreamStatus(List<Stream> stream) {
         int WAIT = 0, READY = 0, SKIP = 0, FUTURE = 0, COMPLETE = 0;
         for (Stream subStream : stream) {
