@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,7 +126,11 @@ public class VertxInvoker implements IVertxInvoker {
                     types[i] = Class.forName(paramType);
                     values[i] = value;
                 }
-                promise.complete(JSONObject.toJSON(clazz.getMethod(methodName, types).invoke(ApplicationContextProvider.getBean(clazz), values)).toString());
+                Object result = clazz.getMethod(methodName, types).invoke(ApplicationContextProvider.getBean(clazz), values);
+                promise.complete(result != null ? JSONObject.toJSON(result).toString() : null);
+            } catch (InvocationTargetException e) {
+                logger.error(e.getMessage(), e);
+                promise.fail(e.getCause());
             } catch (Throwable e) {
                 logger.error(e.getMessage(), e);
                 promise.fail(e);
