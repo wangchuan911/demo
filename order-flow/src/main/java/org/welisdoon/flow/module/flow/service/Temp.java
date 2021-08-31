@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import org.welisdoon.flow.module.flow.entity.Flow;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
-import org.welisdoon.flow.module.template.service.VirtualNodeService;
+import org.welisdoon.flow.module.template.service.VirtualNode;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Component
 @ConditionalOnProperty(prefix = "demo", name = "router")
-public class Temp implements VirtualNodeService.VirtualNodeInitializer, FlowEvent {
+public class Temp implements VirtualNode.VirtualNodeInitializer, FlowEvent {
     @Override
     public List<Stream> onInstantiated(Stream templateStream) {
         templateStream.setNodeId(6L);

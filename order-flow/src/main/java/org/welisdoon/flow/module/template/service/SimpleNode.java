@@ -15,7 +15,7 @@ import org.welisdoon.flow.module.template.annotation.NodeType;
 @NodeType(10005)
 @Service
 @Primary
-public class SimpleNodeService extends AbstractSimpleNode {
+public class SimpleNode extends AbstractSimpleNode {
     @Override
     public void start(Stream stream) {
         setStreamStatus(stream, StreamStatus.READY);

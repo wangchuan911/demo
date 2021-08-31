@@ -18,7 +18,7 @@ import java.util.List;
 
 @NodeType(10000)
 @Service
-public class VirtualNodeService extends SimpleNodeService {
+public class VirtualNode extends SimpleNode {
 
 
     @Override
@@ -30,7 +30,7 @@ public class VirtualNodeService extends SimpleNodeService {
         }
         processor.onStart(stream);
         AbstractNode nodeService = getInstance(stream.getNodeId());
-        if (nodeService instanceof VirtualNodeService) {
+        if (nodeService instanceof VirtualNode) {
             throw new RuntimeException("stream not allow link VirtualNode!");
         }
 
