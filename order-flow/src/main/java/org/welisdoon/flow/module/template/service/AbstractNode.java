@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
 public abstract class AbstractNode {
     LinkDao linkDao;
     StreamDao streamDao;
-    NodeDao nodeDao;
-    LinkFunctionDao linkFunctionDao;
+    static NodeDao nodeDao;
+    static LinkFunctionDao linkFunctionDao;
     FlowDao flowDao;
     static Map<Integer, AbstractNode> NODE_MAP;
 
@@ -45,7 +45,8 @@ public abstract class AbstractNode {
 
     @Autowired
     public void setLinkFunctionDao(LinkFunctionDao linkFunctionDao) {
-        this.linkFunctionDao = linkFunctionDao;
+        if (AbstractNode.linkFunctionDao != linkFunctionDao)
+            AbstractNode.linkFunctionDao = linkFunctionDao;
     }
 
     public LinkFunctionDao getLinkFunctionDao() {
@@ -86,7 +87,8 @@ public abstract class AbstractNode {
 
     @Autowired
     public void setNodeDao(NodeDao nodeDao) {
-        this.nodeDao = nodeDao;
+        if (AbstractNode.nodeDao != nodeDao)
+            AbstractNode.nodeDao = nodeDao;
     }
 
     public abstract void start(Stream stream);
@@ -94,7 +96,7 @@ public abstract class AbstractNode {
     public abstract void finish(Stream stream);
 
     public static AbstractNode getInstance(Long nodeId) {
-        return getInstance(ApplicationContextProvider.getBean(NodeDao.class).get(nodeId));
+        return getInstance(AbstractNode.nodeDao.get(nodeId));
     }
 
     public static AbstractNode getInstance(Node node) {
@@ -149,7 +151,7 @@ public abstract class AbstractNode {
 
     }
 
-    public void setStreamStatus(Stream stream, StreamStatus status) {
+    protected final void setStreamStatus(Stream stream, StreamStatus status) {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setStreamId(stream.getId());
         flowCondition.setStatusId(status.statusId());
@@ -161,7 +163,7 @@ public abstract class AbstractNode {
         flowEvent.onStreamStatus(stream.getFlow(), stream);
     }
 
-    public void setFlowStatus(Flow flow, FlowStatus status) {
+    protected final void setFlowStatus(Flow flow, FlowStatus status) {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(flow.getId());
         flowCondition.setStatusId(status.statusId());
@@ -180,7 +182,7 @@ public abstract class AbstractNode {
     }
 
     public static <T> T getFunctionObject(Long functionId) {
-        return ApplicationContextProvider.getBean(ApplicationContextProvider.getBean(LinkFunctionDao.class).get(functionId).targetClass());
+        return ApplicationContextProvider.getBean(AbstractNode.linkFunctionDao.get(functionId).targetClass());
     }
 
     public Stream getSuperStream(Stream stream) {
