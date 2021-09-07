@@ -86,6 +86,12 @@ public class BaseOrderService {
         return list2;
     }
 
+    public OrderVO get(Long id) {
+        OrderVO orderVO = baseOrderDao.get(id);
+        IOrderService iOrderService = ORDER_CLASSES.get(orderVO.getClassId());
+        return iOrderService.get(id);
+    }
+
     Type[] getIOrderServiceRawType(IOrderService iOrderService) {
         return ((ParameterizedType) Arrays
                 .stream(ApplicationContextProvider

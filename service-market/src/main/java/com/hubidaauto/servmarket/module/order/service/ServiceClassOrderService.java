@@ -60,6 +60,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         System.out.println(Thread.currentThread());
         ServiceClassOrderVO orderVO = new ServiceClassOrderVO(condition.getForm());
         orderVO.setClassId(condition.getClassId());
+        orderVO.setCustId(condition.getCustId());
         baseOrderDao.add(orderVO);
         orderDao.add(orderVO);
 

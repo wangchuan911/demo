@@ -28,5 +28,7 @@ public interface IBaseOrderService {
 
     Future<List<OrderVO>> list(OrderCondition condition);
 
+    Future<OrderVO> get(Long id);
+
 
 }
