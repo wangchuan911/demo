@@ -1,6 +1,7 @@
 package com.hubidaauto.servmarket.module.order.entity;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 
 /**
  * @Classname ServiceClassOrderVO
@@ -9,9 +10,20 @@ import java.sql.Timestamp;
  * @Date 2021/8/26 00:01
  */
 public class ServiceClassOrderVO extends OrderVO {
+    public ServiceClassOrderVO() {
+    }
+
+    public ServiceClassOrderVO(ServiceClassOrderCondition.Form form) {
+        this.addressId = form.addressId;
+        this.remark = form.remark;
+        this.bookTime = form.date;
+        this.workerNum = form.count;
+        this.workHour = (form.time[0] ? 4 : 0) + (form.time[1] ? 4 : 0);
+        this.workTime = String.format("%s %s", form.time[0] ? "早上" : "", form.time[1] ? "下午" : "");
+    }
 
     long itemId, addressId, payTypeId, typeId;
-    String remark, orderDesc;
+    String remark, orderDesc, workTime;
     Timestamp createTime;
     Timestamp finishTime;
     Timestamp bookTime;
@@ -103,5 +115,13 @@ public class ServiceClassOrderVO extends OrderVO {
 
     public void setWorkHour(int workHour) {
         this.workHour = workHour;
+    }
+
+    public String getWorkTime() {
+        return workTime;
+    }
+
+    public void setWorkTime(String workTime) {
+        this.workTime = workTime;
     }
 }

@@ -21,6 +21,7 @@ import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @Classname ServMallOrderService
@@ -32,10 +33,8 @@ import java.util.Arrays;
 @DS("shop")
 @Transactional(rollbackFor = Throwable.class)
 @OrderClass(
-        id = 1000L,
-        orderConditionClass = ServiceClassOrderCondition.class,
-        workOrderConditionClass = ServiceClassWorkOrderCondition.class)
-public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderVO, ServiceClassWorkOrderVO> {
+        id = 1000L)
+public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition> {
     static long TEMPLATE_ID = 1L;
     FlowProxyService flowService;
 
@@ -66,9 +65,9 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    public ServiceClassOrderVO order(OrderCondition<ServiceClassOrderVO> condition) {
+    public ServiceClassOrderVO order(ServiceClassOrderCondition condition) {
         System.out.println(Thread.currentThread());
-        ServiceClassOrderVO orderVO = new ServiceClassOrderVO();
+        ServiceClassOrderVO orderVO = new ServiceClassOrderVO(condition.getForm());
         orderVO.setClassId(condition.getClassId());
         baseOrderDao.add(orderVO);
         orderDao.add(orderVO);
@@ -85,17 +84,23 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
 
     @Override
-    public void start(OrderCondition<ServiceClassOrderVO> condition) {
+    public void start(ServiceClassOrderCondition condition) {
         ServiceClassOrderVO orderVO = orderDao.get(condition.getId());
         this.flowService.start(orderVO.getFlowId());
     }
 
 
     @Override
-    public void workOrder(WorkOrderCondition<ServiceClassWorkOrderVO> workOrderCondition) {
+    public void workOrder(ServiceClassWorkOrderCondition workOrderCondition) {
         ServiceClassWorkOrderVO workOrderVO = workOrderDao.get(workOrderCondition.getId());
         this.flowService.stream(workOrderVO.getStreamId());
     }
+
+    @Override
+    public OrderVO get(Long id) {
+        return orderDao.get(id);
+    }
+
 
     @Override
     public void onPreCreate(Flow flow) {

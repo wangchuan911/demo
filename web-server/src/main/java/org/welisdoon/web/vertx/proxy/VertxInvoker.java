@@ -3,6 +3,7 @@ package org.welisdoon.web.vertx.proxy;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -16,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class VertxInvoker implements IVertxInvoker {
@@ -127,7 +129,7 @@ public class VertxInvoker implements IVertxInvoker {
                     values[i] = value;
                 }
                 Object result = clazz.getMethod(methodName, types).invoke(ApplicationContextProvider.getBean(clazz), values);
-                promise.complete(result != null ? JSONObject.toJSON(result).toString() : null);
+                promise.complete(result != null ? JSONObject.toJSONString(result,SerializerFeature.WriteClassName).toString() : null);
             } catch (InvocationTargetException e) {
                 logger.error(e.getMessage(), e);
                 promise.fail(e.getCause());

@@ -18,17 +18,13 @@
     <sql id="list">
         SELECT A.* FROM BASE_ORDER A
         <where>
-            <choose>
-                <otherwise>
-                    <if test="flowId!=null">
-                        and A.FLOW_ID=#{flowId}
-                    </if>
-                </otherwise>
-            </choose>
+            <if test="custId!=null">
+                and A.CUST_ID=#{custId}
+            </if>
+            <if test="statusId!=null">
+                and A.STATUS_ID=#{statusId}
+            </if>
         </where>
-    </sql>
-    <sql id="condition">
-        AND A.ID=#{id}
     </sql>
     <select id="get" parameterType="long" resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
         <include refid="get"></include>
@@ -37,7 +33,8 @@
         SELECT A.* FROM BASE_ORDER A WHERE A.ID=#{value}
     </sql>
 
-    <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderVO" useGeneratedKeys="true" keyProperty="id">
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderVO" useGeneratedKeys="true"
+            keyProperty="id">
         INSERT INTO shop1.BASE_ORDER (CODE, PRICE, FLOW_ID, STATUS_ID, CUST_ID, CLASS_ID)
         VALUES (#{code},#{price},#{flowId},#{statusId},#{custId},#{classId})
     </insert>

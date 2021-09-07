@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class OrderCondition<T extends OrderVO> extends AbstractBaseCondition<Long, T> {
     int typeId;
-    Long flowId, classId;
+    Long flowId, classId, custId, statusId;
 
     public int getTypeId() {
         return typeId;
@@ -41,5 +41,21 @@ public class OrderCondition<T extends OrderVO> extends AbstractBaseCondition<Lon
 
     public void setClassId(Long classId) {
         this.classId = classId;
+    }
+
+    public Long getCustId() {
+        return custId;
+    }
+
+    public void setCustId(Long custId) {
+        this.custId = custId;
+    }
+
+    public Long getStatusId() {
+        return statusId;
+    }
+
+    public void setStatusId(Long statusId) {
+        this.statusId = statusId;
     }
 }

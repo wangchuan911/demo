@@ -31,6 +31,7 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
     private Class<T> interfaces;
     private Class<?> tagetClass;
     private VertxServiceProxy serviceProxy;
+    T instance;
     IVertxInvoker iVertxInvoker;
 
     public VertxServiceProxyFactoryBean(Class<T> interfaces) throws ClassNotFoundException {
@@ -42,11 +43,13 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
     @Override
     @SuppressWarnings("unchecked")
     public T getObject() throws Exception {
-        Class[] intfs = interfaces.getSuperclass() != Object.class && interfaces.getSuperclass() != null ?
-                new Class[]{interfaces, interfaces.getSuperclass()} :
-                new Class[]{interfaces};
-
-        return (T) Proxy.newProxyInstance(interfaces.getClassLoader(), intfs, this);
+        if (this.instance == null) {
+            Class[] intfs = interfaces.getSuperclass() != Object.class && interfaces.getSuperclass() != null ?
+                    new Class[]{interfaces, interfaces.getSuperclass()} :
+                    new Class[]{interfaces};
+            this.instance = (T) Proxy.newProxyInstance(interfaces.getClassLoader(), intfs, this);
+        }
+        return this.instance;
     }
 
     @Override

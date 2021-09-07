@@ -18,10 +18,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OrderClass {
-    long[] id();
-
-    Class<? extends OrderCondition<?>> orderConditionClass();
-
-    Class<? extends WorkOrderCondition<?>> workOrderConditionClass();
-
+    long id();
 }

@@ -1,7 +1,10 @@
 package com.hubidaauto.servmarket.module.order.web;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
+import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.service.IBaseOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
@@ -89,7 +92,7 @@ public class OrderWebRouter {
 
 
     //    @VertxRouter(path = "\\/stream\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
-    @VertxRouter(path = "/stream", method = "POST")
+    @VertxRouter(path = "/workOrder", method = "POST")
     public void workOrder(RoutingContextChain context) {
         context.handler(routingContext -> {
             try {
@@ -110,8 +113,8 @@ public class OrderWebRouter {
         });
     }
 
-//    @VertxRouter(path = "\\/start\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
-@   VertxRouter(path = "/start", method = "POST")
+    //    @VertxRouter(path = "\\/start\\/(?<id>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+    @VertxRouter(path = "/start", method = "POST")
     public void start(RoutingContextChain context) {
 
         context.handler(routingContext -> {
@@ -126,6 +129,30 @@ public class OrderWebRouter {
                             }
                         });
                 ;
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.fail(e.getCause());
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/list\\/(?<page>\\d+)", method = "POST", mode = VertxRouteType.PathRegex)
+    public void list(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                OrderCondition condition = JSONObject
+                        .parseObject(routingContext.getBodyAsString())
+                        .toJavaObject(OrderCondition.class);
+                condition.page(Integer.parseInt(routingContext.pathParam("page")));
+                orderService
+                        .list(condition)
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end(JSONArray.toJSONString(stringAsyncResult.result()));
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
             } catch (Throwable e) {
                 e.printStackTrace();
                 routingContext.fail(e.getCause());

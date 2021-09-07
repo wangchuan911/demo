@@ -25,6 +25,7 @@ public interface IBaseOrderService {
 
     Future<Void> workOrder(String jsonText);
 
+    Future<OrderVO> list(OrderCondition condition);
 
 
 }

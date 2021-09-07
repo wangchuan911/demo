@@ -10,6 +10,7 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,31 +19,35 @@ import java.util.Map;
  * @Author wang.zhidong
  * @Date 2021/8/28 17:32
  */
-public interface IOrderService<O extends OrderVO, W extends WorkOrderVO> {
-    void start(OrderCondition<O> condition);
+public interface IOrderService<O extends OrderCondition, W extends WorkOrderCondition> {
 
-    OrderVO order(OrderCondition<O> condition);
+    void start(O condition);
 
-    void workOrder(WorkOrderCondition<W> workOrderCondition);
+    OrderVO order(O condition);
 
-   /* static void start(final long typeId,String J) {
-        ApplicationContextProvider
-                .getApplicationContext()
-                .getBeansWithAnnotation(OrderClass.class)
-                .entrySet()
-                .stream()
-                .map(Map.Entry::getValue)
-                .filter(o ->
-                        ApplicationContextProvider.getRealClass(o.getClass()).getAnnotation(OrderClass.class).id() == typeId
-                ).findFirst().get();
-        *//*Type type = ApplicationContextProvider.getRealClass(object.getClass()).getGenericSuperclass();
+    void workOrder(W workOrderCondition);
+
+    OrderVO get(Long id);
+
+
+    /* static void start(final long typeId,String J) {
+         ApplicationContextProvider
+                 .getApplicationContext()
+                 .getBeansWithAnnotation(OrderClass.class)
+                 .entrySet()
+                 .stream()
+                 .map(Map.Entry::getValue)
+                 .filter(o ->
+                         ApplicationContextProvider.getRealClass(o.getClass()).getAnnotation(OrderClass.class).id() == typeId
+                 ).findFirst().get();
+         *//*Type type = ApplicationContextProvider.getRealClass(object.getClass()).getGenericSuperclass();
         if (type == null) return null;
         if (((ParameterizedType) type).getRawType() != AbstractAutoAssign.class)
             return null;
         type = ((ParameterizedType) type).getActualTypeArguments()[0];*//*
     }*/
-   static OrderClass getClassMeta(Class<?> clz) {
-       return ApplicationContextProvider
-               .getRealClass(clz).getAnnotation(OrderClass.class);
-   }
+    static OrderClass getClassMeta(Class<?> clz) {
+        return ApplicationContextProvider
+                .getRealClass(clz).getAnnotation(OrderClass.class);
+    }
 }
