@@ -93,27 +93,22 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
                 JSONArray.toJSONString(objects),
                 stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
-                        String resultJson = stringAsyncResult.result();
-                        if (resultJson == null) {
+                        String resultString = stringAsyncResult.result();
+                        if (resultString == null) {
                             promise.complete(null);
-                        } else if ("java.lang.String".equals(innertype.getTypeName())) {
-                            promise.complete(resultJson);
-                        } else if (resultJson.indexOf("[") == 0
-                                && resultJson.lastIndexOf("]") == resultJson.length() - 1) {
+                        } else if (match(String.class, retunType, innertype)) {
+                            promise.complete(resultString);
+                        } else if (this.match(resultString, '{', '}')
+                                || (innertype == null && this.match(resultString, '[', ']'))) {
+                            promise.complete(JSON.parseObject(stringAsyncResult.result(), retunType));
+                        } else if (this.match(resultString, '[', ']')) {
                             try {
                                 promise.complete(JSON.parseArray(stringAsyncResult.result(), Class.forName(innertype.getTypeName())));
                             } catch (ClassNotFoundException e) {
-                                e.printStackTrace();
-                            }
-                        } else if (resultJson.indexOf("{") == 0
-                                && resultJson.lastIndexOf("}") == resultJson.length() - 1) {
-                            try {
-                                promise.complete(JSON.parseObject(stringAsyncResult.result(), Class.forName(innertype.getTypeName())));
-                            } catch (ClassNotFoundException e) {
-                                e.printStackTrace();
+                                promise.fail(e);
                             }
                         } else {
-                            promise.complete(resultJson);
+                            promise.complete(resultString);
                         }
 
                     } else {
@@ -122,5 +117,14 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
                 }
         );
         return promise.future();
+    }
+
+    boolean match(String string, char head, char foot) {
+        return string.charAt(0) == head
+                && string.charAt(string.length() - 1) == foot;
+    }
+
+    boolean match(Type a, Type... b) {
+        return b.length == 0 ? false : Arrays.stream(b).anyMatch(aClass -> aClass == a);
     }
 }
