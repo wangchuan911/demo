@@ -129,10 +129,14 @@ public class VertxInvoker implements IVertxInvoker {
                     values[i] = value;
                 }
                 Object result = clazz.getMethod(methodName, types).invoke(ApplicationContextProvider.getBean(clazz), values);
-                promise.complete(result != null ? JSONObject.toJSONString(result,SerializerFeature.WriteClassName).toString() : null);
+                promise.complete(result != null ? JSONObject.toJSONString(result, SerializerFeature.WriteClassName).toString() : null);
             } catch (InvocationTargetException e) {
-                logger.error(e.getMessage(), e);
-                promise.fail(e.getCause());
+                Throwable t = e.getCause();
+                logger.error(t.getMessage(), t);
+                if (t instanceof NullPointerException) {
+                    t = new RuntimeException("空数据异常", t);
+                }
+                promise.fail(t);
             } catch (Throwable e) {
                 logger.error(e.getMessage(), e);
                 promise.fail(e);

@@ -3,6 +3,8 @@ package com.hubidaauto.servmarket.module.order.service;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.flow.enums.OperationType;
 import com.hubidaauto.servmarket.module.flow.enums.WorkOrderStatus;
+import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
+import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
@@ -37,31 +39,20 @@ import java.util.List;
 public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition> {
     static long TEMPLATE_ID = 1L;
     FlowProxyService flowService;
-
     ServiceClassOrderDao orderDao;
     BaseOrderDao baseOrderDao;
-
+    ItemDao itemDao;
+    ItemTypeDao itemTypeDao;
     ServiceClassWorkOrderDao workOrderDao;
 
     @Autowired
-    public void setWorkOrderDao(ServiceClassWorkOrderDao workOrderDao) {
+    public void init(ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
         this.workOrderDao = workOrderDao;
-    }
-
-    @Autowired
-    public void setOrderDao(ServiceClassOrderDao orderDao) {
         this.orderDao = orderDao;
-    }
-
-    @Autowired
-    public void setFlowService(FlowProxyService flowService) {
         this.flowService = flowService;
-    }
-
-
-    @Autowired
-    public void setBaseOrderDao(BaseOrderDao baseOrderDao) {
         this.baseOrderDao = baseOrderDao;
+        this.itemDao = itemDao;
+        this.itemTypeDao = itemTypeDao;
     }
 
     @Override
@@ -97,8 +88,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    public OrderVO get(Long id) {
-        return orderDao.get(id);
+    public ServiceClassOrderVO get(Long id) {
+        ServiceClassOrderVO orderVO = orderDao.get(id);
+        orderVO.setItemType(itemTypeDao.get(orderVO.getItemTypeId()));
+        orderVO.setItem(itemDao.get(orderVO.getItemType().getItemId()));
+        return orderVO;
     }
 
 

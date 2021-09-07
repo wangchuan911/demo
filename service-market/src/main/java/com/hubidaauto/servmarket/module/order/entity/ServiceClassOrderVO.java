@@ -1,7 +1,9 @@
 package com.hubidaauto.servmarket.module.order.entity;
 
+import com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO;
+import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
+
 import java.sql.Timestamp;
-import java.util.Arrays;
 
 /**
  * @Classname ServiceClassOrderVO
@@ -20,21 +22,26 @@ public class ServiceClassOrderVO extends OrderVO {
         this.workerNum = form.count;
         this.workHour = (form.time[0] ? 4 : 0) + (form.time[1] ? 4 : 0);
         this.workTime = String.format("%s %s", form.time[0] ? "早上" : "", form.time[1] ? "下午" : "");
+        this.price = form.price;
+        this.itemTypeId = form.itemTypeId;
     }
 
-    long itemId, addressId, payTypeId, typeId;
+    long itemTypeId, addressId, payTypeId, typeId;
     String remark, orderDesc, workTime;
     Timestamp createTime;
     Timestamp finishTime;
     Timestamp bookTime;
     int workerNum, workHour;
+    ItemTypeVO itemType;
+    ItemVO item;
 
-    public long getItemId() {
-        return itemId;
+
+    public long getItemTypeId() {
+        return itemTypeId;
     }
 
-    public void setItemId(long itemId) {
-        this.itemId = itemId;
+    public void setItemTypeId(long itemTypeId) {
+        this.itemTypeId = itemTypeId;
     }
 
     public long getAddressId() {
@@ -123,5 +130,21 @@ public class ServiceClassOrderVO extends OrderVO {
 
     public void setWorkTime(String workTime) {
         this.workTime = workTime;
+    }
+
+    public ItemTypeVO getItemType() {
+        return itemType;
+    }
+
+    public void setItemType(ItemTypeVO itemType) {
+        this.itemType = itemType;
+    }
+
+    public ItemVO getItem() {
+        return item;
+    }
+
+    public void setItem(ItemVO item) {
+        this.item = item;
     }
 }

@@ -10,7 +10,7 @@ public class Page {
     int size, page, start;
 
     public Page(int page) {
-        this(page, 20);
+        this(page, 10);
     }
 
     public Page(int page, int size) {

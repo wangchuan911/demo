@@ -15,10 +15,10 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
 
     public static class Form {
         Boolean[] addedValue, time;
-        Integer count, price;
+        Integer count;
         Timestamp date;
         String remark;
-        Long addressId;
+        Long addressId, price, itemTypeId;
 
         public Boolean[] getAddedValue() {
             return addedValue;
@@ -44,11 +44,11 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
             this.count = count;
         }
 
-        public Integer getPrice() {
+        public Long getPrice() {
             return price;
         }
 
-        public void setPrice(Integer price) {
+        public void setPrice(Long price) {
             this.price = price;
         }
 
@@ -74,6 +74,14 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
 
         public void setAddressId(Long addressId) {
             this.addressId = addressId;
+        }
+
+        public Long getItemTypeId() {
+            return itemTypeId;
+        }
+
+        public void setItemTypeId(Long itemTypeId) {
+            this.itemTypeId = itemTypeId;
         }
     }
 }
