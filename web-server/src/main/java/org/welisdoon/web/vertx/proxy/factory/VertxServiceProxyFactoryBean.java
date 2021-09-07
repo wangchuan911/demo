@@ -2,6 +2,7 @@ package org.welisdoon.web.vertx.proxy.factory;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import org.springframework.beans.factory.FactoryBean;
@@ -78,10 +79,10 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
     }
 
     @Override
-    public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+    public Future invoke(Object o, Method method, Object[] objects) throws Throwable {
         Promise promise = Promise.promise();
-        Type retunType = method.getGenericReturnType(),
-                innertype = retunType == null ? null : ((ParameterizedType) retunType).getActualTypeArguments()[0];
+        Type retunType = ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0],
+                innertype = retunType instanceof ParameterizedType ? ((ParameterizedType) retunType).getActualTypeArguments()[0] : null;
         if (this.iVertxInvoker == null) {
             this.initInvoker();
         }
@@ -92,27 +93,32 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
                         Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(Collectors.toList())),
                 JSONArray.toJSONString(objects),
                 stringAsyncResult -> {
-                    if (stringAsyncResult.succeeded()) {
-                        String resultString = stringAsyncResult.result();
+                    if (!stringAsyncResult.succeeded()) {
+                        promise.fail(stringAsyncResult.cause());
+                        return;
+                    }
+                    String resultString = stringAsyncResult.result();
+                    try {
                         if (resultString == null) {
                             promise.complete(null);
-                        } else if (match(String.class, retunType, innertype)) {
+                            return;
+                        }
+                        if (match(String.class, retunType, innertype)) {
                             promise.complete(resultString);
-                        } else if (this.match(resultString, '{', '}')
+                            return;
+                        }
+                        if (this.match(resultString, '{', '}')
                                 || (innertype == null && this.match(resultString, '[', ']'))) {
                             promise.complete(JSON.parseObject(stringAsyncResult.result(), retunType));
-                        } else if (this.match(resultString, '[', ']')) {
-                            try {
-                                promise.complete(JSON.parseArray(stringAsyncResult.result(), Class.forName(innertype.getTypeName())));
-                            } catch (ClassNotFoundException e) {
-                                promise.fail(e);
-                            }
-                        } else {
-                            promise.complete(resultString);
+                            return;
                         }
-
-                    } else {
-                        promise.fail(stringAsyncResult.cause());
+                        if (this.match(resultString, '[', ']')) {
+                            promise.complete(JSON.parseArray(stringAsyncResult.result(), Class.forName(innertype.getTypeName())));
+                            return;
+                        }
+                        promise.complete(resultString);
+                    } catch (Throwable e) {
+                        promise.fail(e);
                     }
                 }
         );

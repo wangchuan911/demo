@@ -9,6 +9,7 @@ import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import io.vertx.core.Future;
 import org.welisdoon.web.vertx.annotation.VertxServiceProxy;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,7 +26,7 @@ public interface IBaseOrderService {
 
     Future<Void> workOrder(String jsonText);
 
-    Future<OrderVO> list(OrderCondition condition);
+    Future<List<OrderVO>> list(OrderCondition condition);
 
 
 }
