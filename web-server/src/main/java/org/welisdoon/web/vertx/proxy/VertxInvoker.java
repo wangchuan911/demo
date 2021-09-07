@@ -73,7 +73,7 @@ public class VertxInvoker implements IVertxInvoker {
                     } else {
                         subTypes = null;
                     }
-                    types[i] = Class.forName(paramType);
+//                    types[i] = Class.forName(paramType);
                     valueString = params.getString(i);
                     if (StringUtils.isEmpty(valueString)) continue;
                     switch (paramType) {
