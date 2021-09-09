@@ -44,7 +44,7 @@
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO"
             useGeneratedKeys="true" keyProperty="id">
 
-        INSERT INTO shop1.WORK_ORDER (ORDER_ID, STREAM_ID, STAFF_ID,  STATUS_ID)
+        INSERT INTO WORK_ORDER (ORDER_ID, STREAM_ID, STAFF_ID,  STATUS_ID)
         VALUES ( #{orderId},  #{streamId},  #{staffId},  #{statusId})
     </insert>
 

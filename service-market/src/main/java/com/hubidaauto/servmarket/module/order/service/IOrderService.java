@@ -27,8 +27,11 @@ public interface IOrderService<O extends OrderCondition, W extends WorkOrderCond
 
     void workOrder(W workOrderCondition);
 
-    OrderVO get(Long id);
+    OrderVO getOrder(Long orderId);
 
+    WorkOrderVO getWorkOrder(W workOrderCondition);
+
+    List<WorkOrderVO> getWorkOrders(W workOrderCondition);
 
 
     /* static void start(final long typeId,String J) {

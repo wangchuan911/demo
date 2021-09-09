@@ -160,5 +160,45 @@ public class OrderWebRouter {
         });
     }
 
+    @VertxRouter(path = "/getWorkOrder")
+    public void getWorkOrder(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                orderService
+                        .getWorkOrder(routingContext.getBodyAsString())
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end(JSONArray.toJSONString(stringAsyncResult.result()));
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.fail(e.getCause());
+            }
+        });
+    }
+
+    @VertxRouter(path = "/getWorkOrders", method = "POST")
+    public void getWorkOrders(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                orderService
+                        .getWorkOrders(routingContext.getBodyAsString())
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end(JSONArray.toJSONString(stringAsyncResult.result()));
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.fail(e.getCause());
+            }
+        });
+    }
+
 
 }

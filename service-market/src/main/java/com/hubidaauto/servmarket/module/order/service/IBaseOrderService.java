@@ -6,9 +6,11 @@ import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
+import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import io.vertx.core.Future;
 import org.welisdoon.web.vertx.annotation.VertxServiceProxy;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +31,10 @@ public interface IBaseOrderService {
     Future<List<OrderVO>> list(OrderCondition condition);
 
     Future<OrderVO> get(Long id);
+
+    Future<WorkOrderVO> getWorkOrder(String jsonText);
+
+    Future<List<WorkOrderVO>> getWorkOrders(String jsonText);
 
 
 }

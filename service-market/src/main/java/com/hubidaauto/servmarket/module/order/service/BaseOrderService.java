@@ -6,7 +6,9 @@ import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
+import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
+import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,16 +83,33 @@ public class BaseOrderService {
         IOrderService iOrderService;
         for (OrderVO orderVO : list) {
             iOrderService = ORDER_CLASSES.get(orderVO.getClassId());
-            list2.add(iOrderService.get(orderVO.getId()));
+            list2.add(iOrderService.getOrder(orderVO.getId()));
         }
         return list2;
+    }
+
+    public WorkOrderVO getWorkOrder(String jsonText) {
+        JSONObject jsonObject = JSONObject.parseObject(jsonText);
+        IOrderService iOrderService = ORDER_CLASSES.get(jsonObject.getLong(CLASS_ID));
+        Type workOrderConditionClass = this.getIOrderServiceRawType(iOrderService)[1];
+        WorkOrderCondition condition = jsonObject.toJavaObject(workOrderConditionClass);
+        return iOrderService.getWorkOrder(condition);
+    }
+
+    public List<WorkOrderVO> getWorkOrders(String jsonText) {
+        JSONObject jsonObject = JSONObject.parseObject(jsonText);
+        IOrderService iOrderService = ORDER_CLASSES.get(jsonObject.getLong(CLASS_ID));
+        Type workOrderConditionClass = this.getIOrderServiceRawType(iOrderService)[1];
+        WorkOrderCondition condition = jsonObject.toJavaObject(workOrderConditionClass);
+        return iOrderService.getWorkOrders(condition);
     }
 
     public OrderVO get(Long id) {
         OrderVO orderVO = baseOrderDao.get(id);
         IOrderService iOrderService = ORDER_CLASSES.get(orderVO.getClassId());
-        return iOrderService.get(id);
+        return iOrderService.getOrder(id);
     }
+
 
     Type[] getIOrderServiceRawType(IOrderService iOrderService) {
         return ((ParameterizedType) Arrays

@@ -13,6 +13,7 @@ import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
+import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -89,11 +90,21 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    public ServiceClassOrderVO get(Long id) {
-        ServiceClassOrderVO orderVO = orderDao.get(id);
+    public ServiceClassOrderVO getOrder(Long orderId) {
+        ServiceClassOrderVO orderVO = orderDao.get(orderId);
         orderVO.setItemType(itemTypeDao.get(orderVO.getItemTypeId()));
         orderVO.setItem(itemDao.get(orderVO.getItemType().getItemId()));
         return orderVO;
+    }
+
+    @Override
+    public WorkOrderVO getWorkOrder(ServiceClassWorkOrderCondition workOrderCondition) {
+        return workOrderDao.find(workOrderCondition);
+    }
+
+    @Override
+    public List<WorkOrderVO> getWorkOrders(ServiceClassWorkOrderCondition workOrderCondition) {
+        return (List) workOrderDao.list(workOrderCondition);
     }
 
 

@@ -3,7 +3,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao">
-
+    <select id="get" resultType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO">
+        select * from MALL_ITEM_TYPES a where a.ID=#{value}
+    </select>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemCondition"
             resultType="com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO">
         select * from MALL_ITEM_TYPES a

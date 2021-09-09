@@ -4,7 +4,9 @@ import java.util.Arrays;
 
 public class ServiceClassWorkOrderCondition extends WorkOrderCondition<ServiceClassWorkOrderVO> {
     static private String[] UPDATES = {"finish", "start", "skip"};
+    static private String[] QUERY = {"new3", "all"};
     String update;
+    String query = QUERY[0];
 
     public String getUpdate() {
         return update;
@@ -13,6 +15,17 @@ public class ServiceClassWorkOrderCondition extends WorkOrderCondition<ServiceCl
     public void setUpdate(String update) {
         if (Arrays.stream(UPDATES).anyMatch(s -> s.equals(update)))
             this.update = update;
+        else
+            throw new RuntimeException("not support!");
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        if (Arrays.stream(QUERY).anyMatch(s -> s.equals(query)))
+            this.query = query;
         else
             throw new RuntimeException("not support!");
     }
