@@ -6,7 +6,7 @@ public class ServiceClassWorkOrderCondition extends WorkOrderCondition {
     static private String[] UPDATES = {"finish", "start", "skip"};
     static private String[] QUERY = {"all","doing"};
     String update;
-    String query = QUERY[0];
+    String query ;
 
     public String getUpdate() {
         return update;

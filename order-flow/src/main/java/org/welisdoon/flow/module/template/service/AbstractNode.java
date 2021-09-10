@@ -32,7 +32,7 @@ public abstract class AbstractNode {
     static NodeDao nodeDao;
     static LinkFunctionDao linkFunctionDao;
     FlowDao flowDao;
-    static Map<Integer, AbstractNode> NODE_MAP;
+    static Map<Long, AbstractNode> NODE_MAP;
 
 
     public boolean isSimpleNode() {

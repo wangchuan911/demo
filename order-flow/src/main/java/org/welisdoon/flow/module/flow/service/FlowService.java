@@ -168,5 +168,8 @@ public class FlowService {
         return this.streamDao.find(flowCondition);
     }
 
+    public Stream getStream(Long streamId) {
+        return streamDao.get(streamId);
+    }
 
 }

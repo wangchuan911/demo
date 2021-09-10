@@ -8,6 +8,8 @@
         <outputRelativeToContentRoot value="true" />
         <module name="common-utils" />
         <module name="car-service" />
+        <module name="order-flow" />
+        <module name="service-market" />
       </profile>
       <profile name="Annotation profile for micro-server-demo" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -18,7 +20,12 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="carservice" target="11" />
+      <module name="info-map" target="11.0.2" />
+      <module name="micro-center" target="11" />
       <module name="micro-server-demo" target="11" />
+      <module name="web-interface" target="11" />
+      <module name="webserver" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>

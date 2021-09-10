@@ -4,6 +4,11 @@
     <file url="file://$PROJECT_DIR$/car-service/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/car-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/common-utils/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common-utils/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/order-flow/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/order-flow/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/service-market/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/service-market/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/view" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/view/ant-vue" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/web-server" charset="UTF-8" />

@@ -201,7 +201,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 workOrderDao.add(workOrderVO);
                 break;
             case COMPLETE:
-                workOrderCondition = new ServiceClassWorkOrderCondition();
+//                workOrderCondition = new ServiceClassWorkOrderCondition();
                 workOrderCondition = new ServiceClassWorkOrderCondition();
                 workOrderCondition.setStreamId(stream.getId());
                 workOrderCondition.setId(workOrderDao.find(workOrderCondition).getId());
