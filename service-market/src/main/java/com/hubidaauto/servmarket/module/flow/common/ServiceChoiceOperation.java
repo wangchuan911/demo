@@ -2,7 +2,9 @@ package com.hubidaauto.servmarket.module.flow.common;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.service.FlowService;
@@ -17,7 +19,7 @@ import java.util.List;
  * @Author wang.zhidong
  * @Date 2021/8/24 00:52
  */
-@Service
+@Component
 @Transactional(rollbackFor = Throwable.class)
 public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitializer {
 
@@ -30,6 +32,7 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
 
     @Override
     @DS("shop")
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public List<Stream> onInstantiated(Stream templateStream) {
         List<Stream> list = new LinkedList();
         for (int i = 0; i < 2; i++) {

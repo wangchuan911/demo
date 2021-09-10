@@ -7,39 +7,28 @@
             resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
         SELECT * FROM WORK_ORDER A WHERE A.ID=#{value}
     </select>
+    <sql id="condition">
+        <choose>
+            <when test="query=='all'">
+                and #{orderId}=ORDER_ID
+            </when>
+            <when test="query=='doing'">
+                and #{orderId}=ORDER_ID
+                and #{staffId}=STAFF_ID
+                and 11001= STATUS_ID
+            </when>
+            <otherwise>
+                and 1=2
+            </otherwise>
+        </choose>
+    </sql>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition"
             resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
         SELECT * FROM WORK_ORDER A
         <where>
-            <choose>
-                <when test="id!=null">
-                    AND ID=#{id}
-                </when>
-                <when test="openId!=null">
-                    AND APP_ID=#{openId}
-                </when>
-                <when test="datas!=null and datas.size()>0">
-                    <include refid="datas"></include>
-                </when>
-                <otherwise>
-                    and 1=2
-                </otherwise>
-            </choose>
+            <include refid="condition"></include>
         </where>
     </select>
-    <sql id="condition">
-        and a.id=#{data.id}
-    </sql>
-    <sql id="datas">
-        and exists (
-        <foreach collection="datas" item="data" separator="union all">
-            select 1 from dual
-            <where>
-                <include refid="condition"></include>
-            </where>
-        </foreach>
-        )
-    </sql>
 
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO"
             useGeneratedKeys="true" keyProperty="id">
@@ -55,7 +44,8 @@
         where ID=#{id}
     </update>
 
-    <update id="update" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition">
+    <update id="update"
+            parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition">
         update WORK_ORDER
         <set>
             <if test="update=='finish'">
@@ -74,17 +64,7 @@
             resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
         SELECT * FROM WORK_ORDER A
         <where>
-            <choose>
-                <when test="id!=null">
-                    AND ID=#{id}
-                </when>
-                <when test="streamId!=null">
-                    AND STREAM_ID=#{streamId}
-                </when>
-                <otherwise>
-                    and 1=2
-                </otherwise>
-            </choose>
+            <include refid="condition"></include>
         </where>
     </select>
 </mapper>

@@ -12,7 +12,6 @@ import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
-import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,6 @@ import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -99,12 +97,18 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
     @Override
     public WorkOrderVO getWorkOrder(ServiceClassWorkOrderCondition workOrderCondition) {
-        return workOrderDao.find(workOrderCondition);
+        ServiceClassWorkOrderVO workOrderVO = workOrderDao.find(workOrderCondition);
+        workOrderVO.setStream(this.flowService.getStream(workOrderVO.getStreamId()));
+        return workOrderVO;
     }
 
     @Override
     public List<WorkOrderVO> getWorkOrders(ServiceClassWorkOrderCondition workOrderCondition) {
-        return (List) workOrderDao.list(workOrderCondition);
+        List<ServiceClassWorkOrderVO> list = workOrderDao.list(workOrderCondition);
+        for (ServiceClassWorkOrderVO workOrderVO : list) {
+            workOrderVO.setStream(this.flowService.getStream(workOrderVO.getStreamId()));
+        }
+        return (List) list;
     }
 
 
@@ -189,6 +193,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     switch (operationType) {
                         case SIGN_UP:
                         case SERVICING:
+                        case DISPATCH:
                             workOrderVO.setOperation(operationType.name());
                             break;
                     }

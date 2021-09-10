@@ -40,4 +40,9 @@ public class FlowProxyService {
     public Stream stream(Long streamId) {
         return this.flowService.stream(streamId);
     }
+
+    @DS("flow")
+    public Stream getStream(Long streamId) {
+        return this.flowService.getStream(streamId);
+    }
 }

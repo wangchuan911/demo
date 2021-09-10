@@ -64,7 +64,7 @@ public class BaseOrderService {
 
     public void start(String jsonText) {
         JSONObject jsonObject = JSONObject.parseObject(jsonText);
-        IOrderService iOrderService = ORDER_CLASSES.get(jsonObject.getLong(CLASS_ID));
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(jsonObject.getLong("id")).getClassId());
         Type orderConditionClass = this.getIOrderServiceRawType(iOrderService)[0];
         OrderCondition condition = jsonObject.toJavaObject(orderConditionClass);
         iOrderService.start(condition);
@@ -72,7 +72,7 @@ public class BaseOrderService {
 
     public void workOrder(String jsonText) {
         JSONObject jsonObject = JSONObject.parseObject(jsonText);
-        IOrderService iOrderService = ORDER_CLASSES.get(jsonObject.getLong(CLASS_ID));
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(jsonObject.getLong("orderId")).getClassId());
         Type workOrderConditionClass = this.getIOrderServiceRawType(iOrderService)[1];
         WorkOrderCondition condition = jsonObject.toJavaObject(workOrderConditionClass);
         iOrderService.workOrder(condition);
@@ -90,7 +90,7 @@ public class BaseOrderService {
 
     public WorkOrderVO getWorkOrder(String jsonText) {
         JSONObject jsonObject = JSONObject.parseObject(jsonText);
-        IOrderService iOrderService = ORDER_CLASSES.get(jsonObject.getLong(CLASS_ID));
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(jsonObject.getLong("orderId")).getClassId());
         Type workOrderConditionClass = this.getIOrderServiceRawType(iOrderService)[1];
         WorkOrderCondition condition = jsonObject.toJavaObject(workOrderConditionClass);
         return iOrderService.getWorkOrder(condition);
@@ -98,7 +98,7 @@ public class BaseOrderService {
 
     public List<WorkOrderVO> getWorkOrders(String jsonText) {
         JSONObject jsonObject = JSONObject.parseObject(jsonText);
-        IOrderService iOrderService = ORDER_CLASSES.get(jsonObject.getLong(CLASS_ID));
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(jsonObject.getLong("orderId")).getClassId());
         Type workOrderConditionClass = this.getIOrderServiceRawType(iOrderService)[1];
         WorkOrderCondition condition = jsonObject.toJavaObject(workOrderConditionClass);
         return iOrderService.getWorkOrders(condition);

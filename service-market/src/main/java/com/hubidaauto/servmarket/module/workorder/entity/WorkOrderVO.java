@@ -1,5 +1,7 @@
 package com.hubidaauto.servmarket.module.workorder.entity;
 
+import org.welisdoon.flow.module.flow.entity.Stream;
+
 import java.sql.Timestamp;
 
 /**
@@ -12,6 +14,7 @@ public class WorkOrderVO {
     Long id, streamId, staffId, orderId, statusId;
     Timestamp createTime, finishTime;
     String operation;
+    Stream stream;
 
     public Long getId() {
         return id;
@@ -75,5 +78,13 @@ public class WorkOrderVO {
 
     public void setOperation(String operation) {
         this.operation = operation;
+    }
+
+    public Stream getStream() {
+        return stream;
+    }
+
+    public void setStream(Stream stream) {
+        this.stream = stream;
     }
 }

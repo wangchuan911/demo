@@ -2,9 +2,9 @@ package com.hubidaauto.servmarket.module.workorder.entity;
 
 import java.util.Arrays;
 
-public class ServiceClassWorkOrderCondition extends WorkOrderCondition<ServiceClassWorkOrderVO> {
+public class ServiceClassWorkOrderCondition extends WorkOrderCondition {
     static private String[] UPDATES = {"finish", "start", "skip"};
-    static private String[] QUERY = {"new3", "all"};
+    static private String[] QUERY = {"all","doing"};
     String update;
     String query = QUERY[0];
 

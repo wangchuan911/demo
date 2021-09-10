@@ -1,16 +1,14 @@
 package com.hubidaauto.servmarket.module.workorder.entity;
 
-import com.hubidaauto.servmarket.common.entity.AbstractBaseCondition;
-
 /**
  * @Classname WorkOrderCondition
  * @Description TODO
  * @Author wang.zhidong
  * @Date 2021/8/28 18:55
  */
-public class WorkOrderCondition<T extends WorkOrderVO> extends AbstractBaseCondition<Long, T> {
+public class WorkOrderCondition  {
     Long streamId, classId, orderId,
-            workOrderId;
+            id, staffId;
 
     public Long getStreamId() {
         return streamId;
@@ -36,11 +34,19 @@ public class WorkOrderCondition<T extends WorkOrderVO> extends AbstractBaseCondi
         this.orderId = orderId;
     }
 
-    public Long getWorkOrderId() {
-        return workOrderId;
+    public Long getId() {
+        return id;
     }
 
-    public void setWorkOrderId(Long workOrderId) {
-        this.workOrderId = workOrderId;
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(Long staffId) {
+        this.staffId = staffId;
     }
 }
