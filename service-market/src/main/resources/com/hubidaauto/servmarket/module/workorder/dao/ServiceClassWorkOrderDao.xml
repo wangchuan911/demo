@@ -17,6 +17,9 @@
                 and #{staffId}=STAFF_ID
                 and 11001= STATUS_ID
             </when>
+            <when test="streamId!=null">
+                and #{streamId}=STREAM_ID
+            </when>
             <otherwise>
                 and 1=2
             </otherwise>
