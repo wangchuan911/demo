@@ -9,13 +9,5 @@ import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
  * @Date 2021/8/27 09:39
  */
 public class StaffVO  extends AppUserVO {
-    long roleId;
 
-    public long getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(long roleId) {
-        this.roleId = roleId;
-    }
 }

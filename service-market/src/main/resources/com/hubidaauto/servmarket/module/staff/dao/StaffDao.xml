@@ -6,20 +6,43 @@
     <select id="get"
             parameterType="long"
             resultType="com.hubidaauto.servmarket.module.staff.entity.StaffVO">
-        SELECT B.*,A.ROLE_ID,A.ORDER_ID FROM STAFF A
-         JOIN APP_USER B
-         ON A.ID=B.ID
-         A WHERE A.ID=#{value}
+        SELECT A.* FROM APP_USER A
+         WHERE A.ID=#{value}
     </select>
 
     <select id="list" parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffCondition"
             resultType="com.hubidaauto.servmarket.module.staff.entity.StaffVO">
-        SELECT B.*,A.ROLE_ID,A.ORDER_ID FROM STAFF A
-        JOIN APP_USER B
-        ON A.ID=B.ID
+        SELECT A.* FROM APP_USER A
         <where>
+        <choose>
+            <when test="query=='WORKER'">
+                and A.ID IN (
+                    select STAFF_ID from STAFF_TASK A1  WHERE  A1.ORDER_ID=#{orderId}
+                    and exists (
+                    select 1 from  STAFF_JOB A1,STAFF_ROLE B1
+                    WHERE A1.ROLE_ID=B1.ID AND A1.STAFF_ID=A.ID AND B1.ID=2
+                    )
+                )
+            </when>
+            <when test="query=='REGION_DISPATCH'">
+                and A.ID IN (
+                    SELECT A1.STAFF_ID FROM  STAFF_JOB A1
+                    JOIN STAFF_ROLE B1
+                    ON B1.ID=A1.ROLE_ID
+                    AND B1.ID=1
+                    WHERE EXISTS (
+                        SELECT 1 FROM DUAL WHERE A1.REGION_ID=#{regionId}
+                        UNION ALL
+                        SELECT 1 FROM PUB_REGION A2 WHERE A2.ID=#{regionId} AND A1.REGION_ID=A2.SUPER_ID
+                        UNION ALL
+                        SELECT 1 FROM PUB_REGION A2 JOIN PUB_REGION A3 ON A3.SUPER_ID=A2.ID WHERE A3.ID=#{regionId} AND A1.REGION_ID=A2.SUPER_ID
+                    )
+                )
+            </when>
+            <otherwise>and 1=2</otherwise>
+        </choose>
             <if test="orderId!=null">
-                and A.ORDER_ID=#{orderId}
+
             </if>
 
         </where>

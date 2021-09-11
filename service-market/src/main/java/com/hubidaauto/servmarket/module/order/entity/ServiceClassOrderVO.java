@@ -24,6 +24,7 @@ public class ServiceClassOrderVO extends OrderVO {
         this.workTime = String.format("%s %s", form.time[0] ? "早上" : "", form.time[1] ? "下午" : "");
         this.price = form.price;
         this.itemTypeId = form.itemTypeId;
+        this.regionId = form.regionId;
     }
 
     long itemTypeId, addressId, payTypeId, typeId;

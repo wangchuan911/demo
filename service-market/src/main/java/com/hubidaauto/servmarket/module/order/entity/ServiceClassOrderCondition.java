@@ -18,7 +18,7 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
         Integer count;
         Timestamp date;
         String remark;
-        Long addressId, price, itemTypeId;
+        Long addressId, price, itemTypeId, regionId;
 
         public Boolean[] getAddedValue() {
             return addedValue;
@@ -82,6 +82,14 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
 
         public void setItemTypeId(Long itemTypeId) {
             this.itemTypeId = itemTypeId;
+        }
+
+        public Long getRegionId() {
+            return regionId;
+        }
+
+        public void setRegionId(Long regionId) {
+            this.regionId = regionId;
         }
     }
 }

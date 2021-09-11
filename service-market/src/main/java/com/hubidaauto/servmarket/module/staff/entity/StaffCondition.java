@@ -3,6 +3,8 @@ package com.hubidaauto.servmarket.module.staff.entity;
 import com.hubidaauto.servmarket.common.entity.AbstractBaseCondition;
 import com.hubidaauto.servmarket.common.entity.Page;
 
+import java.util.Arrays;
+
 /**
  * @Classname StaffCondition
  * @Description TODO
@@ -10,12 +12,26 @@ import com.hubidaauto.servmarket.common.entity.Page;
  * @Date 2021/8/27 09:47
  */
 public class StaffCondition {
-    Long orderId, staffId, roleId;
+    final static String[] QUERY = {"REGION_DISPATCH", "WORKER"};
+    Long orderId, staffId, roleId, regionId;
+    String query;
     boolean isPage;
     Page page;
 
     public StaffCondition setOrderId(Long orderId) {
         this.orderId = orderId;
+        return this;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public StaffCondition setQuery(String query) {
+        if (Arrays.stream(QUERY).anyMatch(s -> s.equals(query)))
+            this.query = query;
+        else
+            throw new RuntimeException(String.format("error query [%s]", query));
         return this;
     }
 
@@ -67,6 +83,15 @@ public class StaffCondition {
         if (this.page == null) {
             page = new Page(num, size);
         }
+        return this;
+    }
+
+    public Long getRegionId() {
+        return regionId;
+    }
+
+    public StaffCondition setRegionId(Long regionId) {
+        this.regionId = regionId;
         return this;
     }
 }

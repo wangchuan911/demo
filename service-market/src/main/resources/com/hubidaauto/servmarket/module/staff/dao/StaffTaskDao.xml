@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao">
+
+
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffCondition"
+            resultType="com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO">
+        SELECT * FROM STAFF_TASK
+        <where>
+            <choose>
+                <when test="orderId!=null or staffId!=null">
+                    <if test="orderId!=null">
+                        and ORDER_ID=#{orderId}
+                    </if>
+                    <if test="staffId!=null">
+                        and STAFF_ID=#{staffId}
+                    </if>
+                </when>
+            </choose>
+        </where>
+    </select>
+
+    <insert id="add">
+        insert into STAFF_TASK(STAFF_ID,ORDER_ID,TASK_TIME) VALUES (#{staffId},#{orderId},#{taskTime})
+    </insert>
+    <delete id="clear" parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffCondition">
+        delete STAFF_TASK
+        <where>
+            <choose>
+                <when test="orderId!=null or staffId!=null">
+                    <if test="orderId!=null">
+                        and ORDER_ID=#{orderId}
+                    </if>
+                    <if test="staffId!=null">
+                        and STAFF_ID=#{staffId}
+                    </if>
+                </when>
+                <otherwise>and 1=2</otherwise>
+            </choose>
+        </where>
+    </delete>
+    <update id="update" parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffCondition">
+        update STAFF_TASK set STAFF_ID=#{staffId} where ORDER_ID=#{orderId}  and STAFF_ID=#{staffId}
+    </update>
+
+</mapper>

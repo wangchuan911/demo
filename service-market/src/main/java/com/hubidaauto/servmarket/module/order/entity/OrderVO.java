@@ -17,7 +17,7 @@ import java.util.Arrays;
  * @Date 2021/8/13 12:14
  */
 public class OrderVO {
-    Long id, price, flowId, statusId, custId, classId;
+    Long id, price, flowId, statusId, custId, classId, regionId;
     String code;
 
     public Long getId() {
@@ -74,5 +74,13 @@ public class OrderVO {
 
     public void setClassId(Long classId) {
         this.classId = classId;
+    }
+
+    public Long getRegionId() {
+        return regionId;
+    }
+
+    public void setRegionId(Long regionId) {
+        this.regionId = regionId;
     }
 }

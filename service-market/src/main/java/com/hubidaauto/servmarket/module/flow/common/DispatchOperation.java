@@ -52,7 +52,7 @@ public class DispatchOperation implements VirtualNode.VirtualNodeInitializer {
         OrderCondition condition = new OrderCondition();
         condition.setFlowId(templateStream.getFlowId());
         OrderVO orderVO = baseOrderDao.find(condition);
-        List<StaffVO> staffs = staffDao.list(new StaffCondition().setOrderId(orderVO.getId()));
+        List<StaffVO> staffs = staffDao.list(new StaffCondition().setRegionId(orderVO.getRegionId()).setQuery("REGION_DISPATCH"));
         if (CollectionUtils.isEmpty(staffs)) {
             throw new RuntimeException("未指派人，请确认");
         }
