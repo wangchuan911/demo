@@ -47,12 +47,12 @@
     </sql>
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.user.entity.AddressVO"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO ADDRESS ( `DESC`, PHONE, MAN, USER_ID, REGION, LNG, LAT)
-        VALUES ( #{desc}, #{phone}, #{man}, #{userId}, #{region}, #{lng}, #{lat})
+        INSERT INTO ADDRESS ( `DESC`, PHONE, MAN, USER_ID, REGION, LNG, LAT,REGION_ID)
+        VALUES ( #{desc}, #{phone}, #{man}, #{userId}, #{region}, #{lng}, #{lat},#{regionId})
     </insert>
 
     <update id="put" parameterType="com.hubidaauto.servmarket.module.user.entity.AddressVO">
-        update ADDRESS set `DESC`=#{desc},PHONE=#{phone},MAN=#{man},REGION=#{region},LNG=#{lng},LAT=#{lat}
+        update ADDRESS set `DESC`=#{desc},PHONE=#{phone},MAN=#{man},REGION=#{region},LNG=#{lng},LAT=#{lat},REGION_ID=#{regionId}
         where ID=#{id} AND USER_ID=#{userId}
     </update>
 

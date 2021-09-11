@@ -7,7 +7,7 @@ package com.hubidaauto.servmarket.module.user.entity;
  * @Date 2021/8/11 00:55
  */
 public class AddressVO {
-    Long id, userId;
+    Long id, userId, regionId;
     String region, desc, phone, man;
     Double lat, lng;
 
@@ -73,5 +73,13 @@ public class AddressVO {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getRegionId() {
+        return regionId;
+    }
+
+    public void setRegionId(Long regionId) {
+        this.regionId = regionId;
     }
 }
