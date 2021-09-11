@@ -20,7 +20,7 @@ import java.util.Optional;
 @NodeType(10001)
 @Service
 @Primary
-public class SerialNodeSerice extends AbstractComplexNode {
+public class SerialNode extends AbstractComplexNode {
 
     @Override
     public void start(Stream stream) {
