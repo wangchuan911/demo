@@ -2,6 +2,7 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.flow.enums.OperationType;
+import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.flow.enums.WorkOrderStatus;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
@@ -61,6 +62,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         ServiceClassOrderVO orderVO = new ServiceClassOrderVO(condition.getForm());
         orderVO.setClassId(condition.getClassId());
         orderVO.setCustId(condition.getCustId());
+        orderVO.setStatusId(OrderStatus.READY.statusId());
         baseOrderDao.add(orderVO);
         orderDao.add(orderVO);
 
@@ -70,6 +72,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         this.flowService.flow(flow);
 
         orderVO.setFlowId(flow.getId());
+        orderVO.setStatusId(OrderStatus.PRE_PAY.statusId());
         baseOrderDao.put(orderVO);
         return orderVO;
     }
