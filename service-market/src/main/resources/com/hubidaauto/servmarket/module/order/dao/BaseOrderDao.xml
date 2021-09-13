@@ -24,6 +24,9 @@
             <if test="statusId!=null">
                 and A.STATUS_ID=#{statusId}
             </if>
+            <if test="flowId!=null">
+                and A.FLOW_ID=#{flowId}
+            </if>
         </where>
     </sql>
     <select id="get" parameterType="long" resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">

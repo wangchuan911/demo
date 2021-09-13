@@ -4,6 +4,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
+import com.hubidaauto.servmarket.module.order.service.FlowProxyService;
 import com.hubidaauto.servmarket.module.staff.dao.StaffDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class WorkToStaffOperation implements VirtualNode.VirtualNodeInitializer {
     BaseOrderDao baseOrderDao;
     StaffDao staffDao;
+    FlowProxyService flowProxyService;
 
     @Autowired
     public void setStaffDao(StaffDao staffDao) {
@@ -41,6 +43,14 @@ public class WorkToStaffOperation implements VirtualNode.VirtualNodeInitializer 
     public void setBaseOrderDao(BaseOrderDao baseOrderDao) {
         this.baseOrderDao = baseOrderDao;
     }
+
+    @Autowired
+    public void setFlowProxyService(FlowProxyService flowProxyService) {
+        this.flowProxyService = flowProxyService;
+    }
+
+
+
 
     @Override
     @DS("shop")
@@ -61,7 +71,7 @@ public class WorkToStaffOperation implements VirtualNode.VirtualNodeInitializer 
             stream.setFlowId(templateStream.getFlowId());
             stream.setSeq(integer.getAndAdd(1));
             stream.setValueId(staffVO.getId());
-            stream.setFunctionId(null);
+            stream.setFunctionId(templateStream.getValueId());
             stream.setNodeId(6L);
             stream.setName(templateStream.getName());
             return stream;

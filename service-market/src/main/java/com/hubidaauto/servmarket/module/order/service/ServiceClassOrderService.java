@@ -2,6 +2,7 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.flow.enums.OperationType;
+import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.flow.enums.WorkOrderStatus;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
@@ -107,6 +108,16 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         List<ServiceClassWorkOrderVO> list = workOrderDao.list(workOrderCondition);
         for (ServiceClassWorkOrderVO workOrderVO : list) {
             workOrderVO.setStream(this.flowService.getStream(workOrderVO.getStreamId()));
+            switch (workOrderCondition.getQuery()) {
+                case "doing":
+                    Stream superStream = flowService.getStream(workOrderVO.getStream().getSuperId());
+                    ServiceContent serviceContent = ServiceContent.getInstance(superStream.getValueId());
+                    if (serviceContent != null) {
+                        workOrderVO.setOperation(serviceContent.getCode());
+                        workOrderVO.getStream().setName(serviceContent.getDesc());
+                    }
+                    break;
+            }
         }
         return (List) list;
     }
@@ -185,14 +196,15 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 workOrderVO = new ServiceClassWorkOrderVO();
                 ServiceClassOrderVO orderVO = orderDao.find((ServiceClassOrderCondition) new ServiceClassOrderCondition().setFlowId(flow.getId()));
                 workOrderVO.setOrderId(orderVO.getId());
-                workOrderVO.setStaffId(stream.getValueId());
+                if (stream.getNodeId() == 6L)
+                    workOrderVO.setStaffId(stream.getValueId());
                 workOrderVO.setStatusId(WorkOrderStatus.READY.statusId());
                 workOrderVO.setStreamId(stream.getId());
                 if (stream.getFunctionId() != null && stream.getFunctionId() < 0) {
                     OperationType operationType = OperationType.getInstance(stream.getFunctionId());
                     switch (operationType) {
-                        case SIGN_UP:
                         case SERVICING:
+                        case SIGN_UP:
                         case DISPATCH:
                             workOrderVO.setOperation(operationType.name());
                             break;
@@ -209,6 +221,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 workOrderDao.update(workOrderCondition);
                 break;
         }
+    }
+
+    @Override
+    public List<ServiceContent> getServices(OrderVO orderVO) {
+        return List.of(ServiceContent.HOME_CLEAN, ServiceContent.HOME_EQP_CLEAN);
     }
 
 

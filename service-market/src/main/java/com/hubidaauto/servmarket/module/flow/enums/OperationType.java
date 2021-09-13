@@ -1,6 +1,7 @@
 package com.hubidaauto.servmarket.module.flow.enums;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * @Classname OperationType
@@ -9,15 +10,16 @@ import java.util.Arrays;
  * @Date 2021/8/30 09:46
  */
 public enum OperationType {
-    SIGN_UP(-1), SERVICING(-2), DISPATCH(-3);
+    SIGN_UP(-1), SERVICING(-2), DISPATCH(-3), UNKNOW(0);
 
     OperationType(long id) {
         this.id = id;
     }
 
-    long id;
+    public final long id;
 
     public static OperationType getInstance(long id) {
-        return Arrays.stream(OperationType.values()).filter(operationType -> operationType.id == id).findFirst().get();
+        Optional<OperationType> optional = Arrays.stream(OperationType.values()).filter(operationType -> operationType.id == id).findFirst();
+        return optional.isPresent() ? optional.get() : UNKNOW;
     }
 }

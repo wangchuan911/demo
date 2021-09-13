@@ -2,11 +2,11 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
-import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +110,10 @@ public class BaseOrderService {
         return iOrderService.getOrder(id);
     }
 
+    public List<ServiceContent> getServices(OrderVO orderVO) {
+        IOrderService iOrderService = ORDER_CLASSES.get(orderVO.getClassId());
+        return iOrderService.getServices(orderVO);
+    }
 
     Type[] getIOrderServiceRawType(IOrderService iOrderService) {
         return ((ParameterizedType) Arrays

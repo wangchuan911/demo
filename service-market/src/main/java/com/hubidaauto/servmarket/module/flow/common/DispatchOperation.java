@@ -64,7 +64,7 @@ public class DispatchOperation implements VirtualNode.VirtualNodeInitializer {
             stream.setFlowId(templateStream.getFlowId());
             stream.setSeq(integer.getAndAdd(1));
             stream.setValueId(staffVO.getId());
-            stream.setFunctionId(null);
+            stream.setFunctionId(templateStream.getValueId());
             stream.setNodeId(6L);
             stream.setName(templateStream.getName());
             return stream;

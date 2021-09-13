@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Flow;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.service.FlowService;
+import org.welisdoon.flow.module.template.entity.Template;
 
 /**
  * @Classname FlowProxyService
@@ -45,4 +46,10 @@ public class FlowProxyService {
     public Stream getStream(Long streamId) {
         return this.flowService.getStream(streamId);
     }
+
+    @DS("flow")
+    public void streamExpandByTemplate(Template template, Stream superStream){
+        this.flowService.streamExpandByTemplate(template, superStream);
+    }
+
 }

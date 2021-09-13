@@ -1,6 +1,6 @@
 package com.hubidaauto.servmarket.module.order.service;
 
-import com.hubidaauto.carservice.wxapp.mall.common.AbstractAutoAssign;
+import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
@@ -8,10 +8,7 @@ import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @Classname OrderService
@@ -32,6 +29,8 @@ public interface IOrderService<O extends OrderCondition, W extends WorkOrderCond
     WorkOrderVO getWorkOrder(W workOrderCondition);
 
     List<WorkOrderVO> getWorkOrders(W workOrderCondition);
+
+    List<ServiceContent> getServices(OrderVO orderVO);
 
 
     /* static void start(final long typeId,String J) {

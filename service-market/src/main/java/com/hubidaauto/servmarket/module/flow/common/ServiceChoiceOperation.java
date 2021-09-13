@@ -1,9 +1,13 @@
 package com.hubidaauto.servmarket.module.flow.common;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
+import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
+import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
+import com.hubidaauto.servmarket.module.order.entity.OrderVO;
+import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Stream;
@@ -25,9 +29,23 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
 
     FlowService flowService;
 
+    BaseOrderDao baseOrderDao;
+
+    BaseOrderService baseOrderService;
+
     @Autowired
     public void setFlowService(FlowService flowService) {
         this.flowService = flowService;
+    }
+
+    @Autowired
+    public void setBaseOrderDao(BaseOrderDao baseOrderDao) {
+        this.baseOrderDao = baseOrderDao;
+    }
+
+    @Autowired
+    public void setBaseOrderService(BaseOrderService baseOrderService) {
+        this.baseOrderService = baseOrderService;
     }
 
     @Override
@@ -35,7 +53,10 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public List<Stream> onInstantiated(Stream templateStream) {
         List<Stream> list = new LinkedList();
-        for (int i = 0; i < 2; i++) {
+        OrderVO orderVO = baseOrderDao.find(new OrderCondition<>().setFlowId(templateStream.getFlowId()));
+        List<ServiceContent> services = baseOrderService.getServices(orderVO);
+
+        for (int i = 0, len = services.size(); i < len; i++) {
             Stream stream = new Stream();
             stream.setFlow(templateStream.getFlow());
             stream.setSuperId(templateStream.getSuperId());
@@ -44,6 +65,7 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
             stream.setFunctionId(4L);
             stream.setNodeId(1L);
             stream.setName(templateStream.getName());
+            stream.setValueId(services.get(i).getId());
             list.add(stream);
         }
         return list;
