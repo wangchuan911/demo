@@ -173,6 +173,12 @@ public abstract class AbstractNode {
 
         FlowEvent flowEvent = AbstractNode.getFunctionObject(flow.getFunctionId());
         flowEvent.onFlowStatus(flow);
+        switch (status) {
+            case COMPLETE:
+            case DESTORY:
+                flowEvent.onFinished(flow);
+                break;
+        }
 
     }
 

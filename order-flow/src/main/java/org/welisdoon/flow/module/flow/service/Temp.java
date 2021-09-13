@@ -41,7 +41,7 @@ public class Temp implements VirtualNode.VirtualNodeInitializer, FlowEvent {
     }
 
     @Override
-    public void onFinished(Flow flow, Stream stream) {
+    public void onFinished(Flow flow) {
         System.out.println(Thread.currentThread().getStackTrace()[1].toString());
     }
 

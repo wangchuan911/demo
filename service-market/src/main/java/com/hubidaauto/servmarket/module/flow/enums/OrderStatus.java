@@ -8,7 +8,7 @@ package com.hubidaauto.servmarket.module.flow.enums;
  */
 public enum OrderStatus {
 
-    READY(10000), COMPLETE(10001), DISMISS(10002), PRE_PAY(10003), PAYING(10004), PAID(10005);
+    READY(10000), COMPLETE(10001), DISMISS(10002), PRE_PAY(10003), PAYING(10004);
 
     long id;
 

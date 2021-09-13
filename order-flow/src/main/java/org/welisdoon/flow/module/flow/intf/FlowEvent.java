@@ -14,7 +14,7 @@ public interface FlowEvent {
 
     void onCreated(Flow flow, Stream stream);
 
-    void onFinished(Flow flow, Stream stream);
+    void onFinished(Flow flow);
 
     void onPreStart(Stream stream);
 

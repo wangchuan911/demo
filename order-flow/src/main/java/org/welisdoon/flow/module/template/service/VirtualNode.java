@@ -35,7 +35,7 @@ public class VirtualNode extends SimpleNode {
         }
 
         this.streamDao.put(stream);
-        AbstractSimpleNode.getInstance(stream.getNodeId()).start(stream);
+        nodeService.start(stream);
     }
 
     @Override

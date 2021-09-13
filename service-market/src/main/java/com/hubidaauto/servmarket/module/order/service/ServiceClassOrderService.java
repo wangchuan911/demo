@@ -138,7 +138,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    public void onFinished(Flow flow, Stream stream) {
+    public void onFinished(Flow flow) {
         System.out.println("onFinished");
 
     }
