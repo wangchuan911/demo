@@ -34,7 +34,7 @@ public class VirtualNode extends SimpleNode {
             throw new RuntimeException("stream not allow link VirtualNode!");
         }
 
-        this.streamDao.put(stream);
+        this.getStreamDao().put(stream);
         nodeService.start(stream);
     }
 
@@ -50,6 +50,7 @@ public class VirtualNode extends SimpleNode {
         Stream currentStream = new Stream();
         currentStream.sync(superStream);
         currentStream.sync(currentLink);
+        this.setValue(currentStream, currentLink);
 
         /*currentStream.setFlowId(superStream.getFlowId());
         currentStream.setNodeId(currentLink.getNodeId());

@@ -3,15 +3,15 @@ package org.welisdoon.flow.module.template.service;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
+import org.welisdoon.flow.module.flow.dao.FlowValueDao;
 import org.welisdoon.flow.module.flow.entity.*;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.flow.module.template.annotation.NodeType;
-import org.welisdoon.flow.module.template.dao.LinkDao;
+import org.welisdoon.flow.module.template.dao.*;
 import org.welisdoon.flow.module.flow.dao.StreamDao;
-import org.welisdoon.flow.module.template.dao.LinkFunctionDao;
-import org.welisdoon.flow.module.template.dao.NodeDao;
 import org.welisdoon.flow.module.template.entity.Link;
 import org.welisdoon.flow.module.template.entity.LinkFunction;
+import org.welisdoon.flow.module.template.entity.LinkValue;
 import org.welisdoon.flow.module.template.entity.Node;
 import org.welisdoon.flow.module.template.entity.struct.Tree;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -27,13 +27,42 @@ import java.util.stream.Collectors;
  * @Date 2021/8/19 23:44
  */
 public abstract class AbstractNode {
-    LinkDao linkDao;
-    StreamDao streamDao;
+    static LinkDao linkDao;
+    static StreamDao streamDao;
     static NodeDao nodeDao;
     static LinkFunctionDao linkFunctionDao;
-    FlowDao flowDao;
+    static LinkShowDao linkShowDao;
+    static FlowValueDao flowValueDao;
+    static LinkValueDao linkValueDao;
+    static FlowDao flowDao;
     static Map<Long, AbstractNode> NODE_MAP;
 
+    @Autowired
+    public void initDao(LinkDao linkDao,
+                        StreamDao streamDao,
+                        NodeDao nodeDao,
+                        LinkFunctionDao linkFunctionDao,
+                        LinkShowDao linkShowDao,
+                        FlowValueDao flowValueDao,
+                        LinkValueDao linkValueDao,
+                        FlowDao flowDao) {
+
+        AbstractNode.flowDao = setDao(flowDao, AbstractNode.flowDao);
+        AbstractNode.linkDao = setDao(linkDao, AbstractNode.linkDao);
+        AbstractNode.streamDao = setDao(streamDao, AbstractNode.streamDao);
+        AbstractNode.nodeDao = setDao(nodeDao, AbstractNode.nodeDao);
+        AbstractNode.linkFunctionDao = setDao(linkFunctionDao, AbstractNode.linkFunctionDao);
+        AbstractNode.linkShowDao = setDao(linkShowDao, AbstractNode.linkShowDao);
+        AbstractNode.flowValueDao = setDao(flowValueDao, AbstractNode.flowValueDao);
+        AbstractNode.linkValueDao = setDao(linkValueDao, AbstractNode.linkValueDao);
+    }
+
+    static <T> T setDao(T t, T t2) {
+        if (t != null && t2 != t) {
+            return t;
+        }
+        return t2;
+    }
 
     public boolean isSimpleNode() {
         return this instanceof AbstractSimpleNode;
@@ -43,11 +72,6 @@ public abstract class AbstractNode {
         return this instanceof AbstractComplexNode;
     }
 
-    @Autowired
-    public void setLinkFunctionDao(LinkFunctionDao linkFunctionDao) {
-        if (AbstractNode.linkFunctionDao != linkFunctionDao)
-            AbstractNode.linkFunctionDao = linkFunctionDao;
-    }
 
     public LinkFunctionDao getLinkFunctionDao() {
         return linkFunctionDao;
@@ -57,38 +81,31 @@ public abstract class AbstractNode {
         return flowDao;
     }
 
-    @Autowired
-    public void setFlowDao(FlowDao flowDao) {
-        this.flowDao = flowDao;
-    }
-
 
     public LinkDao getLinkDao() {
         return linkDao;
     }
 
-    @Autowired
-    public void setLinkDao(LinkDao linkDao) {
-        this.linkDao = linkDao;
-    }
 
     public StreamDao getStreamDao() {
         return streamDao;
     }
 
-    @Autowired
-    public void setStreamDao(StreamDao streamDao) {
-        this.streamDao = streamDao;
-    }
 
     public NodeDao getNodeDao() {
         return nodeDao;
     }
 
-    @Autowired
-    public void setNodeDao(NodeDao nodeDao) {
-        if (AbstractNode.nodeDao != nodeDao)
-            AbstractNode.nodeDao = nodeDao;
+    public LinkShowDao getLinkShowDao() {
+        return linkShowDao;
+    }
+
+    public FlowValueDao getFlowValueDao() {
+        return flowValueDao;
+    }
+
+    public LinkValueDao getLinkValueDao() {
+        return linkValueDao;
     }
 
     public abstract void start(Stream stream);
@@ -135,8 +152,25 @@ public abstract class AbstractNode {
         currentStream.setName(currentLink.getName());*/
         currentStream.sync(superStream);
         currentStream.sync(currentLink);
+        this.setValue(currentStream, currentLink);
+
         return List.of(currentStream);
     }
+
+    public void setValue(Stream currentStream, Link currentLink) {
+        if (currentLink.getValueId() != null) {
+            LinkValue linkValue = this.getLinkValueDao().get(currentLink.getValueId());
+            if (linkValue != null) {
+                FlowValue flowValue = new FlowValue();
+                flowValue.setFlowId(currentStream.getFlowId());
+                flowValue.setValue(linkValue.getValue());
+                /*this.getFlowValueDao().add(flowValue);
+                currentStream.setValueId(flowValue.getId())*/
+                currentStream.setValue(flowValue);
+            }
+        }
+    }
+
 
     public static class SubStreamStatusCount {
         final public int WAIT, READY, SKIP, FUTURE, COMPLETE;
@@ -168,7 +202,7 @@ public abstract class AbstractNode {
         flowCondition.setFlowId(flow.getId());
         flowCondition.setStatusId(status.statusId());
         flowCondition.setUpdate("STREAM_STATUS");
-        this.flowDao.update(flowCondition);
+        this.getFlowDao().update(flowCondition);
         flow.setStatusId(status.statusId());
 
         FlowEvent flowEvent = AbstractNode.getFunctionObject(flow.getFunctionId());

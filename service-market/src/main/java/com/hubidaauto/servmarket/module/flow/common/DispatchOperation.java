@@ -1,9 +1,11 @@
 package com.hubidaauto.servmarket.module.flow.common;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
+import com.hubidaauto.servmarket.module.order.service.FlowProxyService;
 import com.hubidaauto.servmarket.module.staff.dao.StaffDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.template.service.VirtualNode;
 
@@ -33,6 +36,7 @@ public class DispatchOperation implements VirtualNode.VirtualNodeInitializer {
 
     BaseOrderDao baseOrderDao;
     StaffDao staffDao;
+
 
     @Autowired
     public void setStaffDao(StaffDao staffDao) {
@@ -63,8 +67,18 @@ public class DispatchOperation implements VirtualNode.VirtualNodeInitializer {
             stream.setSuperId(templateStream.getSuperId());
             stream.setFlowId(templateStream.getFlowId());
             stream.setSeq(integer.getAndAdd(1));
-            stream.setValueId(staffVO.getId());
-            stream.setFunctionId(templateStream.getValueId());
+            /*stream.setValueId(staffVO.getId());
+            stream.setFunctionId(templateStream.getValueId());*/
+            FlowValue flowValue = new FlowValue().setFlowId(templateStream.getFlowId());
+            if (templateStream.getValue() != null)
+                flowValue.setValue(templateStream.getValue().getValue());
+
+            stream.setValue(flowValue);
+
+            JSONObject valueJson = flowValue.jsonValue();
+            valueJson.put("staffId", staffVO.getId());
+            flowValue.saveValue(valueJson);
+
             stream.setNodeId(6L);
             stream.setName(templateStream.getName());
             return stream;

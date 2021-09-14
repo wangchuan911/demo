@@ -1,5 +1,6 @@
 package com.hubidaauto.servmarket.module.flow.common;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.service.FlowService;
 import org.welisdoon.flow.module.template.service.VirtualNode;
@@ -55,7 +57,7 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
         List<Stream> list = new LinkedList();
         OrderVO orderVO = baseOrderDao.find(new OrderCondition<>().setFlowId(templateStream.getFlowId()));
         List<ServiceContent> services = baseOrderService.getServices(orderVO);
-
+        JSONObject valueJson;
         for (int i = 0, len = services.size(); i < len; i++) {
             Stream stream = new Stream();
             stream.setFlow(templateStream.getFlow());
@@ -65,7 +67,10 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
             stream.setFunctionId(4L);
             stream.setNodeId(1L);
             stream.setName(templateStream.getName());
-            stream.setValueId(services.get(i).getId());
+//            stream.setValueId(services.get(i).getId());
+            valueJson = new JSONObject();
+            valueJson.put("function", services.get(i).getId());
+            stream.setValue((FlowValue) new FlowValue().setFlowId(templateStream.getFlowId()).saveValue(valueJson));
             list.add(stream);
         }
         return list;

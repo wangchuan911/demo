@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.flow.module.flow.entity.Flow;
+import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.service.FlowService;
 import org.welisdoon.flow.module.template.entity.Template;
@@ -48,8 +49,22 @@ public class FlowProxyService {
     }
 
     @DS("flow")
-    public void streamExpandByTemplate(Template template, Stream superStream){
+    public void streamExpandByTemplate(Template template, Stream superStream) {
         this.flowService.streamExpandByTemplate(template, superStream);
     }
 
+    @DS("flow")
+    public FlowValue getValue(Long valueId) {
+        return this.flowService.getValue(valueId);
+    }
+
+    /*@DS("flow")
+    public boolean setValue(FlowValue flowValue) {
+        return this.flowService.setValue(flowValue);
+    }
+
+    @DS("flow")
+    public boolean addValue(FlowValue flowValue) {
+        return this.flowService.addValue(flowValue);
+    }*/
 }

@@ -1,5 +1,6 @@
 package com.hubidaauto.servmarket.module.order.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.flow.enums.OperationType;
 import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
@@ -62,7 +63,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         ServiceClassOrderVO orderVO = new ServiceClassOrderVO(condition.getForm());
         orderVO.setClassId(condition.getClassId());
         orderVO.setCustId(condition.getCustId());
-        orderVO.setStatusId(OrderStatus.READY.statusId());
+        ;
         baseOrderDao.add(orderVO);
         orderDao.add(orderVO);
 
@@ -81,6 +82,9 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     @Override
     public void start(ServiceClassOrderCondition condition) {
         ServiceClassOrderVO orderVO = orderDao.get(condition.getId());
+        orderVO.setStatusId(OrderStatus.READY.statusId());
+        baseOrderDao.put(orderVO);
+
         this.flowService.start(orderVO.getFlowId());
     }
 
@@ -114,7 +118,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             switch (workOrderCondition.getQuery()) {
                 case "doing":
                     Stream superStream = flowService.getStream(workOrderVO.getStream().getSuperId());
-                    ServiceContent serviceContent = ServiceContent.getInstance(superStream.getValueId());
+                    ServiceContent serviceContent = ServiceContent.getInstance(superStream.getValue().jsonValue().getLong("function"));
                     if (serviceContent != null) {
                         workOrderVO.setOperation(serviceContent.getCode());
                         workOrderVO.getStream().setName(serviceContent.getDesc());
@@ -140,6 +144,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     @Override
     public void onFinished(Flow flow) {
         System.out.println("onFinished");
+
 
     }
 
@@ -199,17 +204,21 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 workOrderVO = new ServiceClassWorkOrderVO();
                 ServiceClassOrderVO orderVO = orderDao.find((ServiceClassOrderCondition) new ServiceClassOrderCondition().setFlowId(flow.getId()));
                 workOrderVO.setOrderId(orderVO.getId());
+                JSONObject valueJson = stream.getValue() != null ? stream.getValue().jsonValue() : stream.getValueId() != null ? flowService.getValue(stream.getValueId()).jsonValue() : new JSONObject();
                 if (stream.getNodeId() == 6L)
-                    workOrderVO.setStaffId(stream.getValueId());
+                    workOrderVO.setStaffId(valueJson.getLong("staffId"));
                 workOrderVO.setStatusId(WorkOrderStatus.READY.statusId());
                 workOrderVO.setStreamId(stream.getId());
-                if (stream.getFunctionId() != null && stream.getFunctionId() < 0) {
-                    OperationType operationType = OperationType.getInstance(stream.getFunctionId());
+                long functionId = valueJson.getLongValue("id");
+                if (functionId < 0) {
+                    OperationType operationType = OperationType.getInstance(functionId);
                     switch (operationType) {
                         case SERVICING:
                         case SIGN_UP:
                         case DISPATCH:
                             workOrderVO.setOperation(operationType.name());
+                            break;
+                        default:
                             break;
                     }
                 }
@@ -222,6 +231,8 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 workOrderCondition.setId(workOrderDao.find(workOrderCondition).getId());
                 workOrderCondition.setUpdate("finish");
                 workOrderDao.update(workOrderCondition);
+                break;
+            default:
                 break;
         }
     }

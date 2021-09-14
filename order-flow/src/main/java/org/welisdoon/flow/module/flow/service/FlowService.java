@@ -1,11 +1,13 @@
 package org.welisdoon.flow.module.flow.service;
 
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.flow.module.flow.dao.FlowDao;
+import org.welisdoon.flow.module.flow.dao.FlowValueDao;
 import org.welisdoon.flow.module.flow.entity.*;
 import org.welisdoon.flow.module.template.dao.LinkDao;
 import org.welisdoon.flow.module.template.dao.NodeDao;
@@ -31,6 +33,7 @@ public class FlowService {
     NodeDao nodeDao;
     StreamDao streamDao;
     LinkDao linkDao;
+    FlowValueDao flowValueDao;
 
    /* @Autowired
     public void setFlowDao(FlowDao flowDao) {
@@ -57,7 +60,12 @@ public class FlowService {
         this.flowDao = flowDao;
     }
 
-//    @PostConstruct
+    @Autowired
+    public void setFlowValueDao(FlowValueDao flowValueDao) {
+        this.flowValueDao = flowValueDao;
+    }
+
+    //    @PostConstruct
 //    public void a() {
 //        /*Flow flow = new Flow();
 //        flow.setId(1L);
@@ -90,6 +98,10 @@ public class FlowService {
             for (Stream currentStream : AbstractNode.getInstance(currentLink.getNodeId()).createSubStreams(superStream, currentLink)) {
                 currentStream.setStatusId(StreamStatus.FUTURE.statusId());
                 currentStream.setFlow(superStream.getFlow());
+                if (currentStream.getValue() != null) {
+                    this.flowValueDao.add(currentStream.getValue());
+                    currentStream.setValueId(currentStream.getValue().getId());
+                }
                 this.streamDao.add(currentStream);
                 superStream.getSubTree().add(currentStream);
                 this.initStreamData(currentLink, currentStream);
@@ -172,4 +184,15 @@ public class FlowService {
         return streamDao.get(streamId);
     }
 
+    public FlowValue getValue(Long valueId) {
+        return flowValueDao.get(valueId);
+    }
+
+    /*public boolean setValue(FlowValue flowValue) {
+        return flowValueDao.put(flowValue) > 0;
+    }
+
+    public boolean addValue(FlowValue flowValue) {
+        return flowValueDao.add(flowValue) > 0;
+    }*/
 }

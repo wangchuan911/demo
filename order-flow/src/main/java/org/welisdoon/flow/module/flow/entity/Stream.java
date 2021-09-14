@@ -13,6 +13,7 @@ public class Stream extends Tree<Stream> {
     Long flowId, statusId;
 
     Flow flow;
+    FlowValue value;
 
     public void setFlow(Flow flow) {
         this.flow = flow;
@@ -58,5 +59,13 @@ public class Stream extends Tree<Stream> {
         currentStream.setSeq(currentLink.getSeq());
         currentStream.setSuperId(superStream.getId());
         currentStream.setName(currentLink.getName());*/
+    }
+
+    public FlowValue getValue() {
+        return value;
+    }
+
+    public void setValue(FlowValue value) {
+        this.value = value;
     }
 }

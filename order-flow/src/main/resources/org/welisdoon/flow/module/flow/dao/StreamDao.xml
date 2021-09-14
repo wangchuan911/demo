@@ -13,6 +13,8 @@
         <result column="FUNCTION_ID" property="functionId"></result>
         <result column="VALUE_ID" property="valueId"></result>
         <result column="NAME" property="name"></result>
+        <association property="value" javaType="org.welisdoon.flow.module.flow.entity.FlowValue"
+                     select="org.welisdoon.flow.module.flow.dao.FlowValueDao.get" column="VALUE_ID"></association>
         <collection property="subTree" ofType="org.welisdoon.flow.module.flow.entity.Stream"
                     select="list" column="{superStreamId=SUB_SELECT_ID,flowId=FLOW_ID,showTree=SHOW_TREE}"></collection>
     </resultMap>
