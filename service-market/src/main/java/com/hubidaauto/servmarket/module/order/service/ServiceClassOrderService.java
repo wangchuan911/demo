@@ -118,6 +118,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             switch (workOrderCondition.getQuery()) {
                 case "doing":
                     Stream superStream = flowService.getStream(workOrderVO.getStream().getSuperId());
+                    if (superStream.getValue() == null) continue;
                     ServiceContent serviceContent = ServiceContent.getInstance(superStream.getValue().jsonValue().getLong("function"));
                     if (serviceContent != null) {
                         workOrderVO.setOperation(serviceContent.getCode());

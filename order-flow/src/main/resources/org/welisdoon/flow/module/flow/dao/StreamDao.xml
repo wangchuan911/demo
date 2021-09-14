@@ -18,17 +18,21 @@
         <collection property="subTree" ofType="org.welisdoon.flow.module.flow.entity.Stream"
                     select="list" column="{superStreamId=SUB_SELECT_ID,flowId=FLOW_ID,showTree=SHOW_TREE}"></collection>
     </resultMap>
+    <sql id="showTreeFalse">
+        -1 SUB_SELECT_ID,false SHOW_TREE
+    </sql>
+    <sql id="showTreeTrue">
+        A.id SUB_SELECT_ID,true SHOW_TREE
+    </sql>
     <sql id="showTree">
         <choose>
-            <when test="showTree==true">A.id</when>
-            <otherwise>-1</otherwise>
+            <when test="showTree==true">
+                <include refid="org.welisdoon.flow.module.flow.dao.StreamDao.showTreeTrue"></include>
+            </when>
+            <otherwise>
+                <include refid="org.welisdoon.flow.module.flow.dao.StreamDao.showTreeFalse"></include>
+            </otherwise>
         </choose>
-        SUB_SELECT_ID,
-        <choose>
-            <when test="showTree==true">true</when>
-            <otherwise>false</otherwise>
-        </choose>
-        SHOW_TREE
     </sql>
     <sql id="selectList">
         select A.*,
@@ -47,17 +51,24 @@
         </where>
     </sql>
     <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
-        <include refid="selectList"></include>
-        order by SEQ
+        <choose>
+            <when test="0 > superStreamId">
+                select 1 from dual where 1=2
+            </when>
+            <otherwise>
+                <include refid="selectList"></include>
+                order by SEQ
+            </otherwise>
+        </choose>
     </select>
 
     <select id="find" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
         <include refid="selectList"></include>
     </select>
 
-    <select id="get" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
+    <select id="get" parameterType="long" resultMap="rm_Stream">
         select A.*,
-        <include refid="showTree"></include>
+        <include refid="showTreeFalse"/>
         from F_STREAM A
         WHERE id=#{streamId}
     </select>
