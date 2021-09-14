@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.flow.module.template.dao.LinkValueDao">
+
+
+    <select id="get" parameterType="org.welisdoon.flow.module.template.entity.LinkValue"
+            resultType="org.welisdoon.flow.module.template.entity.LinkValue">
+        select * from F_LINK_VALUE
+        WHERE id=#{id}
+    </select>
+
+
+</mapper>

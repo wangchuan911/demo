@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.flow.module.flow.dao.FlowValueDao">
+    <sql id="select">
+        select * from F_FLOW_VALUE a
+    </sql>
+
+
+    <select id="get" parameterType="long" resultType="org.welisdoon.flow.module.flow.entity.FlowValue">
+        <include refid="select"></include>
+        where a.ID=#{id}
+    </select>
+
+    <insert id="add" parameterType="org.welisdoon.flow.module.flow.entity.FlowValue" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO F_FLOW_VALUE (ID, VALUE,FLOW_ID) VALUES (#{id}, #{value},#{flowId})
+    </insert>
+
+    <update id="put" parameterType="org.welisdoon.flow.module.flow.entity.FlowValue">
+        UPDATE F_FLOW_VALUE A SET A.VALUE=#{value} where A.ID=#{id} and A.FLOW_ID=#{flowId}
+    </update>
+
+
+
+</mapper>
