@@ -22,4 +22,13 @@ public enum OperationType {
         Optional<OperationType> optional = Arrays.stream(OperationType.values()).filter(operationType -> operationType.id == id).findFirst();
         return optional.isPresent() ? optional.get() : UNKNOW;
     }
+
+    public static OperationType getInstance(String name) {
+        try {
+            OperationType type = valueOf(name);
+            return type == null ? UNKNOW : type;
+        } catch (Throwable e) {
+            return UNKNOW;
+        }
+    }
 }

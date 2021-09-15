@@ -1,7 +1,10 @@
 package com.hubidaauto.servmarket.module.user.web;
 
+import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
+import com.hubidaauto.servmarket.module.staff.dao.StaffDao;
+import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.user.dao.AddressDao;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AddressVO;
@@ -33,6 +36,7 @@ public class AppUserWebRouter {
     AddressDao addressDao;
     AppUserService appUserService;
     AbstractWechatConfiguration abstractWechatConfiguration;
+    StaffDao staffDao;
 
     @Autowired
     public void setAppUserDao(AppUserDao appUserDao) {
@@ -52,6 +56,11 @@ public class AppUserWebRouter {
     @Autowired
     public void setAbstractWechatConfiguration(CustomWeChatAppConfiguration abstractWechatConfiguration) {
         this.abstractWechatConfiguration = abstractWechatConfiguration;
+    }
+
+    @Autowired
+    public void setStaffDao(StaffDao staffDao) {
+        this.staffDao = staffDao;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -181,6 +190,19 @@ public class AppUserWebRouter {
                 return;
             }
             routingContext.end("ok");
+        });
+    }
+
+    @VertxRouter(path = "/workers",
+            method = "POST")
+    public void workers(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            try {
+                StaffCondition staffCondition = JSONObject.parseObject(routingContext.getBodyAsString(), StaffCondition.class);
+                routingContext.end(JSONObject.toJSONString(staffDao.list(staffCondition)));
+            } catch (Throwable e) {
+                routingContext.response().setStatusCode(404).end(e.getMessage());
+            }
         });
     }
 

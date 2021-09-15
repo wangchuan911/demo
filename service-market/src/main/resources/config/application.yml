@@ -30,7 +30,7 @@ vertx:
 
 #logging:
 #  level:
-#    root: "debug"
-#    appdao: "error"
+#    root: "trace"
+#    appdao: "trace"
 #  group:
-#    appdao: "com.hubidaauto.carservice.wxapp.core.dao,com.hubidaauto.carservice.officalaccount.dao,com.hubidaauto.carservice.wxapp.increment.dao,com.hubidaauto.carservice.wxapp.mall.dao,org.springframework.jdbc,org.mybatis"
+#    appdao: ",org.springframework.jdbc,org.mybatis"

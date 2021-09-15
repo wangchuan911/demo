@@ -12,18 +12,25 @@ import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
+import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
+import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
 import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.welisdoon.flow.module.flow.entity.Flow;
+import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
 
@@ -39,6 +46,7 @@ import java.util.List;
 @OrderClass(
         id = 1000L)
 public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition> {
+    private static final Logger logger = LoggerFactory.getLogger(ServiceClassOrderService.class);
     static long TEMPLATE_ID = 1L;
     FlowProxyService flowService;
     ServiceClassOrderDao orderDao;
@@ -46,15 +54,17 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     ItemDao itemDao;
     ItemTypeDao itemTypeDao;
     ServiceClassWorkOrderDao workOrderDao;
+    StaffTaskDao staffTaskDao;
 
     @Autowired
-    public void init(ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
+    public void init(StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
         this.workOrderDao = workOrderDao;
         this.orderDao = orderDao;
         this.flowService = flowService;
         this.baseOrderDao = baseOrderDao;
         this.itemDao = itemDao;
         this.itemTypeDao = itemTypeDao;
+        this.staffTaskDao = staffTaskDao;
     }
 
     @Override
@@ -92,7 +102,41 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     @Override
     public void workOrder(ServiceClassWorkOrderCondition workOrderCondition) {
         ServiceClassWorkOrderVO workOrderVO = workOrderDao.get(workOrderCondition.getId());
+        /*if (!workOrderCondition.getOrderId().equals(workOrderVO.getOrderId()))
+            throw new RuntimeException("工单数据异常");*/
+        ServiceClassOrderVO orderVO = orderDao.get(workOrderVO.getOrderId());
+        String operation = workOrderVO.getOperation();
+        OperationType type;
+        if (!StringUtils.isEmpty(operation) && (type = OperationType.getInstance(operation)) != null) {
+            switch (type) {
+                case SIGN_UP:
+                    break;
+                case SERVICING:
+                    Stream superStream = this.flowService.getStream(this.flowService.getStream(workOrderVO.getStreamId()).getSuperId());
+                    if (superStream.getValue() == null) break;
+                    ServiceContent serviceContent = ServiceContent.getInstance(superStream.getValue().jsonValue().getLong("function"));
+                    if (serviceContent.equals(ServiceContent.HOME_CLEAN)) {
+                        logger.info(ServiceContent.HOME_CLEAN.toString());
+                    } else if (serviceContent.equals(ServiceContent.HOME_EQP_CLEAN)) {
+                        logger.info(ServiceContent.HOME_CLEAN.toString());
+                    }
+                    break;
+                case DISPATCH:
+                    List<Long> staffIds = workOrderCondition.getData().getJSONArray("workers").toJavaList(Long.class);
+                    ApplicationContextProvider.getBean(ServiceClassOrderService.class).addStaffTask(staffIds, orderVO);
+                    break;
+                default:
+                    throw new RuntimeException("未知操作");
+            }
+        }
         this.flowService.stream(workOrderVO.getStreamId());
+    }
+
+    @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
+    public void addStaffTask(List<Long> staffIds, ServiceClassOrderVO orderVO) {
+        for (Long staffId : staffIds) {
+            staffTaskDao.add(new StaffTaskVO().setOrderId(orderVO.getId()).setStaffId(staffId).setTaskTime(orderVO.getBookTime()));
+        }
     }
 
     @Override
@@ -202,6 +246,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 break;
             case WAIT:
             case READY:
+                workOrderCondition = new ServiceClassWorkOrderCondition();
+                workOrderCondition.setStreamId(stream.getId());
+                workOrderVO = workOrderDao.find(workOrderCondition);
+                if (workOrderVO != null) break;
+
                 workOrderVO = new ServiceClassWorkOrderVO();
                 ServiceClassOrderVO orderVO = orderDao.find((ServiceClassOrderCondition) new ServiceClassOrderCondition().setFlowId(flow.getId()));
                 workOrderVO.setOrderId(orderVO.getId());

@@ -1,12 +1,16 @@
 package com.hubidaauto.servmarket.module.workorder.entity;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+
 import java.util.Arrays;
 
 public class ServiceClassWorkOrderCondition extends WorkOrderCondition {
     static private String[] UPDATES = {"finish", "start", "skip"};
-    static private String[] QUERY = {"all","doing"};
+    static private String[] QUERY = {"all", "doing"};
     String update;
-    String query ;
+    String query;
+    JSONObject data;
 
     public String getUpdate() {
         return update;
@@ -28,5 +32,13 @@ public class ServiceClassWorkOrderCondition extends WorkOrderCondition {
             this.query = query;
         else
             throw new RuntimeException("not support!");
+    }
+
+    public JSONObject getData() {
+        return data;
+    }
+
+    public void setData(JSONObject data) {
+        this.data = data;
     }
 }

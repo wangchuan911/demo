@@ -16,23 +16,26 @@ public class StaffTaskVO {
         return staffId;
     }
 
-    public void setStaffId(Long staffId) {
+    public StaffTaskVO setStaffId(Long staffId) {
         this.staffId = staffId;
+        return this;
     }
 
     public Long getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(Long orderId) {
+    public StaffTaskVO setOrderId(Long orderId) {
         this.orderId = orderId;
+        return this;
     }
 
     public Timestamp getTaskTime() {
         return taskTime;
     }
 
-    public void setTaskTime(Timestamp taskTime) {
+    public StaffTaskVO setTaskTime(Timestamp taskTime) {
         this.taskTime = taskTime;
+        return this;
     }
 }

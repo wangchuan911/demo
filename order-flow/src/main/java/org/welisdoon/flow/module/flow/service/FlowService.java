@@ -140,11 +140,12 @@ public class FlowService {
             Link rootLink = linkDao.find(condition);
             Stream stream = new Stream();
             stream.setFlowId(flow.getId());
-            stream.setNodeId(rootLink.getNodeId());
+            /*stream.setNodeId(rootLink.getNodeId());
             stream.setFunctionId(rootLink.getFunctionId());
-            stream.setSeq(rootLink.getSeq());
+            stream.setSeq(rootLink.getSeq());*/
             stream.setStatusId(StreamStatus.FUTURE.statusId());
             stream.setFlow(flow);
+            stream.sync(rootLink);
             streamDao.add(stream);
             this.initStreamData(rootLink, stream);
             System.out.println(JSONArray.toJSONString(rootLink));

@@ -39,6 +39,21 @@
                     )
                 )
             </when>
+            <when test="query=='REGION_WORKERS'">
+                and A.ID IN (
+                SELECT A1.STAFF_ID FROM  STAFF_JOB A1
+                JOIN STAFF_ROLE B1
+                ON B1.ID=A1.ROLE_ID
+                AND B1.ID=2
+                WHERE EXISTS (
+                SELECT 1 FROM DUAL WHERE A1.REGION_ID=#{regionId}
+                UNION ALL
+                SELECT 1 FROM PUB_REGION A2 WHERE A2.ID=#{regionId} AND A1.REGION_ID=A2.SUPER_ID
+                UNION ALL
+                SELECT 1 FROM PUB_REGION A2 JOIN PUB_REGION A3 ON A3.SUPER_ID=A2.ID WHERE A3.ID=#{regionId} AND A1.REGION_ID=A2.SUPER_ID
+                )
+                )
+            </when>
             <otherwise>and 1=2</otherwise>
         </choose>
             <if test="orderId!=null">
