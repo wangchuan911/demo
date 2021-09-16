@@ -8,7 +8,31 @@
     </sql>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
             resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
-        <include refid="list"></include>
+        select A.* from (
+        SELECT A.* FROM BASE_ORDER A
+        <where>
+            and A.CUST_ID=#{custId}
+            <choose>
+                <when test="query=='dispatch'">
+                    and A.STATUS_ID=10001
+                    AND NOT EXISTS (SELECT 1 FROM STAFF_TASK A1 WHERE A1.ORDER_ID=A.ORDER_ID)
+                </when>
+                <when test="query=='pay'">
+                    and A.STATUS_ID=10003
+                </when>
+                <when test="query=='running'">
+                    and A.STATUS_ID=10000
+                </when>
+                <when test="query=='evaluate'">
+                    and A.STATUS_ID=10001
+                </when>
+                <when test="query=='finish'">
+                    and A.STATUS_ID=10001
+                </when>
+            </choose>
+        </where>
+        order by A.ID DESC
+        ) A
         LIMIT ${page.start},${page.size}
     </select>
     <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
@@ -18,6 +42,7 @@
     <sql id="list">
         SELECT A.* FROM BASE_ORDER A
         <where>
+            <if test="query!=null and query!=''.toString()"></if>
             <if test="custId!=null">
                 and A.CUST_ID=#{custId}
             </if>

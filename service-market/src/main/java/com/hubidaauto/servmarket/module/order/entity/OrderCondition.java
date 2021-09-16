@@ -17,6 +17,8 @@ import java.util.Map;
 public class OrderCondition<T extends OrderVO> extends AbstractBaseCondition<Long, T> {
     int typeId;
     Long flowId, classId, custId, statusId;
+    String query;
+    static final private String[] QUERY = {"dispatch", "pay", "running", "evaluate", "finish"};
 
     public int getTypeId() {
         return typeId;
@@ -57,5 +59,16 @@ public class OrderCondition<T extends OrderVO> extends AbstractBaseCondition<Lon
 
     public void setStatusId(Long statusId) {
         this.statusId = statusId;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        if (Arrays.stream(QUERY).anyMatch(s -> s.equals(query)))
+            this.query = query;
+        else
+            throw new RuntimeException("not support!");
     }
 }
