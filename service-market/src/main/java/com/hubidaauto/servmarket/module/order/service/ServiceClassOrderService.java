@@ -14,6 +14,8 @@ import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
+import com.hubidaauto.servmarket.module.user.dao.AddressDao;
+import com.hubidaauto.servmarket.module.user.entity.AddressVO;
 import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
@@ -32,6 +34,7 @@ import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -55,9 +58,10 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     ItemTypeDao itemTypeDao;
     ServiceClassWorkOrderDao workOrderDao;
     StaffTaskDao staffTaskDao;
+    AddressDao addressDao;
 
     @Autowired
-    public void init(StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
+    public void init(AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
         this.workOrderDao = workOrderDao;
         this.orderDao = orderDao;
         this.flowService = flowService;
@@ -65,6 +69,8 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         this.itemDao = itemDao;
         this.itemTypeDao = itemTypeDao;
         this.staffTaskDao = staffTaskDao;
+        this.addressDao = addressDao;
+
     }
 
     @Override
@@ -290,6 +296,20 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     @Override
     public List<ServiceContent> getServices(OrderVO orderVO) {
         return List.of(ServiceContent.HOME_CLEAN, ServiceContent.HOME_EQP_CLEAN);
+    }
+
+    @Override
+    public List<DetailVO> orderDetail(Long id) {
+        ServiceClassOrderVO orderVO = orderDao.get(id);
+        List<DetailVO> list = new LinkedList<>();
+        list.add(new DetailVO("服务日期", orderVO.getBookTime()));
+        list.add(new DetailVO("服务时间", orderVO.getWorkTime()));
+        AddressVO addressVO = addressDao.get(orderVO.getAddressId());
+        list.add(new DetailVO("服务区域", addressVO.getRegion()));
+        list.add(new DetailVO("需要人数", orderVO.getWorkerNum()));
+        list.add(new DetailVO("备注信息", orderVO.getRemark()));
+        list.add(new DetailVO("支付方式", "微信"));
+        return list;
     }
 
 

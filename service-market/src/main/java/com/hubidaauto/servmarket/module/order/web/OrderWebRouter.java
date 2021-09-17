@@ -200,5 +200,23 @@ public class OrderWebRouter {
         });
     }
 
-
+    @VertxRouter(path = "\\/detail\\/(?<orderId>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+    public void detail(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                orderService
+                        .orderDetail(Long.parseLong(routingContext.pathParam("orderId")))
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end(JSONArray.toJSONString(stringAsyncResult.result()));
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.fail(e.getCause());
+            }
+        });
+    }
 }

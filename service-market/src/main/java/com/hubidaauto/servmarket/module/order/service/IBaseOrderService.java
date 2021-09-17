@@ -2,6 +2,7 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
+import com.hubidaauto.servmarket.module.order.entity.DetailVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
@@ -35,6 +36,8 @@ public interface IBaseOrderService {
     Future<WorkOrderVO> getWorkOrder(String jsonText);
 
     Future<List<WorkOrderVO>> getWorkOrders(String jsonText);
+
+    Future<List<DetailVO>> orderDetail(Long id);
 
 
 }

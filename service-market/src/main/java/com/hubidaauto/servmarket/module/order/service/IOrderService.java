@@ -2,6 +2,7 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
+import com.hubidaauto.servmarket.module.order.entity.DetailVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
@@ -32,6 +33,7 @@ public interface IOrderService<O extends OrderCondition, W extends WorkOrderCond
 
     List<ServiceContent> getServices(OrderVO orderVO);
 
+    List<DetailVO> orderDetail(Long orderId);
 
     /* static void start(final long typeId,String J) {
          ApplicationContextProvider

@@ -5,6 +5,7 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
+import com.hubidaauto.servmarket.module.order.entity.DetailVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
@@ -114,6 +115,12 @@ public class BaseOrderService {
         IOrderService iOrderService = ORDER_CLASSES.get(orderVO.getClassId());
         return iOrderService.getServices(orderVO);
     }
+
+    public List<DetailVO> orderDetail(Long orderId) {
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(orderId).getClassId());
+        return iOrderService.orderDetail(orderId);
+    }
+
 
     Type[] getIOrderServiceRawType(IOrderService iOrderService) {
         return ((ParameterizedType) Arrays
