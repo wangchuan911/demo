@@ -6,10 +6,10 @@ package com.hubidaauto.servmarket.module.common.entity;
  * @Author wang.zhidong
  * @Date 2021/8/11 20:00
  */
-public abstract class ContentVO {
+public abstract class ContentVO<T> {
     Long id, type;
 
-    String content, refTable;
+    T content;
 
     public Long getId() {
         return id;
@@ -20,11 +20,11 @@ public abstract class ContentVO {
     }
 
 
-    public String getContent() {
+    public T getContent() {
         return content;
     }
 
-    public void setContent(String content) {
+    public void setContent(T content) {
         this.content = content;
     }
 
@@ -36,11 +36,4 @@ public abstract class ContentVO {
         this.type = type;
     }
 
-    public String getRefTable() {
-        return refTable;
-    }
-
-    public void setRefTable(String refTable) {
-        this.refTable = refTable;
-    }
 }

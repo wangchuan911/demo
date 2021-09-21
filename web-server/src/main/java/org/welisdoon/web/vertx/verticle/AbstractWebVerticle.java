@@ -261,7 +261,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
 
                         routeMethod.setAccessible(true);
                         routeMethod.invoke(serviceBean, paramaters);
-                        logger.info(String.format("%s[%s]", route.methods() == null ? "ALL" : route.methods(), pathString));
+                        LoggerFactory.getLogger(routeMethod.getDeclaringClass()).info(String.format("%s[%s]", route.methods() == null ? "ALL" : route.methods(), pathString));
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
                         return;

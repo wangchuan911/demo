@@ -66,9 +66,9 @@ public class AppUserService implements IWechatUserHandler {
         return userVO;
     }
 
-    /**
+   /* *//**
      * @author Septem
-     */
+     *//*
     @Component
     @VertxConfiguration
     @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
@@ -225,13 +225,13 @@ public class AppUserService implements IWechatUserHandler {
         }
 
 
-        /*@VertxRouter(path = "/",
+        *//*@VertxRouter(path = "/",
                 method = "PUT")
         public void put(RoutingContextChain chain) {
             chain.handler(routingContext -> {
                 routingContext.end(Json.encodeToBuffer(itemDao.put(routingContext.getBodyAsJson().mapTo(ItemVO.class))));
             });
-        }*/
+        }*//*
 
-    }
+    }*/
 }

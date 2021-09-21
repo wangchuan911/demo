@@ -34,6 +34,7 @@ import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -302,7 +303,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     public List<DetailVO> orderDetail(Long id) {
         ServiceClassOrderVO orderVO = orderDao.get(id);
         List<DetailVO> list = new LinkedList<>();
-        list.add(new DetailVO("服务日期", orderVO.getBookTime()));
+        list.add(new DetailVO("服务日期", orderVO.getBookTime().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))));
         list.add(new DetailVO("服务时间", orderVO.getWorkTime()));
         AddressVO addressVO = addressDao.get(orderVO.getAddressId());
         list.add(new DetailVO("服务区域", addressVO.getRegion()));
