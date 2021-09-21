@@ -2,6 +2,7 @@ package com.hubidaauto.servmarket.module.comment.dao;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.comment.entity.CommentVO;
+import com.hubidaauto.servmarket.module.comment.entity.OrderCommentCondition;
 import com.hubidaauto.servmarket.module.comment.entity.OrderCommentVO;
 import org.springframework.stereotype.Repository;
 import org.welisdoon.web.common.dao.ITemplateDao;
@@ -14,5 +15,5 @@ import org.welisdoon.web.common.dao.ITemplateDao;
  */
 @Repository
 @DS("shop")
-public interface OrderCommentDao extends ITemplateDao<Long, OrderCommentVO, OrderCommentVO> {
+public interface OrderCommentDao extends ITemplateDao<Long, OrderCommentVO, OrderCommentCondition> {
 }
