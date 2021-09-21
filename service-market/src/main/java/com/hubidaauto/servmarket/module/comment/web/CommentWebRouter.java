@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
 import com.hubidaauto.servmarket.module.comment.dao.OrderCommentDao;
 import com.hubidaauto.servmarket.module.comment.entity.CommentVO;
+import com.hubidaauto.servmarket.module.comment.entity.OrderCommentCondition;
 import com.hubidaauto.servmarket.module.comment.entity.OrderCommentVO;
 import com.hubidaauto.servmarket.module.common.annotation.ContentType;
 import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
@@ -77,19 +78,18 @@ public class CommentWebRouter {
         });
     }
 
-    @VertxRouter(path = "\\/orders\\/(?<orderId>\\d+)\\/(?<id>\\d*)",
+    @VertxRouter(path = "\\/orders\\/(?<page>\\d+)",
             mode = VertxRouteType.PathRegex,
-            method = "GET")
+            method = "POST")
     public void list(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            OrderCommentVO evaluateVO = new OrderCommentVO();
-            evaluateVO.setOrderId(Long.parseLong(routingContext.pathParam("orderId")));
-            if (!StringUtils.isEmpty(routingContext.pathParam("id"))) {
-                evaluateVO.setId(Long.parseLong(routingContext.pathParam("id")));
-            }
+
             try {
+                OrderCommentCondition evaluateVO = JSONObject.parseObject(routingContext.getBodyAsString(), OrderCommentCondition.class);
+                evaluateVO.page(Integer.parseInt(routingContext.pathParam("page")));
                 routingContext.end(JSON.toJSONString(orderCommentDao.list(evaluateVO)));
             } catch (Throwable e) {
+                e.printStackTrace();
                 routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
