@@ -238,7 +238,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    @Transactional(rollbackFor = Throwable.class, propagation = Propagation.NESTED)
+    @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
     public void onStreamStatus(Flow flow, Stream stream) {
         System.out.println("onStreamStatus");
         ServiceClassWorkOrderCondition workOrderCondition;
