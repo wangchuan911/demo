@@ -13,12 +13,12 @@
         SELECT * FROM (
         SELECT * FROM ORDER_COMMENT A
         <where>
+            and A.ITEM_ID = #{itemId}
+            <if test="itemTypeId!=null">
+                AND A.ITEM_TYPE_ID=#{itemTypeId}
+            </if>
             <choose>
                 <when test="'LASTEST'==query">
-                    and A.ITEM_ID = #{itemId}
-                    <if test="itemTypeId!=null">
-                        AND A.ITEM_TYPE_ID=#{itemTypeId}
-                    </if>
                     and A.ID = (
                     SELECT MAX(A1.ID) FROM ORDER_COMMENT A1 WHERE A1.ITEM_ID=#{itemId}
                     <if test="itemTypeId!=null">
@@ -26,9 +26,6 @@
                     </if>
                     )
                 </when>
-                <otherwise>
-                    and 1=2
-                </otherwise>
             </choose>
         </where>
         ORDER BY A.ID DESC
