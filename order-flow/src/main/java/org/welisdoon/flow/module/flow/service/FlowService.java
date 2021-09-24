@@ -196,4 +196,14 @@ public class FlowService {
     public boolean addValue(FlowValue flowValue) {
         return flowValueDao.add(flowValue) > 0;
     }*/
+
+    public void dismiss(Flow flow) {
+        FlowCondition condition = new FlowCondition().setDelete("dismiss").setFlowId(flow.getId());
+        flowDao.clear(condition);
+        streamDao.clear(condition);
+    }
+
+    public void rollback(Stream stream) {
+
+    }
 }

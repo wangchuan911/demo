@@ -121,6 +121,10 @@ public class BaseOrderService {
         return iOrderService.orderDetail(orderId);
     }
 
+    public void dismiss(Long orderId) {
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(orderId).getClassId());
+        iOrderService.dismiss(orderId);
+    }
 
     Type[] getIOrderServiceRawType(IOrderService iOrderService) {
         return ((ParameterizedType) Arrays

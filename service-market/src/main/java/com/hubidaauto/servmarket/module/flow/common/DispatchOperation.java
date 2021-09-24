@@ -5,13 +5,11 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
-import com.hubidaauto.servmarket.module.order.service.FlowProxyService;
 import com.hubidaauto.servmarket.module.staff.dao.StaffDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -77,7 +75,7 @@ public class DispatchOperation implements VirtualNode.VirtualNodeInitializer {
 
             JSONObject valueJson = flowValue.jsonValue();
             valueJson.put("staffId", staffVO.getId());
-            flowValue.saveValue(valueJson);
+            flowValue.saveJsonValue();
 
             stream.setNodeId(6L);
             stream.setName(templateStream.getName());

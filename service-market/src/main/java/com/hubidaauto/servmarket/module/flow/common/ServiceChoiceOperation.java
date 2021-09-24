@@ -68,9 +68,10 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
             stream.setNodeId(1L);
             stream.setName(templateStream.getName());
 //            stream.setValueId(services.get(i).getId());
-            valueJson = new JSONObject();
+            FlowValue flowValue = new FlowValue().setFlowId(templateStream.getFlowId());
+            valueJson = flowValue.jsonValue();
             valueJson.put("function", services.get(i).getId());
-            stream.setValue((FlowValue) new FlowValue().setFlowId(templateStream.getFlowId()).saveValue(valueJson));
+            stream.setValue((FlowValue) flowValue.saveJsonValue());
             list.add(stream);
         }
         return list;

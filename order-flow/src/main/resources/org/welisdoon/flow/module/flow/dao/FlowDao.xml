@@ -33,5 +33,7 @@
         where a.ID=#{flowId}
     </update>
 
-
+    <delete id="clear" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition">
+        delete from F_FLOW where ID=#{flowId}
+    </delete>
 </mapper>

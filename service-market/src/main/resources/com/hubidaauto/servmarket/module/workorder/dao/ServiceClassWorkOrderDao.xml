@@ -53,11 +53,11 @@
         <set>
             <if test="update=='finish'">
                 FINISH_TIME=CURRENT_TIMESTAMP,
-                status_id=11002,
+                STATUS_ID=11002,
             </if>
             <if test="update=='skip'">
                 FINISH_TIME=CURRENT_TIMESTAMP,
-                statusId=11003,
+                STATUS_ID=11003,
             </if>
         </set>
         where ID=#{id}

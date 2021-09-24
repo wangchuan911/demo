@@ -1,7 +1,10 @@
 package org.welisdoon.flow.module.template.service;
 
+import com.alibaba.fastjson.JSONObject;
 import org.springframework.stereotype.Service;
+import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.flow.module.flow.entity.Stream;
+import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
 import org.welisdoon.flow.module.template.entity.Link;
 import org.welisdoon.flow.module.template.entity.LinkFunction;
@@ -33,6 +36,11 @@ public class VirtualNode extends SimpleNode {
         if (nodeService instanceof VirtualNode) {
             throw new RuntimeException("stream not allow link VirtualNode!");
         }
+        FlowValue value = stream.getValue() == null ? new FlowValue() : stream.getValue();
+        JSONObject jsonValue = value.jsonValue();
+        jsonValue.put("virtual", true);
+        jsonValue.put("virtualFunctionId", function.getId());
+        stream.setValue((FlowValue)value.saveJsonValue());
 
         this.getStreamDao().put(stream);
         nodeService.start(stream);
@@ -66,5 +74,10 @@ public class VirtualNode extends SimpleNode {
         List<Stream> onInstantiated(Stream templateStream);
 
         void onStart(Stream currentStream);
+    }
+
+    public void rollback(Stream stream) {
+        stream.setFunctionId(stream.getValue().jsonValue().getLong("virtualFunctionId"));
+        stream.setNodeId(1L);
     }
 }

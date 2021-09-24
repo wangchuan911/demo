@@ -95,4 +95,12 @@
         update F_STREAM set STATUS_ID=#{statusId}, FLOW_ID= #{flowId},NODE_ID= #{nodeId},SUPER_ID= #{superId}, SEQ=#{seq}, FUNCTION_ID=#{functionId},NAME=#{name},VALUE_ID=#{valueId}
         where ID=#{id}
     </update>
+
+    <delete id="clear" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition">
+        delete from F_STREAM where FLOW_ID=#{flowId}
+    </delete>
+
+    <delete id="delete" parameterType="long">
+        delete from F_STREAM where ID=#{value}
+    </delete>
 </mapper>

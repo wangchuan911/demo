@@ -219,4 +219,23 @@ public class OrderWebRouter {
             }
         });
     }
+    @VertxRouter(path = "\\/dismiss\\/(?<orderId>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+    public void dismiss(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                orderService
+                        .dismiss(Long.parseLong(routingContext.pathParam("orderId")))
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end("成功");
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.fail(e.getCause());
+            }
+        });
+    }
 }

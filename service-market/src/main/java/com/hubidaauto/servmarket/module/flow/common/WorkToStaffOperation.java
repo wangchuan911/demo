@@ -5,7 +5,6 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
-import com.hubidaauto.servmarket.module.order.service.FlowProxyService;
 import com.hubidaauto.servmarket.module.staff.dao.StaffDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
@@ -72,7 +71,7 @@ public class WorkToStaffOperation implements VirtualNode.VirtualNodeInitializer 
 
             JSONObject valueJson = flowValue.jsonValue();
             valueJson.put("staffId", staffVO.getId());
-            flowValue.saveValue(valueJson);
+            flowValue.saveJsonValue();
 
 
             /*stream.setValueId(flowValue.getId());*/

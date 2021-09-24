@@ -35,6 +35,8 @@ public interface IOrderService<O extends OrderCondition, W extends WorkOrderCond
 
     List<DetailVO> orderDetail(Long orderId);
 
+    void dismiss(Long orderId);
+
     /* static void start(final long typeId,String J) {
          ApplicationContextProvider
                  .getApplicationContext()

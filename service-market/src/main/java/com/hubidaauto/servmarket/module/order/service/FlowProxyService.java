@@ -58,6 +58,12 @@ public class FlowProxyService {
         return this.flowService.getValue(valueId);
     }
 
+
+    @DS("flow")
+    public void dismiss(Flow flow) {
+        this.flowService.dismiss(flow);
+    }
+
     /*@DS("flow")
     public boolean setValue(FlowValue flowValue) {
         return this.flowService.setValue(flowValue);

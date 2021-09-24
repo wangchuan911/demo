@@ -39,5 +39,5 @@ public interface IBaseOrderService {
 
     Future<List<DetailVO>> orderDetail(Long id);
 
-
+    Future<Void> dismiss(Long orderId);
 }

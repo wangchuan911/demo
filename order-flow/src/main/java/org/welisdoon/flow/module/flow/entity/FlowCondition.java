@@ -9,7 +9,7 @@ package org.welisdoon.flow.module.flow.entity;
 public class FlowCondition {
     Long nodeId, flowId, linkId, streamId, templateId, statusId, superStreamId;
     boolean showTree;
-    String update;
+    String update, delete;
 
     public boolean isShowTree() {
         return showTree;
@@ -85,4 +85,12 @@ public class FlowCondition {
         this.update = update;
     }
 
+    public String getDelete() {
+        return delete;
+    }
+
+    public FlowCondition setDelete(String delete) {
+        this.delete = delete;
+        return this;
+    }
 }

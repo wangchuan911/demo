@@ -112,6 +112,10 @@ public abstract class AbstractNode {
 
     public abstract void finish(Stream stream);
 
+    public abstract void undo(Stream stream);
+
+    public abstract void dismiss(Stream stream);
+
     public static AbstractNode getInstance(Long nodeId) {
         return getInstance(AbstractNode.nodeDao.get(nodeId));
     }
@@ -235,4 +239,7 @@ public abstract class AbstractNode {
         target.setFlow(source.getFlow());
     }
 
+    boolean isVirtual(Stream stream) {
+        return stream.getValue() != null && stream.getValue().jsonValue().getBooleanValue("virtual");
+    }
 }

@@ -2,6 +2,7 @@ package org.welisdoon.flow.module.template.service;
 
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
 
@@ -59,4 +60,33 @@ public abstract class AbstractComplexNode extends AbstractNode {
         }
     }
 
+    @Override
+    public void undo(Stream stream) {
+        if (StreamStatus.getInstance(stream.getStatusId()) == StreamStatus.FUTURE)
+            return;
+        if (isVirtual(stream)) {
+            List<Stream> subStreams = this.getSubStreams(stream);
+            for (Stream subStream : subStreams) {
+                getInstance(subStream.getNodeId()).dismiss(subStream);
+            }
+            ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
+            this.getStreamDao().put(stream);
+            return;
+        }
+        this.setStreamStatus(stream, StreamStatus.FUTURE);
+        List<Stream> subStreams = getSubStreams(stream);
+        for (Stream subStream : subStreams) {
+            getInstance(subStream.getNodeId()).undo(subStream);
+        }
+    }
+
+    @Override
+    public void dismiss(Stream stream) {
+        List<Stream> subStreams = this.getSubStreams(stream);
+        for (Stream subStream : subStreams) {
+            getInstance(subStream.getNodeId()).dismiss(subStream);
+        }
+        getStreamDao().delete(stream.getSuperId());
+
+    }
 }

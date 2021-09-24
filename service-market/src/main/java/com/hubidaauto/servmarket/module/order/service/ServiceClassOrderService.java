@@ -313,5 +313,16 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         return list;
     }
 
+    @Override
+    public void dismiss(Long orderId) {
+        Flow flow = new Flow();
+        flow.setId(orderDao.get(orderId).getFlowId());
+        orderDao.delete(orderId);
+        ServiceClassWorkOrderCondition workOrderCondition = new ServiceClassWorkOrderCondition();
+        workOrderCondition.setOrderId(orderId);
+        workOrderDao.clear(workOrderCondition);
+        flowService.dismiss(flow);
+    }
+
 
 }
