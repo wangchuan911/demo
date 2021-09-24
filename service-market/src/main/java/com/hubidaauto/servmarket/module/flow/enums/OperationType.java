@@ -10,7 +10,7 @@ import java.util.Optional;
  * @Date 2021/8/30 09:46
  */
 public enum OperationType {
-    SIGN_UP(-1), SERVICING(-2), DISPATCH(-3), UNKNOW(0);
+    SIGN_UP(-1), SERVICING(-2), DISPATCH(-3), UNKNOW(0), CUST_COMFIRM(-4);
 
     OperationType(long id) {
         this.id = id;
