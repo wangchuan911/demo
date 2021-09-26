@@ -197,13 +197,18 @@ public class FlowService {
         return flowValueDao.add(flowValue) > 0;
     }*/
 
-    public void dismiss(Flow flow) {
+    public void clear(Flow flow) {
         FlowCondition condition = new FlowCondition().setDelete("dismiss").setFlowId(flow.getId());
         flowDao.clear(condition);
         streamDao.clear(condition);
+        FlowValue flowValue = new FlowValue();
+        flowValue.setFlowId(flow.getId());
+        flowValueDao.clear(flowValue);
     }
 
-    public void rollback(Stream stream) {
-
+    public void undo(Stream stream) {
+        AbstractNode node = AbstractNode.getInstance(stream.getNodeId());
+        node.undo(stream, true);
+        node.start(stream);
     }
 }

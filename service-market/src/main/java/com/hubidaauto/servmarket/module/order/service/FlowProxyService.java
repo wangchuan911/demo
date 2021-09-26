@@ -61,7 +61,7 @@ public class FlowProxyService {
 
     @DS("flow")
     public void dismiss(Flow flow) {
-        this.flowService.dismiss(flow);
+        this.flowService.clear(flow);
     }
 
     /*@DS("flow")

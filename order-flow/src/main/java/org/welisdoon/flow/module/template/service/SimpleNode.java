@@ -32,16 +32,17 @@ public class SimpleNode extends AbstractSimpleNode {
     }
 
     @Override
-    public void undo(Stream stream) {
+    public Stream undo(Stream stream, boolean propagation) {
         if (isVirtual(stream)) {
             ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
-            this.getStreamDao().put(stream);
         }
-        this.setStreamStatus(stream, StreamStatus.FUTURE);
+        if (propagation) {
+            Stream superStream = this.getSuperStream(stream);
+            superStream = getInstance(superStream.getNodeId()).undo(superStream, true);
+            if (superStream != null)
+                return superStream;
+        }
+        return stream;
     }
 
-    @Override
-    public void dismiss(Stream stream) {
-        getStreamDao().delete(stream.getId());
-    }
 }

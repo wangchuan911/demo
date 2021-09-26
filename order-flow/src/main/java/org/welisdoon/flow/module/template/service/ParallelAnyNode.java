@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @Classname ParallelAnyNode
@@ -22,7 +24,7 @@ public class ParallelAnyNode extends AbstractComplexNode {
     public void start(Stream stream) {
         List<Stream> subStreams = this.getSubStreams(stream);
         AbstractNode abstractNodeService;
-        this.setStreamStatus(stream,StreamStatus.WAIT);
+        this.setStreamStatus(stream, StreamStatus.WAIT);
 
         for (Stream subStream : subStreams) {
             abstractNodeService = getInstance(subStream.getNodeId());
@@ -37,10 +39,43 @@ public class ParallelAnyNode extends AbstractComplexNode {
         if (countResult.COMPLETE == 0) {
             return;
         }
-        this.skip(subStreams);
-
-        this.setStreamStatus(stream,StreamStatus.COMPLETE);
+        for (Stream subStream : subStreams) {
+            this.skip(subStream);
+        }
+        this.setStreamStatus(stream, StreamStatus.COMPLETE);
         Stream superStream = this.getSuperStream(stream);
         AbstractNode.getInstance(superStream.getNodeId()).finish(superStream);
+    }
+
+    @Override
+    public Stream undo(Stream stream, boolean propagation) {
+        StreamStatus status = StreamStatus.getInstance(stream.getStatusId());
+        switch (status) {
+            case COMPLETE:
+            case SKIP:
+                List<Stream> subStreams = this.getSubStreams(stream);
+                if (isVirtual(stream)) {
+                    ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
+                } else {
+                    subStreams
+                            .stream()
+                            .filter(subStream -> subStream.getStatusId() != StreamStatus.FUTURE.statusId())
+                            .forEach(subStream -> {
+                                getInstance(subStream.getNodeId()).undo(subStream, false);
+                            });
+
+
+                    this.setStreamStatus(stream, StreamStatus.WAIT);
+                }
+                if (propagation) {
+                    Stream superStream = getSuperStream(stream);
+                    superStream = getInstance(superStream.getNodeId()).undo(superStream, true);
+                    if (superStream != null)
+                        return superStream;
+                }
+                return stream;
+            default:
+                return null;
+        }
     }
 }

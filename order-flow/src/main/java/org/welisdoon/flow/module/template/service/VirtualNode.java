@@ -40,7 +40,7 @@ public class VirtualNode extends SimpleNode {
         JSONObject jsonValue = value.jsonValue();
         jsonValue.put("virtual", true);
         jsonValue.put("virtualFunctionId", function.getId());
-        stream.setValue((FlowValue)value.saveJsonValue());
+        stream.setValue((FlowValue) value.saveJsonValue());
 
         this.getStreamDao().put(stream);
         nodeService.start(stream);
@@ -76,8 +76,21 @@ public class VirtualNode extends SimpleNode {
         void onStart(Stream currentStream);
     }
 
-    public void rollback(Stream stream) {
+    /*public void rollback(Stream stream) {
         stream.setFunctionId(stream.getValue().jsonValue().getLong("virtualFunctionId"));
         stream.setNodeId(1L);
+    }*/
+
+    public void rollback(Stream stream) {
+        List<Stream> subStreams = this.getSubStreams(stream);
+        for (Stream subStream : subStreams) {
+            getInstance(subStream.getNodeId()).dismiss(subStream);
+        }
+        stream.setFunctionId(stream.getValue().jsonValue().getLong("virtualFunctionId"));
+        stream.setNodeId(1L);
+        stream.setStatusId(StreamStatus.FUTURE.statusId());
+        this.getStreamDao().put(stream);
     }
 }
+
+

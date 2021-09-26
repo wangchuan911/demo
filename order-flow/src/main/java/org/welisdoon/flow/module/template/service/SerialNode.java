@@ -7,6 +7,7 @@ import org.welisdoon.flow.module.flow.entity.FlowStatus;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.template.annotation.NodeType;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,5 +56,37 @@ public class SerialNode extends AbstractComplexNode {
         Stream superStream = this.getSuperStream(stream);
         AbstractNode.getInstance(superStream.getNodeId()).finish(superStream);
 
+    }
+
+    @Override
+    public Stream undo(Stream stream, boolean propagation) {
+        StreamStatus status = StreamStatus.getInstance(stream.getStatusId());
+        switch (status) {
+            case COMPLETE:
+            case SKIP:
+                List<Stream> subStreams = this.getSubStreams(stream);
+                if (isVirtual(stream)) {
+                    ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
+                } else {
+                    boolean flag = false;
+                    for (Stream subStream : subStreams) {
+                        if (flag) {
+                            getInstance(subStream.getNodeId()).undo(subStream, false);
+                        } else {
+                            flag = !isComplete(StreamStatus.getInstance(subStream.getStatusId()));
+                        }
+                    }
+                    this.setStreamStatus(stream, StreamStatus.WAIT);
+                }
+                if (propagation) {
+                    Stream superStream = getSuperStream(stream);
+                    superStream = getInstance(superStream.getNodeId()).undo(superStream, true);
+                    if (superStream != null)
+                        return superStream;
+                }
+                return stream;
+            default:
+                return null;
+        }
     }
 }

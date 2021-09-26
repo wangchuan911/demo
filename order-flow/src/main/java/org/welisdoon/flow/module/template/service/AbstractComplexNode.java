@@ -37,48 +37,19 @@ public abstract class AbstractComplexNode extends AbstractNode {
         return new SubStreamStatusCount(WAIT, READY, SKIP, FUTURE, COMPLETE);
     }
 
-    public void skip(Stream stream) {
-        this.setStreamStatus(stream, StreamStatus.SKIP);
-        for (Stream subStream : this.getSubStreams(stream)) {
-            switch (StreamStatus.getInstance(subStream.getStatusId())) {
-                case FUTURE:
-                case READY:
-                    this.skip(subStream);
-                    break;
-            }
-        }
-    }
-
-    public void skip(List<Stream> streams) {
-        for (Stream subStream : streams) {
-            switch (StreamStatus.getInstance(subStream.getStatusId())) {
-                case FUTURE:
-                case READY:
-                    this.skip(subStream);
-                    break;
-            }
-        }
-    }
-
     @Override
-    public void undo(Stream stream) {
-        if (StreamStatus.getInstance(stream.getStatusId()) == StreamStatus.FUTURE)
-            return;
-        if (isVirtual(stream)) {
-            List<Stream> subStreams = this.getSubStreams(stream);
-            for (Stream subStream : subStreams) {
-                getInstance(subStream.getNodeId()).dismiss(subStream);
+    public boolean skip(Stream stream) {
+        if (super.skip(stream)){
+            for (Stream subStream : this.getSubStreams(stream)) {
+                AbstractNode.getInstance(subStream.getNodeId()).skip(stream);
             }
-            ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
-            this.getStreamDao().put(stream);
-            return;
+            return true;
         }
-        this.setStreamStatus(stream, StreamStatus.FUTURE);
-        List<Stream> subStreams = getSubStreams(stream);
-        for (Stream subStream : subStreams) {
-            getInstance(subStream.getNodeId()).undo(subStream);
-        }
+        return false;
     }
+
+
+
 
     @Override
     public void dismiss(Stream stream) {
@@ -86,7 +57,9 @@ public abstract class AbstractComplexNode extends AbstractNode {
         for (Stream subStream : subStreams) {
             getInstance(subStream.getNodeId()).dismiss(subStream);
         }
-        getStreamDao().delete(stream.getSuperId());
+        super.dismiss(stream);
 
     }
+
+
 }

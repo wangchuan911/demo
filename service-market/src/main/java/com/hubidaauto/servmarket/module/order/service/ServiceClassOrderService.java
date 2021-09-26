@@ -132,11 +132,23 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     List<Long> staffIds = workOrderCondition.getData().getJSONArray("workers").toJavaList(Long.class);
                     ApplicationContextProvider.getBean(ServiceClassOrderService.class).addStaffTask(staffIds, orderVO);
                     break;
+                case CUST_COMFIRM:
+                    break;
                 default:
                     throw new RuntimeException("未知操作");
             }
         }
-        this.flowService.stream(workOrderVO.getStreamId());
+        try {
+            this.flowService.stream(workOrderVO.getStreamId());
+        } catch (Throwable e) {
+            ApplicationContextProvider.getBean(ServiceClassOrderService.class).undo(workOrderVO);
+            throw e;
+        }
+    }
+    @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
+    public void undo(ServiceClassWorkOrderVO workOrderVO) {
+        workOrderVO.setStatusId(WorkOrderStatus.READY.statusId());
+        workOrderDao.put(workOrderVO);
     }
 
     @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
@@ -194,10 +206,14 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
+    @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
     public void onFinished(Flow flow) {
         System.out.println("onFinished");
-
-
+        ServiceClassOrderCondition condition = new ServiceClassOrderCondition();
+        condition.setFlowId(flow.getId());
+        ServiceClassOrderVO orderVO = orderDao.find(condition);
+        orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
+        baseOrderDao.put(orderVO);
     }
 
     @Override
@@ -273,6 +289,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                         case SERVICING:
                         case SIGN_UP:
                         case DISPATCH:
+                        case CUST_COMFIRM:
                             workOrderVO.setOperation(operationType.name());
                             break;
                         default:
