@@ -59,7 +59,7 @@ public class SerialNode extends AbstractComplexNode {
     }
 
     @Override
-    public Stream undo(Stream stream, boolean propagation) {
+    public void undo(Stream stream, boolean propagation) {
         StreamStatus status = StreamStatus.getInstance(stream.getStatusId());
         switch (status) {
             case COMPLETE:
@@ -68,25 +68,23 @@ public class SerialNode extends AbstractComplexNode {
                 if (isVirtual(stream)) {
                     ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
                 } else {
-                    boolean flag = false;
+                    boolean flag = false, isCoplete;
                     for (Stream subStream : subStreams) {
+                        isCoplete = isComplete(StreamStatus.getInstance(subStream.getStatusId()));
                         if (flag) {
-                            getInstance(subStream.getNodeId()).undo(subStream, false);
+                            if (isCoplete)
+                                getInstance(subStream.getNodeId()).undo(subStream, false);
                         } else {
-                            flag = !isComplete(StreamStatus.getInstance(subStream.getStatusId()));
+                            flag = !isCoplete;
                         }
                     }
                     this.setStreamStatus(stream, StreamStatus.WAIT);
                 }
                 if (propagation) {
                     Stream superStream = getSuperStream(stream);
-                    superStream = getInstance(superStream.getNodeId()).undo(superStream, true);
-                    if (superStream != null)
-                        return superStream;
+                    getInstance(superStream.getNodeId()).undo(superStream, true);
                 }
-                return stream;
             default:
-                return null;
         }
     }
 }

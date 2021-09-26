@@ -120,7 +120,7 @@ public abstract class AbstractNode {
         return false;
     }
 
-    public abstract Stream undo(Stream stream,boolean propagation);
+    public abstract void undo(Stream stream,boolean propagation);
 
     public void dismiss(Stream stream) {
         getStreamDao().delete(stream.getId());

@@ -48,7 +48,7 @@ public class ParallelAnyNode extends AbstractComplexNode {
     }
 
     @Override
-    public Stream undo(Stream stream, boolean propagation) {
+    public void undo(Stream stream, boolean propagation) {
         StreamStatus status = StreamStatus.getInstance(stream.getStatusId());
         switch (status) {
             case COMPLETE:
@@ -59,7 +59,7 @@ public class ParallelAnyNode extends AbstractComplexNode {
                 } else {
                     subStreams
                             .stream()
-                            .filter(subStream -> subStream.getStatusId() != StreamStatus.FUTURE.statusId())
+                            .filter(subStream -> isComplete(StreamStatus.getInstance(subStream.getStatusId())))
                             .forEach(subStream -> {
                                 getInstance(subStream.getNodeId()).undo(subStream, false);
                             });
@@ -69,13 +69,9 @@ public class ParallelAnyNode extends AbstractComplexNode {
                 }
                 if (propagation) {
                     Stream superStream = getSuperStream(stream);
-                    superStream = getInstance(superStream.getNodeId()).undo(superStream, true);
-                    if (superStream != null)
-                        return superStream;
+                    getInstance(superStream.getNodeId()).undo(superStream, true);
                 }
-                return stream;
             default:
-                return null;
         }
     }
 }
