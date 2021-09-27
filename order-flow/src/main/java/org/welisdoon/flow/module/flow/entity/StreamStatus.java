@@ -28,4 +28,8 @@ public enum StreamStatus {
         return optionalStreamStatus.isPresent() ? optionalStreamStatus.get() : null;
     }
 
+    public boolean equals(long id) {
+        return this.statusId == id;
+    }
+
 }

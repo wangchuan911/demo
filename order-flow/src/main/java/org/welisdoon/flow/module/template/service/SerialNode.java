@@ -61,30 +61,36 @@ public class SerialNode extends AbstractComplexNode {
     @Override
     public void undo(Stream stream, boolean propagation) {
         StreamStatus status = StreamStatus.getInstance(stream.getStatusId());
-        switch (status) {
-            case COMPLETE:
-            case SKIP:
-                List<Stream> subStreams = this.getSubStreams(stream);
-                if (isVirtual(stream)) {
-                    ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
+        if (status == StreamStatus.FUTURE) return;
+        boolean isVirtual = isVirtual(stream);
+        List<Stream> subStreams = this.getSubStreams(stream);
+
+        if (!propagation) {
+            if (isVirtual)
+                ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
+            else {
+                for (Stream subStream : subStreams) {
+                    getInstance(subStream.getNodeId()).undo(subStream, false);
+                }
+                this.setStreamStatus(stream, StreamStatus.FUTURE);
+            }
+        } else if (this.isComplete(StreamStatus.getInstance(stream.getStatusId()))) {
+            boolean flag = false, isCoplete;
+            for (Stream subStream : subStreams) {
+                isCoplete = isComplete(StreamStatus.getInstance(subStream.getStatusId()));
+                if (flag) {
+                    if (!StreamStatus.FUTURE.equals(stream.getStatusId()))
+                        getInstance(subStream.getNodeId()).undo(subStream, false);
                 } else {
-                    boolean flag = false, isCoplete;
-                    for (Stream subStream : subStreams) {
-                        isCoplete = isComplete(StreamStatus.getInstance(subStream.getStatusId()));
-                        if (flag) {
-                            if (isCoplete)
-                                getInstance(subStream.getNodeId()).undo(subStream, false);
-                        } else {
-                            flag = !isCoplete;
-                        }
-                    }
-                    this.setStreamStatus(stream, StreamStatus.WAIT);
+                    flag = !isCoplete;
                 }
-                if (propagation) {
-                    Stream superStream = getSuperStream(stream);
-                    getInstance(superStream.getNodeId()).undo(superStream, true);
-                }
-            default:
+            }
+            this.setStreamStatus(stream, StreamStatus.WAIT);
+            Stream superStream = getSuperStream(stream);
+            if (superStream != null)
+                getInstance(superStream.getNodeId()).undo(superStream, true);
         }
     }
+
+
 }

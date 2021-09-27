@@ -50,28 +50,24 @@ public class ParallelAnyNode extends AbstractComplexNode {
     @Override
     public void undo(Stream stream, boolean propagation) {
         StreamStatus status = StreamStatus.getInstance(stream.getStatusId());
-        switch (status) {
-            case COMPLETE:
-            case SKIP:
-                List<Stream> subStreams = this.getSubStreams(stream);
-                if (isVirtual(stream)) {
-                    ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
-                } else {
-                    subStreams
-                            .stream()
-                            .filter(subStream -> isComplete(StreamStatus.getInstance(subStream.getStatusId())))
-                            .forEach(subStream -> {
-                                getInstance(subStream.getNodeId()).undo(subStream, false);
-                            });
+        if (status == StreamStatus.FUTURE) return;
+        boolean isVirtual = isVirtual(stream);
+        List<Stream> subStreams = this.getSubStreams(stream);
 
-
-                    this.setStreamStatus(stream, StreamStatus.WAIT);
+        if (!propagation) {
+            if (isVirtual)
+                ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
+            else {
+                for (Stream subStream : subStreams) {
+                    getInstance(subStream.getNodeId()).undo(subStream, false);
                 }
-                if (propagation) {
-                    Stream superStream = getSuperStream(stream);
-                    getInstance(superStream.getNodeId()).undo(superStream, true);
-                }
-            default:
+                this.setStreamStatus(stream, StreamStatus.FUTURE);
+            }
+        } else if (this.isComplete(StreamStatus.getInstance(stream.getStatusId()))) {
+            this.setStreamStatus(stream, StreamStatus.WAIT);
+            Stream superStream = getSuperStream(stream);
+            if (superStream != null)
+                getInstance(superStream.getNodeId()).undo(superStream, true);
         }
     }
 }

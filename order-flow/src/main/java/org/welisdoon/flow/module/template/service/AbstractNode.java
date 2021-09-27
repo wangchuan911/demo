@@ -120,7 +120,9 @@ public abstract class AbstractNode {
         return false;
     }
 
-    public abstract void undo(Stream stream,boolean propagation);
+    protected abstract void undo(Stream stream, boolean propagation);
+
+    public abstract void undo(Stream stream);
 
     public void dismiss(Stream stream) {
         getStreamDao().delete(stream.getId());
@@ -259,6 +261,15 @@ public abstract class AbstractNode {
         switch (status) {
             case SKIP:
             case COMPLETE:
+                return true;
+            default:
+                return false;
+        }
+    }
+    boolean isRunning(StreamStatus status) {
+        switch (status) {
+            case WAIT:
+            case READY:
                 return true;
             default:
                 return false;

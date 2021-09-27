@@ -61,5 +61,25 @@ public abstract class AbstractComplexNode extends AbstractNode {
 
     }
 
-
+    @Override
+    public void undo(Stream stream) {
+        StreamStatus status = StreamStatus.getInstance(stream.getStatusId());
+        switch (status) {
+            case COMPLETE:
+            case SKIP:
+                List<Stream> subStreams = this.getSubStreams(stream);
+                if (isVirtual(stream)) {
+                    ApplicationContextProvider.getBean(VirtualNode.class).rollback(stream);
+                } else {
+                    for (Stream subStream : subStreams) {
+                        getInstance(subStream.getNodeId()).undo(subStream, false);
+                    }
+                    this.setStreamStatus(stream, StreamStatus.FUTURE);
+                }
+                Stream superStream = getSuperStream(stream);
+                if (superStream != null)
+                    getInstance(superStream.getNodeId()).undo(superStream, true);
+            default:
+        }
+    }
 }

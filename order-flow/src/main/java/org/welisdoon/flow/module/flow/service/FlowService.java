@@ -208,7 +208,7 @@ public class FlowService {
 
     public void undo(Stream stream) {
         AbstractNode node = AbstractNode.getInstance(stream.getNodeId());
-        node.undo(stream, true);
+        node.undo(stream);
         node.start(stream);
     }
 }
