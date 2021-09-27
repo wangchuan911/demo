@@ -87,6 +87,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     });
                 });
         ENTRYS = map.entrySet().stream().map(handlerEntryListEntry -> handlerEntryListEntry.getValue()).toArray(Entry[]::new);
+        ENTRYS = Arrays.stream(initEntry).flatMap(register -> Arrays.stream(ENTRYS).filter(entry -> register.getClass().isAssignableFrom(entry.getClass()))).toArray(Entry[]::new);
     }
 
 

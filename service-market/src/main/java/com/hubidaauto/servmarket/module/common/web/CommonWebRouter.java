@@ -55,7 +55,7 @@ public class CommonWebRouter {
     public void img(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             CompositeFuture
-                    .join(routingContext.fileUploads()
+                    .all(routingContext.fileUploads()
                             .stream()
                             .filter(fileUpload -> !fileUpload.cancel())
                             .map(fileUpload ->
@@ -68,6 +68,9 @@ public class CommonWebRouter {
                                                 imageContentVO.setContent(buffer.getBytes());
                                                 try {
                                                     imageContentDao.add(imageContentVO);
+                                                    return Future.succeededFuture(imageContentVO.getId());
+                                                } catch (Throwable e) {
+                                                    return Future.failedFuture(e);
                                                 } finally {
                                                     routingContext.vertx()
                                                             .fileSystem()
@@ -76,11 +79,10 @@ public class CommonWebRouter {
                                                                 logger.error(throwable.getMessage(), throwable);
                                                             });
                                                 }
-                                                return Future.succeededFuture(imageContentVO.getId());
                                             })
                             ).collect(Collectors.toList())
                     ).onComplete(compositeFutureAsyncResult -> {
-                CompositeFuture future = compositeFutureAsyncResult.result();
+                CompositeFuture future = (CompositeFuture) compositeFutureAsyncResult;
                 List<Object> objects = new LinkedList<>();
                 for (int i = 0, len = future.size(); i < len; i++) {
                     if (future.failed(i)) {
@@ -94,7 +96,8 @@ public class CommonWebRouter {
         });
     }
 
-    @VertxRouter(path = "\\/img\\/(?<id>)",
+    @VertxRouter(path = "\\/img\\/(?<id>\\d+)",
+            mode = VertxRouteType.PathRegex,
             method = "GET")
     public void getImg(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
