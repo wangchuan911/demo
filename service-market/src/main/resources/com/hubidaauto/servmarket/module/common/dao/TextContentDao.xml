@@ -9,6 +9,9 @@
         select * from TEXT_CONTENT a where a.id=#{value}
     </select>
 
-
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.common.entity.TextContentVO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO TEXT_CONTENT(ID,TYPE,CONTENT)
+        VALUES (#{id},#{type},#{content})
+    </insert>
 
 </mapper>

@@ -4,21 +4,21 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.common.template.TemplateEngine;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.TemplateHandler;
 import io.vertx.ext.web.templ.thymeleaf.ThymeleafTemplateEngine;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
+import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 import org.welisdoon.web.vertx.verticle.StandaredVerticle;
 
-import javax.annotation.PostConstruct;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -29,8 +29,7 @@ import java.util.function.Consumer;
  */
 @VertxConfiguration
 @Component
-@ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-@VertxRoutePath("{wechat-app-hubida.path.app}/template")
+@VertxRoutePath("/template")
 public class HtmlTemplateWebRouter {
 
     TemplateEngine engine;
@@ -43,13 +42,23 @@ public class HtmlTemplateWebRouter {
         return consumer;
     }
 
-    @VertxRouter(path = "/*", order = -1)
+    @VertxRouter(path = "/*", order = 1)
     public void page(RoutingContextChain chain) {
         chain.handler(TemplateHandler.create(engine));
     }
 
 
-    public void goHtml(RoutingContext routingContext, JsonObject jsonObject, String page) {
+    @VertxRouter(path = "(?<app>/[\\w\\-]+)\\/(?<path>[\\w\\.\\-\\/]+).html", mode = VertxRouteType.PathRegex)
+    public void toPage(RoutingContextChain chain) {
+        chain.handler(BodyHandler.create()).handler(routingContext -> {
+            Map map = new HashMap<>();
+            map.putAll(Map.ofEntries(routingContext.request().params().entries().stream().toArray(Map.Entry[]::new)));
+            //map.putAll(routingContext.data());
+            this.toPage(routingContext, JsonObject.mapFrom(map), routingContext.pathParam("path"));
+        });
+    }
+
+    public void toPage(RoutingContext routingContext, JsonObject jsonObject, String page) {
         this.engine.render(jsonObject, String.format("templates/%s.html", page), res -> {
             if (res.succeeded()) {
                 routingContext.response().putHeader("Content-Type", "text/html").end(res.result());

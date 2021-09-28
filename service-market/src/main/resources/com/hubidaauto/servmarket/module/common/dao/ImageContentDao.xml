@@ -17,10 +17,10 @@
         VALUES (#{id},#{type},#{content},#{refId})
     </insert>
 
-    <insert id="put" parameterType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO">
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO">
         update IMAGE_CONTENT
         SET REF_ID = #{refId},TYPE=#{type}
         WHERE ID=#{id}
-    </insert>
+    </update>
 
 </mapper>
