@@ -9,11 +9,13 @@ import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
 import com.hubidaauto.servmarket.module.common.dao.TextContentDao;
 import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
 import com.hubidaauto.servmarket.module.common.entity.TextContentVO;
+import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
@@ -140,7 +142,11 @@ public class CommonWebRouter {
         chain.handler(routingContext -> {
             try {
                 TextContentVO vo = JSONObject.parseObject(routingContext.getBodyAsString(), TextContentVO.class);
-                textContentDao.add(vo);
+                if (vo.getId() != null) {
+                    textContentDao.put(vo);
+                } else {
+                    textContentDao.add(vo);
+                }
                 if (vo.getImgIds() != null) {
                     for (Long id : vo.getImgIds()) {
                         ImageContentVO image = new ImageContentVO();
@@ -150,11 +156,19 @@ public class CommonWebRouter {
                         imageContentDao.put(image);
                     }
                 }
-                routingContext.end(new JsonObject().put("id", vo.getId()).toBuffer());
+
             } catch (Throwable e) {
                 routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }
 
+    @VertxRouter(path = "\\/text\\/(?<id>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void getText(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            routingContext.end(Json.encodeToBuffer(textContentDao.get(Long.parseLong(routingContext.pathParam("id")))));
+        });
+    }
 }

@@ -1,5 +1,5 @@
 window.$http = (() => {
-    const http = (method, url, data, options) => {
+    const http = (method, url, data = {}, options = {}) => {
         return new Promise((resolve, reject) => {
             var xhr = new XMLHttpRequest();
             //使用HTTP POST请求与服务器交互数据
@@ -12,7 +12,7 @@ window.$http = (() => {
             xhr.open(method, url, true);
             //设置发送数据的请求格式
             xhr.setRequestHeader('content-type', 'application/json');
-            xhr.onreadystatechange = function () {
+            xhr.onreadystatechange = () => {
                 if (xhr.readyState == 4) {
                     //根据服务器的响应内容格式处理响应结果
                     if (xhr.getResponseHeader('content-type') === 'application/json') {
@@ -20,8 +20,6 @@ window.$http = (() => {
                     } else {
                         resolve(xhr.responseText);
                     }
-                } else {
-                    reject({state: xhr.readyState, data: xhr.responseText})
                 }
             }
             //将用户输入值序列化成字符串

@@ -14,4 +14,9 @@
         VALUES (#{id},#{type},#{content})
     </insert>
 
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.common.entity.TextContentVO">
+        update TEXT_CONTENT
+        SET CONTENT=#{content}
+        WHERE ID=#{id}
+    </update>
 </mapper>
