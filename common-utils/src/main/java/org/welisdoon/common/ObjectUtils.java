@@ -4,6 +4,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 /**
  * @Classname ObjectUtils
@@ -12,19 +13,15 @@ import java.util.concurrent.locks.ReentrantLock;
  * @Date 2021/4/23 10:17
  */
 public class ObjectUtils {
-    @FunctionalInterface
-    public interface newObjectFunction<T> {
-        T create();
-    }
 
     final static ReentrantLock REENTRANT_LOCK = new ReentrantLock();
 
-    public static <K, V> V getMapValueOrNewSafe(Map<K, V> map, K key, newObjectFunction<V> function) {
+    public static <K, V> V getMapValueOrNewSafe(Map<K, V> map, K key, Supplier<V> function) {
         if (!map.containsKey(key)) {
             REENTRANT_LOCK.lock();
             try {
                 if (!map.containsKey(key)) {
-                    V v = function.create();
+                    V v = function.get();
                     map.put(key, v);
                 }
             } finally {

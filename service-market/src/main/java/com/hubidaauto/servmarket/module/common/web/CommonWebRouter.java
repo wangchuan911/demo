@@ -18,17 +18,22 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.ext.web.impl.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +52,8 @@ public class CommonWebRouter {
 
     TextContentDao textContentDao;
 
+    HtmlTemplateWebRouter htmlTemplateWebRouter;
+
     @Autowired
     public void setTextContentDao(TextContentDao textContentDao) {
         this.textContentDao = textContentDao;
@@ -55,6 +62,11 @@ public class CommonWebRouter {
     @Autowired
     public void setImageContentDao(ImageContentDao imageContentDao) {
         this.imageContentDao = imageContentDao;
+    }
+
+    @Autowired
+    public void setHtmlTemplateWebRouter(HtmlTemplateWebRouter htmlTemplateWebRouter) {
+        this.htmlTemplateWebRouter = htmlTemplateWebRouter;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -112,12 +124,16 @@ public class CommonWebRouter {
             mode = VertxRouteType.PathRegex,
             method = "GET")
     public void getImg(RoutingContextChain chain) {
+        Environment environment = ApplicationContextProvider.getBean(Environment.class);
+        StaticHandler staticHandler = StaticHandler.create()
+                .setAllowRootFileSystemAccess(true)
+                .setWebRoot(environment.getProperty("temp.filePath"));
+        staticHandler.setAlwaysAsyncFS(true);
+        staticHandler.setCachingEnabled(false);
+
         chain.blockingHandler(routingContext -> {
-            routingContext
-                    .response()
-                    .putHeader("Content-Type", "image/png")
-                    .end(Buffer.buffer(imageContentDao.get(Long.parseLong(routingContext.pathParam("id"))).getContent()));
-        });
+            htmlTemplateWebRouter.cacheImage(routingContext, Utils.pathOffset(routingContext.request().path(), routingContext), () -> imageContentDao.get(Long.parseLong(routingContext.pathParam("id"))));
+        }).handler(staticHandler);
     }
 
     @VertxRouter(path = "\\/imgs\\/(?<type>\\d+)\\/(?<refId>\\d+)",

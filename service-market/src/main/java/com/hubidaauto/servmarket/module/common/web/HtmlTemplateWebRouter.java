@@ -1,14 +1,22 @@
 package com.hubidaauto.servmarket.module.common.web;
 
+import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.file.FileSystem;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.common.template.TemplateEngine;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.TemplateHandler;
 import io.vertx.ext.web.templ.thymeleaf.ThymeleafTemplateEngine;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
@@ -20,6 +28,7 @@ import org.welisdoon.web.vertx.verticle.StandaredVerticle;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @Classname HtmlTemplateConfiguration
@@ -33,11 +42,16 @@ import java.util.function.Consumer;
 public class HtmlTemplateWebRouter {
 
     TemplateEngine engine;
+    FileSystem fileSystem;
+
+    @Value("${temp.filePath}")
+    String tempFilePath;
 
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> html() {
         Consumer<Vertx> consumer = vertx -> {
             setTemplateEngine(vertx);
+            this.fileSystem = vertx.fileSystem();
         };
         return consumer;
     }
@@ -67,6 +81,34 @@ public class HtmlTemplateWebRouter {
                 routingContext.fail(res.cause());
             }
         });
+    }
+
+    public void cacheImage(RoutingContext routingContext, String filePath, Supplier<ImageContentVO> getImage) {
+        routingContext.response().setChunked(true);
+        StringBuilder stringBuilder = new StringBuilder(tempFilePath);
+        stringBuilder.append(filePath.charAt(0) == '/' ? "" : "/").append(filePath);
+        String filePaht = stringBuilder.toString();
+        fileSystem.exists(filePaht).onSuccess(aBoolean -> {
+            if (aBoolean) {
+                routingContext.next();
+            } else {
+                ImageContentVO image = getImage.get();
+                if (image == null) {
+                    failHandler(routingContext, new RuntimeException("没有数据"));
+                    return;
+                }
+                fileSystem.writeFile(stringBuilder.toString(), Buffer.buffer(image.getContent()))
+                        .onSuccess(unused -> {
+                            routingContext.next();
+                        })
+                        .onFailure(throwable -> failHandler(routingContext, throwable));
+            }
+        }).onFailure(throwable -> failHandler(routingContext, throwable));
+    }
+
+    public void failHandler(RoutingContext routingContext, Throwable throwable) {
+        routingContext.response().setStatusCode(404)
+                .end(StringUtils.isEmpty(throwable.getMessage()) ? "not data" : throwable.getMessage());
     }
 
     public void setTemplateEngine(Vertx vertx) {

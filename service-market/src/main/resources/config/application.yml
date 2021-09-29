@@ -7,7 +7,6 @@ server:
     sslKeyStore: /opt/wechat/thekeystore
     sslPassword: e75M8y7K
     sslKeyPath:
-    staticPath: /opt/wechat/tempPic
 spring:
   profiles:
     active: [atomSrv,database,wechat-app]
