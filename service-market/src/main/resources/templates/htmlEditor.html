@@ -133,7 +133,10 @@
         }
         editor.create();
         document.getElementById("ok").addEventListener("click", () => {
-            $http.post(`${app}/common/text`, {imgIds: imgs, content: editor.txt.html(), id: id})
+            $http.post(`${app}/common/text`, {imgIds: imgs, content: editor.txt.html(), id: id}).then(value => {
+                id = value.id;
+                alert("ok")
+            });
         })
     }
     new Promise(resolve => {

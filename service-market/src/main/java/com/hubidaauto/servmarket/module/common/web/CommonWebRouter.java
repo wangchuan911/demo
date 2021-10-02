@@ -172,7 +172,7 @@ public class CommonWebRouter {
                         imageContentDao.put(image);
                     }
                 }
-
+                routingContext.end(new JsonObject().put("id", vo.getId()).toBuffer());
             } catch (Throwable e) {
                 routingContext.response().setStatusCode(500).end(e.getMessage());
             }
