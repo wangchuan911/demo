@@ -1,8 +1,10 @@
 package com.hubidaauto.servmarket.module.goods.web;
 
+import com.hubidaauto.servmarket.common.utils.JsonUtils;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
 import com.hubidaauto.servmarket.module.common.dao.TextContentDao;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
+import com.hubidaauto.servmarket.module.goods.entity.AddedValueVO;
 import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import com.hubidaauto.servmarket.module.goods.service.ItemService;
@@ -26,29 +28,12 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/goods")
 public class GoodsWebRouter {
-    ItemDao itemDao;
-    ItemTypeDao itemTypeDao;
-    ItemService itemService;
-    TextContentDao itemDetailDao;
 
-    @Autowired
-    public void setItemDao(ItemDao itemDao) {
-        this.itemDao = itemDao;
-    }
+    ItemService itemService;
 
     @Autowired
     public void setItemService(ItemService itemService) {
         this.itemService = itemService;
-    }
-
-    @Autowired
-    public void setItemTypeDao(ItemTypeDao itemTypeDao) {
-        this.itemTypeDao = itemTypeDao;
-    }
-
-    @Autowired
-    public void setItemDetailDao(TextContentDao itemDetailDao) {
-        this.itemDetailDao = itemDetailDao;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -62,9 +47,7 @@ public class GoodsWebRouter {
             mode = VertxRouteType.PathRegex)
     public void getItem(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            ItemVO itemVO = itemDao.get(Long.parseLong(routingContext.pathParam("id")));
-            itemVO.setDetail(itemDetailDao.get(itemVO.getContentId()));
-            routingContext.end(Json.encodeToBuffer(itemVO));
+            routingContext.end(Json.encodeToBuffer(itemService.getItem(Long.parseLong(routingContext.pathParam("id")))));
         });
     }
 
@@ -78,7 +61,7 @@ public class GoodsWebRouter {
             String page = routingContext.pathParam("page");
             if (!StringUtils.isEmpty(page))
                 itemCondition.page(Integer.parseInt(page));
-            routingContext.end(Json.encodeToBuffer(itemDao.list(itemCondition)));
+            routingContext.end(Json.encodeToBuffer(itemService.listItem(itemCondition)));
         });
     }
 
@@ -89,7 +72,16 @@ public class GoodsWebRouter {
         chain.handler(routingContext -> {
             ItemCondition itemCondition = routingContext.getBody() == null ? new ItemCondition() :
                     routingContext.getBodyAsJson().mapTo(ItemCondition.class);
-            routingContext.end(Json.encodeToBuffer(itemTypeDao.list(itemCondition)));
+            routingContext.end(Json.encodeToBuffer(itemService.listTypes(itemCondition)));
+        });
+    }
+
+    @VertxRouter(path = "/added/list",
+            method = "POST")
+    public void listAddedValue(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            AddedValueVO addedValueVO = JsonUtils.jsonToObject(routingContext.getBodyAsString(), AddedValueVO.class, () -> null);
+            routingContext.end(Json.encodeToBuffer(itemService.listAddedValue(addedValueVO)));
         });
     }
 
