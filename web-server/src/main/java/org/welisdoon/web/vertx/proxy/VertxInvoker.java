@@ -15,6 +15,7 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,8 +52,8 @@ public class VertxInvoker implements IVertxInvoker {
     }*/
 
     @Override
-    public void invoke(String clzName, String methodName, String paramTypesJson, String paramsJson, Handler<AsyncResult<String>> handler) {
-        String[] paramTypes = JSONArray.parseArray(paramTypesJson, String.class).stream().toArray(String[]::new);
+    public void invoke(String clzName, String methodName, String paramTypesJson, String paramsJson, String threadParamsJson, Handler<AsyncResult<String>> handler) {
+        String[] paramTypes = JSONArray.parseArray(paramTypesJson, String.class).toArray(String[]::new);
         JSONArray params = JSONArray.parseArray(paramsJson);
         Future<String> f = Future.future(promise -> {
             try {
@@ -140,6 +141,31 @@ public class VertxInvoker implements IVertxInvoker {
             } catch (Throwable e) {
                 logger.error(e.getMessage(), e);
                 promise.fail(e);
+            }
+        });
+        f.onComplete(handler);
+    }
+
+    @Override
+    public void check(String clzName, String methodName, String paramTypesJson, Handler<AsyncResult<Void>> handler) {
+        Future<Void> f = Future.future(promise -> {
+            try {
+                String[] params = JSONArray.parseArray(paramTypesJson, String.class).toArray(String[]::new);
+                Class[] types = new Class[params.length];
+                String paramType;
+                for (int i = 0; i < params.length; i++) {
+                    paramType = params[i];
+                    int index = paramType.indexOf("<");
+                    if (index > 0) {
+                        paramType = paramType.substring(0, index);
+                    }
+                    types[i] = Class.forName(paramType);
+                }
+
+                Class<?> clazz = Class.forName(clzName);
+                clazz.getMethod(methodName, types);
+            } catch (Throwable e) {
+
             }
         });
         f.onComplete(handler);

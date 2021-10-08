@@ -15,5 +15,7 @@ import io.vertx.core.json.JsonArray;
 @ProxyGen
 @VertxGen
 public interface IVertxInvoker {
-    void invoke(String clzName, String method, String paramTypes, String params, Handler<AsyncResult<String>> handler);
+    void invoke(String clzName, String method, String paramTypes, String params, String threadParams, Handler<AsyncResult<String>> handler);
+
+    void check(String clzName, String method, String paramTypes, Handler<AsyncResult<Void>> handler);
 }

@@ -92,6 +92,7 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
                 JSONArray.toJSONString(
                         Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(Collectors.toList())),
                 JSONArray.toJSONString(objects),
+                "",
                 stringAsyncResult -> {
                     if (!stringAsyncResult.succeeded()) {
                         promise.fail(stringAsyncResult.cause());
