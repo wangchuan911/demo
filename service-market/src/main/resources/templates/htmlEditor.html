@@ -112,6 +112,9 @@
                 box.appendChild(p)
             })
         }*/
+        editor.config.excludeMenus = [
+            'video', 'strikeThrough', 'link', 'todo', 'code'
+        ]
         editor.config.uploadImgServer = `${app}/common/img`
         editor.config.height = window.innerHeight * 0.8;
         editor.config.uploadImgHooks = {
@@ -134,6 +137,7 @@
         editor.create();
         document.getElementById("ok").addEventListener("click", () => {
             $http.post(`${app}/common/text`, {imgIds: imgs, content: editor.txt.html(), id: id}).then(value => {
+                value = JSON.parse(value);
                 id = value.id;
                 alert("ok")
             });
