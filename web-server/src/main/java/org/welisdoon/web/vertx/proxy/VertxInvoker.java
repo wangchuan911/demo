@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -147,7 +148,7 @@ public class VertxInvoker implements IVertxInvoker {
     }
 
     @Override
-    public void check(String clzName, String methodName, String paramTypesJson, Handler<AsyncResult<Void>> handler) {
+    public void check(String clzName, String methodName, String paramTypesJson, String returnType, Handler<AsyncResult<Void>> handler) {
         Future<Void> f = Future.future(promise -> {
             try {
                 String[] params = JSONArray.parseArray(paramTypesJson, String.class).toArray(String[]::new);
@@ -163,9 +164,13 @@ public class VertxInvoker implements IVertxInvoker {
                 }
 
                 Class<?> clazz = Class.forName(clzName);
-                clazz.getMethod(methodName, types);
+                Method method = clazz.getMethod(methodName, types);
+                if (!method.getReturnType().isAssignableFrom(Class.forName(returnType))) {
+                    throw new NoSuchMethodException(String.format("Method [ %s ] return type is not matched! expect:[ %s ]; actual:[ %s ];", methodName, method.getReturnType().getName(), returnType));
+                }
+                promise.complete();
             } catch (Throwable e) {
-
+                promise.fail(e);
             }
         });
         f.onComplete(handler);

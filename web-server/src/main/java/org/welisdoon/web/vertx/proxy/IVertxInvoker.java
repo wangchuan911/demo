@@ -17,5 +17,5 @@ import io.vertx.core.json.JsonArray;
 public interface IVertxInvoker {
     void invoke(String clzName, String method, String paramTypes, String params, String threadParams, Handler<AsyncResult<String>> handler);
 
-    void check(String clzName, String method, String paramTypes, Handler<AsyncResult<Void>> handler);
+    void check(String clzName, String method, String paramTypes, String returnType, Handler<AsyncResult<Void>> handler);
 }
