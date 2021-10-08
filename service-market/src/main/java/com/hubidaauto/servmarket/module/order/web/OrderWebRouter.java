@@ -219,6 +219,7 @@ public class OrderWebRouter {
             }
         });
     }
+
     @VertxRouter(path = "\\/dismiss\\/(?<orderId>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
     public void dismiss(RoutingContextChain context) {
         context.handler(routingContext -> {
@@ -230,6 +231,26 @@ public class OrderWebRouter {
                                 routingContext.end("成功");
                             } else {
                                 routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.fail(e.getCause());
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/(?<orderId>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
+    public void getOrder(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                orderService
+                        .get(Long.parseLong(routingContext.pathParam("orderId")))
+                        .onComplete(orderResult -> {
+                            if (orderResult.succeeded()) {
+                                routingContext.end(JSONObject.toJSONString(orderResult.result()));
+                            } else {
+                                routingContext.response().setStatusCode(500).end(orderResult.cause().getMessage());
                             }
                         });
             } catch (Throwable e) {

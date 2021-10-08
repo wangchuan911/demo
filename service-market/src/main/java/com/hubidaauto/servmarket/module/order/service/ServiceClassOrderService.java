@@ -37,6 +37,7 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Classname ServMallOrderService
@@ -91,6 +92,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
         orderVO.setFlowId(flow.getId());
         orderVO.setStatusId(OrderStatus.PRE_PAY.statusId());
+        orderVO.setDesc(this.orderDetail(orderVO.getId()).stream().filter(detailVO -> detailVO.getValue() != null).map(detailVO -> detailVO.getValue().toString()).collect(Collectors.joining(" ")));
         baseOrderDao.put(orderVO);
         return orderVO;
     }
@@ -145,6 +147,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             throw e;
         }
     }
+
     @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
     public void undo(ServiceClassWorkOrderVO workOrderVO) {
         workOrderVO.setStatusId(WorkOrderStatus.READY.statusId());
@@ -327,6 +330,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         list.add(new DetailVO("需要人数", orderVO.getWorkerNum()));
         list.add(new DetailVO("备注信息", orderVO.getRemark()));
         list.add(new DetailVO("支付方式", "微信"));
+        list.add(new DetailVO("支付方式", orderVO.getAddedValue()));
         return list;
     }
 

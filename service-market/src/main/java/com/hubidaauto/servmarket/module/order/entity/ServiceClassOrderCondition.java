@@ -14,17 +14,18 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
     }
 
     public static class Form {
-        Boolean[] addedValue, time;
+        Boolean[] time;
+        Long[] addedValue;
         Integer count;
         Timestamp date;
         String remark;
         Long addressId, price, itemTypeId, regionId;
 
-        public Boolean[] getAddedValue() {
+        public Long[] getAddedValue() {
             return addedValue;
         }
 
-        public void setAddedValue(Boolean[] addedValue) {
+        public void setAddedValue(Long[] addedValue) {
             this.addedValue = addedValue;
         }
 

@@ -7,7 +7,7 @@
     <select id="get"
             parameterType="long"
             resultType="com.hubidaauto.servmarket.module.goods.entity.AddedValueVO">
-        SELECT * FROM MALL_ITEM A WHERE A.ID=#{value}
+        SELECT * FROM MALL_ITEM_ADDED_VALUE A WHERE A.ID=#{value}
     </select>
 
     <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.AddedValueVO"
