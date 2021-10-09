@@ -24,7 +24,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
  * @Date 2021/8/21 16:58
  */
 @Component
-@ConditionalOnProperty(prefix = "demo", name = "router")
+@ConditionalOnProperty(prefix = "order-flow.demo", name = "router")
 @VertxRoutePath("/demo/flow")
 @VertxConfiguration
 public class FlowWebRouter {

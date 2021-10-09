@@ -16,8 +16,8 @@ import java.util.List;
  * @Date 2021/8/21 13:33
  */
 @Component
-@ConditionalOnProperty(prefix = "demo", name = "router")
-public class Temp implements VirtualNode.VirtualNodeInitializer, FlowEvent {
+@ConditionalOnProperty(prefix = "order-flow.demo", name = "router")
+public class DemoOrderOperation implements VirtualNode.VirtualNodeInitializer, FlowEvent {
     @Override
     public List<Stream> onInstantiated(Stream templateStream) {
         templateStream.setNodeId(6L);
