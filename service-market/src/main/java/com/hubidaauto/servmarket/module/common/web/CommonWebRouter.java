@@ -5,8 +5,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.servmarket.module.comment.dao.OrderCommentDao;
 import com.hubidaauto.servmarket.module.comment.entity.CommentVO;
 import com.hubidaauto.servmarket.module.common.annotation.ContentType;
+import com.hubidaauto.servmarket.module.common.dao.AppConfigDao;
 import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
 import com.hubidaauto.servmarket.module.common.dao.TextContentDao;
+import com.hubidaauto.servmarket.module.common.entity.AppConfig;
 import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
 import com.hubidaauto.servmarket.module.common.entity.TextContentVO;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
@@ -54,6 +56,8 @@ public class CommonWebRouter {
 
     HtmlTemplateWebRouter htmlTemplateWebRouter;
 
+    AppConfigDao appConfigDao;
+
     @Autowired
     public void setTextContentDao(TextContentDao textContentDao) {
         this.textContentDao = textContentDao;
@@ -67,6 +71,11 @@ public class CommonWebRouter {
     @Autowired
     public void setHtmlTemplateWebRouter(HtmlTemplateWebRouter htmlTemplateWebRouter) {
         this.htmlTemplateWebRouter = htmlTemplateWebRouter;
+    }
+
+    @Autowired
+    public void setAppConfigDao(AppConfigDao appConfigDao) {
+        this.appConfigDao = appConfigDao;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -185,6 +194,26 @@ public class CommonWebRouter {
     public void getText(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             routingContext.end(Json.encodeToBuffer(textContentDao.get(Long.parseLong(routingContext.pathParam("id")))));
+        });
+    }
+
+    @VertxRouter(path = "\\/cfgs\\/(?<group>\\w+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void getConfigs(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            AppConfig appConfig = new AppConfig();
+            appConfig.setGroup(routingContext.pathParam("group"));
+            routingContext.end(Json.encodeToBuffer(appConfigDao.list(appConfig)));
+        });
+    }
+
+    @VertxRouter(path = "\\/cfg\\/(?<name>\\w+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void getConfig(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            routingContext.end(Json.encodeToBuffer(appConfigDao.get(routingContext.pathParam("name"))));
         });
     }
 }

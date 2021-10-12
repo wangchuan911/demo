@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.common.dao.AppConfigDao">
+
+    <select id="get" parameterType="string"
+            resultType="com.hubidaauto.servmarket.module.common.entity.AppConfig">
+        SELECT * FROM APP_CONFIG A WHERE A.NAME=#{VALUE}
+    </select>
+
+    <select id="list" parameterType="string"
+            resultType="com.hubidaauto.servmarket.module.common.entity.AppConfig">
+        SELECT * FROM APP_CONFIG A WHERE A.GROUP=#{group}
+        <if test="name!=null and name.length()>0">
+            and A.NAME=#{name}
+        </if>
+    </select>
+</mapper>

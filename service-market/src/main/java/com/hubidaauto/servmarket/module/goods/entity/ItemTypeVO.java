@@ -7,7 +7,7 @@ package com.hubidaauto.servmarket.module.goods.entity;
  * @Date 2021/8/5 20:00
  */
 public class ItemTypeVO {
-    Long id, itemId, price;
+    Long id, itemId, price, img;
     String desc;
 
     public Long getId() {
@@ -46,4 +46,11 @@ public class ItemTypeVO {
         return this;
     }
 
+    public Long getImg() {
+        return img;
+    }
+
+    public void setImg(Long img) {
+        this.img = img;
+    }
 }

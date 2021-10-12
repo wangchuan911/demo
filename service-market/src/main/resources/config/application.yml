@@ -9,7 +9,7 @@ server:
     sslKeyPath:
 spring:
   profiles:
-    active: [atomSrv,database,wechat-app]
+    active: [atomSrv,database,wechat-app,order-flow]
   main:
     web-application-type: none
 ################### Vert.x Configuration ##########################

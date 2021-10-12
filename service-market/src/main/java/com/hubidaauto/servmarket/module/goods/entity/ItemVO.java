@@ -1,14 +1,16 @@
 package com.hubidaauto.servmarket.module.goods.entity;
 
 import com.hubidaauto.servmarket.module.common.entity.ContentVO;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 public class ItemVO {
     Long id, type, price, contentId;
-    String name;
+    String name, imgs;
     ContentVO detail;
     List<ItemTypeVO> types;
+
 
     public Long getId() {
         return id;
@@ -73,4 +75,19 @@ public class ItemVO {
         return this;
     }
 
+    public String getImgs() {
+        return imgs;
+    }
+
+    public void setImgs(String imgs) {
+        this.imgs = imgs;
+    }
+
+    public void addImg(Long imgId) {
+        if (StringUtils.isEmpty(this.imgs)) {
+            this.imgs = imgId.toString();
+        } else {
+            this.imgs += (String.format(",%d", imgId));
+        }
+    }
 }

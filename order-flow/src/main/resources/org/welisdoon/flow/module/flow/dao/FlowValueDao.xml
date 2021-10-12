@@ -21,6 +21,8 @@
         UPDATE F_FLOW_VALUE A SET A.VALUE=#{value} where A.ID=#{id} and A.FLOW_ID=#{flowId}
     </update>
 
-
+    <delete id="clear" parameterType="org.welisdoon.flow.module.flow.entity.FlowValue">
+         delete from F_FLOW_VALUE where FLOW_ID=#{flowId}
+    </delete>
 
 </mapper>
