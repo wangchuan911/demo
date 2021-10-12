@@ -70,4 +70,8 @@
             <include refid="condition"></include>
         </where>
     </select>
+
+    <delete id="clear" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition">
+        DELETE FROM WORK_ORDER  WHERE ORDER_ID=#{orderId}
+    </delete>
 </mapper>

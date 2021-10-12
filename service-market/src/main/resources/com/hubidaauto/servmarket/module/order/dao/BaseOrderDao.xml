@@ -81,7 +81,7 @@
 
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderVO" useGeneratedKeys="true"
             keyProperty="id">
-        INSERT INTO shop1.BASE_ORDER (CODE, PRICE, FLOW_ID, STATUS_ID, CUST_ID, CLASS_ID,REGION_ID,`DESC`)
+        INSERT INTO BASE_ORDER (CODE, PRICE, FLOW_ID, STATUS_ID, CUST_ID, CLASS_ID,REGION_ID,`DESC`)
         VALUES (#{code},#{price},#{flowId},#{statusId},#{custId},#{classId},#{regionId},#{desc})
     </insert>
 
@@ -90,4 +90,8 @@
          t.FLOW_ID = #{flowId}, t.STATUS_ID =  #{statusId}, t.CUST_ID =  #{custId}, t.CLASS_ID =  #{classId},t.REGION_ID=#{regionId},t.`DESC`=#{desc}
         WHERE t.ID = #{id}
     </update>
+
+    <delete id="delete" parameterType="long">
+        delete from BASE_ORDER where ID=#{value}
+    </delete>
 </mapper>

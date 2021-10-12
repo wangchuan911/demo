@@ -339,6 +339,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         Flow flow = new Flow();
         flow.setId(orderDao.get(orderId).getFlowId());
         orderDao.delete(orderId);
+        baseOrderDao.delete(orderId);
         ServiceClassWorkOrderCondition workOrderCondition = new ServiceClassWorkOrderCondition();
         workOrderCondition.setOrderId(orderId);
         workOrderDao.clear(workOrderCondition);
