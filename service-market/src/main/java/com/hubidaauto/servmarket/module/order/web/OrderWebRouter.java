@@ -58,23 +58,40 @@ public class OrderWebRouter {
     }
 
 
-    @VertxRouter(path = "\\/pay\\/(?<userId>\\d+)\\/(?<orderId>\\d+)\\/(?<nonce>\\w+)\\/(?<timeStamp>\\d+)",
+    @VertxRouter(path = "\\/pay\\/(?<payTarget>\\w+)\\/(?<userId>\\d+)\\/(?<orderId>\\d+)\\/(?<nonce>\\w+)\\/(?<timeStamp>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void payment(RoutingContextChain chain) {
         chain.handler(routingContext -> {
+            String path = routingContext.request().path();
+            System.out.println(path);
             AppUserVO userVO = appUserDao.get(Long.parseLong(routingContext.pathParam("userId")));
             WeChatPayOrder weChatPayOrder = new WeChatPayOrder()
                     .setId(routingContext.pathParam("orderId"))
                     .setUserId(userVO.getAppId())
                     .setNonce(routingContext.pathParam("nonce"))
-                    .setTimeStamp(routingContext.pathParam("timeStamp"));
+                    .setTimeStamp(routingContext.pathParam("timeStamp"))
+                    .setPayClass(this.customWeChatAppConfiguration.getPath()
+                            .getPays()
+                            .entrySet()
+                            .stream()
+                            .filter(stringStringEntry -> path.indexOf(stringStringEntry.getValue()) >= 0)
+                            .findFirst()
+                            .get()
+                            .getKey());
             this.customWeChatAppConfiguration.getWechatPrePayInfo(weChatPayOrder).onSuccess(jsonObject -> {
                 routingContext.end(jsonObject.toBuffer());
             }).onFailure(throwable -> {
                 routingContext.response().setStatusCode(500).end(throwable.getMessage());
             });
         });
+    }
+
+    @VertxRouter(path = "/pay",
+            method = "POST",
+            mode = VertxRouteType.PathRegex)
+    public void paymentCallBack(RoutingContextChain chain) {
+        chain.handler(this.customWeChatAppConfiguration::weChatPayBillCallBack);
     }
 
     @VertxRouter(path = "/",

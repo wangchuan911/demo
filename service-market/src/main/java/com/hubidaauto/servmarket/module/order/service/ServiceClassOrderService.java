@@ -2,6 +2,8 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
+import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.flow.enums.OperationType;
 import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
@@ -15,11 +17,15 @@ import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
 import com.hubidaauto.servmarket.module.user.dao.AddressDao;
+import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AddressVO;
+import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
+import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +39,12 @@ import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.entity.wechat.WeChatPayOrder;
+import org.welisdoon.web.entity.wechat.payment.requset.PayBillRequsetMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
+import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
+import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
@@ -50,7 +62,7 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Throwable.class)
 @OrderClass(
         id = 1000L)
-public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition> {
+public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler {
     private static final Logger logger = LoggerFactory.getLogger(ServiceClassOrderService.class);
     static long TEMPLATE_ID = 1L;
     FlowProxyService flowService;
@@ -61,9 +73,10 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     ServiceClassWorkOrderDao workOrderDao;
     StaffTaskDao staffTaskDao;
     AddressDao addressDao;
+    AppUserDao appUserDao;
 
     @Autowired
-    public void init(AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
+    public void init(AppUserDao appUserDao, AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
         this.workOrderDao = workOrderDao;
         this.orderDao = orderDao;
         this.flowService = flowService;
@@ -72,6 +85,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         this.itemTypeDao = itemTypeDao;
         this.staffTaskDao = staffTaskDao;
         this.addressDao = addressDao;
+        this.appUserDao = appUserDao;
 
     }
 
@@ -347,4 +361,35 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
 
+    @Override
+    public PayBillResponseMesseage payBillCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+        OrderVO orderVO;
+        {
+            OrderCondition<OrderVO> condition = new OrderCondition<>();
+            condition.setCode(payBillRequsetMesseage.getOutTradeNo());
+            AppUserVO userVO = appUserDao.find(new UserCondition().setOpenId(payBillRequsetMesseage.getOpenId()));
+            condition.setCustId(userVO.getId());
+            orderVO = baseOrderDao.find(condition);
+        }
+
+        PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
+        if (orderVO != null) {
+            payBillResponseMesseage.ok();
+        } else {
+            payBillResponseMesseage.fail("定单不存在");
+        }
+        return payBillResponseMesseage;
+    }
+
+    @Override
+    public PrePayRequsetMesseage prePayRequset(WeChatPayOrder weChatPayOrder) {
+        OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
+        CustomWeChatAppConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);
+        PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
+                .setBody(String.format("%s-服务费用结算:\n定单编号：%s\n金额%s", customWeChatAppConfiguration.getAppName(), orderVO.getCode(), OrderUtils.priceFormat(orderVO.getPrice().intValue(), ' ', true, false)))
+                .setOutTradeNo(orderVO.getCode())
+                .setTotalFee(orderVO.getPrice().intValue())
+                .setOpenid(weChatPayOrder.getUserId());
+        return messeage;
+    }
 }

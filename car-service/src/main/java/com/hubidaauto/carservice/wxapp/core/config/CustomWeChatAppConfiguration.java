@@ -3,6 +3,7 @@ package com.hubidaauto.carservice.wxapp.core.config;
 import com.hubidaauto.carservice.wxapp.core.dao.TacheDao;
 import com.hubidaauto.carservice.wxapp.core.entity.TacheVO;
 import com.hubidaauto.carservice.wxapp.core.service.OperationService;
+import com.hubidaauto.carservice.wxapp.core.service.OrderService;
 import com.hubidaauto.carservice.wxapp.core.service.UserService;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -286,7 +287,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 											routingContext.fail(httpResponseAsyncResult.cause());
 										}
 									});*/
-                            WeChatPayOrder weChatPayOrder = new WeChatPayOrder().setId(orderId).setUserId(custId).setNonce(nonce).setTimeStamp(timeStamp);
+                            WeChatPayOrder weChatPayOrder = new WeChatPayOrder().setId(orderId).setUserId(custId).setNonce(nonce).setTimeStamp(timeStamp).setPayClass(OrderService.class.getName());
                             this.getWechatPrePayInfo(weChatPayOrder).
                                     onSuccess(entries -> {
                                         routingContext.response()
@@ -311,7 +312,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             });
 
             //支付信息微信回调
-            router.post(this.getPath().getPay()).handler(BodyHandler.create()).handler(this::weChatPayBillCallBack);
+            router.post(this.getPath().getPay(OrderService.class.getName())).handler(BodyHandler.create()).handler(this::weChatPayBillCallBack);
 //			router.post(this.getPath().getPay()).handler(routingContext -> {
 //				routingContext.response().setChunked(true);
 //				logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));

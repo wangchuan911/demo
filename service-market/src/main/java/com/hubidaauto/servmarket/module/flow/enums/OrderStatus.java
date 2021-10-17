@@ -1,5 +1,7 @@
 package com.hubidaauto.servmarket.module.flow.enums;
 
+import java.util.Arrays;
+
 /**
  * @Classname OrderStatus
  * @Description TODO
@@ -18,5 +20,9 @@ public enum OrderStatus {
 
     public long statusId() {
         return id;
+    }
+
+    public static OrderStatus getInstance(long id) {
+       return Arrays.stream(values()).filter(orderStatus -> orderStatus.id == id).findFirst().get();
     }
 }

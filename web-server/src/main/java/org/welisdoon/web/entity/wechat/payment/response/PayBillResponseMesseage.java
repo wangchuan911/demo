@@ -1,5 +1,7 @@
 package org.welisdoon.web.entity.wechat.payment.response;
 
+import org.springframework.util.StringUtils;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -29,9 +31,10 @@ public class PayBillResponseMesseage {
      */
     @XmlElement(name = "return_msg")
     String returnMsg;
+
     /**
      * 以下字段在return_code为SUCCESS的时候有返回
-     * */
+     */
 
     public String getReturnCode() {
         return returnCode;
@@ -47,5 +50,15 @@ public class PayBillResponseMesseage {
 
     public void setReturnMsg(String returnMsg) {
         this.returnMsg = returnMsg;
+    }
+
+    public void ok() {
+        this.setReturnCode("SUCCESS");
+        this.setReturnMsg("OK");
+    }
+
+    public void fail(String msg) {
+        this.setReturnCode("FAIL");
+        this.setReturnMsg(StringUtils.isEmpty(msg) ? "FAIL" : msg);
     }
 }

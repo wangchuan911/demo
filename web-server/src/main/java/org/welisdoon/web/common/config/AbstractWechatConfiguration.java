@@ -46,6 +46,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public abstract class AbstractWechatConfiguration {
@@ -196,18 +197,22 @@ public abstract class AbstractWechatConfiguration {
     }
 
     public static class Path {
-        String pay;
+        Map<String, String> pays;
         String app;
         String push;
         String appIndex;
         Map<String, String> other;
 
-        public String getPay() {
-            return pay;
+        public Map<String, String> getPays() {
+            return pays;
         }
 
-        public void setPay(String pay) {
-            this.pay = pay;
+        public String getPay(String key) {
+            return pays.get(key);
+        }
+
+        public void setPays(Map<String, String> pays) {
+            this.pays = pays;
         }
 
         public String getApp() {
@@ -244,18 +249,19 @@ public abstract class AbstractWechatConfiguration {
 
         public String path(String code) {
             String path;
-            switch (code) {
-                case "app":
-                    path = this.getApp();
-                    break;
-                case "pay":
-                    path = this.getPay();
-                    break;
-                case "push":
-                    path = this.getPush();
-                    break;
-                default:
-                    path = this.getOther().get(code);
+            if (code.startsWith("pays.")) {
+                path = this.getPay(code.split(".")[1]);
+            } else {
+                switch (code) {
+                    case "app":
+                        path = this.getApp();
+                        break;
+                    case "push":
+                        path = this.getPush();
+                        break;
+                    default:
+                        path = this.getOther().get(code);
+                }
             }
             return path;
         }
@@ -486,14 +492,15 @@ public abstract class AbstractWechatConfiguration {
     public Future<JsonObject> getWechatPrePayInfo(WeChatPayOrder weChatPayOrder) {
         return Future.future(jsonObjectPromise -> {
             try {
-                IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(IWechatPayHandler.class);
+                Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(weChatPayOrder.getPayClass());
+                IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
                 PrePayRequsetMesseage prePayRequsetMesseage = iWechatPayHandler.prePayRequset(weChatPayOrder);
                 Buffer buffer = Buffer.buffer(JAXBUtils.toXML(prePayRequsetMesseage
                         .setAppId(this.getAppID())
                         .setMchId(this.getMchId())
                         .setNonceStr(weChatPayOrder.getNonce())
                         .setSpbillCreateIp(this.getNetIp())
-                        .setNotifyUrl(this.getAddress() + this.getPath().getPay())
+                        .setNotifyUrl(this.getAddress() + this.getPath().getPay(weChatPayOrder.getPayClass()))
                         .setTradeType("JSAPI")
                         .setSign(this.getMchKey())
                 ));
@@ -507,13 +514,8 @@ public abstract class AbstractWechatConfiguration {
                                     if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getResultCode())) {
                                         resultBodyJson
                                                 .put("error", String.format("支付失败:%s[%s]",
-                                                        prePayResponseMesseage.getErrCodeDes(),
-                                                        prePayResponseMesseage.getErrCode()));
-                                    } else if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getReturnCode())) {
-                                        resultBodyJson
-                                                .put("error", String.format("支付失败:%s[%s]",
-                                                        prePayResponseMesseage.getReturnMsg(),
-                                                        prePayResponseMesseage.getErrCode()));
+                                                        prePayResponseMesseage.getReturnCode(),
+                                                        prePayResponseMesseage.getReturnMsg()));
                                     } else {
                                         String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s&key=%s"
                                                 , this.getAppID()
@@ -543,15 +545,24 @@ public abstract class AbstractWechatConfiguration {
     }
 
     public void weChatPayBillCallBack(RoutingContext routingContext) {
-        IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(IWechatPayHandler.class);
-        routingContext.response().setChunked(true);
-        logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
         try {
+            String path = routingContext.request().path();
+            Optional<String> optional = getPath().getPays().entrySet().stream().filter(stringStringEntry ->
+                    path.indexOf(stringStringEntry.getValue()) >= 0
+            ).map(Map.Entry::getKey).findFirst();
+            if (optional.isEmpty()) {
+                routingContext.fail(404, new RuntimeException("无效的地址"));
+                return;
+            }
+            Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(optional.get());
+            IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
+            routingContext.response().setChunked(true);
+            logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
             PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
             PayBillResponseMesseage payBillResponseMesseage = iWechatPayHandler.payBillCallBack(payBillRequsetMesseage);
             routingContext.response()
                     .end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
-        } catch (JAXBException e) {
+        } catch (JAXBException | ClassNotFoundException e) {
             logger.error(e.getMessage(), e);
             routingContext.fail(e);
         }

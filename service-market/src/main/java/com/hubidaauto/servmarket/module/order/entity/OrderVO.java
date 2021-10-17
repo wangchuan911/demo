@@ -24,8 +24,9 @@ public class OrderVO {
         return id;
     }
 
-    public void setId(Long id) {
+    public OrderVO setId(Long id) {
         this.id = id;
+        return this;
     }
 
     public Long getPrice() {
