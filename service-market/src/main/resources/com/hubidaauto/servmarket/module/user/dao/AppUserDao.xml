@@ -7,6 +7,10 @@
             resultType="com.hubidaauto.servmarket.module.user.entity.AppUserVO">
         select * from APP_USER a where a.id=#{value}
     </select>
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.user.entity.UserCondition"
+            resultType="com.hubidaauto.servmarket.module.user.entity.AppUserVO">
+        select * from APP_USER a where a.APP_ID=#{openId}
+    </select>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.user.entity.UserCondition"
             resultType="com.hubidaauto.servmarket.module.user.entity.AppUserVO">
         select * from APP_USER a

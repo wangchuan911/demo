@@ -46,7 +46,10 @@ import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -107,6 +110,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         orderVO.setFlowId(flow.getId());
         orderVO.setStatusId(OrderStatus.PRE_PAY.statusId());
         orderVO.setDesc(this.orderDetail(orderVO.getId()).stream().filter(detailVO -> detailVO.getValue() != null).map(detailVO -> detailVO.getValue().toString()).collect(Collectors.joining(" ")));
+        orderVO.setCode(String.format("%6d%s%04d%s%08d", condition.getForm().getRegionId(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYYMMddHH")), orderVO.getCustId(), "SECS", orderVO.getId()));
         baseOrderDao.put(orderVO);
         return orderVO;
     }
@@ -375,6 +379,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
         if (orderVO != null) {
             payBillResponseMesseage.ok();
+            this.start((ServiceClassOrderCondition) new ServiceClassOrderCondition().setId(orderVO.getId()));
         } else {
             payBillResponseMesseage.fail("定单不存在");
         }

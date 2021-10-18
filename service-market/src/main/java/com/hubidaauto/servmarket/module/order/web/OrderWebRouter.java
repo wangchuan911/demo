@@ -87,7 +87,7 @@ public class OrderWebRouter {
         });
     }
 
-    @VertxRouter(path = "/pay",
+    @VertxRouter(path = "\\/pay\\/(?<payTarget>\\w+)",
             method = "POST",
             mode = VertxRouteType.PathRegex)
     public void paymentCallBack(RoutingContextChain chain) {
