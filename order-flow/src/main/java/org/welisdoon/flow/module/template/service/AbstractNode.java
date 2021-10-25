@@ -147,7 +147,7 @@ public abstract class AbstractNode {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(stream.getFlowId());
         flowCondition.setSuperStreamId(stream.getId());
-        flowCondition.setShowTree(true);
+//        flowCondition.setShowTree(true);
         List<Stream> subStreams = getStreamDao().list(flowCondition);
         for (Stream subStream : subStreams) {
             this.sync(stream, subStream);
