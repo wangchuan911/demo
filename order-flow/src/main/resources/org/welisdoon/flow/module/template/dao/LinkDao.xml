@@ -13,16 +13,13 @@
         <result column="FUNCTION_ID" property="functionId"></result>
         <result column="NAME" property="name"></result>
         <result column="VALUE_ID" property="valueId" ></result>
+        <result column="SHOW_ID" property="showId" ></result>
         <collection property="subTree" ofType="org.welisdoon.flow.module.template.entity.Link"
-                    select="list" column="{superLinkId=SUB_SELECT_ID,templateId=TEMPLATE_ID,showTree=SHOW_TREE}"></collection>
+                    select="list" column="{superLinkId=SUB_SELECT_ID,templateId=TEMPLATE_ID}"></collection>
     </resultMap>
-    <sql id="showTree">
-        <include refid="org.welisdoon.flow.module.flow.dao.StreamDao.showTree"/>
-    </sql>
-
    <sql id="selectByCondition">
-       select A.*,
-       <include refid="showTree"></include>
+       select A.*
+            ,A.id SUB_SELECT_ID
        from F_LINK A
        <where>
            <choose>
@@ -45,8 +42,8 @@
     </select>
 
     <select id="get" parameterType="org.welisdoon.flow.module.template.entity.TemplateCondition" resultMap="rm_Link">
-        select a.*,<include refid="showTree"></include> from F_LINK a
-        WHERE id=#{linkId}
+        SELECT A.* ,NULL SUB_SELECT_ID FROM F_LINK A
+        WHERE ID=#{linkId}
     </select>
 
 

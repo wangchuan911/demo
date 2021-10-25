@@ -31,7 +31,6 @@ public abstract class AbstractNode {
     static StreamDao streamDao;
     static NodeDao nodeDao;
     static LinkFunctionDao linkFunctionDao;
-    static LinkShowDao linkShowDao;
     static FlowValueDao flowValueDao;
     static LinkValueDao linkValueDao;
     static FlowDao flowDao;
@@ -42,7 +41,6 @@ public abstract class AbstractNode {
                         StreamDao streamDao,
                         NodeDao nodeDao,
                         LinkFunctionDao linkFunctionDao,
-                        LinkShowDao linkShowDao,
                         FlowValueDao flowValueDao,
                         LinkValueDao linkValueDao,
                         FlowDao flowDao) {
@@ -52,7 +50,6 @@ public abstract class AbstractNode {
         AbstractNode.streamDao = setDao(streamDao, AbstractNode.streamDao);
         AbstractNode.nodeDao = setDao(nodeDao, AbstractNode.nodeDao);
         AbstractNode.linkFunctionDao = setDao(linkFunctionDao, AbstractNode.linkFunctionDao);
-        AbstractNode.linkShowDao = setDao(linkShowDao, AbstractNode.linkShowDao);
         AbstractNode.flowValueDao = setDao(flowValueDao, AbstractNode.flowValueDao);
         AbstractNode.linkValueDao = setDao(linkValueDao, AbstractNode.linkValueDao);
     }
@@ -96,9 +93,6 @@ public abstract class AbstractNode {
         return nodeDao;
     }
 
-    public LinkShowDao getLinkShowDao() {
-        return linkShowDao;
-    }
 
     public FlowValueDao getFlowValueDao() {
         return flowValueDao;
@@ -153,6 +147,7 @@ public abstract class AbstractNode {
         FlowCondition flowCondition = new FlowCondition();
         flowCondition.setFlowId(stream.getFlowId());
         flowCondition.setSuperStreamId(stream.getId());
+        flowCondition.setShowTree(true);
         List<Stream> subStreams = getStreamDao().list(flowCondition);
         for (Stream subStream : subStreams) {
             this.sync(stream, subStream);

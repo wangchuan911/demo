@@ -8,15 +8,6 @@ package org.welisdoon.flow.module.template.entity;
  */
 public class TemplateCondition {
     Long nodeId, superLinkId, linkId, templateId, functionId;
-    boolean showTree;
-
-    public boolean isShowTree() {
-        return showTree;
-    }
-
-    public void setShowTree(boolean showTree) {
-        this.showTree = showTree;
-    }
 
     public Long getNodeId() {
         return nodeId;

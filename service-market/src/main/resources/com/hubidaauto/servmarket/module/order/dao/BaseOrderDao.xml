@@ -6,12 +6,6 @@
     <sql id="columns">
         A.CODE,A.PRICE,A.FLOW_ID,A.STATUS_ID,A.CUST_ID,A.CLASS_ID,A.REGION_ID,A.`DESC`
     </sql>
-
-
-    <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
-            resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
-        SELECT A.* FROM BASE_ORDER A WHERE A.CODE=#{code} AND A.CUST_ID=#{custId}
-    </select>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
             resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
         select A.* from (
@@ -75,6 +69,9 @@
             </if>
             <if test="flowId!=null">
                 and A.FLOW_ID=#{flowId}
+            </if>
+            <if test="code!=null">
+                and A.CODE=#{code}
             </if>
         </where>
     </sql>

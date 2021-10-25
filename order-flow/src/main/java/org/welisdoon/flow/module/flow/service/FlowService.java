@@ -113,7 +113,6 @@ public class FlowService {
     public void streamExpandByTemplate(Template template, Stream superStream) {
         TemplateCondition condition = new TemplateCondition();
         condition.setTemplateId(template.getId());
-        condition.setShowTree(true);
         Link rootLink = linkDao.find(condition);
         superStream.setNodeId(rootLink.getNodeId());
         superStream.setFunctionId(rootLink.getFunctionId());
@@ -136,7 +135,6 @@ public class FlowService {
 
             TemplateCondition condition = new TemplateCondition();
             condition.setTemplateId(flow.getTemplateId());
-            condition.setShowTree(true);
             Link rootLink = linkDao.find(condition);
             Stream stream = new Stream();
             stream.setFlowId(flow.getId());

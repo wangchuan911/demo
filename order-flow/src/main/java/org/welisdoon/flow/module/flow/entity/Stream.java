@@ -52,6 +52,7 @@ public class Stream extends Tree<Stream> {
         this.setValueId(currentLink.getValueId());
         this.setSeq(currentLink.getSeq());
         this.setName(currentLink.getName());
+        this.setShowId(currentLink.getShowId());
 
         /*currentStream.setFlowId(superStream.getFlowId());
         currentStream.setNodeId(currentLink.getNodeId());

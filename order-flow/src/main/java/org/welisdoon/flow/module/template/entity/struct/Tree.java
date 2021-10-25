@@ -1,5 +1,7 @@
 package org.welisdoon.flow.module.template.entity.struct;
 
+import org.welisdoon.flow.module.template.entity.LinkShow;
+
 import java.util.List;
 
 /**
@@ -9,10 +11,11 @@ import java.util.List;
  * @Date 2021/8/19 23:36
  */
 public abstract class Tree<T> {
-    Long id, superId, functionId, nodeId, valueId;
+    Long id, superId, functionId, nodeId, valueId, showId;
     int seq;
     String name;
     List<T> subTree;
+    LinkShow show;
 
     public Long getId() {
         return id;
@@ -86,6 +89,22 @@ public abstract class Tree<T> {
 
     public void setValueId(Long valueId) {
         this.valueId = valueId;
+    }
+
+    public Long getShowId() {
+        return showId;
+    }
+
+    public void setShowId(Long showId) {
+        this.showId = showId;
+    }
+
+    public LinkShow getShow() {
+        return show;
+    }
+
+    public void setShow(LinkShow show) {
+        this.show = show;
     }
 
     @Override

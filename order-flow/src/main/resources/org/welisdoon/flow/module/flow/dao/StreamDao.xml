@@ -13,30 +13,22 @@
         <result column="FUNCTION_ID" property="functionId"></result>
         <result column="VALUE_ID" property="valueId"></result>
         <result column="NAME" property="name"></result>
+        <result column="SHOW_ID" property="showId" ></result>
+        <association property="show" javaType="org.welisdoon.flow.module.template.entity.LinkShow"
+                     select="org.welisdoon.flow.module.template.dao.LinkShowDao.get" column="SHOW_ID"></association>
         <association property="value" javaType="org.welisdoon.flow.module.flow.entity.FlowValue"
                      select="org.welisdoon.flow.module.flow.dao.FlowValueDao.get" column="VALUE_ID"></association>
         <collection property="subTree" ofType="org.welisdoon.flow.module.flow.entity.Stream"
                     select="list" column="{superStreamId=SUB_SELECT_ID,flowId=FLOW_ID,showTree=SHOW_TREE}"></collection>
     </resultMap>
-    <sql id="showTreeFalse">
-        -1 SUB_SELECT_ID,false SHOW_TREE
-    </sql>
-    <sql id="showTreeTrue">
-        A.id SUB_SELECT_ID,true SHOW_TREE
-    </sql>
-    <sql id="showTree">
+    <sql id="SHOW_TREE">
         <choose>
-            <when test="showTree==true">
-                <include refid="org.welisdoon.flow.module.flow.dao.StreamDao.showTreeTrue"></include>
-            </when>
-            <otherwise>
-                <include refid="org.welisdoon.flow.module.flow.dao.StreamDao.showTreeFalse"></include>
-            </otherwise>
+            <when test="showTree==false">,NULL SUB_SELECT_ID,false SHOW_TREE</when>
+            <otherwise>,A.id SUB_SELECT_ID,true SHOW_TREE</otherwise>
         </choose>
     </sql>
     <sql id="selectList">
-        select A.*,
-        <include refid="showTree"></include>
+        select A.* <include refid="SHOW_TREE"></include>
         from F_STREAM A
         <where>
             <choose>
@@ -52,7 +44,7 @@
     </sql>
     <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
         <choose>
-            <when test="0 > superStreamId">
+            <when test="superStreamId==null">
                 select 1 from dual where 1=2
             </when>
             <otherwise>
@@ -67,10 +59,10 @@
     </select>
 
     <select id="get" parameterType="long" resultMap="rm_Stream">
-        select A.*,
-        <include refid="showTreeFalse"/>
+        select A.*
+            ,NULL SUB_SELECT_ID,false SHOW_TREE
         from F_STREAM A
-        WHERE id=#{streamId}
+        WHERE ID=#{streamId}
     </select>
 
     <update id="update" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition">
@@ -87,12 +79,12 @@
 
     <insert id="add" parameterType="org.welisdoon.flow.module.flow.entity.Stream" useGeneratedKeys="true"
             keyProperty="id">
-        INSERT INTO F_STREAM (STATUS_ID, FLOW_ID, NODE_ID, SUPER_ID, SEQ, FUNCTION_ID,NAME,VALUE_ID)
-        VALUES (#{statusId}, #{flowId}, #{nodeId}, #{superId}, #{seq}, #{functionId},#{name},#{valueId})
+        INSERT INTO F_STREAM (STATUS_ID, FLOW_ID, NODE_ID, SUPER_ID, SEQ, FUNCTION_ID,NAME,VALUE_ID,SHOW_ID)
+        VALUES (#{statusId}, #{flowId}, #{nodeId}, #{superId}, #{seq}, #{functionId},#{name},#{valueId},#{showId})
     </insert>
 
     <update id="put" parameterType="org.welisdoon.flow.module.flow.entity.Stream">
-        update F_STREAM set STATUS_ID=#{statusId}, FLOW_ID= #{flowId},NODE_ID= #{nodeId},SUPER_ID= #{superId}, SEQ=#{seq}, FUNCTION_ID=#{functionId},NAME=#{name},VALUE_ID=#{valueId}
+        update F_STREAM set STATUS_ID=#{statusId}, FLOW_ID= #{flowId},NODE_ID= #{nodeId},SUPER_ID= #{superId}, SEQ=#{seq}, FUNCTION_ID=#{functionId},NAME=#{name},VALUE_ID=#{valueId},SHOW_ID=#{showId}
         where ID=#{id}
     </update>
 
