@@ -41,8 +41,8 @@
         order by SEQ
     </select>
 
-    <select id="get" parameterType="org.welisdoon.flow.module.template.entity.TemplateCondition" resultMap="rm_Link">
-        SELECT A.* ,NULL SUB_SELECT_ID FROM F_LINK A
+    <select id="get" parameterType="long" resultMap="rm_Link">
+        SELECT A.* ,-1 SUB_SELECT_ID FROM F_LINK A
         WHERE ID=#{linkId}
     </select>
 

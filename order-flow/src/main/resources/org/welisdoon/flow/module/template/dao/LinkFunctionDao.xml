@@ -7,8 +7,15 @@
 
     <select id="get" parameterType="org.welisdoon.flow.module.template.entity.TemplateCondition"
             resultType="org.welisdoon.flow.module.template.entity.LinkFunction">
-        select * from F_FUNCTION
-        WHERE id=#{functionId}
+        <choose>
+            <when test="id==null">
+                select 1 from dual where 1=2
+            </when>
+            <otherwise>
+                select * from F_FUNCTION
+                WHERE id=#{functionId}
+            </otherwise>
+        </choose>
     </select>
 
 

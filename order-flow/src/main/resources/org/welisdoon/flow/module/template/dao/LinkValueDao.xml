@@ -5,10 +5,17 @@
 <mapper namespace="org.welisdoon.flow.module.template.dao.LinkValueDao">
 
 
-    <select id="get" parameterType="org.welisdoon.flow.module.template.entity.LinkValue"
+    <select id="get" parameterType="long"
             resultType="org.welisdoon.flow.module.template.entity.LinkValue">
-        select * from F_LINK_VALUE
-        WHERE id=#{id}
+        <choose>
+            <when test="id==null">
+                select 1 from dual where 1=2
+            </when>
+            <otherwise>
+                select * from F_LINK_VALUE
+                WHERE id=#{id}
+            </otherwise>
+        </choose>
     </select>
 
 
