@@ -78,19 +78,27 @@ public class VertxConfiguration {
         {
             final Collection<URL> CollectUrl = new LinkedList<>();
             ApplicationContextProvider.getApplicationContext()
-                    .getBeansWithAnnotation(ComponentScan.class).entrySet().stream().map(Map.Entry::getValue).flatMap(o ->
-                    Arrays.stream(ApplicationContextProvider
-                            .getRealClass(o.getClass())
-                            .getAnnotation(ComponentScan.class)
-                            .basePackageClasses())
-            ).forEach(aClass -> {
-                CollectUrl.addAll(ClasspathHelper.forPackage(aClass.getPackageName()));
-            });
+                    .getBeansWithAnnotation(ComponentScan.class).entrySet()
+                    .stream()
+                    .map(entry ->
+                            ApplicationContextProvider
+                                    .getRealClass(entry.getValue().getClass())
+                    )
+                    .flatMap(clz ->
+                            Arrays.stream((clz
+                                    .getAnnotation(ComponentScan.class) != null) ? clz
+                                    .getAnnotation(ComponentScan.class)
+                                    .basePackageClasses() : new Class[]{clz})
+                    )
+                    .forEach(aClass -> {
+                        CollectUrl.addAll(ClasspathHelper.forPackage(aClass.getPackageName()));
+                    });
             Arrays.stream(extraScanPath).forEach(path -> {
                 CollectUrl.addAll(ClasspathHelper.forPackage(path));
             });
-
-            CollectUrl.addAll(ClasspathHelper.forPackage(WebserverApplication.class.getPackageName()));
+            URL url = ClasspathHelper.forClass(WebserverApplication.class);
+            if (!CollectUrl.contains(url))
+                CollectUrl.add(url);
             logger.warn(CollectUrl.toString());
             configurationBuilder.setUrls(CollectUrl);
             configurationBuilder.setInputsFilter(s -> s.toLowerCase().endsWith(".class") || s.toLowerCase().endsWith(".java"));
