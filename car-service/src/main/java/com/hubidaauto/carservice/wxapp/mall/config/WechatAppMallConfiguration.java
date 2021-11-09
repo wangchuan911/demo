@@ -97,7 +97,7 @@ public class WechatAppMallConfiguration {
 
 							Buffer buffer = Buffer.buffer(JAXBUtils.toXML(new PrePayRequsetMesseage()
 									.setAppId(configuration.getAppID())
-									.setMchId(configuration.getMchId())
+									.setMchId(configuration.getMerchant().getMchId())
 									.setNonceStr(nonce)
 									.setBody(String.format("%s-购买商品结算:\n定单编号：%s\n金额%s", configuration.getAppName(), orderVo.getCode(), orderVo.getCost()))
 									.setOutTradeNo(orderVo.getCode())
@@ -106,7 +106,7 @@ public class WechatAppMallConfiguration {
 									.setNotifyUrl(configuration.getAddress() + PAY_CALLBACK)
 									.setTradeType("JSAPI")
 									.setOpenid(orderVo.getUserId())
-									.setSign(configuration.getMchKey())
+									.setSign(configuration.getMerchant().getMchKey())
 							));
 							webClient.postAbs(URL_UNIFIEDORDERON)
 									.sendBuffer(buffer, httpResponseAsyncResult -> {
@@ -131,7 +131,7 @@ public class WechatAppMallConfiguration {
 															, nonce
 															, prePayResponseMesseage.getPrepayId()
 															, timeStamp
-															, configuration.getMchKey());
+															, configuration.getMerchant().getMchKey());
 													String prePayId = prePayResponseMesseage.getPrepayId();
 													resultBodyJson
 															.put("sign", DigestUtils.md5Hex(sign))

@@ -20,9 +20,14 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.common.web.AbstractBaseService;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
+import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
 import org.welisdoon.web.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.RefundRequestMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.RefundResultMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
+import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
+import org.welisdoon.web.entity.wechat.payment.response.RefundResponseMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 import org.welisdoon.web.vertx.annotation.VertxWebApi;
 
@@ -192,7 +197,7 @@ public class OrderService extends AbstractBaseService<OrderVO> implements IWecha
 	}
 
 	@Override
-	public PayBillResponseMesseage payBillCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+	public PayBillResponseMesseage payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
 		OrderVO orderVO = new OrderVO()
 				.setOrderCode(payBillRequsetMesseage.getOutTradeNo())
 				.setCustId(payBillRequsetMesseage.getOpenId());
@@ -221,7 +226,7 @@ public class OrderService extends AbstractBaseService<OrderVO> implements IWecha
 	}
 
 	@Override
-	public PrePayRequsetMesseage prePayRequset(WeChatPayOrder payOrder) {
+	public PrePayRequsetMesseage payRequset(WeChatPayOrder payOrder) {
 
 		OrderVO orderVo = orderDao.get(new OrderVO(payOrder));
 		CustomWeChatAppConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);
@@ -231,5 +236,15 @@ public class OrderService extends AbstractBaseService<OrderVO> implements IWecha
 				.setTotalFee(orderVo.getCost())
 				.setOpenid(orderVo.getCustId());
 		return messeage;
+	}
+
+	@Override
+	public RefundReplyMesseage refundCallBack(RefundResultMesseage refundResultMesseage) {
+		return null;
+	}
+
+	@Override
+	public RefundRequestMesseage refundRequset(WeChatRefundOrder weChatPayOrder) {
+		return null;
 	}
 }

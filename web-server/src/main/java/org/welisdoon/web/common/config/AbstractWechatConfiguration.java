@@ -9,11 +9,13 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +28,17 @@ import org.welisdoon.web.common.encrypt.AesException;
 import org.welisdoon.web.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
+import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
 import org.welisdoon.web.entity.wechat.WeChatUser;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.web.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.RefundRequestMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.RefundResultMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PrePayResponseMesseage;
+import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
+import org.welisdoon.web.entity.wechat.payment.response.RefundResponseMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 import org.welisdoon.web.service.wechat.intf.IWechatUserHandler;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
@@ -59,16 +66,16 @@ public abstract class AbstractWechatConfiguration {
     private Integer afterUpdateTokenTime;
     private Map urls;
     private Map schedul;
-    private String mchId;
-    private String mchKey;
     private String appName;
     private String address;
     private Path path;
     private String netIp;
     private WXBizMsgCrypt wxBizMsgCrypt;
     private WechatAsyncMeassger wechatAsyncMeassger;
+    private WechatAsyncMeassger mchApiAsyncMeassger;
     private boolean readOnly = false;
     private String classPath;
+    private Merchant merchant;
 
     public String getAppID() {
         return appID;
@@ -132,14 +139,6 @@ public abstract class AbstractWechatConfiguration {
         this.schedul = schedul;
     }
 
-    public String getMchId() {
-        return mchId;
-    }
-
-    public void setMchId(String mchId) {
-        this.isReadOnly();
-        this.mchId = mchId;
-    }
 
     public String getAppName() {
         return appName;
@@ -168,14 +167,6 @@ public abstract class AbstractWechatConfiguration {
         this.path = path;
     }
 
-    public String getMchKey() {
-        return mchKey;
-    }
-
-    public void setMchKey(String mchKey) {
-        this.isReadOnly();
-        this.mchKey = mchKey;
-    }
 
     public String getNetIp() {
         if (StringUtils.isEmpty(this.netIp)) {
@@ -198,6 +189,7 @@ public abstract class AbstractWechatConfiguration {
 
     public static class Path {
         Map<String, String> pays;
+        Map<String, String> refunds;
         String app;
         String push;
         String appIndex;
@@ -209,6 +201,18 @@ public abstract class AbstractWechatConfiguration {
 
         public String getPay(String key) {
             return pays.get(key);
+        }
+
+        public String getRefund(String key) {
+            return refunds.get(key);
+        }
+
+        public Map<String, String> getRefunds() {
+            return refunds;
+        }
+
+        public void setRefunds(Map<String, String> refunds) {
+            this.refunds = refunds;
         }
 
         public void setPays(Map<String, String> pays) {
@@ -251,6 +255,8 @@ public abstract class AbstractWechatConfiguration {
             String path;
             if (code.startsWith("pays.")) {
                 path = this.getPay(code.split(".")[1]);
+            } else if (code.startsWith("refunds.")) {
+                path = this.getRefund(code.split(".")[1]);
             } else {
                 switch (code) {
                     case "app":
@@ -414,14 +420,25 @@ public abstract class AbstractWechatConfiguration {
         }
     }
 
-    public void setWechatAsyncMeassger(WebClient webClient) {
+    public synchronized void setWechatAsyncMeassger(WebClient webClient) {
         if (this.wechatAsyncMeassger != null)
             return;
         this.wechatAsyncMeassger = new WechatAsyncMeassger(urls, webClient);
     }
 
+    public synchronized void initApiAsyncMeassger(Vertx vertx) {
+        if (this.mchApiAsyncMeassger != null || this.merchant == null)
+            return;
+        this.mchApiAsyncMeassger = new WechatAsyncMeassger(urls, WebClient.create(vertx, new WebClientOptions().setPemKeyCertOptions(new PemKeyCertOptions().setKeyPath(this.merchant.keyPath).setCertPath(this.merchant.certPath))));
+    }
+
+
     public WechatAsyncMeassger getWechatAsyncMeassger() {
         return wechatAsyncMeassger;
+    }
+
+    public WechatAsyncMeassger getMchApiAsyncMeassger() {
+        return mchApiAsyncMeassger;
     }
 
     final static Map<Class<?>, AbstractWechatConfiguration> WECHAT_CONFIGS = new HashMap(4);
@@ -489,20 +506,20 @@ public abstract class AbstractWechatConfiguration {
         });
     }
 
-    public Future<JsonObject> getWechatPrePayInfo(WeChatPayOrder weChatPayOrder) {
+    public Future<JsonObject> wechatPayRequst(WeChatPayOrder weChatPayOrder) {
         return Future.future(jsonObjectPromise -> {
             try {
                 Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(weChatPayOrder.getPayClass());
                 IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
-                PrePayRequsetMesseage prePayRequsetMesseage = iWechatPayHandler.prePayRequset(weChatPayOrder);
+                PrePayRequsetMesseage prePayRequsetMesseage = iWechatPayHandler.payRequset(weChatPayOrder);
                 Buffer buffer = Buffer.buffer(JAXBUtils.toXML(prePayRequsetMesseage
                         .setAppId(this.getAppID())
-                        .setMchId(this.getMchId())
+                        .setMchId(this.getMerchant().getMchId())
                         .setNonceStr(weChatPayOrder.getNonce())
                         .setSpbillCreateIp(this.getNetIp())
                         .setNotifyUrl(this.getAddress() + this.getPath().getPay(weChatPayOrder.getPayClass()))
                         .setTradeType("JSAPI")
-                        .setSign(this.getMchKey())
+                        .setSign(this.getMerchant().getMchKey())
                 ));
                 this.wechatAsyncMeassger.getWebClient().postAbs(this.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString())
                         .sendBuffer(buffer, httpResponseAsyncResult -> {
@@ -522,7 +539,7 @@ public abstract class AbstractWechatConfiguration {
                                                 , weChatPayOrder.getNonce()
                                                 , prePayResponseMesseage.getPrepayId()
                                                 , weChatPayOrder.getTimeStamp()
-                                                , this.getMchKey());
+                                                , this.getMerchant().getMchKey());
                                         String prePayId = prePayResponseMesseage.getPrepayId();
                                         resultBodyJson
                                                 .put("sign", DigestUtils.md5Hex(sign))
@@ -544,7 +561,7 @@ public abstract class AbstractWechatConfiguration {
 
     }
 
-    public void weChatPayBillCallBack(RoutingContext routingContext) {
+    public void wechatPayResult(RoutingContext routingContext) {
         try {
             String path = routingContext.request().path();
             Optional<String> optional = getPath().getPays().entrySet().stream().filter(stringStringEntry ->
@@ -559,7 +576,7 @@ public abstract class AbstractWechatConfiguration {
             routingContext.response().setChunked(true);
             logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
             PayBillRequsetMesseage payBillRequsetMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), PayBillRequsetMesseage.class);
-            PayBillResponseMesseage payBillResponseMesseage = iWechatPayHandler.payBillCallBack(payBillRequsetMesseage);
+            PayBillResponseMesseage payBillResponseMesseage = iWechatPayHandler.payCallBack(payBillRequsetMesseage);
             routingContext.response()
                     .end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));
         } catch (JAXBException | ClassNotFoundException e) {
@@ -569,4 +586,120 @@ public abstract class AbstractWechatConfiguration {
 
     }
 
+    public Future<JsonObject> wechatRefundRequest(WeChatRefundOrder weChatRefundOrder) {
+        return Future.future(jsonObjectPromise -> {
+            try {
+                Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(weChatRefundOrder.getPayClass());
+                IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
+                RefundRequestMesseage requset = iWechatPayHandler.refundRequset(weChatRefundOrder);
+                Buffer buffer = Buffer.buffer(JAXBUtils.toXML(requset
+                        .setAppId(this.getAppID())
+                        .setMchId(this.getMerchant().getMchId())
+                        .setNonceStr(weChatRefundOrder.getNonce())
+                        .setNotifyUrl(String.format("%s%s", this.getAddress(), this.getPath().getRefund(weChatRefundOrder.getPayClass())))
+                        .setSign(this.getMerchant().getMchKey())
+                ));
+                this.mchApiAsyncMeassger.getWebClient().postAbs(this.getUrls().get(CommonConst.WecharUrlKeys.REFUND).toString())
+                        .sendBuffer(buffer, httpResponseAsyncResult -> {
+                            if (httpResponseAsyncResult.succeeded()) {
+                                JsonObject resultBodyJson = new JsonObject();
+                                try {
+                                    RefundResponseMesseage messeage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), RefundResponseMesseage.class);
+                                    System.out.println(messeage);
+                                    if (!CommonConst.WeChatPubValues.SUCCESS.equals(messeage.getReturnCode())) {
+                                        resultBodyJson
+                                                .put("error", String.format("退款失败:%s[%s,%s]",
+                                                        messeage.getReturnCode(),
+                                                        messeage.getReturnMsg(),
+                                                        messeage.getErrCodeDes()));
+                                    } else {
+                                        resultBodyJson
+                                                .put("success", messeage.getReturnMsg());
+                                    }
+                                    jsonObjectPromise.complete(resultBodyJson);
+                                } catch (Throwable t) {
+                                    jsonObjectPromise.fail(httpResponseAsyncResult.cause());
+                                }
+                            } else {
+                                jsonObjectPromise.fail(httpResponseAsyncResult.cause());
+                            }
+                        });
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+                jsonObjectPromise.fail(e);
+            }
+        });
+    }
+
+    public void weChatRefundCallBack(RoutingContext routingContext) {
+        try {
+            String path = routingContext.request().path();
+            Optional<String> optional = getPath().getRefunds().entrySet().stream().filter(stringStringEntry ->
+                    path.indexOf(stringStringEntry.getValue()) >= 0
+            ).map(Map.Entry::getKey).findFirst();
+            if (optional.isEmpty()) {
+                routingContext.fail(404, new RuntimeException("无效的地址"));
+                return;
+            }
+            Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(optional.get());
+            IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
+            routingContext.response().setChunked(true);
+            logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
+            RefundResultMesseage resultMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), RefundResultMesseage.class);
+            RefundReplyMesseage responseMesseage = iWechatPayHandler.refundCallBack(resultMesseage);
+            routingContext.response()
+                    .end(Buffer.buffer(JAXBUtils.toXML(responseMesseage)));
+        } catch (JAXBException | ClassNotFoundException e) {
+            logger.error(e.getMessage(), e);
+            routingContext.fail(e);
+        }
+
+    }
+
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.isReadOnly();
+        this.merchant = merchant;
+    }
+
+    public static class Merchant {
+        String certPath, keyPath;
+        private String mchId;
+        private String mchKey;
+
+        public String getCertPath() {
+            return certPath;
+        }
+
+        public void setCertPath(String certPath) {
+            this.certPath = certPath;
+        }
+
+        public String getKeyPath() {
+            return keyPath;
+        }
+
+        public void setKeyPath(String keyPath) {
+            this.keyPath = keyPath;
+        }
+
+        public String getMchKey() {
+            return mchKey;
+        }
+
+        public void setMchKey(String mchKey) {
+            this.mchKey = mchKey;
+        }
+
+        public String getMchId() {
+            return mchId;
+        }
+
+        public void setMchId(String mchId) {
+            this.mchId = mchId;
+        }
+    }
 }

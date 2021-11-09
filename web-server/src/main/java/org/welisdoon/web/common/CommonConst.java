@@ -21,6 +21,7 @@ public interface CommonConst {
                 CODE_2_SESSION = "code2Session",
                 UNIFIED_ORDER = "unifiedorder",
                 USER_INFO = "userInfo",
-                CUSTOM_SEND = "customSend";
+                CUSTOM_SEND = "customSend",
+                REFUND = "refund";
     }
 }

@@ -1,6 +1,5 @@
 package com.hubidaauto.servmarket.module.order.web;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
@@ -14,13 +13,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
+import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
-
-import java.util.HashMap;
 
 /**
  * @Classname OrderWebRouter
@@ -79,7 +77,7 @@ public class OrderWebRouter {
                             .findFirst()
                             .get()
                             .getKey());
-            this.customWeChatAppConfiguration.getWechatPrePayInfo(weChatPayOrder).onSuccess(jsonObject -> {
+            this.customWeChatAppConfiguration.wechatPayRequst(weChatPayOrder).onSuccess(jsonObject -> {
                 routingContext.end(jsonObject.toBuffer());
             }).onFailure(throwable -> {
                 routingContext.response().setStatusCode(500).end(throwable.getMessage());
@@ -91,7 +89,7 @@ public class OrderWebRouter {
             method = "POST",
             mode = VertxRouteType.PathRegex)
     public void paymentCallBack(RoutingContextChain chain) {
-        chain.handler(this.customWeChatAppConfiguration::weChatPayBillCallBack);
+        chain.handler(this.customWeChatAppConfiguration::wechatPayResult);
     }
 
     @VertxRouter(path = "/",
@@ -275,5 +273,38 @@ public class OrderWebRouter {
                 routingContext.fail(e.getCause());
             }
         });
+    }
+
+
+    @VertxRouter(path = "\\/refund\\/(?<payTarget>\\w+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void refund(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            String path = routingContext.request().path();
+            System.out.println(path);
+            WeChatRefundOrder weChatPayOrder = (WeChatRefundOrder) new WeChatRefundOrder()
+                    .setId(routingContext.pathParam("orderId"))
+                    .setPayClass(this.customWeChatAppConfiguration.getPath()
+                            .getPays()
+                            .entrySet()
+                            .stream()
+                            .filter(stringStringEntry -> path.indexOf(stringStringEntry.getValue()) >= 0)
+                            .findFirst()
+                            .get()
+                            .getKey());
+            this.customWeChatAppConfiguration.wechatRefundRequest(weChatPayOrder).onSuccess(jsonObject -> {
+                routingContext.end(jsonObject.toBuffer());
+            }).onFailure(throwable -> {
+                routingContext.response().setStatusCode(500).end(throwable.getMessage());
+            });
+        });
+    }
+
+    @VertxRouter(path = "\\/refund\\/(?<payTarget>\\w+)",
+            method = "POST",
+            mode = VertxRouteType.PathRegex)
+    public void refundCallBack(RoutingContextChain chain) {
+        chain.handler(this.customWeChatAppConfiguration::weChatRefundCallBack);
     }
 }

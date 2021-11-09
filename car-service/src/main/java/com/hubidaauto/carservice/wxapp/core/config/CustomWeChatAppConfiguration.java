@@ -288,7 +288,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 										}
 									});*/
                             WeChatPayOrder weChatPayOrder = new WeChatPayOrder().setId(orderId).setUserId(custId).setNonce(nonce).setTimeStamp(timeStamp).setPayClass(OrderService.class.getName());
-                            this.getWechatPrePayInfo(weChatPayOrder).
+                            this.wechatPayRequst(weChatPayOrder).
                                     onSuccess(entries -> {
                                         routingContext.response()
                                                 .end(entries.toBuffer());
@@ -312,7 +312,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
             });
 
             //支付信息微信回调
-            router.post(this.getPath().getPay(OrderService.class.getName())).handler(BodyHandler.create()).handler(this::weChatPayBillCallBack);
+            router.post(this.getPath().getPay(OrderService.class.getName())).handler(BodyHandler.create()).handler(this::wechatPayResult);
 //			router.post(this.getPath().getPay()).handler(routingContext -> {
 //				routingContext.response().setChunked(true);
 //				logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));

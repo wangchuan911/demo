@@ -5,8 +5,9 @@ wechat-app-hubida:
   key: AC32OLzYAjjkPqzxilsPiMPbqYCHESnOuPzyYpjFyVw
   afterUpdateTokenTime: 6000
   orderCycleTime: 0
-  mchId: xxxx
-  mchKey: xxx
+  merchant:
+    mchId: xxxx
+    mchKey: xxx
   appName: 爱车智联AUTOCAR
   address: https://www.welisdoon.xyz
   path:

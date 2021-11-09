@@ -211,6 +211,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         Consumer<Vertx> vertxConsumer = vertx -> {
             commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
             setWechatAsyncMeassger(WebClient.create(vertx));
+            this.initApiAsyncMeassger(vertx);
 
             this.initAccessTokenSyncTimer(vertx, objectMessage -> {
                 JsonObject tokenJson = (JsonObject) objectMessage.body();

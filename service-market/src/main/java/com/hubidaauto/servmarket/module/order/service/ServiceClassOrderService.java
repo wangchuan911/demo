@@ -41,9 +41,14 @@ import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
+import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
 import org.welisdoon.web.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.RefundRequestMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.RefundResultMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
+import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
+import org.welisdoon.web.entity.wechat.payment.response.RefundResponseMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 
 import java.text.SimpleDateFormat;
@@ -366,7 +371,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
 
     @Override
-    public PayBillResponseMesseage payBillCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+    public PayBillResponseMesseage payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
         OrderVO orderVO;
         {
             OrderCondition<OrderVO> condition = new OrderCondition<>();
@@ -387,7 +392,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    public PrePayRequsetMesseage prePayRequset(WeChatPayOrder weChatPayOrder) {
+    public PrePayRequsetMesseage payRequset(WeChatPayOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
         CustomWeChatAppConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);
         PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
@@ -395,6 +400,30 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 .setOutTradeNo(orderVO.getCode())
                 .setTotalFee(orderVO.getPrice().intValue())
                 .setOpenid(weChatPayOrder.getUserId());
+        return messeage;
+    }
+
+    @Override
+    public RefundReplyMesseage refundCallBack(RefundResultMesseage refundResultMesseage) {
+        RefundReplyMesseage messeage = new RefundReplyMesseage();
+        OrderVO orderVO;
+        OrderCondition<OrderVO> condition = new OrderCondition<>();
+        condition.setCode(refundResultMesseage.getOutTradeNo());
+        orderVO = baseOrderDao.find(condition);
+        orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
+        baseOrderDao.put(orderVO);
+        messeage.ok();
+        return messeage;
+    }
+
+    @Override
+    public RefundRequestMesseage refundRequset(WeChatRefundOrder weChatPayOrder) {
+        OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
+        RefundRequestMesseage messeage = new RefundRequestMesseage()
+                .setOutTradeNo(orderVO.getCode())
+                .setOutRefundNo(orderVO.getCode())
+                .setRefundFee(orderVO.getPrice().intValue())
+                .setTotalFee(orderVO.getPrice().intValue());
         return messeage;
     }
 }
