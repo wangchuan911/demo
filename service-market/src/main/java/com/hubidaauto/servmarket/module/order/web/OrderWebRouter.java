@@ -276,7 +276,7 @@ public class OrderWebRouter {
     }
 
 
-    @VertxRouter(path = "\\/refund\\/(?<payTarget>\\w+)",
+    @VertxRouter(path = "\\/refund\\/(?<payTarget>\\w+)\\/(?<orderId>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void refund(RoutingContextChain chain) {
@@ -286,7 +286,7 @@ public class OrderWebRouter {
             WeChatRefundOrder weChatPayOrder = (WeChatRefundOrder) new WeChatRefundOrder()
                     .setId(routingContext.pathParam("orderId"))
                     .setPayClass(this.customWeChatAppConfiguration.getPath()
-                            .getPays()
+                            .getRefunds()
                             .entrySet()
                             .stream()
                             .filter(stringStringEntry -> path.indexOf(stringStringEntry.getValue()) >= 0)

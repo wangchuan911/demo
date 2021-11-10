@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.StringJoiner;
 
 @XmlRootElement(name = "xml")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -429,5 +430,34 @@ public class PrePayRequsetMesseage {
     public PrePayRequsetMesseage setSceneInfo(String sceneInfo) {
         this.sceneInfo = sceneInfo;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", PrePayRequsetMesseage.class.getSimpleName() + "[", "]")
+                .add("appId='" + appId + "'")
+                .add("mchId='" + mchId + "'")
+                .add("deviceInfo='" + deviceInfo + "'")
+                .add("nonceStr='" + nonceStr + "'")
+                .add("sign='" + sign + "'")
+                .add("signType='" + signType + "'")
+                .add("body='" + body + "'")
+                .add("detail='" + detail + "'")
+                .add("attach='" + attach + "'")
+                .add("outTradeNo='" + outTradeNo + "'")
+                .add("feeType='" + feeType + "'")
+                .add("totalFee=" + totalFee)
+                .add("spbillCreateIp='" + spbillCreateIp + "'")
+                .add("timeStart='" + timeStart + "'")
+                .add("timeExpire='" + timeExpire + "'")
+                .add("goodsTag='" + goodsTag + "'")
+                .add("notifyUrl='" + notifyUrl + "'")
+                .add("tradeType='" + tradeType + "'")
+                .add("productId='" + productId + "'")
+                .add("limitPay='" + limitPay + "'")
+                .add("openid='" + openid + "'")
+                .add("receipt='" + receipt + "'")
+                .add("sceneInfo='" + sceneInfo + "'")
+                .toString();
     }
 }

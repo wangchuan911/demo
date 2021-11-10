@@ -13,7 +13,10 @@ wechat-app-hubida:
   path:
     pays:
       com.hubidaauto.carservice.wxapp.core.service.OrderService: /wxAppPay
-      com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService: /order/pay/sco
+      com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService: /wxApp/order/pay/sco
+    refunds:
+      com.hubidaauto.carservice.wxapp.core.service.OrderService: /wxAppRefund
+      com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService: /wxApp/order/refund/sco
     app: /wxApp
     push: /wxPush
     appIndex: /pages/index2/index/index

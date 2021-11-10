@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.flow.module.flow.entity.Flow;
 import org.welisdoon.flow.module.flow.entity.FlowValue;
@@ -54,9 +55,7 @@ import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -72,7 +71,7 @@ import java.util.stream.Collectors;
         id = 1000L)
 public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler {
     private static final Logger logger = LoggerFactory.getLogger(ServiceClassOrderService.class);
-    static long TEMPLATE_ID = 1L;
+    static long TEMPLATE_ID = 1L, SIMPLE_NODE_ID = 6L;
     FlowProxyService flowService;
     ServiceClassOrderDao orderDao;
     BaseOrderDao baseOrderDao;
@@ -282,6 +281,9 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     @Override
     @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
     public void onStreamStatus(Flow flow, Stream stream) {
+        if (stream.getShowId() == null && stream.getNodeId() != SIMPLE_NODE_ID) {
+            return;
+        }
         System.out.println("onStreamStatus");
         ServiceClassWorkOrderCondition workOrderCondition;
         ServiceClassWorkOrderVO workOrderVO;
@@ -304,7 +306,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 ServiceClassOrderVO orderVO = orderDao.find((ServiceClassOrderCondition) new ServiceClassOrderCondition().setFlowId(flow.getId()));
                 workOrderVO.setOrderId(orderVO.getId());
                 JSONObject valueJson = stream.getValue() != null ? stream.getValue().jsonValue() : stream.getValueId() != null ? flowService.getValue(stream.getValueId()).jsonValue() : new JSONObject();
-                if (stream.getNodeId() == 6L)
+                if (stream.getNodeId() == SIMPLE_NODE_ID)
                     workOrderVO.setStaffId(valueJson.getLong("staffId"));
                 workOrderVO.setStatusId(WorkOrderStatus.READY.statusId());
                 workOrderVO.setStreamId(stream.getId());
@@ -419,11 +421,69 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     @Override
     public RefundRequestMesseage refundRequset(WeChatRefundOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
-        RefundRequestMesseage messeage = new RefundRequestMesseage()
-                .setOutTradeNo(orderVO.getCode())
-                .setOutRefundNo(orderVO.getCode())
-                .setRefundFee(orderVO.getPrice().intValue())
-                .setTotalFee(orderVO.getPrice().intValue());
-        return messeage;
+        List<ServiceClassWorkOrderVO> doing = (List) this.getWorkOrders((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setQuery("all").setOrderId(orderVO.getId()));
+        if (CollectionUtils.isEmpty(doing))
+            throw new RuntimeException("无效的操作");
+        WorkOrderVO workOrderVO = doing.stream()
+                .sorted(Comparator.comparing(WorkOrderVO::getCreateTime))
+                .filter(workOrderVO1 -> {
+                    if (workOrderVO1.getStream().getNodeId() != SIMPLE_NODE_ID)
+                        return false;
+                    if (workOrderVO1.getStream().getValueId() == null)
+                        return false;
+                    Stream stream = workOrderVO1.getStream();
+                    long functionId = ((stream.getValue() != null) ? stream.getValue() : flowService.getValue(stream.getValueId())).jsonValue().getLongValue("id");
+                    if (functionId >= 0) return false;
+                    OperationType operationType = OperationType.getInstance(functionId);
+                    switch (operationType) {
+                        case SIGN_UP:
+                        case SERVICING:
+                        case DISPATCH:
+                        case CUST_COMFIRM:
+                            return true;
+                        default:
+                            return false;
+                    }
+                })
+                .
+
+                        toArray(WorkOrderVO[]::new)[0];
+        if (workOrderVO == null) {
+            throw new RuntimeException("改环节不能退款");
+        }
+        switch (OperationType.getInstance(workOrderVO.getStream().
+
+                getValue().
+
+                jsonValue().
+
+                getLongValue("id"))) {
+            case DISPATCH:
+            case SIGN_UP:
+            case SERVICING:
+            case CUST_COMFIRM:
+                break;
+            default:
+                throw new RuntimeException("该环节已不能进行此操作");
+        }
+        return new
+
+                RefundRequestMesseage()
+                .
+
+                        setOutTradeNo(orderVO.getCode())
+                .
+
+                        setOutRefundNo(orderVO.getCode())
+                .
+
+                        setRefundFee(orderVO.getPrice().
+
+                                intValue())
+                .
+
+                        setTotalFee(orderVO.getPrice().
+
+                                intValue());
     }
 }

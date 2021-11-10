@@ -16,29 +16,32 @@ public class ServiceClassWorkOrderCondition extends WorkOrderCondition {
         return update;
     }
 
-    public void setUpdate(String update) {
+    public ServiceClassWorkOrderCondition setUpdate(String update) {
         if (Arrays.stream(UPDATES).anyMatch(s -> s.equals(update)))
             this.update = update;
         else
             throw new RuntimeException("not support!");
+        return this;
     }
 
     public String getQuery() {
         return query;
     }
 
-    public void setQuery(String query) {
+    public ServiceClassWorkOrderCondition setQuery(String query) {
         if (Arrays.stream(QUERY).anyMatch(s -> s.equals(query)))
             this.query = query;
         else
             throw new RuntimeException("not support!");
+        return this;
     }
 
     public JSONObject getData() {
         return data;
     }
 
-    public void setData(JSONObject data) {
+    public ServiceClassWorkOrderCondition setData(JSONObject data) {
         this.data = data;
+        return this;
     }
 }

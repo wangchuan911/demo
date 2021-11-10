@@ -618,6 +618,7 @@ public abstract class AbstractWechatConfiguration {
                                     }
                                     jsonObjectPromise.complete(resultBodyJson);
                                 } catch (Throwable t) {
+                                    logger.error(t.getMessage(), t);
                                     jsonObjectPromise.fail(httpResponseAsyncResult.cause());
                                 }
                             } else {
