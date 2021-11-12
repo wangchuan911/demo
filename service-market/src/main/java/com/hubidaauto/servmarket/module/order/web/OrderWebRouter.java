@@ -3,6 +3,8 @@ package com.hubidaauto.servmarket.module.order.web;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
+import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
+import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.service.IBaseOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
@@ -20,6 +22,9 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+
 /**
  * @Classname OrderWebRouter
  * @Description TODO
@@ -34,6 +39,12 @@ public class OrderWebRouter {
     AbstractWechatConfiguration customWeChatAppConfiguration;
     AppUserDao appUserDao;
     IBaseOrderService orderService;
+    OrderPayDaoLog orderPrePayDaoLog;
+
+    @Autowired
+    public void setOrderPrePayDaoLog(OrderPayDaoLog orderPrePayDaoLog) {
+        this.orderPrePayDaoLog = orderPrePayDaoLog;
+    }
 
     @Autowired
     public void setAppUserDao(AppUserDao appUserDao) {
@@ -56,7 +67,7 @@ public class OrderWebRouter {
     }
 
 
-    @VertxRouter(path = "\\/pay\\/(?<payTarget>\\w+)\\/(?<userId>\\d+)\\/(?<orderId>\\d+)\\/(?<nonce>\\w+)\\/(?<timeStamp>\\d+)",
+    @VertxRouter(path = "\\/pay\\/(?<payTarget>\\w+)\\/(?<userId>\\d+)\\/(?<orderId>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void payment(RoutingContextChain chain) {
@@ -64,11 +75,12 @@ public class OrderWebRouter {
             String path = routingContext.request().path();
             System.out.println(path);
             AppUserVO userVO = appUserDao.get(Long.parseLong(routingContext.pathParam("userId")));
+            Long timeStamp = System.currentTimeMillis() / 1000;
             WeChatPayOrder weChatPayOrder = new WeChatPayOrder()
                     .setId(routingContext.pathParam("orderId"))
                     .setUserId(userVO.getAppId())
-                    .setNonce(routingContext.pathParam("nonce"))
-                    .setTimeStamp(routingContext.pathParam("timeStamp"))
+                    .setNonce(WeChatRefundOrder.generateNonce())
+                    .setTimeStamp(String.valueOf(timeStamp))
                     .setPayClass(this.customWeChatAppConfiguration.getPath()
                             .getPays()
                             .entrySet()
@@ -78,12 +90,35 @@ public class OrderWebRouter {
                             .get()
                             .getKey());
             this.customWeChatAppConfiguration.wechatPayRequst(weChatPayOrder).onSuccess(jsonObject -> {
+                orderPrePayDaoLog.add(
+                        new OrderPayLogVO()
+                                .setOrderId(Long.parseLong(routingContext.pathParam("orderId")))
+                                .setNonce(weChatPayOrder.getNonce())
+                                .setTimeStamp(timeStamp)
+                                .setSign(jsonObject.getString("sign"))
+                                .setPrepayId(jsonObject.getString("prepayId")));
                 routingContext.end(jsonObject.toBuffer());
             }).onFailure(throwable -> {
                 routingContext.response().setStatusCode(500).end(throwable.getMessage());
             });
         });
     }
+
+    @VertxRouter(path = "\\/repay\\/(?<payTarget>\\w+)\\/(?<userId>\\d+)\\/(?<orderId>\\d+)\\/(?<nonce>\\w+)\\/(?<timeStamp>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void rePayment(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            Long orderId = Long.parseLong(routingContext.pathParam("orderId"));
+            OrderPayLogVO logVO = orderPrePayDaoLog.get(orderId);
+            if (logVO != null && logVO.getCreateDate().compareTo(Timestamp.valueOf(LocalDateTime.now())) > 0) {
+                routingContext.end(JSONObject.toJSONString(logVO));
+                return;
+            }
+            routingContext.response().setStatusCode(500).end("超过支付时间，单子失效！");
+        });
+    }
+
 
     @VertxRouter(path = "\\/pay\\/(?<payTarget>\\w+)",
             method = "POST",
@@ -292,7 +327,9 @@ public class OrderWebRouter {
                             .filter(stringStringEntry -> path.indexOf(stringStringEntry.getValue()) >= 0)
                             .findFirst()
                             .get()
-                            .getKey());
+                            .getKey())
+                    .setNonce(WeChatRefundOrder.generateNonce())
+                    .setTimeStamp(String.valueOf(System.currentTimeMillis() / 1000));
             this.customWeChatAppConfiguration.wechatRefundRequest(weChatPayOrder).onSuccess(jsonObject -> {
                 routingContext.end(jsonObject.toBuffer());
             }).onFailure(throwable -> {

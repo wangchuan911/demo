@@ -1,5 +1,7 @@
 package org.welisdoon.web.entity.wechat;
 
+import java.util.Random;
+
 public class WeChatPayOrder {
     String id;
     String userId;
@@ -50,5 +52,26 @@ public class WeChatPayOrder {
     public WeChatPayOrder setPayClass(String payClass) {
         this.payClass = payClass;
         return this;
+    }
+
+    public static String generateNonce() {
+        char[] chars = new char[32];
+        Random random = new Random();
+        int offset;
+        char choffset;
+        for (int i = 0; i < chars.length; i++) {
+            offset = random.nextInt(61);
+            if (offset >= 36) {
+                choffset = 'A';
+                offset -= 36;
+            } else if (offset >= 10) {
+                choffset = 'a';
+                offset -= 10;
+            } else {
+                choffset = '0';
+            }
+            chars[i] = (char) (choffset + offset);
+        }
+        return new String(chars);
     }
 }

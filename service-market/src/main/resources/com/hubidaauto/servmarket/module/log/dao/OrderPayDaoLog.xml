@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog">
+
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO">
+        SELECT *
+        FROM  LOG_WX_PAY A
+        WHERE A.ORDER_ID=#{value}
+    </select>
+
+    <delete id="delete" parameterType="long">
+        DELETE FROM LOG_WX_PAY WHERE ORDER_ID=#{value}
+    </delete>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO">
+        insert into LOG_WX_PAY (PREPAY_ID, NONCE, TIME_STAMP, CREATE_DATE, ORDER_ID) VALUES (#{prepayId}, #{nonce}, #{timeStamp}, date_add(now(), interval 90 minute ), #{orderId})
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO">
+        update LOG_WX_PAY set  where ORDER_ID=#{orderId}
+    </update>
+</mapper>

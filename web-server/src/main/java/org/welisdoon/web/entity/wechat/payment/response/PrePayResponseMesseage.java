@@ -1,5 +1,7 @@
 package org.welisdoon.web.entity.wechat.payment.response;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -222,6 +224,15 @@ public class PrePayResponseMesseage {
     public PrePayResponseMesseage setPrepayId(String prepayId) {
         this.prepayId = prepayId;
         return this;
+    }
+
+    public static String generateSign(String appId, String nonce, String prepayId, String tineStamp, String key) {
+        return DigestUtils.md5Hex(String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s&key=%s"
+                , appId
+                , nonce
+                , prepayId
+                , tineStamp
+                , key));
     }
 
     @Override

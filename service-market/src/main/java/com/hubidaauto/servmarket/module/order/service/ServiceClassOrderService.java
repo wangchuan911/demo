@@ -2,7 +2,6 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.hubidaauto.carservice.wxapp.core.config.CustomConst;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.flow.enums.OperationType;
 import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
@@ -10,6 +9,7 @@ import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.flow.enums.WorkOrderStatus;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
+import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
@@ -25,7 +25,6 @@ import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
-import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.flow.module.flow.entity.Flow;
-import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
@@ -49,10 +47,8 @@ import org.welisdoon.web.entity.wechat.payment.requset.RefundRequestMesseage;
 import org.welisdoon.web.entity.wechat.payment.requset.RefundResultMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
-import org.welisdoon.web.entity.wechat.payment.response.RefundResponseMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -81,6 +77,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     StaffTaskDao staffTaskDao;
     AddressDao addressDao;
     AppUserDao appUserDao;
+    OrderPayDaoLog orderPrePayDaoLog;
 
     @Autowired
     public void init(AppUserDao appUserDao, AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
@@ -445,19 +442,12 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                             return false;
                     }
                 })
-                .
-
-                        toArray(WorkOrderVO[]::new)[0];
+                .toArray(WorkOrderVO[]::new)[0];
         if (workOrderVO == null) {
             throw new RuntimeException("改环节不能退款");
         }
-        switch (OperationType.getInstance(workOrderVO.getStream().
-
-                getValue().
-
-                jsonValue().
-
-                getLongValue("id"))) {
+        switch (OperationType.getInstance(workOrderVO.getStream().getValue().
+                jsonValue().getLongValue("id"))) {
             case DISPATCH:
             case SIGN_UP:
             case SERVICING:
@@ -466,24 +456,8 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             default:
                 throw new RuntimeException("该环节已不能进行此操作");
         }
-        return new
-
-                RefundRequestMesseage()
-                .
-
-                        setOutTradeNo(orderVO.getCode())
-                .
-
-                        setOutRefundNo(orderVO.getCode())
-                .
-
-                        setRefundFee(orderVO.getPrice().
-
-                                intValue())
-                .
-
-                        setTotalFee(orderVO.getPrice().
-
-                                intValue());
+        return new RefundRequestMesseage().setOutTradeNo(orderVO.getCode()).
+                setOutRefundNo(orderVO.getCode()).setRefundFee(orderVO.getPrice().intValue()).
+                setTotalFee(orderVO.getPrice().intValue());
     }
 }

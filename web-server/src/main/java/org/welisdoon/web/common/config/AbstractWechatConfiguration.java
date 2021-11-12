@@ -523,34 +523,35 @@ public abstract class AbstractWechatConfiguration {
                 ));
                 this.wechatAsyncMeassger.getWebClient().postAbs(this.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString())
                         .sendBuffer(buffer, httpResponseAsyncResult -> {
-                            if (httpResponseAsyncResult.succeeded()) {
-                                JsonObject resultBodyJson = new JsonObject();
-                                try {
-                                    PrePayResponseMesseage prePayResponseMesseage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), PrePayResponseMesseage.class);
-                                    System.out.println(prePayResponseMesseage);
-                                    if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getResultCode())) {
-                                        resultBodyJson
-                                                .put("error", String.format("支付失败:%s[%s]",
-                                                        prePayResponseMesseage.getReturnCode(),
-                                                        prePayResponseMesseage.getReturnMsg()));
-                                    } else {
-                                        String sign = String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s&key=%s"
-                                                , this.getAppID()
-                                                , weChatPayOrder.getNonce()
-                                                , prePayResponseMesseage.getPrepayId()
-                                                , weChatPayOrder.getTimeStamp()
-                                                , this.getMerchant().getMchKey());
-                                        String prePayId = prePayResponseMesseage.getPrepayId();
-                                        resultBodyJson
-                                                .put("sign", DigestUtils.md5Hex(sign))
-                                                .put("prePayId", prePayId);
-                                    }
-                                    jsonObjectPromise.complete(resultBodyJson);
-                                } catch (Throwable t) {
-                                    jsonObjectPromise.fail(httpResponseAsyncResult.cause());
-                                }
-                            } else {
+                            if (!httpResponseAsyncResult.succeeded()) {
                                 jsonObjectPromise.fail(httpResponseAsyncResult.cause());
+                                return;
+                            }
+                            try {
+                                PrePayResponseMesseage prePayResponseMesseage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), PrePayResponseMesseage.class);
+                                System.out.println(prePayResponseMesseage);
+                                if (!CommonConst.WeChatPubValues.SUCCESS.equals(prePayResponseMesseage.getResultCode())) {
+                                    throw new RuntimeException(String.format("支付失败:%s[%s]",
+                                            prePayResponseMesseage.getReturnCode(),
+                                            prePayResponseMesseage.getReturnMsg()));
+                                } else {
+                                    String sign = /*String.format("appId=%s&nonceStr=%s&package=prepay_id=%s&signType=MD5&timeStamp=%s&key=%s"
+                                                ,*/ PrePayResponseMesseage.generateSign(
+                                            this.getAppID()
+                                            , weChatPayOrder.getNonce()
+                                            , prePayResponseMesseage.getPrepayId()
+                                            , weChatPayOrder.getTimeStamp()
+                                            , this.getMerchant().getMchKey());
+                                    JsonObject resultBodyJson = new JsonObject()
+                                            .put("sign", /*DigestUtils.md5Hex(sign)*/sign)
+                                            .put("prepayId", prePayResponseMesseage.getPrepayId())
+                                            .put("nonce", weChatPayOrder.getNonce())
+                                            .put("timeStamp", weChatPayOrder.getTimeStamp());
+                                    jsonObjectPromise.complete(resultBodyJson);
+                                }
+                            } catch (Throwable t) {
+                                logger.error(t.getMessage(), t);
+                                jsonObjectPromise.fail(t);
                             }
                         });
             } catch (Throwable e) {
@@ -599,30 +600,28 @@ public abstract class AbstractWechatConfiguration {
                         .setNotifyUrl(String.format("%s%s", this.getAddress(), this.getPath().getRefund(weChatRefundOrder.getPayClass())))
                         .setSign(this.getMerchant().getMchKey())
                 ));
+                logger.info(requset.toString());
                 this.mchApiAsyncMeassger.getWebClient().postAbs(this.getUrls().get(CommonConst.WecharUrlKeys.REFUND).toString())
                         .sendBuffer(buffer, httpResponseAsyncResult -> {
-                            if (httpResponseAsyncResult.succeeded()) {
-                                JsonObject resultBodyJson = new JsonObject();
-                                try {
-                                    RefundResponseMesseage messeage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), RefundResponseMesseage.class);
-                                    System.out.println(messeage);
-                                    if (!CommonConst.WeChatPubValues.SUCCESS.equals(messeage.getReturnCode())) {
-                                        resultBodyJson
-                                                .put("error", String.format("退款失败:%s[%s,%s]",
-                                                        messeage.getReturnCode(),
-                                                        messeage.getReturnMsg(),
-                                                        messeage.getErrCodeDes()));
-                                    } else {
-                                        resultBodyJson
-                                                .put("success", messeage.getReturnMsg());
-                                    }
-                                    jsonObjectPromise.complete(resultBodyJson);
-                                } catch (Throwable t) {
-                                    logger.error(t.getMessage(), t);
-                                    jsonObjectPromise.fail(httpResponseAsyncResult.cause());
-                                }
-                            } else {
+                            if (!httpResponseAsyncResult.succeeded()) {
                                 jsonObjectPromise.fail(httpResponseAsyncResult.cause());
+                                return;
+                            }
+                            try {
+                                RefundResponseMesseage messeage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), RefundResponseMesseage.class);
+                                System.out.println(messeage);
+                                if (!CommonConst.WeChatPubValues.SUCCESS.equals(messeage.getReturnCode())) {
+                                    throw new RuntimeException(String.format("退款失败:%s[%s,%s]",
+                                            messeage.getReturnCode(),
+                                            messeage.getReturnMsg(),
+                                            messeage.getErrCodeDes()));
+                                } else {
+                                    JsonObject resultBodyJson = new JsonObject().put("success", messeage.getReturnMsg());
+                                    jsonObjectPromise.complete(resultBodyJson);
+                                }
+                            } catch (Throwable t) {
+                                logger.error(t.getMessage(), t);
+                                jsonObjectPromise.fail(t);
                             }
                         });
             } catch (Throwable e) {

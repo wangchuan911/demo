@@ -15,6 +15,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.StringJoiner;
 
 /**
  * @Classname RefundRequestMesseage
@@ -35,7 +36,7 @@ public class RefundRequestMesseage {
     //    签名	sign	是	String(32)	C380BEC2BFD727A4B6845133519F3AD6	签名，详见签名生成算法
     String sign;
     //    签名类型	sign_type	否	String(32)	HMAC-SHA256	签名类型，目前支持HMAC-SHA256和MD5，默认为MD5
-    String signType;
+    String signType = "MD5";
     //    微信支付订单号	transaction_id	二选一	String(32)	1217752501201407033233368018	微信生成的订单号，在支付通知中有返回
 //    商户订单号	out_trade_no	String(32)	1217752501201407033233368018	商户系统内部订单号，要求32个字符内，只能是数字、大小写字母_-|*@ ，且在同一个商户号下唯一。
 //    transaction_id、out_trade_no二选一，如果同时存在优先级：transaction_id> out_trade_no
@@ -56,7 +57,7 @@ public class RefundRequestMesseage {
     Integer refundFee;
     //    退款货币种类	refund_fee_type	否	String(8)	CNY	退款货币类型，需与支付一致，或者不填。符合ISO 4217标准的三位字母代码，默认人民币：CNY，其他值列表详见货币类型
     @XmlElement(name = "refund_fee_type")
-    String refundFeeType;
+    String refundFeeType = "CNY";
     //    退款原因	refund_desc	否	String(80)	商品已售完
 //    若商户传入，会在下发给用户的退款消息中体现退款原因
     @XmlElement(name = "refund_desc")
@@ -238,5 +239,25 @@ public class RefundRequestMesseage {
     public RefundRequestMesseage setOutTradeNo(String outTradeNo) {
         this.outTradeNo = outTradeNo;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", RefundRequestMesseage.class.getSimpleName() + "[", "]")
+                .add("appId='" + appId + "'")
+                .add("mchId='" + mchId + "'")
+                .add("nonceStr='" + nonceStr + "'")
+                .add("sign='" + sign + "'")
+                .add("signType='" + signType + "'")
+                .add("transactionId='" + transactionId + "'")
+                .add("outTradeNo='" + outTradeNo + "'")
+                .add("outRefundNo='" + outRefundNo + "'")
+                .add("totalFee=" + totalFee)
+                .add("refundFee=" + refundFee)
+                .add("refundFeeType='" + refundFeeType + "'")
+                .add("refundDesc='" + refundDesc + "'")
+                .add("refundAccount='" + refundAccount + "'")
+                .add("notifyUrl='" + notifyUrl + "'")
+                .toString();
     }
 }

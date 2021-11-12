@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.StringJoiner;
 
 /**
  * @Classname RefundResponseMesseage
@@ -295,5 +296,33 @@ public class RefundResponseMesseage {
 
     public void setCouponRefundCount(Integer couponRefundCount) {
         this.couponRefundCount = couponRefundCount;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", RefundResponseMesseage.class.getSimpleName() + "[", "]")
+                .add("returnCode='" + returnCode + "'")
+                .add("returnMsg='" + returnMsg + "'")
+                .add("errCode='" + errCode + "'")
+                .add("errCodeDes='" + errCodeDes + "'")
+                .add("appId='" + appId + "'")
+                .add("mchId='" + mchId + "'")
+                .add("nonceStr='" + nonceStr + "'")
+                .add("sign='" + sign + "'")
+                .add("transactionId='" + transactionId + "'")
+                .add("outTradeNo='" + outTradeNo + "'")
+                .add("outRefundNo='" + outRefundNo + "'")
+                .add("refundId='" + refundId + "'")
+                .add("refundFee=" + refundFee)
+                .add("settlementRefundFee='" + settlementRefundFee + "'")
+                .add("totalFee=" + totalFee)
+                .add("settlementTotalFee=" + settlementTotalFee)
+                .add("feeType='" + feeType + "'")
+                .add("cashFee=" + cashFee)
+                .add("cashFeeType='" + cashFeeType + "'")
+                .add("cashRefundFee=" + cashRefundFee)
+                .add("couponRefundFee=" + couponRefundFee)
+                .add("couponRefundCount=" + couponRefundCount)
+                .toString();
     }
 }
