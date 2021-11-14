@@ -13,9 +13,11 @@ import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
+import org.welisdoon.web.entity.wechat.payment.response.PrePayResponseMesseage;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -74,10 +76,16 @@ public class OrderWebRouter {
         chain.handler(routingContext -> {
             String path = routingContext.request().path();
             System.out.println(path);
+            Long orderId = Long.parseLong(routingContext.pathParam("orderId"));
+            OrderPayLogVO log = orderPrePayDaoLog.get(orderId);
+            if (log != null) {
+                routingContext.response().setStatusCode(500).end(!StringUtils.isEmpty(log.getTransactionId()) ? "定单已支付" : "正在支付，请稍后再试");
+                return;
+            }
             AppUserVO userVO = appUserDao.get(Long.parseLong(routingContext.pathParam("userId")));
             Long timeStamp = System.currentTimeMillis() / 1000;
             WeChatPayOrder weChatPayOrder = new WeChatPayOrder()
-                    .setId(routingContext.pathParam("orderId"))
+                    .setId(orderId.toString())
                     .setUserId(userVO.getAppId())
                     .setNonce(WeChatRefundOrder.generateNonce())
                     .setTimeStamp(String.valueOf(timeStamp))
@@ -92,7 +100,7 @@ public class OrderWebRouter {
             this.customWeChatAppConfiguration.wechatPayRequst(weChatPayOrder).onSuccess(jsonObject -> {
                 orderPrePayDaoLog.add(
                         new OrderPayLogVO()
-                                .setOrderId(Long.parseLong(routingContext.pathParam("orderId")))
+                                .setOrderId(orderId)
                                 .setNonce(weChatPayOrder.getNonce())
                                 .setTimeStamp(timeStamp)
                                 .setSign(jsonObject.getString("sign"))
@@ -104,7 +112,7 @@ public class OrderWebRouter {
         });
     }
 
-    @VertxRouter(path = "\\/repay\\/(?<payTarget>\\w+)\\/(?<userId>\\d+)\\/(?<orderId>\\d+)\\/(?<nonce>\\w+)\\/(?<timeStamp>\\d+)",
+    @VertxRouter(path = "\\/repay\\/(?<payTarget>\\w+)\\/(?<userId>\\d+)\\/(?<orderId>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void rePayment(RoutingContextChain chain) {
@@ -112,7 +120,12 @@ public class OrderWebRouter {
             Long orderId = Long.parseLong(routingContext.pathParam("orderId"));
             OrderPayLogVO logVO = orderPrePayDaoLog.get(orderId);
             if (logVO != null && logVO.getCreateDate().compareTo(Timestamp.valueOf(LocalDateTime.now())) > 0) {
-                routingContext.end(JSONObject.toJSONString(logVO));
+                routingContext.end(JSONObject.toJSONString(logVO.setSign(PrePayResponseMesseage.generateSign(
+                        this.customWeChatAppConfiguration.getAppID()
+                        , logVO.getNonce()
+                        , logVO.getPrepayId()
+                        , logVO.getTimeStamp().toString()
+                        , this.customWeChatAppConfiguration.getMerchant().getMchKey()))));
                 return;
             }
             routingContext.response().setStatusCode(500).end("超过支付时间，单子失效！");

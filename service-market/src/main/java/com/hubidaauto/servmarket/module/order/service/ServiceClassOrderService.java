@@ -16,6 +16,7 @@ import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
+import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
 import com.hubidaauto.servmarket.module.user.dao.AddressDao;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
@@ -367,6 +368,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         ServiceClassWorkOrderCondition workOrderCondition = new ServiceClassWorkOrderCondition();
         workOrderCondition.setOrderId(orderId);
         workOrderDao.clear(workOrderCondition);
+        staffTaskDao.clear(new StaffCondition().setOrderId(orderId));
         flowService.dismiss(flow);
     }
 
