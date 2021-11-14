@@ -600,7 +600,10 @@ public abstract class AbstractWechatConfiguration {
                         .setNotifyUrl(String.format("%s%s", this.getAddress(), this.getPath().getRefund(weChatRefundOrder.getPayClass())))
                         .setSign(this.getMerchant().getMchKey())
                 ));
-                logger.info(requset.toString());
+/*
+                Buffer buffer = Buffer.buffer(xml.startsWith("<?") ? (xml.substring(xml.indexOf("?>") + 2)) : xml);
+*/
+                logger.info(buffer.toString());
                 this.mchApiAsyncMeassger.getWebClient().postAbs(this.getUrls().get(CommonConst.WecharUrlKeys.REFUND).toString())
                         .sendBuffer(buffer, httpResponseAsyncResult -> {
                             if (!httpResponseAsyncResult.succeeded()) {
@@ -645,7 +648,7 @@ public abstract class AbstractWechatConfiguration {
             IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
             routingContext.response().setChunked(true);
             logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
-            RefundResultMesseage resultMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), RefundResultMesseage.class);
+            RefundResultMesseage resultMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), RefundResultMesseage.class).decrypt(this.getMerchant().getMchKey());
             RefundReplyMesseage responseMesseage = iWechatPayHandler.refundCallBack(resultMesseage);
             routingContext.response()
                     .end(Buffer.buffer(JAXBUtils.toXML(responseMesseage)));

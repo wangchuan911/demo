@@ -28,15 +28,20 @@ import java.util.StringJoiner;
 public class RefundRequestMesseage {
 
     //    公众账号ID	appid	是	String(32)	wx8888888888888888	微信分配的公众账号ID（企业号corpid即为此appid）
+    @XmlElement(name = "appid")
     String appId;
     //    商户号	mch_id	是	String(32)	1900000109	微信支付分配的商户号
+    @XmlElement(name = "mch_id")
     String mchId;
     //    随机字符串	nonce_str	是	String(32)	5K8264ILTKCH16CQ2502SI8ZNMTM67VS	随机字符串，不长于32位。推荐随机数生成算法
+    @XmlElement(name = "nonce_str")
     String nonceStr;
     //    签名	sign	是	String(32)	C380BEC2BFD727A4B6845133519F3AD6	签名，详见签名生成算法
+    @XmlElement(name = "sign")
     String sign;
     //    签名类型	sign_type	否	String(32)	HMAC-SHA256	签名类型，目前支持HMAC-SHA256和MD5，默认为MD5
-    String signType = "MD5";
+    @XmlElement(name = "sign_type")
+    String signType;
     //    微信支付订单号	transaction_id	二选一	String(32)	1217752501201407033233368018	微信生成的订单号，在支付通知中有返回
 //    商户订单号	out_trade_no	String(32)	1217752501201407033233368018	商户系统内部订单号，要求32个字符内，只能是数字、大小写字母_-|*@ ，且在同一个商户号下唯一。
 //    transaction_id、out_trade_no二选一，如果同时存在优先级：transaction_id> out_trade_no
@@ -57,7 +62,7 @@ public class RefundRequestMesseage {
     Integer refundFee;
     //    退款货币种类	refund_fee_type	否	String(8)	CNY	退款货币类型，需与支付一致，或者不填。符合ISO 4217标准的三位字母代码，默认人民币：CNY，其他值列表详见货币类型
     @XmlElement(name = "refund_fee_type")
-    String refundFeeType = "CNY";
+    String refundFeeType;
     //    退款原因	refund_desc	否	String(80)	商品已售完
 //    若商户传入，会在下发给用户的退款消息中体现退款原因
     @XmlElement(name = "refund_desc")

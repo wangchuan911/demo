@@ -20,6 +20,6 @@
     </insert>
 
     <update id="put" parameterType="com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO">
-        update LOG_WX_PAY set  where ORDER_ID=#{orderId}
+        update LOG_WX_PAY set TRANSACTION_ID=#{transactionId} where ORDER_ID=#{orderId}
     </update>
 </mapper>

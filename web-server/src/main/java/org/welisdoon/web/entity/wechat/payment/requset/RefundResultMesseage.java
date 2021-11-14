@@ -1,12 +1,39 @@
 package org.welisdoon.web.entity.wechat.payment.requset;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.reflections.ReflectionUtils;
+import org.springframework.util.Assert;
+import org.springframework.util.Base64Utils;
+import org.springframework.util.StringUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.welisdoon.web.common.encrypt.WXBizMsgCrypt;
+import org.xml.sax.InputSource;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
+import java.security.*;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidParameterSpecException;
+import java.util.List;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * @Classname RefundRequestMesseage
@@ -74,6 +101,10 @@ public class RefundResultMesseage {
 
     @XmlElement(name = "notify_url")
     String notifyUrl;
+
+
+    @XmlElement(name = "req_info")
+    String reqInfo;
 
     public String getAppId() {
         return appId;
@@ -229,5 +260,69 @@ public class RefundResultMesseage {
 
     public void setOutTradeNo(String outTradeNo) {
         this.outTradeNo = outTradeNo;
+    }
+
+    public String getReqInfo() {
+        return reqInfo;
+    }
+
+    public RefundResultMesseage setReqInfo(String reqInfo) {
+        this.reqInfo = reqInfo;
+        return this;
+    }
+
+    public RefundResultMesseage decrypt(String key) {
+        /*
+         *解密步骤如下：
+            （1）对加密串A做base64解码，得到加密串B
+            （2）对商户key做md5，得到32位小写key* ( key设置路径：微信商户平台(pay.weixin.qq.com)-->账户设置-->API安全-->密钥设置 )
+
+            （3）用key*对加密串B做AES-256-ECB解密（PKCS7Padding）
+        */
+        /*
+         PZ/oFW/q+RziEaWc3ujFJpKvgYocDhtUZEDKa/FodEqTHk3b3yOmsAcNE/d0AVClj3NRYEa9E9XcoNYNzXPKZX7naKCZ3qjkzSHLNaUe8rfUVOb0wsdHa50yNxrgBupDVn97ctSlKvEcLwBcnDVLBEF/JnJ2kyfYQjIyBiWuKsjPtPb4h8csUIMJqdhheRBt7414/NdA6Ep/FcnXTr/VnQfWdD7QT1dkuWtyXdYeOrlPLSYmrvbjEfIeJ/IOiMCO97PsRLm6fIqbafr6NErQWJoK7M87Z6kgUJfM3LvAlioOS1gDCHA+3kqvBezYGqCDdgfZAks0lDsmXiwOLTidmXOHRZc2bMfZham9YHyB8Iv1zLxJ68WVa7JD3nwiTOW6SbgTsL+vtRdBhKVKcL4u4Ya8VqWIhOP1/0s1uuqyGl7Ai9UGyvXNLyUBwDg+t8En3kOVvsb7FQADKfSViAJkgcoizLcFQsu0pCeweXamCUKvbvl9b00ULKE8m9kJBLkXCu4qVkFOejqeOn9mgHzNLEl2mEPXiiWSYWj5yyKYo7g6Fav3RSEklvSdroojsNyxF5vcvunDOUQv2RzLT8Gvi8iyhmBYKumJCjk2ULec2ARF2cuR5ZjEq94hLFHEhRouu6iuXqMe81xULTYW71pQT/fGcjay9noFNjkISaeUg5pBTb2PKRbl8HKpXmF0nOaho1/YKlyVfIAGzTICG190D8hLaumuSSH6Yh8modcqeYHD6TgguKw8RlxpwGZ1HxLSvaNYRZeIOa98TmDU1TmTDs2TT6Eu7gR99YW25TCVjJh9aE6husUpyjaHDIEdJjxd2yldvAOaCwCh7BVDR8xzEalapAASErD0XQVoRvMq5xyt6LWnx885pSiR23hdStCEd5hToB9kxYoaV1O578xtLtq81mFGwWQp1TEYYwpfuV96mFs4trhqm/UVEFCZ0y1/YKUclEMPaNSMiWMEx4xzxH9SOxS6trPBWqA6CGj1merZQA6ADMUizyU+yn1luz9GiQ/mv2wKNUyNpFfOXgP8mlHYww41QcJT2eknxWEgHAQFH9yPhXhIjEqr1rLg4MPv0RAJDUmiaCVdY3KlaMibGw==
+        */
+        try {
+
+            byte[] content = WXBizMsgCrypt.base64.decode(this.reqInfo);
+            // 初始化
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(DigestUtils.md5Hex(key).toLowerCase().getBytes(), "AES");
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            StringReader sr = new StringReader(new String(cipher.doFinal(content)));
+            InputSource is = new InputSource(sr);
+            Document document = db.parse(is);
+
+            Element root = document.getDocumentElement();
+            for (Field field : ReflectionUtils.getAllFields(this.getClass(), ReflectionUtils.withAnnotation(XmlElement.class))) {
+                NodeList nodeList = root.getElementsByTagName(field.getAnnotation(XmlElement.class).name());
+                if (nodeList == null || nodeList.getLength() == 0) continue;
+                String xmlValue = nodeList.item(0).getTextContent();
+                if (xmlValue == null || xmlValue.length() == 0) continue;
+                Object value;
+                try {
+                    if (Integer.class.equals(field.getType())) {
+                        value = Integer.parseInt(xmlValue);
+                    } else if (String.class.equals(field.getType())) {
+                        value = xmlValue;
+                    } else {
+                        continue;
+                    }
+                    field.set(RefundResultMesseage.this, value);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        return this;
+    }
+
+    public static void main(String[] args) {
+        new RefundResultMesseage().setReqInfo("PZ/oFW/q+RziEaWc3ujFJpKvgYocDhtUZEDKa/FodEqTHk3b3yOmsAcNE/d0AVClj3NRYEa9E9XcoNYNzXPKZX7naKCZ3qjkzSHLNaUe8rfUVOb0wsdHa50yNxrgBupDVn97ctSlKvEcLwBcnDVLBEF/JnJ2kyfYQjIyBiWuKsjPtPb4h8csUIMJqdhheRBt7414/NdA6Ep/FcnXTr/VnQfWdD7QT1dkuWtyXdYeOrlPLSYmrvbjEfIeJ/IOiMCO97PsRLm6fIqbafr6NErQWJoK7M87Z6kgUJfM3LvAlioOS1gDCHA+3kqvBezYGqCDdgfZAks0lDsmXiwOLTidmXOHRZc2bMfZham9YHyB8Iv1zLxJ68WVa7JD3nwiTOW6SbgTsL+vtRdBhKVKcL4u4Ya8VqWIhOP1/0s1uuqyGl7Ai9UGyvXNLyUBwDg+t8En3kOVvsb7FQADKfSViAJkgcoizLcFQsu0pCeweXamCUKvbvl9b00ULKE8m9kJBLkXCu4qVkFOejqeOn9mgHzNLEl2mEPXiiWSYWj5yyKYo7g6Fav3RSEklvSdroojsNyxF5vcvunDOUQv2RzLT8Gvi8iyhmBYKumJCjk2ULec2ARF2cuR5ZjEq94hLFHEhRouu6iuXqMe81xULTYW71pQT/fGcjay9noFNjkISaeUg5pBTb2PKRbl8HKpXmF0nOaho1/YKlyVfIAGzTICG190D8hLaumuSSH6Yh8modcqeYHD6TgguKw8RlxpwGZ1HxLSvaNYRZeIOa98TmDU1TmTDs2TT6Eu7gR99YW25TCVjJh9aE6husUpyjaHDIEdJjxd2yldvAOaCwCh7BVDR8xzEalapAASErD0XQVoRvMq5xyt6LWnx885pSiR23hdStCEd5hToB9kxYoaV1O578xtLtq81mFGwWQp1TEYYwpfuV96mFs4trhqm/UVEFCZ0y1/YKUclEMPaNSMiWMEx4xzxH9SOxS6trPBWqA6CGj1merZQA6ADMUizyU+yn1luz9GiQ/mv2wKNUyNpFfOXgP8mlHYww41QcJT2eknxWEgHAQFH9yPhXhIjEqr1rLg4MPv0RAJDUmiaCVdY3KlaMibGw==")
+                .decrypt("20191230dashanhuaquanfuhubida888");
     }
 }

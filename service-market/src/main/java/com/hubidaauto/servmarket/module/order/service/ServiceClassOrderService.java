@@ -10,6 +10,7 @@ import com.hubidaauto.servmarket.module.flow.enums.WorkOrderStatus;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
+import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
@@ -80,7 +81,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     OrderPayDaoLog orderPrePayDaoLog;
 
     @Autowired
-    public void init(AppUserDao appUserDao, AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao) {
+    public void init(AppUserDao appUserDao, AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao, OrderPayDaoLog orderPrePayDaoLog) {
         this.workOrderDao = workOrderDao;
         this.orderDao = orderDao;
         this.flowService = flowService;
@@ -90,6 +91,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         this.staffTaskDao = staffTaskDao;
         this.addressDao = addressDao;
         this.appUserDao = appUserDao;
+        this.orderPrePayDaoLog = orderPrePayDaoLog;
 
     }
 
@@ -382,6 +384,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
         PayBillResponseMesseage payBillResponseMesseage = new PayBillResponseMesseage();
         if (orderVO != null) {
+            orderPrePayDaoLog.put(new OrderPayLogVO().setOrderId(orderVO.getId()).setTransactionId(payBillRequsetMesseage.getTransactionId()));
             payBillResponseMesseage.ok();
             this.start((ServiceClassOrderCondition) new ServiceClassOrderCondition().setId(orderVO.getId()));
         } else {
@@ -456,8 +459,9 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             default:
                 throw new RuntimeException("该环节已不能进行此操作");
         }
+        OrderPayLogVO payLogVO = orderPrePayDaoLog.get(orderVO.getId());
         return new RefundRequestMesseage().setOutTradeNo(orderVO.getCode()).
                 setOutRefundNo(orderVO.getCode()).setRefundFee(orderVO.getPrice().intValue()).
-                setTotalFee(orderVO.getPrice().intValue());
+                setTotalFee(orderVO.getPrice().intValue()).setTransactionId(payLogVO.getTransactionId());
     }
 }

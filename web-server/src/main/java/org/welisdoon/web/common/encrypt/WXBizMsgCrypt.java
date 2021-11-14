@@ -59,10 +59,14 @@ import java.util.Random;
  */
 public class WXBizMsgCrypt {
     static Charset CHARSET = StandardCharsets.UTF_8;
-    static Base64 base64 = new Base64();
+    final public static Base64 base64 = new Base64();
     byte[] aesKey;
     String token;
     String appId;
+
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     /**
      * 构造函数
@@ -323,6 +327,7 @@ public class WXBizMsgCrypt {
      * @param sessionKey 会话ID
      * @param iv         加密算法的初始向量
      */
+
     public static String wxDecrypt(String encrypted, String sessionKey, String iv) throws Throwable {
         String result = "";
         // 被加密的数据
@@ -341,7 +346,6 @@ public class WXBizMsgCrypt {
             keyByte = temp;
         }
         // 初始化
-        Security.addProvider(new BouncyCastleProvider());
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding", "BC");
         SecretKeySpec spec = new SecretKeySpec(keyByte, "AES");
         AlgorithmParameters parameters = AlgorithmParameters.getInstance("AES");

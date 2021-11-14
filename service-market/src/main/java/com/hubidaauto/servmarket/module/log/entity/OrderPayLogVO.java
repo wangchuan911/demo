@@ -15,6 +15,7 @@ public class OrderPayLogVO {
     Timestamp createDate;
     Long orderId;
     String sign;
+    String transactionId;
 
     public String getPrepayId() {
         return prepayId;
@@ -68,5 +69,14 @@ public class OrderPayLogVO {
 
     public String getSign() {
         return sign;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public OrderPayLogVO setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+        return this;
     }
 }
