@@ -26,7 +26,7 @@
         insert into STAFF_TASK(STAFF_ID,ORDER_ID,TASK_TIME) VALUES (#{staffId},#{orderId},#{taskTime})
     </insert>
     <delete id="clear" parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffCondition">
-        delete STAFF_TASK
+        delete from STAFF_TASK
         <where>
             <choose>
                 <when test="orderId!=null or staffId!=null">
