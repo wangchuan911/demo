@@ -16,7 +16,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -416,7 +415,7 @@ public abstract class AbstractWechatConfiguration {
         } else {
             String accessToken = tokenJson.getString("access_token");
             logger.info(String.format("[%s]Token:%s[%s]", this.getAppID(), accessToken, tokenJson.getLong("expires_in")));
-            return token;
+            return accessToken;
         }
     }
 
@@ -704,5 +703,11 @@ public abstract class AbstractWechatConfiguration {
         public void setMchId(String mchId) {
             this.mchId = mchId;
         }
+    }
+
+    public void updateAccessToken(String accessToken) {
+        this.wechatAsyncMeassger.setAccessToken(accessToken);
+        if (this.mchApiAsyncMeassger != null)
+            this.mchApiAsyncMeassger.setAccessToken(accessToken);
     }
 }

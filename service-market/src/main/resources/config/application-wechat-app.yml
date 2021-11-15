@@ -29,6 +29,7 @@ wechat-app-hubida:
     unifiedorder: https://api.mch.weixin.qq.com/pay/unifiedorder
     subscribeSend: https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token={{ACCESS_TOKEN}}
     refund: https://api.mch.weixin.qq.com/secapi/pay/refund
+    getwxacodeunlimit: https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={{ACCESS_TOKEN}}
   classPath: com.hubidaauto.carservice.wxapp
 temp:
   filePath: D:\Documents\Pictures

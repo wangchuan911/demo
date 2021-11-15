@@ -3,6 +3,9 @@ package com.hubidaauto.servmarket.module.user.web;
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
+import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
+import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
+import com.hubidaauto.servmarket.module.common.web.HtmlTemplateWebRouter;
 import com.hubidaauto.servmarket.module.staff.dao.StaffDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.user.dao.AddressDao;
@@ -11,18 +14,29 @@ import com.hubidaauto.servmarket.module.user.entity.AddressVO;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.user.service.AppUserService;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.ext.web.impl.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Septem
@@ -37,6 +51,8 @@ public class AppUserWebRouter {
     AppUserService appUserService;
     AbstractWechatConfiguration abstractWechatConfiguration;
     StaffDao staffDao;
+    HtmlTemplateWebRouter htmlTemplateWebRouter;
+    ImageContentDao imageContentDao;
 
     @Autowired
     public void setAppUserDao(AppUserDao appUserDao) {
@@ -56,6 +72,16 @@ public class AppUserWebRouter {
     @Autowired
     public void setAbstractWechatConfiguration(CustomWeChatAppConfiguration abstractWechatConfiguration) {
         this.abstractWechatConfiguration = abstractWechatConfiguration;
+    }
+
+    @Autowired
+    public void setHtmlTemplateWebRouter(HtmlTemplateWebRouter htmlTemplateWebRouter) {
+        this.htmlTemplateWebRouter = htmlTemplateWebRouter;
+    }
+
+    @Autowired
+    public void setImageContentDao(ImageContentDao imageContentDao) {
+        this.imageContentDao = imageContentDao;
     }
 
     @Autowired
@@ -214,5 +240,54 @@ public class AppUserWebRouter {
             routingContext.end(Json.encodeToBuffer(itemDao.put(routingContext.getBodyAsJson().mapTo(ItemVO.class))));
         });
     }*/
+
+    @VertxRouter(path = "\\/invite\\/(?<userId>\\d+)(?:\\_(?<envVersion>\\w+))?",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void invite(RoutingContextChain chain) {
+
+
+        Environment environment = ApplicationContextProvider.getBean(Environment.class);
+        StaticHandler staticHandler = StaticHandler.create()
+                .setAllowRootFileSystemAccess(true)
+                .setWebRoot(environment.getProperty("temp.filePath"));
+        staticHandler.setAlwaysAsyncFS(true);
+        staticHandler.setCachingEnabled(false);
+
+        chain.blockingHandler(routingContext -> {
+            String envVersion = routingContext.pathParam("envVersion");
+            Long userId = Long.parseLong(routingContext.pathParam("userId"));
+
+            ImageContentVO contentVO = new ImageContentVO();
+            contentVO.setRefId(userId);
+            contentVO.setType(20008L);
+            List<ImageContentVO> images = imageContentDao.list(contentVO);
+            if (!CollectionUtils.isEmpty(images)) {
+                htmlTemplateWebRouter.cacheImage(routingContext, Utils.pathOffset(routingContext.request().path(), routingContext), () -> imageContentDao.get(images.get(0).getId()));
+                return;
+            }
+            abstractWechatConfiguration.getWechatAsyncMeassger()
+                    .post("getwxacodeunlimit",
+                            new JsonObject()
+//                                    .put("access_token", abstractWechatConfiguration.getWechatAsyncMeassger().getAccessToken())
+                                    .put("page", "pages/index/index")
+                                    .put("check_path", true)
+                                    .put("env_version", StringUtils.isEmpty(envVersion) ? null : envVersion)
+                                    .put("scene",
+                                            Map.of("userId", userId)
+                                                    .entrySet().stream().map(e -> String.format("%s=%s", e.getKey(), e.getValue())).collect(Collectors.joining("&")))
+                            , bufferHttpResponse -> {
+                                Buffer buffer = bufferHttpResponse.body();
+
+                                contentVO.setContent(buffer.getBytes());
+                                imageContentDao.add(contentVO);
+
+                                routingContext.response().end(buffer);
+                            }, throwable -> {
+                                routingContext.response().setStatusCode(500).end(throwable.getMessage());
+                            });
+
+        }).handler(staticHandler);
+    }
 
 }

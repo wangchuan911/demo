@@ -164,13 +164,14 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 
         WebClient webClient = WebClient.create(vertx);
         setWechatAsyncMeassger(webClient);
+        initApiAsyncMeassger(vertx);
 
         commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
 
         this.initAccessTokenSyncTimer(vertx, objectMessage -> {
-            this.getWechatAsyncMeassger().setToken(this.getTokenFromMessage(objectMessage));
+            this.updateAccessToken(this.getTokenFromMessage(objectMessage));
         });
 
 

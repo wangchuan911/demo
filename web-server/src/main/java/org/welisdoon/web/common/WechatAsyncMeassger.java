@@ -19,7 +19,7 @@ public class WechatAsyncMeassger {
 	private static final Logger logger = LoggerFactory.getLogger(WechatAsyncMeassger.class);
 	WebClient webClient;
 	Map url;
-	String token;
+	String accessToken;
 	/*final static Map<Class<?>, WechatAsyncMeassger> MAP = new HashMap(4);*/
 
 	/*public WechatAsyncMeassger(AbstractWechatConfiguration configuration, WebClient webClient) {
@@ -52,13 +52,13 @@ public class WechatAsyncMeassger {
 		this.url.put(key, url);
 	}
 
-	public WechatAsyncMeassger setToken(String token) {
-		this.token = token;
+	public WechatAsyncMeassger setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
 		return this;
 	}
 
-	public String getToken() {
-		return token;
+	public String getAccessToken() {
+		return accessToken;
 	}
 
 
@@ -120,7 +120,7 @@ public class WechatAsyncMeassger {
 				replace(url, String.format("{{%s}}", o.getKey().toString()), o.getValue().toString());
 			});
 		}
-		replace(url, "{{ACCESS_TOKEN}}", this.token);
+		replace(url, "{{ACCESS_TOKEN}}", this.accessToken);
 		return url.toString();
 	}
 

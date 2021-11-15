@@ -8,7 +8,7 @@
             resultType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO">
         SELECT * FROM IMAGE_CONTENT A WHERE A.ID=#{value}
     </select>
-    <select id="list" parameterType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO">
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO" resultType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO">
         SELECT ID,TYPE,REF_ID FROM IMAGE_CONTENT A WHERE A.REF_ID=#{refId} AND A.TYPE=#{type}
     </select>
 
@@ -22,5 +22,4 @@
         SET REF_ID = #{refId},TYPE=#{type}
         WHERE ID=#{id}
     </update>
-
 </mapper>
