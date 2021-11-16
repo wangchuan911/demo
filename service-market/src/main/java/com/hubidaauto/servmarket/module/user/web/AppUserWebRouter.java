@@ -241,7 +241,7 @@ public class AppUserWebRouter {
         });
     }*/
 
-    @VertxRouter(path = "\\/invite\\/(?<userId>\\d+)(?:\\_(?<envVersion>\\w+))?",
+    @VertxRouter(path = "\\/invite\\/(?<userId>\\d+)(?:\\_(?<envVersion>[a_zA_Z]+))?",
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void invite(RoutingContextChain chain) {
@@ -288,6 +288,26 @@ public class AppUserWebRouter {
                             });
 
         }).handler(staticHandler);
+    }
+
+    @VertxRouter(path = "\\/invite\\/(?<userId>\\d+)\\_(?<userId2>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void inviteUser(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            Long userId = Long.parseLong(routingContext.pathParam("userId"));
+            Long userId2 = Long.parseLong(routingContext.pathParam("userId2"));
+            AppUserVO userVO = appUserDao.get(userId), userVO2 = appUserDao.get(userId2);
+            if (userVO == null || userVO2 == null) {
+                routingContext.response().setStatusCode(404).end("死无对证");
+            } else if (userVO.getInviteUser() != null) {
+                routingContext.response().setStatusCode(500).end("名花有主");
+            } else {
+                userVO.setInviteUser(userVO2.getId());
+                appUserDao.put(userVO);
+                routingContext.response().end("榜上有名");
+            }
+        });
     }
 
 }

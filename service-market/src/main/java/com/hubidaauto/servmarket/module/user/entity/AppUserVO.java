@@ -11,7 +11,7 @@ import org.welisdoon.web.entity.wechat.WeChatUser;
  * @Date 2021/8/11 00:55
  */
 public class AppUserVO {
-    Long id, defAddrId;
+    Long id, defAddrId, inviteUser;
     String appId, session, name;
     Integer type;
 
@@ -73,6 +73,15 @@ public class AppUserVO {
 
     public AppUserVO setDefAddrId(Long defAddrId) {
         this.defAddrId = defAddrId;
+        return this;
+    }
+
+    public Long getInviteUser() {
+        return inviteUser;
+    }
+
+    public AppUserVO setInviteUser(Long inviteUser) {
+        this.inviteUser = inviteUser;
         return this;
     }
 }
