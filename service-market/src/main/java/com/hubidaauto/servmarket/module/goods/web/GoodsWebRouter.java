@@ -10,6 +10,8 @@ import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import com.hubidaauto.servmarket.module.goods.service.ItemService;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.handler.BodyHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,7 @@ import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
+import org.welisdoon.web.vertx.proxy.VertxInvoker;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 import java.util.List;
@@ -30,6 +33,7 @@ import java.util.List;
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/goods")
 public class GoodsWebRouter {
+    private static final Logger logger = LoggerFactory.getLogger(GoodsWebRouter.class);
 
     ItemService itemService;
 
@@ -53,16 +57,19 @@ public class GoodsWebRouter {
         });
     }
 
-    @VertxRouter(path = "\\/list(?:\\/(?<page>\\d+))?",
+    @VertxRouter(path = "\\/list\\/(?<page>\\d+)",
             method = "POST",
             mode = VertxRouteType.PathRegex)
     public void listItem(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
-            String page = routingContext.pathParam("page");
-            if (!StringUtils.isEmpty(page))
-                itemCondition.page(Integer.parseInt(page));
-            routingContext.end(Json.encodeToBuffer(itemService.listItem(itemCondition)));
+            try {
+                ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+                itemCondition.page(Integer.parseInt(routingContext.pathParam("page")));
+                routingContext.end(Json.encodeToBuffer(itemService.listItem(itemCondition)));
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+                routingContext.end(Json.encodeToBuffer(List.of()));
+            }
         });
     }
 
@@ -71,12 +78,13 @@ public class GoodsWebRouter {
             method = "POST")
     public void listTypes(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            if (routingContext.getBody() == null) {
+            try {
+                ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+                routingContext.end(Json.encodeToBuffer(itemService.listTypes(itemCondition)));
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
                 routingContext.end(Json.encodeToBuffer(List.of()));
-                return;
             }
-            ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
-            routingContext.end(Json.encodeToBuffer(itemService.listTypes(itemCondition)));
         });
     }
 

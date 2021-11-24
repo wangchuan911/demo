@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ItemVO {
     Long id, type, price, contentId;
-    String name, imgs;
+    String name, imgs, desc;
     ContentVO detail;
     List<ItemTypeVO> types;
 
@@ -79,15 +79,26 @@ public class ItemVO {
         return imgs;
     }
 
-    public void setImgs(String imgs) {
+    public ItemVO setImgs(String imgs) {
         this.imgs = imgs;
+        return this;
     }
 
-    public void addImg(Long imgId) {
+    public ItemVO addImg(Long imgId) {
         if (StringUtils.isEmpty(this.imgs)) {
             this.imgs = imgId.toString();
         } else {
             this.imgs += (String.format(",%d", imgId));
         }
+        return this;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public ItemVO setDesc(String desc) {
+        this.desc = desc;
+        return this;
     }
 }
