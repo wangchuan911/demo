@@ -459,11 +459,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         }
         switch (OperationType.getInstance(workOrderVO.getStream().getValue().
                 jsonValue().getLongValue("id"))) {
-            case DISPATCH:
-            case SIGN_UP:
-                throw new RuntimeException("该环节已不能进行此操作");
             case SERVICING:
             case CUST_COMFIRM:
+                throw new RuntimeException("该环节已不能进行此操作");
+            case DISPATCH:
+            case SIGN_UP:
             default:
                 break;
         }
