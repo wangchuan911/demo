@@ -20,6 +20,8 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
+import java.util.List;
+
 /**
  * @author Septem
  */
@@ -69,6 +71,10 @@ public class GoodsWebRouter {
             method = "POST")
     public void listTypes(RoutingContextChain chain) {
         chain.handler(routingContext -> {
+            if (routingContext.getBody() == null) {
+                routingContext.end(Json.encodeToBuffer(List.of()));
+                return;
+            }
             ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
             routingContext.end(Json.encodeToBuffer(itemService.listTypes(itemCondition)));
         });
