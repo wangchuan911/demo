@@ -56,8 +56,7 @@ public class GoodsWebRouter {
             mode = VertxRouteType.PathRegex)
     public void listItem(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            ItemCondition itemCondition = routingContext.getBody() == null ? new ItemCondition() :
-                    routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+            ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
             String page = routingContext.pathParam("page");
             if (!StringUtils.isEmpty(page))
                 itemCondition.page(Integer.parseInt(page));
@@ -70,8 +69,7 @@ public class GoodsWebRouter {
             method = "POST")
     public void listTypes(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            ItemCondition itemCondition = routingContext.getBody() == null ? new ItemCondition() :
-                    routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+            ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
             routingContext.end(Json.encodeToBuffer(itemService.listTypes(itemCondition)));
         });
     }

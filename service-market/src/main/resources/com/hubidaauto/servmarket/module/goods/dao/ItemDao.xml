@@ -24,6 +24,9 @@
                 </foreach>
                 )
             </if>
+            <if test="data!=null">
+                <include refid="condition"></include>
+            </if>
         </where>
         limit ${page.start},${page.size}
     </select>

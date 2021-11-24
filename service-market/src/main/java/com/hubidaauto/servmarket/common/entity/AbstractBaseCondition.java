@@ -13,8 +13,7 @@ import java.util.List;
  * @Author wang.zhidong
  * @Date 2021/8/9 21:46
  */
-public class AbstractBaseCondition<K, R> {
-    Page page;
+public class AbstractBaseCondition<K, R> extends PageCondition {
 
     List<R> datas;
 
@@ -28,28 +27,6 @@ public class AbstractBaseCondition<K, R> {
         if (datas == null)
             datas = new LinkedList<>();
         datas.add(r);
-        return this;
-    }
-
-    public AbstractBaseCondition page(int num) {
-        if (this.page == null)
-            this.page = new Page(num);
-        return this;
-    }
-
-    AbstractBaseCondition page(int num, int size) {
-        if (this.page == null) {
-            page = new Page(num, size);
-        }
-        return this;
-    }
-
-    public Page getPage() {
-        return page;
-    }
-
-    public AbstractBaseCondition setPage(Page page) {
-        this.page = page;
         return this;
     }
 
