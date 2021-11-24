@@ -28,8 +28,7 @@
                 <include refid="condition"></include>
             </if>
             <if test="keyWord!=null">
-                --and a.KEY_WORD like '%'||${keyWord}||'%'
-                and LOCATE(${keyWord}, a.KEY_WORD)>0
+                and LOCATE(#{keyWord}, a.KEY_WORD)>0
             </if>
         </where>
         limit ${page.start},${page.size}
