@@ -148,7 +148,7 @@ public class OrderWebRouter {
             orderService.order(routingContext.getBodyAsString()).onSuccess(value -> {
                 routingContext.end(JSONObject.toJSONString(value));
             }).onFailure(throwable -> {
-                routingContext.end(throwable.getMessage());
+                routingContext.response().setStatusCode(500).end(throwable.getMessage());
             });
         });
     }

@@ -12,6 +12,7 @@ import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
+import com.hubidaauto.servmarket.module.order.consts.CostTimeUnit;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
@@ -348,8 +349,13 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     public List<DetailVO> orderDetail(Long id) {
         ServiceClassOrderVO orderVO = orderDao.get(id);
         List<DetailVO> list = new LinkedList<>();
-        list.add(new DetailVO("服务日期", orderVO.getBookTime().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))));
-        list.add(new DetailVO("服务时间", orderVO.getWorkTime()));
+        list.add(new DetailVO("上门时间", orderVO.getBookTime().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH点"))));
+        switch (CostTimeUnit.getInstance(orderVO.getTimeCostUnit())) {
+            case HOURS:
+                list.add(new DetailVO("服务时长", String.format("%d%s", orderVO.getTimeCostUnit(), "小时")));
+                break;
+        }
+
         AddressVO addressVO = addressDao.get(orderVO.getAddressId());
         list.add(new DetailVO("服务区域", addressVO.getRegion()));
         list.add(new DetailVO("需要人数", orderVO.getWorkerNum()));

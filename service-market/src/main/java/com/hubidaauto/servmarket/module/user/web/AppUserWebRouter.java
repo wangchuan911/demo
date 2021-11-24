@@ -241,7 +241,7 @@ public class AppUserWebRouter {
         });
     }*/
 
-    @VertxRouter(path = "\\/invite\\/(?<userId>\\d+)(?:\\_(?<envVersion>[a_zA_Z]+))?",
+    @VertxRouter(path = "\\/invite\\/(?<userId>\\d+)(?:\\_(?<envVersion>(trial|develop)))?",
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void invite(RoutingContextChain chain) {

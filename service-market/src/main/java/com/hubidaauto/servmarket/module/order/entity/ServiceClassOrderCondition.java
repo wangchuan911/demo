@@ -14,12 +14,13 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
     }
 
     public static class Form {
-        Boolean[] time;
+        String[] time;
+        Integer timeCost;
+        Long timeCostUnit;
         Long[] addedValue;
         Integer count;
-        Timestamp date;
         String remark;
-        Long addressId, price, itemTypeId, regionId;
+        Long addressId, price, itemTypeId, regionId, typeId;
 
         public Long[] getAddedValue() {
             return addedValue;
@@ -29,11 +30,11 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
             this.addedValue = addedValue;
         }
 
-        public Boolean[] getTime() {
+        public String[] getTime() {
             return time;
         }
 
-        public void setTime(Boolean[] time) {
+        public void setTime(String[] time) {
             this.time = time;
         }
 
@@ -51,14 +52,6 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
 
         public void setPrice(Long price) {
             this.price = price;
-        }
-
-        public Timestamp getDate() {
-            return date;
-        }
-
-        public void setDate(Timestamp date) {
-            this.date = date;
         }
 
         public String getRemark() {
@@ -91,6 +84,30 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
 
         public void setRegionId(Long regionId) {
             this.regionId = regionId;
+        }
+
+        public Integer getTimeCost() {
+            return timeCost;
+        }
+
+        public void setTimeCost(Integer timeCost) {
+            this.timeCost = timeCost;
+        }
+
+        public Long getTimeCostUnit() {
+            return timeCostUnit;
+        }
+
+        public void setTimeCostUnit(Long timeCostUnit) {
+            this.timeCostUnit = timeCostUnit;
+        }
+
+        public Long getTypeId() {
+            return typeId;
+        }
+
+        public void setTypeId(Long typeId) {
+            this.typeId = typeId;
         }
     }
 }
