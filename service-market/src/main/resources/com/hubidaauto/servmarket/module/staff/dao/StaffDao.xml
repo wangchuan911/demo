@@ -8,6 +8,9 @@
             resultType="com.hubidaauto.servmarket.module.staff.entity.StaffVO">
         SELECT A.* FROM APP_USER A
          WHERE A.ID=#{value}
+         AND EXISTS (
+         SELECT 1 FORM STAFF_JOB A1 WHERE A1.STAFF_ID=A.ID
+         )
     </select>
 
     <select id="list" parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffCondition"

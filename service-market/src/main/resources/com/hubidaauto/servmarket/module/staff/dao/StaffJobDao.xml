@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.staff.dao.StaffJobDao">
+
+
+    <select id="list"
+            parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffCondition"
+            resultType="com.hubidaauto.servmarket.module.staff.entity.StaffJob">
+        SELECT * FROM STAFF_JOB A
+        <where>
+            <if test="regionId!=null">
+                AND EXISTS (
+                    SELECT 1 FROM DUAL WHERE A.REGION_ID=#{regionId}
+                    UNION ALL
+                    SELECT 1 FROM PUB_REGION A2 WHERE A2.ID=#{regionId} AND A.REGION_ID=A2.SUPER_ID
+                    UNION ALL
+                    SELECT 1 FROM PUB_REGION A2 JOIN PUB_REGION A3 ON A3.SUPER_ID=A2.ID WHERE A3.ID=#{regionId} AND A.REGION_ID=A2.SUPER_ID
+                )
+            </if>
+            AND A.STAFF_ID=#{staffId}
+        </where>
+    </select>
+
+</mapper>

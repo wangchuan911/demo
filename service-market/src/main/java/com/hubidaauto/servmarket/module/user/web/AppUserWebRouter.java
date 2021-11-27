@@ -7,7 +7,9 @@ import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
 import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
 import com.hubidaauto.servmarket.module.common.web.HtmlTemplateWebRouter;
 import com.hubidaauto.servmarket.module.staff.dao.StaffDao;
+import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
+import com.hubidaauto.servmarket.module.staff.entity.StaffJob;
 import com.hubidaauto.servmarket.module.user.dao.AddressDao;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AddressVO;
@@ -51,6 +53,7 @@ public class AppUserWebRouter {
     AppUserService appUserService;
     AbstractWechatConfiguration abstractWechatConfiguration;
     StaffDao staffDao;
+    StaffJobDao staffJobDao;
     HtmlTemplateWebRouter htmlTemplateWebRouter;
     ImageContentDao imageContentDao;
 
@@ -87,6 +90,11 @@ public class AppUserWebRouter {
     @Autowired
     public void setStaffDao(StaffDao staffDao) {
         this.staffDao = staffDao;
+    }
+
+    @Autowired
+    public void setStaffJobDao(StaffJobDao staffJobDao) {
+        this.staffJobDao = staffJobDao;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -306,6 +314,24 @@ public class AppUserWebRouter {
                 userVO.setInviteUser(userVO2.getId());
                 appUserDao.put(userVO);
                 routingContext.response().end("榜上有名");
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/job\\/(?<regionId>\\d+)\\/(?<userId>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void getJob(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            try {
+                List<StaffJob> jobs = this.staffJobDao.list(
+                        new StaffCondition()
+                                .setRegionId(Long.parseLong(routingContext.pathParam("regionId")))
+                                .setStaffId(Long.parseLong(routingContext.pathParam("userId"))));
+                routingContext.response().end(JSONObject.toJSONString(jobs));
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }
