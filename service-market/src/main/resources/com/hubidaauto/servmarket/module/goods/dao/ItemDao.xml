@@ -12,7 +12,7 @@
 
     <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemCondition"
             resultType="com.hubidaauto.servmarket.module.goods.entity.ItemVO">
-        select * from MALL_ITEM a
+        select ID, TYPE, PRICE, `NAME`, CONTENT_ID, IMGS, `DESC`, KEY_WORD from MALL_ITEM a
         <where>
             <if test="datas!=null and datas.size()>0">
                 and exists (

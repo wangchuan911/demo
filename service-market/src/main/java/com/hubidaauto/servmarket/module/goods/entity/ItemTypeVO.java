@@ -7,7 +7,8 @@ package com.hubidaauto.servmarket.module.goods.entity;
  * @Date 2021/8/5 20:00
  */
 public class ItemTypeVO {
-    Long id, itemId, price, img;
+    Long id, itemId, price, img, timeCostUnit;
+    Integer timeCost;
     String desc;
 
     public Long getId() {
@@ -52,5 +53,21 @@ public class ItemTypeVO {
 
     public void setImg(Long img) {
         this.img = img;
+    }
+
+    public Long getTimeCostUnit() {
+        return timeCostUnit;
+    }
+
+    public void setTimeCostUnit(Long timeCostUnit) {
+        this.timeCostUnit = timeCostUnit;
+    }
+
+    public Integer getTimeCost() {
+        return timeCost;
+    }
+
+    public void setTimeCost(Integer timeCost) {
+        this.timeCost = timeCost;
     }
 }

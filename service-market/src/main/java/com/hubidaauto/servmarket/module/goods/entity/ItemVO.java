@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ItemVO {
     Long id, type, price, contentId;
-    String name, imgs, desc;
+    String name, imgs, desc, typesGroupDesc;
     ContentVO detail;
     List<ItemTypeVO> types;
 
@@ -100,5 +100,13 @@ public class ItemVO {
     public ItemVO setDesc(String desc) {
         this.desc = desc;
         return this;
+    }
+
+    public String getTypesGroupDesc() {
+        return typesGroupDesc;
+    }
+
+    public void setTypesGroupDesc(String typesGroupDesc) {
+        this.typesGroupDesc = typesGroupDesc;
     }
 }
