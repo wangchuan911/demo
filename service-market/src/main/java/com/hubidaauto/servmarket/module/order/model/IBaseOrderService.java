@@ -1,4 +1,4 @@
-package com.hubidaauto.servmarket.module.order.service;
+package com.hubidaauto.servmarket.module.order.model;
 
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
@@ -6,6 +6,7 @@ import com.hubidaauto.servmarket.module.order.entity.DetailVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
+import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import io.vertx.core.Future;

@@ -1,4 +1,4 @@
-package com.hubidaauto.servmarket.module.order.service;
+package com.hubidaauto.servmarket.module.order.model;
 
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;

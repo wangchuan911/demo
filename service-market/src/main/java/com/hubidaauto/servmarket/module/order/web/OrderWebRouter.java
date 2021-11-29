@@ -6,7 +6,7 @@ import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
-import com.hubidaauto.servmarket.module.order.service.IBaseOrderService;
+import com.hubidaauto.servmarket.module.order.model.IBaseOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import io.vertx.ext.web.handler.BodyHandler;
