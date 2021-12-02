@@ -16,14 +16,14 @@ import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.web.AbstractBaseService;
 import org.welisdoon.web.entity.wechat.WeChatUser;
-import org.welisdoon.web.service.wechat.intf.IWechatUserHandler;
+import org.welisdoon.web.service.wechat.intf.WechatLoginHandler;
 import org.welisdoon.web.vertx.annotation.VertxWebApi;
 
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class UserService extends AbstractBaseService<UserVO> implements IWechatUserHandler {
+public class UserService extends AbstractBaseService<UserVO> implements WechatLoginHandler<JsonObject> {
 //	private static final Logger logger = logger(UserService.class);
 	@Autowired
 	UserDao userDao;
