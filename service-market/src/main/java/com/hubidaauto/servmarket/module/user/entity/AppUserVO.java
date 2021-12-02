@@ -1,5 +1,6 @@
 package com.hubidaauto.servmarket.module.user.entity;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import org.welisdoon.web.entity.wechat.WeChatUser;
@@ -32,6 +33,7 @@ public class AppUserVO {
     }
 
     @JsonIgnore
+    @JSONField(deserialize = false)
     public String getAppId() {
         return appId;
     }
@@ -41,6 +43,8 @@ public class AppUserVO {
         return this;
     }
 
+    @JsonIgnore
+    @JSONField(deserialize = false)
     public String getSession() {
         return session;
     }

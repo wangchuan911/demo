@@ -17,6 +17,7 @@ import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
+import com.hubidaauto.servmarket.module.order.model.OverTimeOperationable;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
@@ -53,6 +54,7 @@ import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -69,7 +71,7 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Throwable.class)
 @OrderClass(
         id = 1000L)
-public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler {
+public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler, OverTimeOperationable {
     private static final Logger logger = LoggerFactory.getLogger(ServiceClassOrderService.class);
     static long TEMPLATE_ID = 1L, SIMPLE_NODE_ID = 6L;
     FlowProxyService flowService;
@@ -317,8 +319,17 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     OperationType operationType = OperationType.getInstance(functionId);
                     switch (operationType) {
                         case SERVICING:
+                            workOrderVO.setDeadLineTime(Timestamp.valueOf(this.computeWorkTime(orderVO.getBookTime().toLocalDateTime(), orderVO.getTimeCostUnit(), orderVO.getTimeCost())));
+                            workOrderVO.setOperation(operationType.name());
+                            break;
                         case SIGN_UP:
+                            workOrderVO.setDeadLineTime(Timestamp.valueOf(orderVO.getBookTime().toLocalDateTime()));
+                            workOrderVO.setOperation(operationType.name());
+                            break;
                         case DISPATCH:
+                            workOrderVO.setDeadLineTime(Timestamp.valueOf(this.computeWorkTime(orderVO.getCreateTime().toLocalDateTime(), 0L, 2)));
+                            workOrderVO.setOperation(operationType.name());
+                            break;
                         case CUST_COMFIRM:
                             workOrderVO.setOperation(operationType.name());
                             break;
@@ -472,5 +483,47 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         return new RefundRequestMesseage().setOutTradeNo(orderVO.getCode()).
                 setOutRefundNo(orderVO.getCode()).setRefundFee(orderVO.getPrice().intValue()).
                 setTotalFee(orderVO.getPrice().intValue()).setTransactionId(payLogVO.getTransactionId());
+    }
+
+    @Override
+    public void overtime(OverTimeOrderVO overTimeOrder) {
+        ServiceClassOrderVO orderVO = orderDao.get(overTimeOrder.getRelaOrderId());
+
+        orderVO.setTimeCost(orderVO.getTimeCost() + overTimeOrder.getTimeCost());
+        orderDao.put(orderVO);
+
+        List<ServiceClassWorkOrderVO> allWorkOrders = (List) this.getWorkOrders((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setQuery("all").setOrderId(orderVO.getId()));
+        allWorkOrders = allWorkOrders.stream()
+                .sorted(Comparator.comparing(WorkOrderVO::getCreateTime))
+                .filter(workOrderVO1 -> {
+                    if (workOrderVO1.getStream().getNodeId() != SIMPLE_NODE_ID)
+                        return false;
+                    if (workOrderVO1.getStream().getValueId() == null)
+                        return false;
+                    Stream stream = workOrderVO1.getStream();
+                    long functionId = ((stream.getValue() != null) ? stream.getValue() : flowService.getValue(stream.getValueId())).jsonValue().getLongValue("id");
+                    if (functionId >= 0) return false;
+                    OperationType operationType = OperationType.getInstance(functionId);
+                    switch (operationType) {
+                        case SERVICING:
+                            return true;
+                        case CUST_COMFIRM:
+                        case SIGN_UP:
+                        case DISPATCH:
+                        default:
+                            return false;
+                    }
+                }).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(allWorkOrders)) {
+            allWorkOrders.stream().forEach(workOrder -> {
+                LocalDateTime time = workOrder.getDeadLineTime().toLocalDateTime();
+                time = computeWorkTime(time, orderVO.getTimeCostUnit(), overTimeOrder.getTimeCost());
+                workOrder.setDeadLineTime(Timestamp.valueOf(time));
+            });
+        }
+    }
+
+    LocalDateTime computeWorkTime(LocalDateTime time, long timeCostUnit, Integer timeCost) {
+        return time.plusHours(timeCost);
     }
 }

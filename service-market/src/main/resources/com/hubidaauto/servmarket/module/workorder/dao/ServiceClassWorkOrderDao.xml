@@ -36,14 +36,14 @@
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO"
             useGeneratedKeys="true" keyProperty="id">
 
-        INSERT INTO WORK_ORDER (ORDER_ID, STREAM_ID, STAFF_ID,  STATUS_ID, OPERATION)
-        VALUES ( #{orderId},  #{streamId},  #{staffId},  #{statusId}, #{operation})
+        INSERT INTO WORK_ORDER (ORDER_ID, STREAM_ID, STAFF_ID,  STATUS_ID, OPERATION, DEAD_LINE_TIME)
+        VALUES ( #{orderId},  #{streamId},  #{staffId},  #{statusId}, #{operation}, #{deadLineTime,jdbcType=TIMESTAMP})
     </insert>
 
     <update id="put" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
         update WORK_ORDER
         set STAFF_ID=#{staffId},
-        STATUS_ID=#{statusId}, CREATE_TIME=#{createTime}, FINISH_TIME=#{finishTime}
+        STATUS_ID=#{statusId}, CREATE_TIME=#{createTime}, FINISH_TIME=#{finishTime}, DEAD_LINE_TIME=#{deadLineTime,jdbcType=TIMESTAMP}
         where ID=#{id}
     </update>
 

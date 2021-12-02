@@ -24,7 +24,7 @@ public class ServiceClassOrderVO extends OrderVO {
     public ServiceClassOrderVO(ServiceClassOrderCondition.Form form) {
         this.addressId = form.addressId;
         this.remark = form.remark;
-        this.bookTime = Timestamp.valueOf(LocalDateTime.parse(String.format("%s %s:00:00", form.time[0], form.time[1]), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        this.bookTime = Timestamp.valueOf(LocalDateTime.parse(String.format("%04d-%02d-%02d %02d:00:00", Arrays.stream((form.time[0] + "-" + form.time[1]).split("-")).map(s -> Integer.valueOf(s)).toArray(Object[]::new)), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         this.workerNum = form.count;
         this.timeCost = form.timeCost;
         this.timeCostUnit = form.timeCostUnit;

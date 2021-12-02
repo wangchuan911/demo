@@ -39,7 +39,7 @@ import org.welisdoon.web.entity.wechat.payment.response.PrePayResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundResponseMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
-import org.welisdoon.web.service.wechat.intf.IWechatUserHandler;
+import org.welisdoon.web.service.wechat.intf.WechatLoginHandler;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.proxy.IVertxInvoker;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
@@ -477,7 +477,7 @@ public abstract class AbstractWechatConfiguration {
         this.classPath = classPath;
     }
 
-    public Future<JsonObject> getWeChatCode2session(String jsCode, IWechatUserHandler wechatUserHandler) {
+    public <T> Future<T> getWeChatCode2session(String jsCode, WechatLoginHandler<T> wechatUserHandler) {
         return Future.future(jsonObjectPromise -> {
             this.wechatAsyncMeassger.getWebClient().getAbs(this.getUrls().get(CommonConst.WecharUrlKeys.CODE_2_SESSION).toString() + jsCode)
                     .send(httpResponseAsyncResult -> {
@@ -486,14 +486,10 @@ public abstract class AbstractWechatConfiguration {
                                 HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
                                 JsonObject jsonObject = httpResponse.body().toJsonObject();
                                 logger.info(jsonObject.toString());
-                                jsonObject.mergeIn(JsonObject.mapFrom(wechatUserHandler.login(new WeChatUser()
+                                jsonObjectPromise.complete(wechatUserHandler.login(new WeChatUser()
                                         .setOpenId(jsonObject.getString("openid"))
                                         .setSessionKey(jsonObject.getString("session_key"))
-                                        .setUnionid(jsonObject.getString("unionid")))));
-                                //安全问题
-                                jsonObject.remove("session_key");
-                                jsonObject.remove("unionid");
-                                jsonObjectPromise.complete(jsonObject);
+                                        .setUnionid(jsonObject.getString("unionid"))));
                             } else {
                                 jsonObjectPromise.fail(httpResponseAsyncResult.cause());
                             }

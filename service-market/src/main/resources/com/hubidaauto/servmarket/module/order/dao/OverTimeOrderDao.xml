@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.order.dao.OverTimeOrderDao">
+    <sql id="columns">
+        <include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.columns"></include>
+    </sql>
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderCondtion"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
+
+        SELECT <include refid="columns"></include>,B.*
+        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
+        JOIN OVER_TIME_ORDER B
+        ON A.ID=B.ID
+
+    </select>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderCondtion"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
+
+        SELECT <include refid="columns"></include>,B.*
+        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
+        JOIN OVER_TIME_ORDER B
+        ON A.ID=B.ID
+
+        limit ${page.start},${page.size}
+    </select>
+    <sql id="condition">
+        and a.id=#{data.ID}
+    </sql>
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
+        SELECT <include refid="columns"></include>,B.*
+        FROM (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.get"></include>) A
+        JOIN OVER_TIME_ORDER B
+        ON A.ID=B.ID
+
+
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO" >
+        INSERT INTO OVER_TIME_ORDER (ID, ITEM_TYPE_ID, RELA_ORDER_ID, TIME_COST)
+        VALUES (#{id},#{itemTypeId},#{relaOrderId},#{timeCost})
+
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
+        UPDATE OVER_TIME_ORDER t
+        SET t.ITEM_TYPE_ID = #{itemTypeId}, t.RELA_ORDER_ID = #{relaOrderId}, t.TIME_COST = #{timeCost}
+            WHERE t.ID = #{id}
+
+    </update>
+
+    <delete id="delete" parameterType="long">
+        delete from OVER_TIME_ORDER where ID=#{value}
+    </delete>
+</mapper>

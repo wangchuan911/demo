@@ -2,29 +2,16 @@ package com.hubidaauto.servmarket.module.user.service;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
-import com.hubidaauto.servmarket.common.utils.JsonUtils;
-import com.hubidaauto.servmarket.module.user.dao.AddressDao;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
-import com.hubidaauto.servmarket.module.user.entity.AddressVO;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
-import io.vertx.core.json.Json;
-import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatUser;
-import org.welisdoon.web.service.wechat.intf.IWechatUserHandler;
-import org.welisdoon.web.vertx.annotation.VertxConfiguration;
-import org.welisdoon.web.vertx.annotation.VertxRoutePath;
-import org.welisdoon.web.vertx.annotation.VertxRouter;
-import org.welisdoon.web.vertx.enums.VertxRouteType;
-import org.welisdoon.web.vertx.utils.RoutingContextChain;
+import org.welisdoon.web.service.wechat.intf.WechatLoginHandler;
 
 import java.util.List;
 
@@ -37,7 +24,7 @@ import java.util.List;
 @Service
 @Transactional
 @DS("shop")
-public class AppUserService implements IWechatUserHandler {
+public class AppUserService implements WechatLoginHandler<AppUserVO> {
     AppUserDao appUserDao;
     AbstractWechatConfiguration abstractWechatConfiguration;
 
@@ -66,7 +53,7 @@ public class AppUserService implements IWechatUserHandler {
         return userVO;
     }
 
-   /* *//**
+    /* *//**
      * @author Septem
      *//*
     @Component

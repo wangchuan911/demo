@@ -16,6 +16,7 @@ import com.hubidaauto.servmarket.module.user.entity.AddressVO;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.user.service.AppUserService;
+import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -191,7 +192,7 @@ public class AppUserWebRouter {
             abstractWechatConfiguration
                     .getWeChatCode2session(code, appUserService)
                     .onSuccess(entries -> {
-                        routingContext.end(entries.toBuffer());
+                        routingContext.end(JSONObject.toJSONString(entries));
                     })
                     .onFailure(throwable -> {
                         routingContext.fail(throwable);

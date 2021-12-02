@@ -12,7 +12,7 @@ import java.sql.Timestamp;
  */
 public class WorkOrderVO {
     Long id, streamId, staffId, orderId, statusId;
-    Timestamp createTime, finishTime;
+    Timestamp createTime, finishTime, deadLineTime;
     String operation;
     Stream stream;
 
@@ -86,5 +86,13 @@ public class WorkOrderVO {
 
     public void setStream(Stream stream) {
         this.stream = stream;
+    }
+
+    public Timestamp getDeadLineTime() {
+        return deadLineTime;
+    }
+
+    public void setDeadLineTime(Timestamp deadLineTime) {
+        this.deadLineTime = deadLineTime;
     }
 }
