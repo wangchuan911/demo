@@ -1,11 +1,5 @@
 package com.hubidaauto.servmarket.module.order.entity;
 
-import com.hubidaauto.servmarket.module.goods.dao.AddedValueDao;
-import org.welisdoon.web.common.ApplicationContextProvider;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 /**
  * @Classname OverTimeOrderVO
  * @Description TODO
@@ -14,12 +8,12 @@ import java.util.stream.Collectors;
  */
 public class OverTimeOrderVO extends OrderVO {
     Long relaOrderId;
-    Integer timeCost;
+    Integer measurement;
     Long itemTypeId, typeId;
 
     public OverTimeOrderVO(OverTimeOrderCondtion.Form form) {
 
-        this.timeCost = form.timeCost;
+        this.measurement = form.measurement;
         this.price = form.price;
         this.itemTypeId = form.itemTypeId;
         this.typeId = form.typeId;
@@ -33,12 +27,12 @@ public class OverTimeOrderVO extends OrderVO {
         this.relaOrderId = relaOrderId;
     }
 
-    public Integer getTimeCost() {
-        return timeCost;
+    public Integer getMeasurement() {
+        return measurement;
     }
 
-    public void setTimeCost(Integer timeCost) {
-        this.timeCost = timeCost;
+    public void setMeasurement(Integer measurement) {
+        this.measurement = measurement;
     }
 
     public Long getItemTypeId() {

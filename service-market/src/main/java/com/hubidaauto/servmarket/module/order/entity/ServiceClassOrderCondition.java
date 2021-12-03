@@ -1,7 +1,5 @@
 package com.hubidaauto.servmarket.module.order.entity;
 
-import java.sql.Timestamp;
-
 public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrderVO> {
     Form form;
 
@@ -15,8 +13,8 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
 
     public static class Form {
         String[] time;
-        Integer timeCost;
-        Long timeCostUnit;
+        Integer measurement;
+        Long measurementUnit;
         Long[] addedValue;
         Integer count;
         String remark;
@@ -86,20 +84,20 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
             this.regionId = regionId;
         }
 
-        public Integer getTimeCost() {
-            return timeCost;
+        public Integer getMeasurement() {
+            return measurement;
         }
 
-        public void setTimeCost(Integer timeCost) {
-            this.timeCost = timeCost;
+        public void setMeasurement(Integer measurement) {
+            this.measurement = measurement;
         }
 
-        public Long getTimeCostUnit() {
-            return timeCostUnit;
+        public Long getMeasurementUnit() {
+            return measurementUnit;
         }
 
-        public void setTimeCostUnit(Long timeCostUnit) {
-            this.timeCostUnit = timeCostUnit;
+        public void setMeasurementUnit(Long measurementUnit) {
+            this.measurementUnit = measurementUnit;
         }
 
         public Long getTypeId() {

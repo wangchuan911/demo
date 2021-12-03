@@ -26,8 +26,8 @@ public class ServiceClassOrderVO extends OrderVO {
         this.remark = form.remark;
         this.bookTime = Timestamp.valueOf(LocalDateTime.parse(String.format("%04d-%02d-%02d %02d:00:00", Arrays.stream((form.time[0] + "-" + form.time[1]).split("-")).map(s -> Integer.valueOf(s)).toArray(Object[]::new)), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         this.workerNum = form.count;
-        this.timeCost = form.timeCost;
-        this.timeCostUnit = form.timeCostUnit;
+        this.measurement = form.measurement;
+        this.measurementUnit = form.measurementUnit;
         this.price = form.price;
         this.itemTypeId = form.itemTypeId;
         this.typeId = form.typeId;
@@ -41,12 +41,12 @@ public class ServiceClassOrderVO extends OrderVO {
 
     }
 
-    Long itemTypeId, addressId, payTypeId, typeId, timeCostUnit;
+    Long itemTypeId, addressId, payTypeId, typeId, measurementUnit;
     String remark, addedValue;
     Timestamp createTime;
     Timestamp finishTime;
     Timestamp bookTime;
-    Integer workerNum, timeCost;
+    Integer workerNum, measurement;
     ItemTypeVO itemType;
     ItemVO item;
 
@@ -123,20 +123,20 @@ public class ServiceClassOrderVO extends OrderVO {
         this.workerNum = workerNum;
     }
 
-    public int getTimeCost() {
-        return timeCost;
+    public int getMeasurement() {
+        return measurement;
     }
 
-    public void setTimeCost(Integer timeCost) {
-        this.timeCost = timeCost;
+    public void setMeasurement(Integer measurement) {
+        this.measurement = measurement;
     }
 
-    public Long getTimeCostUnit() {
-        return timeCostUnit;
+    public Long getMeasurementUnit() {
+        return measurementUnit;
     }
 
-    public void setTimeCostUnit(Long timeCostUnit) {
-        this.timeCostUnit = timeCostUnit;
+    public void setMeasurementUnit(Long measurementUnit) {
+        this.measurementUnit = measurementUnit;
     }
 
     public ItemTypeVO getItemType() {

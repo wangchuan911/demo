@@ -33,7 +33,7 @@ public class AppUserVO {
     }
 
     @JsonIgnore
-    @JSONField(deserialize = false)
+    @JSONField(deserialize = false, serialize = false)
     public String getAppId() {
         return appId;
     }
@@ -44,7 +44,7 @@ public class AppUserVO {
     }
 
     @JsonIgnore
-    @JSONField(deserialize = false)
+    @JSONField(deserialize = false, serialize = false)
     public String getSession() {
         return session;
     }

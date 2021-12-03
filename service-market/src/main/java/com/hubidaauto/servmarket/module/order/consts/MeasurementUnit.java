@@ -9,19 +9,19 @@ import java.util.Optional;
  * @Author wang.zhidong
  * @Date 2021/11/23 20:32
  */
-public enum CostTimeUnit {
+public enum MeasurementUnit {
     TIMES(11110L, "次"), HOURS(11111L, "小时"), UKNOW(-1L, "未知");
 
     private Long id;
     private String desc;
 
-    CostTimeUnit(Long id, String desc) {
+    MeasurementUnit(Long id, String desc) {
         this.id = id;
         this.desc = desc;
     }
 
-    public static CostTimeUnit getInstance(Long id) {
-        Optional<CostTimeUnit> optional = Arrays.stream(values()).findFirst();
+    public static MeasurementUnit getInstance(Long id) {
+        Optional<MeasurementUnit> optional = Arrays.stream(values()).findFirst();
         return optional.orElseGet(() -> UKNOW);
     }
 }
