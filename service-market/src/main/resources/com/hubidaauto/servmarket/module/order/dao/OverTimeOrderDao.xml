@@ -39,14 +39,14 @@
     </select>
 
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO" >
-        INSERT INTO OVER_TIME_ORDER (ID, ITEM_TYPE_ID, RELA_ORDER_ID, MEASUREMENT)
-        VALUES (#{id},#{itemTypeId},#{relaOrderId},#{measurement})
+        INSERT INTO OVER_TIME_ORDER (ID, ITEM_TYPE_ID, RELA_ORDER_ID, WORK_LOAD)
+        VALUES (#{id},#{itemTypeId},#{relaOrderId},#{workLoad})
 
     </insert>
 
     <update id="put" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
         UPDATE OVER_TIME_ORDER t
-        SET t.ITEM_TYPE_ID = #{itemTypeId}, t.RELA_ORDER_ID = #{relaOrderId}, t.MEASUREMENT = #{measurement}
+        SET t.ITEM_TYPE_ID = #{itemTypeId}, t.RELA_ORDER_ID = #{relaOrderId}, t.WORK_LOAD = #{workLoad}
             WHERE t.ID = #{id}
 
     </update>

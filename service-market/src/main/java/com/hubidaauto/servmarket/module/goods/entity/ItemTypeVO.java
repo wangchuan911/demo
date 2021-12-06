@@ -7,8 +7,8 @@ package com.hubidaauto.servmarket.module.goods.entity;
  * @Date 2021/8/5 20:00
  */
 public class ItemTypeVO {
-    Long id, itemId, price, img, measurementUnit;
-    Integer measurement;
+    Long id, itemId, price, img, workLoadUnit;
+    Integer workLoad;
     String desc;
 
     public Long getId() {
@@ -55,19 +55,19 @@ public class ItemTypeVO {
         this.img = img;
     }
 
-    public Long getMeasurementUnit() {
-        return measurementUnit;
+    public Long getWorkLoadUnit() {
+        return workLoadUnit;
     }
 
-    public void setMeasurementUnit(Long measurementUnit) {
-        this.measurementUnit = measurementUnit;
+    public void setWorkLoadUnit(Long workLoadUnit) {
+        this.workLoadUnit = workLoadUnit;
     }
 
-    public Integer getMeasurement() {
-        return measurement;
+    public Integer getWorkLoad() {
+        return workLoad;
     }
 
-    public void setMeasurement(Integer measurement) {
-        this.measurement = measurement;
+    public void setWorkLoad(Integer workLoad) {
+        this.workLoad = workLoad;
     }
 }

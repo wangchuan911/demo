@@ -13,8 +13,8 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
 
     public static class Form {
         String[] time;
-        Integer measurement;
-        Long measurementUnit;
+        Integer workLoad;
+        Long workLoadUnit;
         Long[] addedValue;
         Integer count;
         String remark;
@@ -84,20 +84,20 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
             this.regionId = regionId;
         }
 
-        public Integer getMeasurement() {
-            return measurement;
+        public Integer getWorkLoad() {
+            return workLoad;
         }
 
-        public void setMeasurement(Integer measurement) {
-            this.measurement = measurement;
+        public void setWorkLoad(Integer workLoad) {
+            this.workLoad = workLoad;
         }
 
-        public Long getMeasurementUnit() {
-            return measurementUnit;
+        public Long getWorkLoadUnit() {
+            return workLoadUnit;
         }
 
-        public void setMeasurementUnit(Long measurementUnit) {
-            this.measurementUnit = measurementUnit;
+        public void setWorkLoadUnit(Long workLoadUnit) {
+            this.workLoadUnit = workLoadUnit;
         }
 
         public Long getTypeId() {

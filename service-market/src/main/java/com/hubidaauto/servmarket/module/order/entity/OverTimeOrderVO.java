@@ -8,12 +8,12 @@ package com.hubidaauto.servmarket.module.order.entity;
  */
 public class OverTimeOrderVO extends OrderVO {
     Long relaOrderId;
-    Integer measurement;
+    Integer workLoad;
     Long itemTypeId, typeId;
 
     public OverTimeOrderVO(OverTimeOrderCondtion.Form form) {
 
-        this.measurement = form.measurement;
+        this.workLoad = form.workLoad;
         this.price = form.price;
         this.itemTypeId = form.itemTypeId;
         this.typeId = form.typeId;
@@ -27,12 +27,12 @@ public class OverTimeOrderVO extends OrderVO {
         this.relaOrderId = relaOrderId;
     }
 
-    public Integer getMeasurement() {
-        return measurement;
+    public Integer getWorkLoad() {
+        return workLoad;
     }
 
-    public void setMeasurement(Integer measurement) {
-        this.measurement = measurement;
+    public void setWorkLoad(Integer workLoad) {
+        this.workLoad = workLoad;
     }
 
     public Long getItemTypeId() {

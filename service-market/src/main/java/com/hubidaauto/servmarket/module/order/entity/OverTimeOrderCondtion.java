@@ -28,15 +28,15 @@ public class OverTimeOrderCondtion extends OrderCondition<OverTimeOrderVO> {
     }
 
     public static class Form {
-        Integer measurement;
+        Integer workLoad;
         Long price, itemTypeId, typeId, relaOrderId;
 
-        public Integer getMeasurement() {
-            return measurement;
+        public Integer getWorkLoad() {
+            return workLoad;
         }
 
-        public void setMeasurement(Integer measurement) {
-            this.measurement = measurement;
+        public void setWorkLoad(Integer workLoad) {
+            this.workLoad = workLoad;
         }
 
         public Long getPrice() {

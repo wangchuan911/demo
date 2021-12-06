@@ -209,16 +209,16 @@ public class OrderWebRouter {
                 condition.page(Integer.parseInt(routingContext.pathParam("page")));
                 orderService
                         .list(condition)
-                        .onComplete(stringAsyncResult -> {
-                            if (stringAsyncResult.succeeded()) {
-                                routingContext.end(JSONArray.toJSONString(stringAsyncResult.result()));
-                            } else {
-                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
-                            }
+                        .onSuccess(orders -> {
+                            routingContext.end(JSONArray.toJSONString(orders));
+                        })
+                        .onFailure(throwable -> {
+                            throwable.printStackTrace();
+                            routingContext.response().setStatusCode(500).end(throwable.getMessage());
                         });
             } catch (Throwable e) {
                 e.printStackTrace();
-                routingContext.fail(e.getCause());
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }
@@ -238,7 +238,7 @@ public class OrderWebRouter {
                         });
             } catch (Throwable e) {
                 e.printStackTrace();
-                routingContext.fail(e.getCause());
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }
@@ -258,7 +258,7 @@ public class OrderWebRouter {
                         });
             } catch (Throwable e) {
                 e.printStackTrace();
-                routingContext.fail(e.getCause());
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }
@@ -278,7 +278,7 @@ public class OrderWebRouter {
                         });
             } catch (Throwable e) {
                 e.printStackTrace();
-                routingContext.fail(e.getCause());
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }
@@ -298,7 +298,7 @@ public class OrderWebRouter {
                         });
             } catch (Throwable e) {
                 e.printStackTrace();
-                routingContext.fail(e.getCause());
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }
@@ -318,7 +318,7 @@ public class OrderWebRouter {
                         });
             } catch (Throwable e) {
                 e.printStackTrace();
-                routingContext.fail(e.getCause());
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }

@@ -26,8 +26,8 @@ public class ServiceClassOrderVO extends OrderVO {
         this.remark = form.remark;
         this.bookTime = Timestamp.valueOf(LocalDateTime.parse(String.format("%04d-%02d-%02d %02d:00:00", Arrays.stream((form.time[0] + "-" + form.time[1]).split("-")).map(s -> Integer.valueOf(s)).toArray(Object[]::new)), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         this.workerNum = form.count;
-        this.measurement = form.measurement;
-        this.measurementUnit = form.measurementUnit;
+        this.workLoad = form.workLoad;
+        this.workLoadUnit = form.workLoadUnit;
         this.price = form.price;
         this.itemTypeId = form.itemTypeId;
         this.typeId = form.typeId;
@@ -41,12 +41,12 @@ public class ServiceClassOrderVO extends OrderVO {
 
     }
 
-    Long itemTypeId, addressId, payTypeId, typeId, measurementUnit;
+    Long itemTypeId, addressId, payTypeId, typeId, workLoadUnit;
     String remark, addedValue;
     Timestamp createTime;
     Timestamp finishTime;
     Timestamp bookTime;
-    Integer workerNum, measurement;
+    Integer workerNum, workLoad;
     ItemTypeVO itemType;
     ItemVO item;
 
@@ -123,20 +123,20 @@ public class ServiceClassOrderVO extends OrderVO {
         this.workerNum = workerNum;
     }
 
-    public int getMeasurement() {
-        return measurement;
+    public int getWorkLoad() {
+        return workLoad;
     }
 
-    public void setMeasurement(Integer measurement) {
-        this.measurement = measurement;
+    public void setWorkLoad(Integer workLoad) {
+        this.workLoad = workLoad;
     }
 
-    public Long getMeasurementUnit() {
-        return measurementUnit;
+    public Long getWorkLoadUnit() {
+        return workLoadUnit;
     }
 
-    public void setMeasurementUnit(Long measurementUnit) {
-        this.measurementUnit = measurementUnit;
+    public void setWorkLoadUnit(Long workLoadUnit) {
+        this.workLoadUnit = workLoadUnit;
     }
 
     public ItemTypeVO getItemType() {
