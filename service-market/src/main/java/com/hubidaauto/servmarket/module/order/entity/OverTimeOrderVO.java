@@ -11,6 +11,9 @@ public class OverTimeOrderVO extends OrderVO {
     Integer workLoad;
     Long itemTypeId, typeId;
 
+    public OverTimeOrderVO() {
+    }
+
     public OverTimeOrderVO(OverTimeOrderCondtion.Form form) {
 
         this.workLoad = form.workLoad;

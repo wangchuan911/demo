@@ -14,6 +14,7 @@ wechat-app-hubida:
     pays:
       com.hubidaauto.carservice.wxapp.core.service.OrderService: /wxAppPay
       com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService: /wxApp/order/pay/sco
+      com.hubidaauto.servmarket.module.order.service.OverTimeOrderService: /wxApp/order/pay/oto
     refunds:
       com.hubidaauto.carservice.wxapp.core.service.OrderService: /wxAppRefund
       com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService: /wxApp/order/refund/sco

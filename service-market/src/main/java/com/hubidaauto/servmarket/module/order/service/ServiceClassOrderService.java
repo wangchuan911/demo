@@ -118,7 +118,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         orderVO.setFlowId(flow.getId());
         orderVO.setStatusId(OrderStatus.PRE_PAY.statusId());
         orderVO.setDesc(this.orderDetail(orderVO.getId()).stream().filter(detailVO -> detailVO.getValue() != null).map(detailVO -> detailVO.getValue().toString()).collect(Collectors.joining(" ")));
-        orderVO.setCode(String.format("%6d%s%04d%s%08d", condition.getForm().getRegionId(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYYMMddHH")), orderVO.getCustId(), "SECS", orderVO.getId()));
+        orderVO.setCode(String.format("%6d%s%04d%s%09d", condition.getForm().getRegionId(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYYMMddHH")), orderVO.getCustId(), "SCO", orderVO.getId()));
         baseOrderDao.put(orderVO);
         return orderVO;
     }

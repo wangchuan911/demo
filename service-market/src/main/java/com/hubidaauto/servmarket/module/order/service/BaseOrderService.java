@@ -32,7 +32,7 @@ import java.util.*;
 @Transactional(rollbackFor = Throwable.class)
 public class BaseOrderService {
 
-    Map<Long, IOrderService<?, ?>> ORDER_CLASSES = new HashMap<>();
+    static Map<Long, IOrderService<?, ?>> ORDER_CLASSES = new HashMap<>();
     static String CLASS_ID = "classId", ID = "id";
 
     BaseOrderDao baseOrderDao;
@@ -50,7 +50,7 @@ public class BaseOrderService {
                 .entrySet()
                 .stream()
                 .forEach(stringObjectEntry -> {
-                    this.ORDER_CLASSES.put(ApplicationContextProvider
+                    ORDER_CLASSES.put(ApplicationContextProvider
                             .getRealClass(stringObjectEntry.getValue().getClass())
                             .getAnnotation(OrderClass.class).id(), (IOrderService<?, ?>) stringObjectEntry.getValue());
                 });
