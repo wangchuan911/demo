@@ -17,8 +17,8 @@ import java.util.Arrays;
  * @Date 2021/8/13 12:14
  */
 public class OrderVO {
-    Long id, price, flowId, statusId, custId, classId, regionId;
-    String code,desc;
+    Long id, price, totalPrice, flowId, statusId, custId, classId, regionId;
+    String code, desc;
 
     public Long getId() {
         return id;
@@ -91,5 +91,13 @@ public class OrderVO {
 
     public void setDesc(String desc) {
         this.desc = desc;
+    }
+
+    public Long getTotalPrice() {
+        return totalPrice == null ? this.price : totalPrice;
+    }
+
+    public void setTotalPrice(Long totalPrice) {
+        this.totalPrice = totalPrice;
     }
 }

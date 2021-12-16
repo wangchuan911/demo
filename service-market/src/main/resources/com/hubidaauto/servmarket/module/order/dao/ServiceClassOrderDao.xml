@@ -39,8 +39,8 @@
     </select>
 
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO" >
-        INSERT INTO SERVICE_CLASS_ORDER (ID, ITEM_TYPE_ID, REMARK,  FINISH_TIME, BOOK_TIME, TYPE_ID, ADDRESS_ID, PAY_TYPE_ID, WORKER_NUM, WORK_LOAD, WORK_LOAD_UNIT, ADDED_VALUE)
-        VALUES (#{id},#{itemTypeId},#{remark},#{finishTime},#{bookTime},#{typeId},#{addressId},#{payTypeId},#{workerNum},#{workLoad},#{workLoadUnit},#{addedValue})
+        INSERT INTO SERVICE_CLASS_ORDER (ID, ITEM_TYPE_ID, REMARK,  FINISH_TIME, BOOK_TIME, TYPE_ID, ADDRESS_ID, PAY_TYPE_ID, WORKER_NUM, WORK_LOAD, WORK_LOAD_UNIT, ADDED_VALUE,TOTAL_WORK_LOAD)
+        VALUES (#{id},#{itemTypeId},#{remark},#{finishTime},#{bookTime},#{typeId},#{addressId},#{payTypeId},#{workerNum},#{workLoad},#{workLoadUnit},#{addedValue},#{totalWorkLoad})
 
     </insert>
 
@@ -48,7 +48,7 @@
         UPDATE SERVICE_CLASS_ORDER t
         SET t.ITEM_TYPE_ID = #{itemTypeId}, t.REMARK = #{remark}, t.FINISH_TIME = #{finishTime}, t.BOOK_TIME = #{bookTime}, t.TYPE_ID = #{typeId},
             t.ADDRESS_ID = #{addressId}, t.PAY_TYPE_ID = #{payTypeId}, t.WORKER_NUM = #{workerNum}, t.WORK_LOAD = #{workLoad},t.ADDED_VALUE=#{addedValue}
-            t.WORK_LOAD_UNIT= #{workLoadUnit}
+            t.WORK_LOAD_UNIT= #{workLoadUnit},t.TOTAL_WORK_LOAD=#{totalWorkLoad}
             WHERE t.ID = #{id}
 
     </update>

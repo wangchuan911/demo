@@ -15,5 +15,5 @@ import org.welisdoon.web.common.dao.ITemplateDao;
  */
 @Repository
 @DS("shop")
-public interface StaffTaskDao extends ITemplateDao<Long[], StaffTaskVO, StaffCondition> {
+public interface StaffTaskDao extends ITemplateDao<Long, StaffTaskVO, StaffCondition> {
 }

@@ -46,7 +46,7 @@ public class ServiceClassOrderVO extends OrderVO {
     Timestamp createTime;
     Timestamp finishTime;
     Timestamp bookTime;
-    Integer workerNum, workLoad;
+    Integer workerNum, workLoad, totalWorkLoad;
     ItemTypeVO itemType;
     ItemVO item;
 
@@ -163,5 +163,11 @@ public class ServiceClassOrderVO extends OrderVO {
         this.addedValue = addedValue;
     }
 
+    public Integer getTotalWorkLoad() {
+        return totalWorkLoad == null ? this.workLoad : this.totalWorkLoad;
+    }
 
+    public void setTotalWorkLoad(Integer totalWorkLoad) {
+        this.totalWorkLoad = totalWorkLoad;
+    }
 }

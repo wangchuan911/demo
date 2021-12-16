@@ -11,7 +11,7 @@ import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.OverTimeOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
-import com.hubidaauto.servmarket.module.order.model.OverTimeOperationable;
+import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
@@ -117,10 +117,10 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
         OverTimeOrderVO orderVO = orderDao.get(condition.getId());
         OrderVO relaOrder = orderDao.get(orderVO.getRelaOrderId());
         Object service = BaseOrderService.ORDER_CLASSES.get(relaOrder.getClassId());
-        if (!OverTimeOperationable.class.isAssignableFrom(ApplicationContextProvider.getRealClass(service.getClass()))) {
+        if (!IOverTimeOperationable.class.isAssignableFrom(ApplicationContextProvider.getRealClass(service.getClass()))) {
             throw new RuntimeException(String.format("该类型[%s]单子不允许加时", relaOrder.getClassId()));
         }
-        ((OverTimeOperationable) service).overtime(orderVO);
+        ((IOverTimeOperationable) service).overtime(orderVO);
         orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
         orderDao.put(orderVO);
     }
@@ -131,7 +131,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
         OverTimeOrderVO orderVO = new OverTimeOrderVO(condition.getForm());
         OrderVO relaOrder = baseOrderDao.get(condition.getForm().getRelaOrderId());
         Object service = BaseOrderService.ORDER_CLASSES.get(relaOrder.getClassId());
-        if (!OverTimeOperationable.class.isAssignableFrom(ApplicationContextProvider.getRealClass(service.getClass()))) {
+        if (!IOverTimeOperationable.class.isAssignableFrom(ApplicationContextProvider.getRealClass(service.getClass()))) {
             throw new RuntimeException(String.format("该类型[%s]单子不允许加时", relaOrder.getClassId()));
         }
 

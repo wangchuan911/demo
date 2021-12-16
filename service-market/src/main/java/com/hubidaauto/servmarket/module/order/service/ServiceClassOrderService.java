@@ -17,7 +17,7 @@ import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
-import com.hubidaauto.servmarket.module.order.model.OverTimeOperationable;
+import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
@@ -71,7 +71,7 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Throwable.class)
 @OrderClass(
         id = 1000L)
-public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler, OverTimeOperationable {
+public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler, IOverTimeOperationable {
     private static final Logger logger = LoggerFactory.getLogger(ServiceClassOrderService.class);
     static long TEMPLATE_ID = 1L, SIMPLE_NODE_ID = 6L;
     FlowProxyService flowService;
@@ -319,7 +319,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     OperationType operationType = OperationType.getInstance(functionId);
                     switch (operationType) {
                         case SERVICING:
-                            workOrderVO.setDeadLineTime(Timestamp.valueOf(this.computeWorkTime(orderVO.getBookTime().toLocalDateTime(), orderVO.getWorkLoadUnit(), orderVO.getWorkLoad())));
+                            workOrderVO.setDeadLineTime(Timestamp.valueOf(this.computeWorkTime(orderVO.getBookTime().toLocalDateTime(), orderVO.getWorkLoadUnit(), orderVO.getTotalWorkLoad())));
                             workOrderVO.setOperation(operationType.name());
                             break;
                         case SIGN_UP:
@@ -364,16 +364,29 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         list.add(new DetailVO("上门时间", orderVO.getBookTime().toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH点"))));
         switch (WorkLoadUnit.getInstance(orderVO.getWorkLoadUnit())) {
             case HOURS:
-                list.add(new DetailVO("服务时长", String.format("%d%s", orderVO.getWorkLoadUnit(), "小时")));
+            case TIMES:
+                list.add(new DetailVO("服务时长", String.format("%d%s", orderVO.getTotalWorkLoad(), WorkLoadUnit.HOURS.getDesc())));
+                break;
+            case SQUARE:
+                list.add(new DetailVO("服务范围", String.format("%d%s", orderVO.getTotalWorkLoad(), WorkLoadUnit.HOURS.getDesc())));
                 break;
         }
 
         AddressVO addressVO = addressDao.get(orderVO.getAddressId());
         list.add(new DetailVO("服务区域", addressVO.getRegion()));
-        list.add(new DetailVO("需要人数", orderVO.getWorkerNum()));
+        list.add(new DetailVO("需要人数", String.format("%s%s", orderVO.getWorkerNum(), "人")));
         list.add(new DetailVO("备注信息", orderVO.getRemark()));
         list.add(new DetailVO("支付方式", "微信"));
-        list.add(new DetailVO("支付方式", orderVO.getAddedValue()));
+        if (!StringUtils.isEmpty(orderVO.getAddedValue()))
+            list.add(new DetailVO("增值服务", orderVO.getAddedValue()));
+
+        List<StaffTaskVO> staffTaskVOS = staffTaskDao.list(new StaffCondition().setOrderId(orderVO.getId()));
+        if (!CollectionUtils.isEmpty(staffTaskVOS)) {
+            staffTaskVOS.stream()
+                    .map(staffTaskVO -> appUserDao.get(staffTaskVO.getStaffId()))
+                    .map(appUserVO -> new DetailVO("服务人员", appUserVO.getName()))
+                    .forEach(detailVO -> list.add(detailVO));
+        }
         return list;
     }
 
@@ -465,7 +478,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                             return false;
                     }
                 })
-                .toArray(WorkOrderVO[]::new)[0];
+                .findFirst().orElse(null);
         if (workOrderVO == null) {
             throw new RuntimeException("改环节不能退款");
         }
@@ -489,7 +502,8 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     public void overtime(OverTimeOrderVO overTimeOrder) {
         ServiceClassOrderVO orderVO = orderDao.get(overTimeOrder.getRelaOrderId());
 
-        orderVO.setWorkLoad(orderVO.getWorkLoad() + overTimeOrder.getWorkLoad());
+        //orderVO.setWorkLoad(orderVO.getWorkLoad() + overTimeOrder.getWorkLoad());
+        orderVO.setTotalWorkLoad(orderVO.getTotalWorkLoad() + overTimeOrder.getWorkLoad());
         orderDao.put(orderVO);
 
         List<ServiceClassWorkOrderVO> allWorkOrders = (List) this.getWorkOrders((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setQuery("all").setOrderId(orderVO.getId()));
@@ -524,6 +538,13 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     LocalDateTime computeWorkTime(LocalDateTime time, long workLoadUnit, Integer workLoad) {
-        return time.plusHours(workLoad);
+        switch (WorkLoadUnit.getInstance(workLoadUnit)) {
+            case HOURS:
+                return time.plusHours(workLoad);
+            case TIMES:
+                return time.plusHours(workLoad * 8);
+            default:
+                return time;
+        }
     }
 }

@@ -10,6 +10,6 @@ import com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO;
  * @Date 2021/11/30 00:25
  */
 @FunctionalInterface
-public interface OverTimeOperationable {
+public interface IOverTimeOperationable {
     void overtime(OverTimeOrderVO overTimeOrder);
 }
