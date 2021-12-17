@@ -4,6 +4,8 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
+import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
+import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
@@ -55,16 +57,20 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
     OrderPayDaoLog orderPrePayDaoLog;
     OverTimeOrderDao orderDao;
     BaseOrderService orderService;
+    ItemTypeDao itemTypeDao;
+    ItemDao itemDao;
 
     private static final Logger logger = LoggerFactory.getLogger(OverTimeOrderService.class);
 
     @Autowired
-    public OverTimeOrderService(BaseOrderService orderService, AppUserDao appUserDao, BaseOrderDao baseOrderDao, OrderPayDaoLog orderPrePayDaoLog, OverTimeOrderDao orderDao) {
+    public OverTimeOrderService(ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderService orderService, AppUserDao appUserDao, BaseOrderDao baseOrderDao, OrderPayDaoLog orderPrePayDaoLog, OverTimeOrderDao orderDao) {
         this.appUserDao = appUserDao;
         this.baseOrderDao = baseOrderDao;
         this.orderPrePayDaoLog = orderPrePayDaoLog;
         this.orderDao = orderDao;
         this.orderService = orderService;
+        this.itemTypeDao = itemTypeDao;
+        this.itemDao = itemDao;
     }
 
     @Override
@@ -158,7 +164,10 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
 
     @Override
     public OrderVO getOrder(Long orderId) {
-        return null;
+        OverTimeOrderVO orderVO = orderDao.get(orderId);
+        orderVO.setItemType(itemTypeDao.get(orderVO.getItemTypeId()));
+        orderVO.setItem(itemDao.get(orderVO.getItemType().getItemId()));
+        return orderVO;
     }
 
     @Override

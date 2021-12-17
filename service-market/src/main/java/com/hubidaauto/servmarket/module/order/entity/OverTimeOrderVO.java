@@ -1,5 +1,8 @@
 package com.hubidaauto.servmarket.module.order.entity;
 
+import com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO;
+import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
+
 /**
  * @Classname OverTimeOrderVO
  * @Description TODO
@@ -10,6 +13,8 @@ public class OverTimeOrderVO extends OrderVO {
     Long relaOrderId;
     Integer workLoad;
     Long itemTypeId, typeId;
+    ItemTypeVO itemType;
+    ItemVO item;
 
     public OverTimeOrderVO() {
     }
@@ -52,5 +57,21 @@ public class OverTimeOrderVO extends OrderVO {
 
     public void setTypeId(Long typeId) {
         this.typeId = typeId;
+    }
+
+    public ItemTypeVO getItemType() {
+        return itemType;
+    }
+
+    public void setItemType(ItemTypeVO itemType) {
+        this.itemType = itemType;
+    }
+
+    public ItemVO getItem() {
+        return item;
+    }
+
+    public void setItem(ItemVO item) {
+        this.item = item;
     }
 }
