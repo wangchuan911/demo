@@ -14,39 +14,44 @@ public class StaffJob {
         return id;
     }
 
-    public void setId(Long id) {
+    public StaffJob setId(Long id) {
         this.id = id;
+        return this;
     }
 
     public Long getStaffId() {
         return staffId;
     }
 
-    public void setStaffId(Long staffId) {
+    public StaffJob setStaffId(Long staffId) {
         this.staffId = staffId;
+        return this;
     }
 
     public Long getRegionId() {
         return regionId;
     }
 
-    public void setRegionId(Long regionId) {
+    public StaffJob setRegionId(Long regionId) {
         this.regionId = regionId;
+        return this;
     }
 
     public Long getRoleId() {
         return roleId;
     }
 
-    public void setRoleId(Long roleId) {
+    public StaffJob setRoleId(Long roleId) {
         this.roleId = roleId;
+        return this;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public StaffJob setName(String name) {
         this.name = name;
+        return this;
     }
 }

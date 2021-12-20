@@ -12,15 +12,32 @@
         <where>
             <if test="regionId!=null">
                 AND EXISTS (
-                    SELECT 1 FROM DUAL WHERE A.REGION_ID=#{regionId}
-                    UNION ALL
-                    SELECT 1 FROM PUB_REGION A2 WHERE A2.ID=#{regionId} AND A.REGION_ID=A2.SUPER_ID
-                    UNION ALL
-                    SELECT 1 FROM PUB_REGION A2 JOIN PUB_REGION A3 ON A3.SUPER_ID=A2.ID WHERE A3.ID=#{regionId} AND A.REGION_ID=A2.SUPER_ID
+                SELECT 1 FROM DUAL WHERE A.REGION_ID=#{regionId}
+                UNION ALL
+                SELECT 1 FROM PUB_REGION A2 WHERE A2.ID=#{regionId} AND A.REGION_ID=A2.SUPER_ID
+                UNION ALL
+                SELECT 1 FROM PUB_REGION A2 JOIN PUB_REGION A3 ON A3.SUPER_ID=A2.ID WHERE A3.ID=#{regionId} AND
+                A.REGION_ID=A2.SUPER_ID
+                )
+            </if>
+            <if test="roleId!=null">
+                AND ROLE_ID=#{roleId}
+            </if>
+            <if test="staffIds!=null and staffIds.length>0">
+                and id in (
+                <foreach collection="staffIds" separator="," item="theStaffId">#{theStaffId}</foreach>
                 )
             </if>
             AND A.STAFF_ID=#{staffId}
         </where>
     </select>
+
+    <insert id="add" parameterMap="com.hubidaauto.servmarket.module.staff.entity.StaffJob" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO STAFF_JOB (STAFF_ID, NAME, REGION_ID, ROLE_ID) VALUES (#{staffId}, #{name}, #{regionId}, #{roleId})
+    </insert>
+    <delete id="delete" parameterType="long">
+        DELETE FROM STAFF_JOB WHERE ID=#{value}
+    </delete>
 
 </mapper>

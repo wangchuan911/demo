@@ -1,9 +1,9 @@
 package com.hubidaauto.servmarket.module.staff.entity;
 
-import com.hubidaauto.servmarket.common.entity.AbstractBaseCondition;
 import com.hubidaauto.servmarket.common.entity.Page;
 
 import java.util.Arrays;
+
 
 /**
  * @Classname StaffCondition
@@ -16,6 +16,7 @@ public class StaffCondition {
     Long orderId, staffId, roleId, regionId;
     String query, search;
     Page page;
+    Long[] staffIds;
 
     public StaffCondition setOrderId(Long orderId) {
         this.orderId = orderId;
@@ -92,5 +93,13 @@ public class StaffCondition {
 
     public void setSearch(String search) {
         this.search = search;
+    }
+
+    public Long[] getStaffIds() {
+        return staffIds;
+    }
+
+    public void setStaffIds(Long[] staffIds) {
+        this.staffIds = staffIds;
     }
 }

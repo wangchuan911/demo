@@ -16,7 +16,6 @@ import com.hubidaauto.servmarket.module.user.entity.AddressVO;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.user.service.AppUserService;
-import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -37,8 +36,10 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -331,6 +332,34 @@ public class AppUserWebRouter {
                         new StaffCondition()
                                 .setRegionId(Long.parseLong(routingContext.pathParam("regionId")))
                                 .setStaffId(Long.parseLong(routingContext.pathParam("userId"))));
+                routingContext.response().end(JSONObject.toJSONString(jobs));
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/(?<del>(un))promote",
+            method = "PUT")
+    public void promote(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            boolean delete = "un".equals(routingContext.pathParam("del"));
+            try {
+                StaffCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), StaffCondition.class);
+                condition.setRegionId(450000L);
+                condition.setRoleId(3L);
+                Set<Long> staffIds = Arrays.stream(condition.getStaffIds()).collect(Collectors.toSet());
+                List<StaffJob> jobs = this.staffJobDao.list(condition);
+                jobs.stream().forEach(staffJob -> {
+                    if (delete)
+                        staffJobDao.delete(staffJob.getId());
+                    staffIds.remove(staffJob.getStaffId());
+                });
+                if (!delete)
+                    staffIds.stream().forEach(staffId -> {
+                        staffJobDao.add(new StaffJob().setName("推广人员").setRegionId(condition.getRegionId()).setRoleId(condition.getRoleId()).setStaffId(staffId));
+                    });
                 routingContext.response().end(JSONObject.toJSONString(jobs));
             } catch (Throwable e) {
                 e.printStackTrace();
