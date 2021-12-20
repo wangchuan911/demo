@@ -228,12 +228,14 @@ public class AppUserWebRouter {
         });
     }
 
-    @VertxRouter(path = "/workers",
+    @VertxRouter(path = "\\/workers\\/(?<page>\\d+)",
+            mode = VertxRouteType.PathRegex,
             method = "POST")
     public void workers(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             try {
                 StaffCondition staffCondition = JSONObject.parseObject(routingContext.getBodyAsString(), StaffCondition.class);
+                staffCondition.page(Integer.valueOf(routingContext.pathParam("page")));
                 routingContext.end(JSONObject.toJSONString(staffDao.list(staffCondition)));
             } catch (Throwable e) {
                 routingContext.response().setStatusCode(404).end(e.getMessage());

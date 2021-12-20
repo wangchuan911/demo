@@ -57,14 +57,17 @@
                 )
                 )
             </when>
+            <when test="query=='INVITE_MAN'">
+
+            </when>
             <otherwise>and 1=2</otherwise>
         </choose>
-            <if test="orderId!=null">
-
+            <if test="search!=null and search!=''.toString()">
+                and LOCATE(#{search}, A.NAME)>0
             </if>
 
         </where>
-        <if test="isPage==true">
+        <if test="page != null">
             LIMIT ${page.start},${page.size}
         </if>
     </select>

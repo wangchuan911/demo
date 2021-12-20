@@ -14,8 +14,7 @@ import java.util.Arrays;
 public class StaffCondition {
     final static String[] QUERY = {"REGION_DISPATCH", "WORKER", "REGION_WORKERS"};
     Long orderId, staffId, roleId, regionId;
-    String query;
-    boolean isPage;
+    String query, search;
     Page page;
 
     public StaffCondition setOrderId(Long orderId) {
@@ -57,14 +56,6 @@ public class StaffCondition {
         return this;
     }
 
-    public boolean isPage() {
-        return isPage;
-    }
-
-    public void setPage(boolean page) {
-        isPage = page;
-    }
-
     public Page getPage() {
         return page;
     }
@@ -93,5 +84,13 @@ public class StaffCondition {
     public StaffCondition setRegionId(Long regionId) {
         this.regionId = regionId;
         return this;
+    }
+
+    public String getSearch() {
+        return search;
+    }
+
+    public void setSearch(String search) {
+        this.search = search;
     }
 }
