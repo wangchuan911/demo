@@ -12,7 +12,7 @@ import java.util.Arrays;
  * @Date 2021/8/27 09:47
  */
 public class StaffCondition {
-    final static String[] QUERY = {"REGION_DISPATCH", "WORKER", "REGION_WORKERS"};
+    final static String[] QUERY = {"REGION_DISPATCH", "WORKER", "REGION_WORKERS", "INVITE_MAN"};
     Long orderId, staffId, roleId, regionId;
     String query, search;
     Page page;

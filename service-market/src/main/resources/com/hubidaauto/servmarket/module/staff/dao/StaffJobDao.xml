@@ -23,16 +23,20 @@
             <if test="roleId!=null">
                 AND ROLE_ID=#{roleId}
             </if>
-            <if test="staffIds!=null and staffIds.length>0">
-                and id in (
-                <foreach collection="staffIds" separator="," item="theStaffId">#{theStaffId}</foreach>
-                )
-            </if>
-            AND A.STAFF_ID=#{staffId}
+            <choose>
+                <when test="staffIds!=null and staffIds.length>0">
+                    and A.STAFF_ID in (
+                    <foreach collection="staffIds" separator="," item="theStaffId">#{theStaffId}</foreach>
+                    )
+                </when>
+                <otherwise>
+                    AND A.STAFF_ID=#{staffId}
+                </otherwise>
+            </choose>
         </where>
     </select>
 
-    <insert id="add" parameterMap="com.hubidaauto.servmarket.module.staff.entity.StaffJob" useGeneratedKeys="true"
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.staff.entity.StaffJob" useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO STAFF_JOB (STAFF_ID, NAME, REGION_ID, ROLE_ID) VALUES (#{staffId}, #{name}, #{regionId}, #{roleId})
     </insert>
