@@ -29,7 +29,8 @@ public class OverTimeOrderCondtion extends OrderCondition<OverTimeOrderVO> {
 
     public static class Form {
         Integer workLoad;
-        Long price, itemTypeId, typeId, relaOrderId;
+        Long itemTypeId, typeId, relaOrderId;
+        Integer price;
 
         public Integer getWorkLoad() {
             return workLoad;
@@ -39,11 +40,11 @@ public class OverTimeOrderCondtion extends OrderCondition<OverTimeOrderVO> {
             this.workLoad = workLoad;
         }
 
-        public Long getPrice() {
+        public Integer getPrice() {
             return price;
         }
 
-        public void setPrice(Long price) {
+        public void setPrice(Integer price) {
             this.price = price;
         }
 

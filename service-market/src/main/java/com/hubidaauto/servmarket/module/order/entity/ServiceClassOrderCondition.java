@@ -18,7 +18,8 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
         Long[] addedValue;
         Integer count;
         String remark;
-        Long addressId, price, itemTypeId, regionId, typeId;
+        Long addressId, itemTypeId, regionId, typeId;
+        Integer price;
 
         public Long[] getAddedValue() {
             return addedValue;
@@ -44,11 +45,11 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
             this.count = count;
         }
 
-        public Long getPrice() {
+        public Integer getPrice() {
             return price;
         }
 
-        public void setPrice(Long price) {
+        public void setPrice(Integer price) {
             this.price = price;
         }
 

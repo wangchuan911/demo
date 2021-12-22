@@ -75,6 +75,7 @@ public abstract class AbstractWechatConfiguration {
     private boolean readOnly = false;
     private String classPath;
     private Merchant merchant;
+    private EventBus eventBus;
 
     public String getAppID() {
         return appID;
@@ -431,6 +432,13 @@ public abstract class AbstractWechatConfiguration {
         this.mchApiAsyncMeassger = new WechatAsyncMeassger(urls, WebClient.create(vertx, new WebClientOptions().setPemKeyCertOptions(new PemKeyCertOptions().setKeyPath(this.merchant.keyPath).setCertPath(this.merchant.certPath))));
     }
 
+    public synchronized void initEventBus(Vertx vertx) {
+        this.eventBus = vertx.eventBus();
+    }
+
+    public EventBus getEventBus() {
+        return eventBus;
+    }
 
     public WechatAsyncMeassger getWechatAsyncMeassger() {
         return wechatAsyncMeassger;
