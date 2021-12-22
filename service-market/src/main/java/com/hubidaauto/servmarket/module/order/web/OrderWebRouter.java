@@ -2,13 +2,13 @@ package com.hubidaauto.servmarket.module.order.web;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.model.IBaseOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
+import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -54,7 +54,7 @@ public class OrderWebRouter {
     }
 
     @Autowired
-    public void setAbstractWechatConfiguration(CustomWeChatAppConfiguration customWeChatAppConfiguration) {
+    public void setAbstractWechatConfiguration(ServiceMarketConfiguration customWeChatAppConfiguration) {
         this.customWeChatAppConfiguration = customWeChatAppConfiguration;
     }
 

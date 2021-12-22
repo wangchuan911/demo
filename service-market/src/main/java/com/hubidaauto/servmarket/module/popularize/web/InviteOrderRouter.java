@@ -1,9 +1,6 @@
 package com.hubidaauto.servmarket.module.popularize.web;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONPObject;
-import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
 import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
 import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;

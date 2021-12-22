@@ -1,6 +1,5 @@
 package com.hubidaauto.servmarket;
 
-import com.hubidaauto.carservice.CarserviceApplication;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,15 +14,15 @@ import org.welisdoon.web.vertx.proxy.factory.VertxServiceProxyScan;
 
 @SpringBootApplication
 @EnableTransactionManagement(proxyTargetClass = true)
-@MapperScan(basePackageClasses = {ServiceMarketApplication.class, CarserviceApplication.class, OrderFlowApplication.class}, annotationClass = Repository.class)
+@MapperScan(basePackageClasses = {ServiceMarketApplication.class, OrderFlowApplication.class}, annotationClass = Repository.class)
 @ComponentScan(
-        basePackageClasses = {WebserverApplication.class, ServiceMarketApplication.class, CarserviceApplication.class, OrderFlowApplication.class},
+        basePackageClasses = {WebserverApplication.class, ServiceMarketApplication.class, OrderFlowApplication.class},
         excludeFilters = {
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {WebserverApplication.class, CarserviceApplication.class, OrderFlowApplication.class})
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {WebserverApplication.class, OrderFlowApplication.class})
         }
 )
 @EnableAspectJAutoProxy(proxyTargetClass = true)
-@VertxServiceProxyScan(basePackageClasses = {ServiceMarketApplication.class, CarserviceApplication.class})
+@VertxServiceProxyScan(basePackageClasses = {ServiceMarketApplication.class})
 public class ServiceMarketApplication {
 
     public static void main(String[] args) {

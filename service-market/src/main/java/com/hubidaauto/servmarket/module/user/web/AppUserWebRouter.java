@@ -1,7 +1,6 @@
 package com.hubidaauto.servmarket.module.user.web;
 
 import com.alibaba.fastjson.JSONObject;
-import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
 import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
 import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
@@ -16,6 +15,7 @@ import com.hubidaauto.servmarket.module.user.entity.AddressVO;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.user.service.AppUserService;
+import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -75,7 +75,7 @@ public class AppUserWebRouter {
     }
 
     @Autowired
-    public void setAbstractWechatConfiguration(CustomWeChatAppConfiguration abstractWechatConfiguration) {
+    public void setAbstractWechatConfiguration(ServiceMarketConfiguration abstractWechatConfiguration) {
         this.abstractWechatConfiguration = abstractWechatConfiguration;
     }
 

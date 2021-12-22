@@ -1,12 +1,12 @@
 package com.hubidaauto.servmarket.module.popularize.service;
 
-import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteOrderDao;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteOrderVO;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
+import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -43,7 +43,7 @@ public class InviteOrderService {
     @VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
         return (Consumer<Vertx>) vertx1 -> {
-            AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);
+            AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
             MessageConsumer<Long> consumer = vertx1.eventBus().consumer(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"));
             consumer.handler(longMessage -> {
                 OrderVO orderVO = baseOrderDao.get(longMessage.body());

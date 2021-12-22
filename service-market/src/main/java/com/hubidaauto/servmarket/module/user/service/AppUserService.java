@@ -1,10 +1,10 @@
 package com.hubidaauto.servmarket.module.user.service;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
+import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +34,7 @@ public class AppUserService implements WechatLoginHandler<AppUserVO> {
     }
 
     @Autowired
-    public void setAbstractWechatConfiguration(CustomWeChatAppConfiguration abstractWechatConfiguration) {
+    public void setAbstractWechatConfiguration(ServiceMarketConfiguration abstractWechatConfiguration) {
         this.abstractWechatConfiguration = abstractWechatConfiguration;
     }
 

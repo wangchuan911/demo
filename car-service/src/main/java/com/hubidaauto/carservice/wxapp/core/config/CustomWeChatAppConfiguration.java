@@ -165,6 +165,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         WebClient webClient = WebClient.create(vertx);
         setWechatAsyncMeassger(webClient);
         initApiAsyncMeassger(vertx);
+        initEventBus(vertx);
 
         commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
 

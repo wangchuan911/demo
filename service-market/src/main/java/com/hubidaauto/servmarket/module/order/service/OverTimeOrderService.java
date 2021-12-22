@@ -1,7 +1,6 @@
 package com.hubidaauto.servmarket.module.order.service;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
@@ -19,6 +18,7 @@ import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
+import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,7 +98,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
     @Override
     public PrePayRequsetMesseage payRequset(WeChatPayOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
-        CustomWeChatAppConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);
+        AbstractWechatConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
         PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
                 .setBody(String.format("%s-服务加时费用结算:\n定单编号：%s\n金额%s", customWeChatAppConfiguration.getAppName(), orderVO.getCode(), OrderUtils.priceFormat(orderVO.getPrice().intValue(), ' ', true, false)))
                 .setOutTradeNo(orderVO.getCode())
