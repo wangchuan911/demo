@@ -53,6 +53,7 @@ import org.welisdoon.web.entity.wechat.payment.requset.RefundResultMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
+import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -244,7 +245,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
         baseOrderDao.put(orderVO);
         AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
-        configuration.getEventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), orderVO.getId());
+        WorkerVerticle.getVertix().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), orderVO.getId());
     }
 
     @Override
@@ -549,4 +550,5 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 return time;
         }
     }
+
 }

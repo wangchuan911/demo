@@ -2,48 +2,24 @@ package com.hubidaauto.servmarket.module.popularize.web;
 
 import com.alibaba.fastjson.JSON;
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
-import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
-import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
-import com.hubidaauto.servmarket.module.common.web.HtmlTemplateWebRouter;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
-import com.hubidaauto.servmarket.module.popularize.dao.InviteOrderDao;
-import com.hubidaauto.servmarket.module.popularize.entity.InviteOrderCondition;
-import com.hubidaauto.servmarket.module.popularize.entity.InviteOrderVO;
-import com.hubidaauto.servmarket.module.staff.dao.StaffDao;
-import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
-import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
-import com.hubidaauto.servmarket.module.staff.entity.StaffJob;
-import com.hubidaauto.servmarket.module.user.dao.AddressDao;
-import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
-import com.hubidaauto.servmarket.module.user.entity.AddressVO;
-import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
-import com.hubidaauto.servmarket.module.user.entity.UserCondition;
-import com.hubidaauto.servmarket.module.user.service.AppUserService;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
+import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao;
+import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition;
+import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO;
+import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.StaticHandler;
-import io.vertx.ext.web.impl.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
-import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
+import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author Septem
@@ -52,9 +28,9 @@ import java.util.stream.Collectors;
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/invite")
-public class InviteOrderRouter {
+public class InviteRebateOrderRouter {
 
-    InviteOrderDao inviteOrderDao;
+    InviteRebateOrderDao inviteOrderDao;
     BaseOrderDao baseOrderDao;
 
     @Autowired
@@ -63,7 +39,7 @@ public class InviteOrderRouter {
     }
 
     @Autowired
-    public void setInviteOrderDao(InviteOrderDao inviteOrderDao) {
+    public void setInviteOrderDao(InviteRebateOrderDao inviteOrderDao) {
         this.inviteOrderDao = inviteOrderDao;
     }
 
@@ -78,17 +54,26 @@ public class InviteOrderRouter {
             mode = VertxRouteType.PathRegex)
     public void listUser(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            InviteOrderCondition condition = JsonUtils.jsonToObject(routingContext.getBodyAsString(), InviteOrderCondition.class, () -> null);
+            InviteRebateOrderCondition condition = JsonUtils.jsonToObject(routingContext.getBodyAsString(), InviteRebateOrderCondition.class, () -> null);
             if (condition == null) {
                 routingContext.response().setStatusCode(404).end("没有数据");
                 return;
             }
             String page = routingContext.pathParam("page");
             condition.page(Integer.parseInt(page));
-            List<InviteOrderVO> inviteOrders = inviteOrderDao.list(condition);
+            List<InviteRebateOrderVO> inviteOrders = inviteOrderDao.list(condition);
             routingContext.end(JSON.toJSONString(inviteOrders));
         });
     }
 
-
+    @VertxRouter(path = "\\/order(?:\\/(?<orderId>\\d+))?",
+            method = "POST",
+            mode = VertxRouteType.PathRegex)
+    public void order(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
+            WorkerVerticle.getVertix().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), Long.valueOf(routingContext.pathParam("orderId")));
+            routingContext.end();
+        });
+    }
 }

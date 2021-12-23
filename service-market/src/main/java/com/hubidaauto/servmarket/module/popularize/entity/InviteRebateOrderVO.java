@@ -1,6 +1,5 @@
 package com.hubidaauto.servmarket.module.popularize.entity;
 
-import com.hubidaauto.servmarket.common.entity.PageCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 
 /**
@@ -9,7 +8,7 @@ import com.hubidaauto.servmarket.module.order.entity.OrderVO;
  * @Author wang.zhidong
  * @Date 2021/12/22 20:03
  */
-public class InviteOrderVO extends OrderVO  {
+public class InviteRebateOrderVO extends OrderVO  {
     Long  payState, inviteMan;
     Integer rebate;
 
@@ -19,7 +18,7 @@ public class InviteOrderVO extends OrderVO  {
         return payState;
     }
 
-    public InviteOrderVO setPayState(Long payState) {
+    public InviteRebateOrderVO setPayState(Long payState) {
         this.payState = payState;
         return this;
     }
@@ -28,7 +27,7 @@ public class InviteOrderVO extends OrderVO  {
         return inviteMan;
     }
 
-    public InviteOrderVO setInviteMan(Long inviteMan) {
+    public InviteRebateOrderVO setInviteMan(Long inviteMan) {
         this.inviteMan = inviteMan;
         return this;
     }
@@ -37,7 +36,7 @@ public class InviteOrderVO extends OrderVO  {
         return rebate;
     }
 
-    public InviteOrderVO setRebate(Integer rebate) {
+    public InviteRebateOrderVO setRebate(Integer rebate) {
         this.rebate = rebate;
         return this;
     }

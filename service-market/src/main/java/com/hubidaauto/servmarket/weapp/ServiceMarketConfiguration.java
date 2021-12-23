@@ -78,7 +78,6 @@ public class ServiceMarketConfiguration extends AbstractWechatConfiguration {
             WebClient webClient = WebClient.create(vertx);
             setWechatAsyncMeassger(webClient);
             initApiAsyncMeassger(vertx);
-            initEventBus(vertx);
 
             this.initAccessTokenSyncTimer(vertx, objectMessage -> {
                 this.updateAccessToken(this.getTokenFromMessage(objectMessage));

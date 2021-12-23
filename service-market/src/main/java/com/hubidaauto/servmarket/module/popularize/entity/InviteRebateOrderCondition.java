@@ -8,7 +8,7 @@ import com.hubidaauto.servmarket.common.entity.PageCondition;
  * @Author wang.zhidong
  * @Date 2021/12/22 20:22
  */
-public class InviteOrderCondition extends PageCondition {
+public class InviteRebateOrderCondition extends PageCondition {
     Long   inviteMan;
 
     public Long getInviteMan() {

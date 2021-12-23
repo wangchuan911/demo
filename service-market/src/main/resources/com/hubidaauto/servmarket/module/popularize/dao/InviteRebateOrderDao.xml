@@ -2,25 +2,25 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.hubidaauto.servmarket.module.popularize.dao.InviteOrderDao">
+<mapper namespace="com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao">
     <sql id="columns">
         <include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.columns"></include>
     </sql>
-    <select id="find" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteOrderCondition"
-            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteOrderVO">
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition"
+            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
 
         SELECT <include refid="columns"></include>,B.*
         from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
-        JOIN INVITE_ORDER B
+        JOIN INVITE_REBATE_ORDER B
         ON A.ID=B.ID
 
     </select>
-    <select id="list" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteOrderCondition"
-            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteOrderVO">
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition"
+            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
 
         SELECT <include refid="columns"></include>,B.*
         from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
-        JOIN INVITE_ORDER B
+        JOIN INVITE_REBATE_ORDER B
         ON A.ID=B.ID
 
         limit ${page.start},${page.size}
@@ -29,29 +29,29 @@
         and a.id=#{data.ID}
     </sql>
     <select id="get" parameterType="long"
-            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteOrderVO">
+            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
         SELECT <include refid="columns"></include>,B.*
         FROM (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.get"></include>) A
-        JOIN INVITE_ORDER B
+        JOIN INVITE_REBATE_ORDER B
         ON A.ID=B.ID
 
 
     </select>
 
-    <insert id="add" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteOrderVO" >
-        INSERT INTO INVITE_ORDER (ID, PAY_STATE, INVITE_MAN, REBATE)
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO INVITE_REBATE_ORDER (ID, PAY_STATE, INVITE_MAN, REBATE)
         VALUES (#{id},#{payState},#{inviteMan},#{rebate})
 
     </insert>
 
-    <update id="put" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteOrderVO">
-        UPDATE INVITE_ORDER t
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
+        UPDATE INVITE_REBATE_ORDER t
         SET t.PAY_STATE = #{payState}, t.INVITE_MAN = #{inviteMan}, t.REBATE = #{rebate}
             WHERE t.ID = #{id}
 
     </update>
 
     <delete id="delete" parameterType="long">
-        delete from INVITE_ORDER where ID=#{value}
+        delete from INVITE_REBATE_ORDER where ID=#{value}
     </delete>
 </mapper>
