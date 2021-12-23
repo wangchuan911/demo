@@ -72,7 +72,7 @@ public class InviteRebateOrderRouter {
     public void order(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
-            WorkerVerticle.getVertix().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), Long.valueOf(routingContext.pathParam("orderId")));
+            WorkerVerticle.getOneVertx().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), Long.valueOf(routingContext.pathParam("orderId")));
             routingContext.end();
         });
     }

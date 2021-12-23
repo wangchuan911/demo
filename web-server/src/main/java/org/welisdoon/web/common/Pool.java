@@ -1,9 +1,6 @@
 package org.welisdoon.web.common;
 
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -17,8 +14,19 @@ public class Pool<T> {
     Node<T> head;
     Node<T> foot;
     AtomicInteger timer = new AtomicInteger(4);
+    int timerCount;
+
+    public Pool(int timerCount) {
+        assert timerCount > 1;
+        this.timerCount = timerCount;
+    }
+
+    public Pool() {
+        this(4);
+    }
 
     public synchronized void add(T t) {
+        new ArrayList<>();
         assert t != null;
         if (head == null) {
             this.head = new Node<>(t);
@@ -29,9 +37,10 @@ public class Pool<T> {
     }
 
     public T getCacheOne() {
-        if (index == null || timer.get() <= 0)
+        if (timer.getAndDecrement() <= 0 || index == null) {
+            timer.set(this.timerCount);
             return getOne();
-        timer.decrementAndGet();
+        }
         return index.value;
     }
 
@@ -42,6 +51,16 @@ public class Pool<T> {
             index = index.next;
         }
         return index.value;
+    }
+
+    public T[] getAll() {
+        List<T> list = new LinkedList();
+        Node<T> n = this.head;
+        while (n != null) {
+            list.add(n.value);
+            n = n.next;
+        }
+        return (T[]) list.stream().toArray();
     }
 
     class Node<T> {

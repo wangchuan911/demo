@@ -32,11 +32,15 @@ public class WorkerVerticle extends AbstractCustomVerticle {
         pool.add(vertx);
     }
 
-    public static Vertx getVertix() {
+    public static Vertx getOneVertx() {
         return pool.getCacheOne();
     }
 
-    public static Vertx getVertix(boolean isNew) {
+    public static Vertx getOneVertx(boolean isNew) {
         return pool.getOne();
+    }
+
+    public static Vertx[] getAllVertxs() {
+        return pool.getAll();
     }
 }
