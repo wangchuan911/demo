@@ -28,14 +28,11 @@ public class WorkerVerticle extends AbstractCustomVerticle {
     }
 
     public static Vertx getOneVertx() {
-        return pool.getOneWithLazy();
-    }
-
-    public static Vertx getOneVertx(boolean isNew) {
         return pool.getOne();
     }
 
-    public static Vertx[] getAllVertxs() {
+    public static Vertx[] getAllVertx(){
         return pool.getAll();
     }
+
 }
