@@ -44,50 +44,45 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
     Router router;
 
     @Override
-    void deploying(Promise startFuture) {
-        router = Router.router(vertx);
+    public void start(Promise promise) {
+        this.router = Router.router(this.vertx);
         logger.info("create router");
-        startFuture.complete();
 
-    }
-
-    @Override
-    void deployComplete(Promise startFuture) {
-        if (router != null) {
-            //开启https
-            HttpServerOptions httpServerOptions = new HttpServerOptions();
-            if (!new File(sslKeyStore).exists()) {
-                logger.warn(String.format("sslKeyStore:%s is not exists!", sslKeyStore));
-                this.sslEnable = false;
-            } else if (sslEnable) {
-                httpServerOptions.setSsl(true);
-                switch (this.sslKeyType.toLowerCase()) {
-                    case "pem":
-                        httpServerOptions.setPemKeyCertOptions(new PemKeyCertOptions().setCertPath(sslKeyStore).setKeyPath(sslKeyPath));
-                        break;
-                    case "jks":
-                        httpServerOptions.setKeyCertOptions(new JksOptions().setPath(sslKeyStore).setPassword(sslPassword));
-                        break;
-                    case "pfx":
-                        httpServerOptions.setPfxKeyCertOptions(new PfxOptions().setPath(sslKeyStore).setPassword(sslPassword));
-                        break;
-                    default:
-                        SelfSignedCertificate certificate = SelfSignedCertificate.create();
-                        httpServerOptions.setKeyCertOptions(certificate.keyCertOptions())
-                                .setTrustOptions(certificate.trustOptions());
-                }
+        this.start();
+        //开启https
+        HttpServerOptions httpServerOptions = new HttpServerOptions();
+        if (!new File(sslKeyStore).exists()) {
+            logger.warn(String.format("sslKeyStore:%s is not exists!", sslKeyStore));
+            this.sslEnable = false;
+        } else if (sslEnable) {
+            httpServerOptions.setSsl(true);
+            switch (this.sslKeyType.toLowerCase()) {
+                case "pem":
+                    httpServerOptions.setPemKeyCertOptions(new PemKeyCertOptions().setCertPath(sslKeyStore).setKeyPath(sslKeyPath));
+                    break;
+                case "jks":
+                    httpServerOptions.setKeyCertOptions(new JksOptions().setPath(sslKeyStore).setPassword(sslPassword));
+                    break;
+                case "pfx":
+                    httpServerOptions.setPfxKeyCertOptions(new PfxOptions().setPath(sslKeyStore).setPassword(sslPassword));
+                    break;
+                default:
+                    SelfSignedCertificate certificate = SelfSignedCertificate.create();
+                    httpServerOptions.setKeyCertOptions(certificate.keyCertOptions())
+                            .setTrustOptions(certificate.trustOptions());
             }
-            vertx.createHttpServer(httpServerOptions)
-                    .requestHandler(router)
-                    .listen(port, httpServerAsyncResult -> {
-                        if (httpServerAsyncResult.succeeded()) {
-                            startFuture.complete();
-                            logger.info(String.format("HTTP server started on http%s://localhost:%s", sslEnable ? "s" : "", port));
-                        } else {
-                            startFuture.fail(httpServerAsyncResult.cause());
-                        }
-                    });
         }
+        this.vertx.createHttpServer(httpServerOptions)
+                .requestHandler(router)
+                .listen(port, httpServerAsyncResult -> {
+                    if (httpServerAsyncResult.succeeded()) {
+                        promise.complete();
+                        logger.info(String.format("HTTP server started on http%s://localhost:%s", sslEnable ? "s" : "", port));
+                    } else {
+                        promise.fail(httpServerAsyncResult.cause());
+                    }
+                });
+
     }
 
     public int getPort() {

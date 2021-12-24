@@ -245,7 +245,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
         baseOrderDao.put(orderVO);
         AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
-        WorkerVerticle.getOneVertx().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), orderVO.getId());
+        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), orderVO.getId());
     }
 
     @Override

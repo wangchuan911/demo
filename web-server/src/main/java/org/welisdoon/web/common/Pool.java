@@ -16,6 +16,32 @@ public class Pool<T> {
     volatile int threadSign = 0;
     int size = 0;
 
+    public void del(T... ts) {
+        for (T t : ts) {
+            this._del(t);
+        }
+    }
+
+    synchronized void _del(T t) {
+        Node<T> pre = this.foot;
+        Node<T> node = this.head;
+        for (int i = 0; i < size; i++) {
+            if (node.value.equals(t)) {
+                if (pre == node) {
+                    this.foot = (this.head = (this.index = null));
+                } else {
+                    pre.next = node.next;
+                    if (index == node) {
+                        index = node.next;
+                    }
+                    node.next = null;
+                }
+                break;
+            }
+            pre = node;
+            node = node.next;
+        }
+    }
 
     public synchronized void add(T... ts) {
         new ArrayList<>();

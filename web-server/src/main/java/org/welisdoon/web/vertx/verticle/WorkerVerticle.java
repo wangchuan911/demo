@@ -17,22 +17,20 @@ public class WorkerVerticle extends AbstractCustomVerticle {
     static Pool<Vertx> pool = new Pool<>();
 
     @Override
-    void deploying(Promise future) {
-        future.complete();
-    }
-
-    @Override
-    void deployComplete(Promise future) {
-        future.complete();
+    public void start(Promise<Void> startPromise) throws Exception {
+        super.start(startPromise);
         pool.add(vertx);
     }
 
-    public static Vertx getOneVertx() {
-        return pool.getOne();
+    @Override
+    public void stop(Promise<Void> stopPromise) throws Exception {
+        super.stop(stopPromise);
+        pool.del(vertx);
     }
 
-    public static Vertx[] getAllVertx(){
-        return pool.getAll();
+    public static Pool<Vertx> pool() {
+        return pool;
     }
+
 
 }

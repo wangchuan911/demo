@@ -26,18 +26,10 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
     private static Entry[] ENTRYS;
 
     @Override
-    final public void start(Promise<Void> startPromise) {
-        Promise<Void> promise = Promise.promise();
-        promise.future().onComplete(voidAsyncResult -> {
-            handleRegist();
-            deployComplete(startPromise);
-        });
-        deploying(promise);
+    public void start() {
+        handleRegist();
     }
 
-    abstract void deploying(Promise future);
-
-    abstract void deployComplete(Promise future);
 
     /*public static synchronized <T> void registeredHandler(Class<? extends AbstractCustomVerticle> verticle, Class<T> t, Handler<T> handler) {
         try {
