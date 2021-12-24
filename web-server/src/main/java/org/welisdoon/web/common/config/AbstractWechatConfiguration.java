@@ -304,12 +304,6 @@ public abstract class AbstractWechatConfiguration {
         }
     }
 
-    @VertxRegister(WorkerVerticle.class)
-    public Consumer<Vertx> initVertxServiceProxy() {
-        return (verix) -> {
-            AsyncProxyUtils.createServiceBinder(verix, this.getAppID(), IVertxInvoker.class);
-        };
-    }
 
     public <T> void initAccessTokenSyncTimer(Vertx vertx1, Handler<Message<T>> var1) {
         final String key = "WX.TOKEN";

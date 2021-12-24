@@ -25,19 +25,21 @@ public class Pool<T> {
         this(4);
     }
 
-    public synchronized void add(T t) {
+    public synchronized void add(T... ts) {
         new ArrayList<>();
-        assert t != null;
-        if (head == null) {
-            this.head = new Node<>(t);
-            this.foot = this.head;
-            return;
+        assert ts != null && ts.length > 0;
+        for (T t : ts) {
+            if (head == null) {
+                this.head = new Node<>(t);
+                this.foot = this.head;
+                continue;
+            }
+            this.foot = (this.foot.next = new Node(t));
         }
-        this.foot = (this.foot.next = new Node(t));
     }
 
-    public T getCacheOne() {
-        if (timer.getAndDecrement() <= 0 || index == null) {
+    public T getOneWithLazy() {
+        if (timer.getAndDecrement() <= 0 || index == null || this.head != this.foot) {
             timer.set(this.timerCount);
             return getOne();
         }

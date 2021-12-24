@@ -4,15 +4,10 @@ import io.vertx.core.Promise;
 
 import io.vertx.core.Vertx;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.Pool;
-import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.vertx.annotation.Verticle;
-import org.welisdoon.web.vertx.annotation.VertxServiceProxy;
-import org.welisdoon.web.vertx.proxy.IVertxInvoker;
 
 @Component("workerVerticle")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -33,7 +28,7 @@ public class WorkerVerticle extends AbstractCustomVerticle {
     }
 
     public static Vertx getOneVertx() {
-        return pool.getCacheOne();
+        return pool.getOneWithLazy();
     }
 
     public static Vertx getOneVertx(boolean isNew) {

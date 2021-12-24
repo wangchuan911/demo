@@ -18,7 +18,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -28,7 +30,8 @@ import java.util.stream.Collectors;
  * @Date 2021/8/16 15:43
  */
 public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, InvocationHandler {
-    static final String REGEXP = "\\{([\\w\\-\\d\\.]+)\\}";
+    static final Pattern PATTERN = Pattern.compile("\\{([\\w\\-\\d\\.]+)\\}");
+    static final Map<String, IVertxInvoker> iVertxInvokers = new HashMap<>(8, 0.9F);
     private Class<T> interfaces;
     private Class<?> tagetClass;
     private VertxServiceProxy serviceProxy;
@@ -63,17 +66,46 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
         return true;
     }
 
-    synchronized void initInvoker() {
+    private String getAddress() {
+        /*String address = VertxServiceProxyFactoryBean.this.serviceProxy.address();
+        Matcher matcher = PATTERN.matcher(address);
+        while (matcher.group()) {
+
+            address = address.replaceFirst(REGEXP, "$1");
+        }
+        return ApplicationContextProvider.getApplicationContext().getEnvironment().getProperty(address);*/
+
+
+        StringBuilder address = new StringBuilder(VertxServiceProxyFactoryBean.this.serviceProxy.address());
+        Matcher matcher = PATTERN.matcher(VertxServiceProxyFactoryBean.this.serviceProxy.address());
+        Deque<int[]> indexs = new LinkedList<>();
+        while (matcher.find()) {
+            indexs.addFirst(new int[]{matcher.start(), matcher.end()});
+        }
+        int[] index;
+        while ((index = indexs.pollFirst()) != null) {
+            address.replace(index[0], index[1], ApplicationContextProvider.getApplicationContext().getEnvironment().getProperty(address.substring(index[0] + 1, index[1] - 1)));
+        }
+        return address.toString();
+    }
+
+    void initInvoker() {
         if (this.iVertxInvoker == null) {
-            String address = VertxServiceProxyFactoryBean.this.serviceProxy.address();
-            while (address.matches(REGEXP)) {
-                address = address.replaceFirst(REGEXP, "$1");
+            String key = this.getAddress();
+            if (!iVertxInvokers.containsKey(key)) {
+                synchronized (iVertxInvokers) {
+                    if (!iVertxInvokers.containsKey(key)) {
+                        this.iVertxInvoker = AsyncProxyUtils.
+                                createServiceProxyBuilder(
+                                        ApplicationContextProvider.getBean(StandaredVerticle.class).getVertx(),
+                                        key,
+                                        IVertxInvoker.class);
+                        iVertxInvokers.put(key, this.iVertxInvoker);
+                        return;
+                    }
+                }
             }
-            this.iVertxInvoker = AsyncProxyUtils.
-                    createServiceProxyBuilder(
-                            ApplicationContextProvider.getBean(StandaredVerticle.class).getVertx(),
-                            ApplicationContextProvider.getApplicationContext().getEnvironment().getProperty(address),
-                            IVertxInvoker.class);
+            this.iVertxInvoker = iVertxInvokers.get(key);
         }
 
     }

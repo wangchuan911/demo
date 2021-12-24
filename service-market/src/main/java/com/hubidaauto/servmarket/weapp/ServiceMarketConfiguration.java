@@ -86,4 +86,11 @@ public class ServiceMarketConfiguration extends AbstractWechatConfiguration {
     }
 
 
+    @VertxRegister(WorkerVerticle.class)
+    public Consumer<Vertx> initVertxServiceProxy() {
+        return (verix) -> {
+            AsyncProxyUtils.createServiceBinder(verix, this.getAppID(), IVertxInvoker.class);
+        };
+    }
+
 }
