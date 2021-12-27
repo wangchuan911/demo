@@ -2,12 +2,16 @@ package com.hubidaauto.servmarket.module.order.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.hubidaauto.servmarket.module.common.dao.AppConfigDao;
+import com.hubidaauto.servmarket.module.common.entity.AppConfig;
 import com.hubidaauto.servmarket.module.flow.enums.OperationType;
 import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.flow.enums.WorkOrderStatus;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
+import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
+import com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
@@ -17,6 +21,7 @@ import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
 import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
+import com.hubidaauto.servmarket.module.popularize.model.IRebate;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
@@ -72,7 +77,7 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Throwable.class)
 @OrderClass(
         id = 1000L)
-public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler, IOverTimeOperationable {
+public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler, IOverTimeOperationable, IRebate {
     private static final Logger logger = LoggerFactory.getLogger(ServiceClassOrderService.class);
     static long TEMPLATE_ID = 1L, SIMPLE_NODE_ID = 6L;
     FlowProxyService flowService;
@@ -85,9 +90,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     AddressDao addressDao;
     AppUserDao appUserDao;
     OrderPayDaoLog orderPrePayDaoLog;
+    AppConfigDao appConfigDao;
 
     @Autowired
-    public void init(AppUserDao appUserDao, AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao, OrderPayDaoLog orderPrePayDaoLog) {
+    public void init(AppUserDao appUserDao, AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao, OrderPayDaoLog orderPrePayDaoLog,
+                     AppConfigDao appConfigDao) {
         this.workOrderDao = workOrderDao;
         this.orderDao = orderDao;
         this.flowService = flowService;
@@ -98,7 +105,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         this.addressDao = addressDao;
         this.appUserDao = appUserDao;
         this.orderPrePayDaoLog = orderPrePayDaoLog;
-
+        this.appConfigDao = appConfigDao;
     }
 
     @Override
@@ -151,11 +158,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     Stream superStream = this.flowService.getStream(this.flowService.getStream(workOrderVO.getStreamId()).getSuperId());
                     if (superStream.getValue() == null) break;
                     ServiceContent serviceContent = ServiceContent.getInstance(superStream.getValue().jsonValue().getLong("function"));
-                    if (serviceContent.equals(ServiceContent.HOME_CLEAN)) {
+                    /*if (serviceContent.equals(ServiceContent.HOME_CLEAN)) {
                         logger.info(ServiceContent.HOME_CLEAN.toString());
                     } else if (serviceContent.equals(ServiceContent.HOME_EQP_CLEAN)) {
                         logger.info(ServiceContent.HOME_CLEAN.toString());
-                    }
+                    }*/
                     break;
                 case DISPATCH:
                     List<Long> staffIds = workOrderCondition.getData().getJSONArray("workers").toJavaList(Long.class);
@@ -357,7 +364,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
     @Override
     public List<ServiceContent> getServices(OrderVO orderVO) {
-        return List.of(ServiceContent.HOME_CLEAN, ServiceContent.HOME_EQP_CLEAN);
+        return List.of(ServiceContent.SIMPLE_CLEAM);
     }
 
     @Override
@@ -551,4 +558,14 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         }
     }
 
+    @Override
+    public Integer rebate(OrderVO orderVO) {
+        ServiceClassOrderVO order = orderDao.get(orderVO.getId());
+        ItemTypeVO itemTypeVO = itemTypeDao.get(order.getItemTypeId());
+        AppConfig config = appConfigDao.find(new AppConfig().setName(String.format("%s_%d", IRebate.CONFIG_GROUP, Long.valueOf(itemTypeVO.getItemId()))).setGroup(IRebate.CONFIG_GROUP));
+        if (config == null)
+            return 0;
+        StringBuilder sb = new StringBuilder(order.getTotalPrice() * Integer.valueOf(config.getValue()));
+        return Integer.valueOf(sb.substring(0, sb.length() - 2));
+    }
 }

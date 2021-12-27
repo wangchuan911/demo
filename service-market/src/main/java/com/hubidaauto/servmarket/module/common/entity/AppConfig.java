@@ -13,23 +13,26 @@ public class AppConfig {
         return name;
     }
 
-    public void setName(String name) {
+    public AppConfig setName(String name) {
         this.name = name;
+        return this;
     }
 
     public String getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public AppConfig setValue(String value) {
         this.value = value;
+        return this;
     }
 
     public String getGroup() {
         return group;
     }
 
-    public void setGroup(String group) {
+    public AppConfig setGroup(String group) {
         this.group = group;
+        return this;
     }
 }

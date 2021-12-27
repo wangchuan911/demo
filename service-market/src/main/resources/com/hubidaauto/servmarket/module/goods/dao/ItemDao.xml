@@ -37,6 +37,9 @@
         <if test="data.type!=null">
             and a.TYPE=#{data.type}
         </if>
+        <if test="data.id!=null">
+            and a.id=#{data.id}
+        </if>
     </sql>
 
 </mapper>

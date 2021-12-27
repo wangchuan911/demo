@@ -2,7 +2,9 @@ package com.hubidaauto.servmarket.module.popularize.web;
 
 import com.alibaba.fastjson.JSON;
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
+import com.hubidaauto.servmarket.module.common.dao.AppConfigDao;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
+import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateCountDao;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO;
@@ -26,12 +28,13 @@ import java.util.List;
  */
 @Component
 @VertxConfiguration
-@ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
+//@ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/invite")
 public class InviteRebateOrderRouter {
 
     InviteRebateOrderDao inviteOrderDao;
     BaseOrderDao baseOrderDao;
+    InviteRebateCountDao inviteRebateCountDao;
 
     @Autowired
     public void setBaseOrderDao(BaseOrderDao baseOrderDao) {
@@ -43,30 +46,39 @@ public class InviteRebateOrderRouter {
         this.inviteOrderDao = inviteOrderDao;
     }
 
+    @Autowired
+    public void setInviteRebateCountDao(InviteRebateCountDao inviteRebateCountDao) {
+        this.inviteRebateCountDao = inviteRebateCountDao;
+    }
+
     @VertxRouter(path = "/*", order = -1)
     public void all(RoutingContextChain chain) {
         chain.handler(BodyHandler.create());
     }
 
 
-    @VertxRouter(path = "\\/orders(?:\\/(?<page>\\d+))?",
-            method = "POST",
+    @VertxRouter(path = "\\/orders\\/(?<userId>\\d+)\\/(?<page>\\d+)",
+            method = "GET",
             mode = VertxRouteType.PathRegex)
     public void listUser(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            InviteRebateOrderCondition condition = JsonUtils.jsonToObject(routingContext.getBodyAsString(), InviteRebateOrderCondition.class, () -> null);
-            if (condition == null) {
-                routingContext.response().setStatusCode(404).end("没有数据");
-                return;
-            }
+            InviteRebateOrderCondition condition = new InviteRebateOrderCondition();
+            condition.setInviteMan(Long.valueOf(routingContext.pathParam("userId")));
             String page = routingContext.pathParam("page");
             condition.page(Integer.parseInt(page));
-            List<InviteRebateOrderVO> inviteOrders = inviteOrderDao.list(condition);
-            routingContext.end(JSON.toJSONString(inviteOrders));
+            try {
+
+                List<InviteRebateOrderVO> inviteOrders = inviteOrderDao.list(condition);
+                routingContext.end(JSON.toJSONString(inviteOrders));
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(404).end("[]");
+            }
+
         });
     }
 
-    @VertxRouter(path = "\\/order(?:\\/(?<orderId>\\d+))?",
+    @VertxRouter(path = "\\/order\\/(?<orderId>\\d+)",
             method = "POST",
             mode = VertxRouteType.PathRegex)
     public void order(RoutingContextChain chain) {
@@ -74,6 +86,15 @@ public class InviteRebateOrderRouter {
             AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
             WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), Long.valueOf(routingContext.pathParam("orderId")));
             routingContext.end();
+        });
+    }
+
+    @VertxRouter(path = "\\/count\\/(?<userId>\\d+)",
+            method = "POST",
+            mode = VertxRouteType.PathRegex)
+    public void count(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            routingContext.end(JSON.toJSONString(inviteOrderDao.get(Long.valueOf(routingContext.pathParam("userId")))));
         });
     }
 }

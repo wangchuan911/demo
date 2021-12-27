@@ -6,28 +6,18 @@
     <sql id="columns">
         <include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.columns"></include>
     </sql>
-    <select id="find" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition"
-            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
 
-        SELECT <include refid="columns"></include>,B.*
-        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
-        JOIN INVITE_REBATE_ORDER B
-        ON A.ID=B.ID
-
-    </select>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition"
             resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
 
         SELECT <include refid="columns"></include>,B.*
-        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
-        JOIN INVITE_REBATE_ORDER B
+        from INVITE_REBATE_ORDER B
+        JOIN BASE_ORDER A
         ON A.ID=B.ID
-
+        WHERE B.INVITE_MAN=#{inviteMan}
         limit ${page.start},${page.size}
     </select>
-    <sql id="condition">
-        and a.id=#{data.ID}
-    </sql>
+
     <select id="get" parameterType="long"
             resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
         SELECT <include refid="columns"></include>,B.*

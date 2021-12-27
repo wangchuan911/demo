@@ -142,4 +142,8 @@ public class BaseOrderService {
                 .get())
                 .getActualTypeArguments();
     }
+
+    public static IOrderService getOrderService(Long classId){
+        return ORDER_CLASSES.get(classId);
+    }
 }
