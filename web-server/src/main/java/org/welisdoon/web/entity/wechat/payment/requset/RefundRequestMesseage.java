@@ -8,6 +8,7 @@ import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.reflections.ReflectionUtils;
+import org.welisdoon.web.entity.wechat.utils.SignUtils;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -121,7 +122,7 @@ public class RefundRequestMesseage {
     }
 
     public RefundRequestMesseage setSign(String sign) {
-        StringBuilder tmpStr = new StringBuilder();
+        /*StringBuilder tmpStr = new StringBuilder();
         Class<XmlElement> annotationClass = XmlElement.class;
         ReflectionUtils.getFields(this.getClass(), ReflectionUtils.withAnnotation(annotationClass))
                 .stream()
@@ -135,9 +136,9 @@ public class RefundRequestMesseage {
                     }
                 })
                 .sorted((o1, o2) -> {
-                    /*char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
+                    *//*char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
                     char c2 = o2.getAnnotation(annotationClass).name().charAt(0);
-                    return c1 - c2;*/
+                    return c1 - c2;*//*
                     return PrePayRequsetMesseage.ASCIISort(o1.getAnnotation(annotationClass).name(), o2.getAnnotation(annotationClass).name());
                 })
                 .forEachOrdered(field -> {
@@ -152,7 +153,8 @@ public class RefundRequestMesseage {
                 .append(sign);
         this.sign = DigestUtils
                 .md5Hex(tmpStr.toString())
-                .toUpperCase();
+                .toUpperCase();*/
+        this.sign = SignUtils.sign(this, sign);
         return this;
     }
 

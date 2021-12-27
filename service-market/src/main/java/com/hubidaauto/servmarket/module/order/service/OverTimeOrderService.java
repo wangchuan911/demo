@@ -26,12 +26,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
-import org.welisdoon.web.entity.wechat.payment.requset.PayBillRequsetMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.RefundRequestMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.RefundResultMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.*;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
@@ -115,6 +113,11 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
     @Override
     public RefundRequestMesseage refundRequset(WeChatRefundOrder weChatPayOrder) {
         throw new RuntimeException("不支持退款");
+    }
+
+    @Override
+    public MarketTransferRequsetMesseage marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
+        return null;
     }
 
     @Override

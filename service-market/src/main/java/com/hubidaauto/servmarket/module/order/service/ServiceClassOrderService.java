@@ -49,12 +49,10 @@ import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
-import org.welisdoon.web.entity.wechat.payment.requset.PayBillRequsetMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.RefundRequestMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.RefundResultMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.*;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
@@ -506,6 +504,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         return new RefundRequestMesseage().setOutTradeNo(orderVO.getCode()).
                 setOutRefundNo(orderVO.getCode()).setRefundFee(orderVO.getPrice().intValue()).
                 setTotalFee(orderVO.getPrice().intValue()).setTransactionId(payLogVO.getTransactionId());
+    }
+
+    @Override
+    public MarketTransferRequsetMesseage marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
+        return null;
     }
 
     @Override

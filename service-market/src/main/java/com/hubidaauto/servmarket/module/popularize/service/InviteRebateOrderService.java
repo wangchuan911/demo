@@ -8,6 +8,7 @@ import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateCountDao;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateCountVO;
+import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO;
 import com.hubidaauto.servmarket.module.popularize.model.IRebate;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
@@ -21,10 +22,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
+import org.welisdoon.web.entity.wechat.WeChatPayOrder;
+import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
+import org.welisdoon.web.entity.wechat.payment.requset.*;
+import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
+import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
+import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -37,7 +46,7 @@ import java.util.function.Consumer;
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @DS("shop")
-public class InviteRebateOrderService {
+public class InviteRebateOrderService implements IWechatPayHandler {
     private static final Logger logger = LoggerFactory.getLogger(InviteRebateOrderService.class);
 
     BaseOrderDao baseOrderDao;
@@ -87,5 +96,31 @@ public class InviteRebateOrderService {
                 }
             });
         };
+    }
+
+    @Override
+    public PayBillResponseMesseage payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+        return null;
+    }
+
+    @Override
+    public PrePayRequsetMesseage payRequset(WeChatPayOrder weChatPayOrder) {
+        return null;
+    }
+
+    @Override
+    public RefundReplyMesseage refundCallBack(RefundResultMesseage refundResultMesseage) {
+        return null;
+    }
+
+    @Override
+    public RefundRequestMesseage refundRequset(WeChatRefundOrder weChatPayOrder) {
+        return null;
+    }
+
+    @Override
+    public MarketTransferRequsetMesseage marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
+        InviteRebateCountVO countVO = inviteRebateCountDao.get(Long.valueOf(weChatPayOrder.getUserId()));
+        return new MarketTransferRequsetMesseage().setAmount(countVO.getTotalRebate() - countVO.getPaidRebate()).setNonceStr(WeChatPayOrder.generateNonce());
     }
 }

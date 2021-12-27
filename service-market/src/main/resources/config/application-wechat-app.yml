@@ -31,6 +31,7 @@ wechat-app-hubida:
     subscribeSend: https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token={{ACCESS_TOKEN}}
     refund: https://api.mch.weixin.qq.com/secapi/pay/refund
     getwxacodeunlimit: https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={{ACCESS_TOKEN}}
+    mmpaymkttransfers: https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers
   classPath: com.hubidaauto.carservice.wxapp
 temp:
   filePath: D:\Documents\Pictures

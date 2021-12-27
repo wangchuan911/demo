@@ -22,6 +22,7 @@ public interface CommonConst {
                 UNIFIED_ORDER = "unifiedorder",
                 USER_INFO = "userInfo",
                 CUSTOM_SEND = "customSend",
-                REFUND = "refund";
+                REFUND = "refund",
+                MARKET_TRANSFER = "mmpaymkttransfers";
     }
 }

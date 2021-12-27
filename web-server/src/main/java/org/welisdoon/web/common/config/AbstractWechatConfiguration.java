@@ -26,18 +26,13 @@ import org.welisdoon.web.common.WechatAsyncMeassger;
 import org.welisdoon.web.common.encrypt.AesException;
 import org.welisdoon.web.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
+import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
 import org.welisdoon.web.entity.wechat.WeChatUser;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
-import org.welisdoon.web.entity.wechat.payment.requset.PayBillRequsetMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.RefundRequestMesseage;
-import org.welisdoon.web.entity.wechat.payment.requset.RefundResultMesseage;
-import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
-import org.welisdoon.web.entity.wechat.payment.response.PrePayResponseMesseage;
-import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
-import org.welisdoon.web.entity.wechat.payment.response.RefundResponseMesseage;
+import org.welisdoon.web.entity.wechat.payment.requset.*;
+import org.welisdoon.web.entity.wechat.payment.response.*;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 import org.welisdoon.web.service.wechat.intf.WechatLoginHandler;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
@@ -645,6 +640,52 @@ public abstract class AbstractWechatConfiguration {
             routingContext.fail(e);
         }
 
+    }
+
+    public Future<JsonObject> wechatMarketTransfersRequest(WeChatMarketTransferOrder transferOrder) {
+        return Future.future(jsonObjectPromise -> {
+            try {
+                Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(transferOrder.getPayClass());
+                IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
+                MarketTransferRequsetMesseage requset = iWechatPayHandler.marketTransferRequset(transferOrder);
+                Buffer buffer = Buffer.buffer(JAXBUtils.toXML(requset
+                        .setMchAppid(this.getAppID())
+                        .setMchId(this.getMerchant().getMchId())
+                        .setNonceStr(transferOrder.getNonce())
+                        .setSign(this.getMerchant().getMchKey())
+                ));
+/*
+                Buffer buffer = Buffer.buffer(xml.startsWith("<?") ? (xml.substring(xml.indexOf("?>") + 2)) : xml);
+*/
+                logger.info(buffer.toString());
+                this.mchApiAsyncMeassger.getWebClient().postAbs(this.getUrls().get(CommonConst.WecharUrlKeys.MARKET_TRANSFER).toString())
+                        .sendBuffer(buffer, httpResponseAsyncResult -> {
+                            if (!httpResponseAsyncResult.succeeded()) {
+                                jsonObjectPromise.fail(httpResponseAsyncResult.cause());
+                                return;
+                            }
+                            try {
+                                MarketTransferResponseMesseage messeage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), MarketTransferResponseMesseage.class);
+                                System.out.println(messeage);
+                                if (!CommonConst.WeChatPubValues.SUCCESS.equals(messeage.getReturnCode())) {
+                                    throw new RuntimeException(String.format("转账失败:%s[%s,%s]",
+                                            messeage.getReturnCode(),
+                                            messeage.getReturnMsg(),
+                                            messeage.getErrCodeDes()));
+                                } else {
+                                    JsonObject resultBodyJson = new JsonObject().put("success", messeage.getReturnMsg());
+                                    jsonObjectPromise.complete(resultBodyJson);
+                                }
+                            } catch (Throwable t) {
+                                logger.error(t.getMessage(), t);
+                                jsonObjectPromise.fail(t);
+                            }
+                        });
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+                jsonObjectPromise.fail(e);
+            }
+        });
     }
 
     public Merchant getMerchant() {

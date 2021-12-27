@@ -11,6 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.welisdoon.web.common.encrypt.WXBizMsgCrypt;
+import org.welisdoon.web.entity.wechat.utils.SignUtils;
 import org.xml.sax.InputSource;
 
 import javax.crypto.BadPaddingException;
@@ -138,7 +139,7 @@ public class RefundResultMesseage {
     }
 
     public RefundResultMesseage setSign(String sign) {
-        StringBuilder tmpStr = new StringBuilder();
+        /*StringBuilder tmpStr = new StringBuilder();
         Class<XmlElement> annotationClass = XmlElement.class;
         ReflectionUtils.getFields(this.getClass(), ReflectionUtils.withAnnotation(annotationClass))
                 .stream()
@@ -152,9 +153,9 @@ public class RefundResultMesseage {
                     }
                 })
                 .sorted((o1, o2) -> {
-                    /*char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
+                    *//*char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
                     char c2 = o2.getAnnotation(annotationClass).name().charAt(0);
-                    return c1 - c2;*/
+                    return c1 - c2;*//*
                     return PrePayRequsetMesseage.ASCIISort(o1.getAnnotation(annotationClass).name(), o2.getAnnotation(annotationClass).name());
                 })
                 .forEachOrdered(field -> {
@@ -169,7 +170,8 @@ public class RefundResultMesseage {
                 .append(sign);
         this.sign = DigestUtils
                 .md5Hex(tmpStr.toString())
-                .toUpperCase();
+                .toUpperCase();*/
+        this.sign = SignUtils.sign(this, sign);
         return this;
     }
 

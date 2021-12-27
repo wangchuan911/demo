@@ -3,6 +3,7 @@ package org.welisdoon.web.entity.wechat.payment.requset;
 import com.sun.istack.NotNull;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.reflections.ReflectionUtils;
+import org.welisdoon.web.entity.wechat.utils.SignUtils;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -209,7 +210,7 @@ public class PrePayRequsetMesseage {
     }
 
     public PrePayRequsetMesseage setSign(String sign) {
-        StringBuilder tmpStr = new StringBuilder();
+        /*StringBuilder tmpStr = new StringBuilder();
         Class<XmlElement> annotationClass = XmlElement.class;
         ReflectionUtils.getFields(this.getClass(), ReflectionUtils.withAnnotation(annotationClass))
                 .stream()
@@ -223,9 +224,9 @@ public class PrePayRequsetMesseage {
                     }
                 })
                 .sorted((o1, o2) -> {
-                    /*char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
+                    *//*char c1 = o1.getAnnotation(annotationClass).name().charAt(0);
                     char c2 = o2.getAnnotation(annotationClass).name().charAt(0);
-                    return c1 - c2;*/
+                    return c1 - c2;*//*
                     return ASCIISort(o1.getAnnotation(annotationClass).name(), o2.getAnnotation(annotationClass).name());
                 })
                 .forEachOrdered(field -> {
@@ -240,11 +241,12 @@ public class PrePayRequsetMesseage {
                 .append(sign);
         this.sign = DigestUtils
                 .md5Hex(tmpStr.toString())
-                .toUpperCase();
+                .toUpperCase();*/
+        this.sign = SignUtils.sign(this, sign);
         return this;
     }
 
-    public static int ASCIISort(String str1, String str2) {
+    /*public static int ASCIISort(String str1, String str2) {
         char c1;
         char c2;
         int v = 0, len = Math.min(str1.length(), str2.length());
@@ -258,7 +260,7 @@ public class PrePayRequsetMesseage {
             return v;
         }
         return v;
-    }
+    }*/
 
     public String getSignType() {
         return signType;
