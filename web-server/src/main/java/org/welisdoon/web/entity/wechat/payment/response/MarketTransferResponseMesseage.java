@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.StringJoiner;
 
 /**
  * @Classname TranferToPersionRequsetMesseage
@@ -158,5 +159,23 @@ public class MarketTransferResponseMesseage {
 
     public void setPaymentTime(String paymentTime) {
         this.paymentTime = paymentTime;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", MarketTransferResponseMesseage.class.getSimpleName() + "[", "]")
+                .add("returnCode='" + returnCode + "'")
+                .add("returnMsg='" + returnMsg + "'")
+                .add("mchAppid='" + mchAppid + "'")
+                .add("mchid='" + mchid + "'")
+                .add("deviceInfo='" + deviceInfo + "'")
+                .add("nonceStr='" + nonceStr + "'")
+                .add("resultCode='" + resultCode + "'")
+                .add("errCode='" + errCode + "'")
+                .add("errCodeDes='" + errCodeDes + "'")
+                .add("partnerTradeNo='" + partnerTradeNo + "'")
+                .add("paymentNo='" + paymentNo + "'")
+                .add("paymentTime='" + paymentTime + "'")
+                .toString();
     }
 }

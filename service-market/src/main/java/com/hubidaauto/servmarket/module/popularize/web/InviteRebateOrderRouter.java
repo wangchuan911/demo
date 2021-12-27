@@ -120,7 +120,7 @@ public class InviteRebateOrderRouter {
                     .onSuccess(jsonObject -> {
                         InviteRebateCountVO countVO = inviteRebateCountDao.get(userId);
                         countVO.setPaidRebate(countVO.getTotalRebate());
-                        inviteRebateCountDao.update(countVO);
+                        inviteRebateCountDao.put(countVO);
                         inviteOrderDao.update(new InviteRebateOrderCondition().setInviteMan(userId).setPayState(10051L));
                         routingContext.end("成功");
                     })

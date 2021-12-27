@@ -667,15 +667,16 @@ public abstract class AbstractWechatConfiguration {
                             try {
                                 MarketTransferResponseMesseage messeage = JAXBUtils.fromXML(httpResponseAsyncResult.result().bodyAsString(), MarketTransferResponseMesseage.class);
                                 System.out.println(messeage);
-                                if (!CommonConst.WeChatPubValues.SUCCESS.equals(messeage.getReturnCode())) {
-                                    throw new RuntimeException(String.format("转账失败:%s[%s,%s]",
-                                            messeage.getReturnCode(),
-                                            messeage.getReturnMsg(),
-                                            messeage.getErrCodeDes()));
-                                } else {
+                                if (CommonConst.WeChatPubValues.SUCCESS.equals(messeage.getReturnCode()) &&
+                                        CommonConst.WeChatPubValues.SUCCESS.equals(messeage.getResultCode())) {
                                     JsonObject resultBodyJson = new JsonObject().put("success", messeage.getReturnMsg());
                                     jsonObjectPromise.complete(resultBodyJson);
+                                    return;
                                 }
+                                throw new RuntimeException(String.format("结算失败:%s[%s,%s]",
+                                        messeage.getReturnCode(),
+                                        messeage.getReturnMsg(),
+                                        messeage.getErrCodeDes()));
                             } catch (Throwable t) {
                                 logger.error(t.getMessage(), t);
                                 jsonObjectPromise.fail(t);
