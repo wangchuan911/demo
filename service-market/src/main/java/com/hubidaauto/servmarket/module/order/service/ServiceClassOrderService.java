@@ -1,6 +1,8 @@
 package com.hubidaauto.servmarket.module.order.service;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONPObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.common.dao.AppConfigDao;
 import com.hubidaauto.servmarket.module.common.entity.AppConfig;
@@ -22,6 +24,7 @@ import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
 import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
 import com.hubidaauto.servmarket.module.popularize.model.IRebate;
+import com.hubidaauto.servmarket.module.popularize.model.RebateConfig;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
@@ -565,10 +568,20 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     public Integer rebate(OrderVO orderVO) {
         ServiceClassOrderVO order = orderDao.get(orderVO.getId());
         ItemTypeVO itemTypeVO = itemTypeDao.get(order.getItemTypeId());
-        AppConfig config = appConfigDao.find(new AppConfig().setName(String.format("%s_%d", IRebate.CONFIG_GROUP, Long.valueOf(itemTypeVO.getItemId()))).setGroup(IRebate.CONFIG_GROUP));
+        AppConfig config = appConfigDao.get(String.format("%s_%s", "ITEM_TYPE", IRebate.CONFIG_GROUP));
         if (config == null)
             return 0;
-        StringBuilder sb = new StringBuilder(order.getTotalPrice() * Integer.valueOf(config.getValue()));
-        return Integer.valueOf(sb.substring(0, sb.length() - 2));
+        JSONObject json = JSONObject.parseObject(config.getValue());
+        String key;
+        if (json.containsKey(key = String.format("%d_%d", itemTypeVO.getItemId(), itemTypeVO.getId()))) {
+
+        } else if (json.containsKey(key = String.format("%d_", itemTypeVO.getItemId()))) {
+
+        } else if (json.containsKey(key = "_")) {
+
+        } else {
+            return 0;
+        }
+        return json.getObject(key, RebateConfig.class).compute(order.getTotalPrice());
     }
 }
