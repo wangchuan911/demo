@@ -15,6 +15,9 @@
         JOIN BASE_ORDER A
         ON A.ID=B.ID
         WHERE B.INVITE_MAN=#{inviteMan}
+        <if test="payState!=null">
+            and PAY_STATE=#{payState}
+        </if>
         limit ${page.start},${page.size}
     </select>
 
@@ -28,9 +31,10 @@
 
     </select>
 
-    <insert id="add" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO" useGeneratedKeys="true" keyProperty="id">
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO"
+            useGeneratedKeys="true" keyProperty="id">
         INSERT INTO INVITE_REBATE_ORDER (ID, PAY_STATE, INVITE_MAN, REBATE)
-        VALUES (#{id},#{payState},#{inviteMan},#{rebate})
+        VALUES (#{id},10050,#{inviteMan},#{rebate})
 
     </insert>
 
@@ -44,4 +48,16 @@
     <delete id="delete" parameterType="long">
         delete from INVITE_REBATE_ORDER where ID=#{value}
     </delete>
+
+    <update id="update" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition">
+        UPDATE INVITE_REBATE_ORDER t
+        <set>
+            t.PAY_STATE = #{payState},
+        </set>
+
+        <where>
+            and t.INVITE_MAN = #{inviteMan}
+        </where>
+
+    </update>
 </mapper>

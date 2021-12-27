@@ -7,6 +7,7 @@ import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateCountVO;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO;
+import com.hubidaauto.servmarket.module.popularize.service.InviteRebateOrderService;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,11 +97,11 @@ public class InviteRebateOrderRouter {
     }
 
     @VertxRouter(path = "\\/count\\/(?<userId>\\d+)",
-            method = "POST",
+            method = "GET",
             mode = VertxRouteType.PathRegex)
     public void count(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            routingContext.end(JSON.toJSONString(inviteOrderDao.get(Long.valueOf(routingContext.pathParam("userId")))));
+            routingContext.end(JSON.toJSONString(inviteRebateCountDao.get(Long.valueOf(routingContext.pathParam("userId")))));
         });
     }
 
@@ -115,11 +116,12 @@ public class InviteRebateOrderRouter {
                     .wechatMarketTransfersRequest((WeChatMarketTransferOrder)
                             new WeChatMarketTransferOrder()
                                     .setUserId(userId.toString())
-                                    .setPayClass(this.getClass().getName()))
+                                    .setPayClass(InviteRebateOrderService.class.getName()))
                     .onSuccess(jsonObject -> {
                         InviteRebateCountVO countVO = inviteRebateCountDao.get(userId);
                         countVO.setPaidRebate(countVO.getTotalRebate());
                         inviteRebateCountDao.update(countVO);
+                        inviteOrderDao.update(new InviteRebateOrderCondition().setInviteMan(userId).setPayState(10051L));
                         routingContext.end("成功");
                     })
                     .onFailure(throwable -> {

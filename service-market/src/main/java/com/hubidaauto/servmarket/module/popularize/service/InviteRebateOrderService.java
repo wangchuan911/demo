@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.annotation.Transactional;
+import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
@@ -46,6 +48,7 @@ import java.util.function.Consumer;
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @DS("shop")
+@Transactional(rollbackFor = Throwable.class)
 public class InviteRebateOrderService implements IWechatPayHandler {
     private static final Logger logger = LoggerFactory.getLogger(InviteRebateOrderService.class);
 
@@ -66,6 +69,29 @@ public class InviteRebateOrderService implements IWechatPayHandler {
         this.inviteRebateCountDao = b6;
     }
 
+    public void start(Long orderId) {
+        OrderVO orderVO = baseOrderDao.get(orderId);
+
+        Object service = BaseOrderService.getOrderService(orderVO.getClassId());
+        if (!(service instanceof IRebate)) return;
+        AppUserVO appUserVO = appUserDao.get(orderVO.getCustId());
+        if (appUserVO.getInviteUser() == null)
+            return;
+        InviteRebateOrderVO inviteRebateOrderVO = (InviteRebateOrderVO) new InviteRebateOrderVO().
+                setInviteMan(appUserVO.getInviteUser())
+                .setRebate(((IRebate) service).rebate(orderVO))
+                .setId(orderVO.getId());
+        this.inviteOrderDao.add(inviteRebateOrderVO);
+        InviteRebateCountVO countVO = inviteRebateCountDao.get(inviteRebateOrderVO.getInviteMan());
+        if (countVO == null) {
+            countVO = new InviteRebateCountVO().setUserId(appUserVO.getInviteUser()).setTotalRebate(inviteRebateOrderVO.getRebate());
+            inviteRebateCountDao.add(countVO);
+        } else {
+            countVO.setTotalRebate(countVO.getTotalRebate() + inviteRebateOrderVO.getRebate());
+            inviteRebateCountDao.put(countVO);
+        }
+    }
+
     @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncServiceProxy() {
 
@@ -74,26 +100,7 @@ public class InviteRebateOrderService implements IWechatPayHandler {
             MessageConsumer<Long> consumer = vertx1.eventBus().consumer(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"));
             consumer.handler(longMessage -> {
                 logger.info("orderFinished");
-                OrderVO orderVO = baseOrderDao.get(longMessage.body());
-
-                Object service = BaseOrderService.getOrderService(orderVO.getClassId());
-                if (!(service instanceof IRebate)) return;
-                AppUserVO appUserVO = appUserDao.get(orderVO.getCustId());
-                if (appUserVO.getInviteUser() == null)
-                    return;
-                InviteRebateOrderVO inviteRebateOrderVO = (InviteRebateOrderVO) new InviteRebateOrderVO().
-                        setInviteMan(appUserVO.getInviteUser())
-                        .setRebate(((IRebate) service).rebate(orderVO))
-                        .setId(orderVO.getId());
-                this.inviteOrderDao.add(inviteRebateOrderVO);
-                InviteRebateCountVO countVO = inviteRebateCountDao.get(inviteRebateOrderVO.getInviteMan());
-                if (countVO == null) {
-                    countVO = new InviteRebateCountVO().setUserId(appUserVO.getInviteUser()).setTotalRebate(inviteRebateOrderVO.getRebate());
-                    inviteRebateCountDao.add(countVO);
-                } else {
-                    countVO.setTotalRebate(countVO.getTotalRebate() + inviteRebateOrderVO.getRebate());
-                    inviteRebateCountDao.update(countVO);
-                }
+                ApplicationContextProvider.getBean(InviteRebateOrderService.class).start(longMessage.body());
             });
         };
     }
