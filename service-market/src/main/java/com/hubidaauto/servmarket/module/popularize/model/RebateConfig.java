@@ -39,7 +39,7 @@ public class RebateConfig {
             case '%':
                 try {
                     originPrice = originPrice * Integer.valueOf(this.rebate.substring(0, this.rebate.length() - 1));
-                    StringBuilder s = new StringBuilder(originPrice);
+                    StringBuilder s = new StringBuilder().append(originPrice);
                     if (s.length() > 2) {
                         s.delete(s.length() - 2, s.length());
                         originPrice = Integer.valueOf(s.toString());
