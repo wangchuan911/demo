@@ -35,6 +35,8 @@ import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -127,7 +129,15 @@ public class InviteRebateOrderService implements IWechatPayHandler {
 
     @Override
     public MarketTransferRequsetMesseage marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
-        InviteRebateCountVO countVO = inviteRebateCountDao.get(Long.valueOf(weChatPayOrder.getUserId()));
-        return new MarketTransferRequsetMesseage().setAmount(countVO.getTotalRebate() - countVO.getPaidRebate()).setNonceStr(WeChatPayOrder.generateNonce());
+        Long userid = Long.valueOf(weChatPayOrder.getUserId());
+        InviteRebateCountVO countVO = inviteRebateCountDao.get(userid);
+        AppUserVO userVO = appUserDao.get(userid);
+        return new MarketTransferRequsetMesseage()
+                .setPartnerTradeNo(String.format("%08dMT%020d", weChatPayOrder.getUserId(), System.currentTimeMillis()))
+                .setOpenid(userVO.getAppId())
+                .setCheckName("NO_CHECK")
+                .setAmount(countVO.getTotalRebate() - countVO.getPaidRebate())
+                .setNonceStr(WeChatPayOrder.generateNonce())
+                .setDesc("推广费用");
     }
 }
