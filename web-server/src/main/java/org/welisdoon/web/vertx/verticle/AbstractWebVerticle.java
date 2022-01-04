@@ -245,17 +245,26 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                     }
                     try {
                         Object[] paramaters = Arrays.stream(routeMethod.getParameterTypes()).map(aClass -> {
-                            Object value = null;
                             if (aClass == Vertx.class) {
-                                value = vertx;
+                                return vertx;
                             } else if (aClass == RoutingContextChain.class) {
-                                value = chain;
+                                return chain;
                             }
-                            return value;
+                            return null;
                         }).toArray();
-
                         routeMethod.setAccessible(true);
-                        routeMethod.invoke(serviceBean, paramaters);
+                        if (paramaters.length > 0)
+                            routeMethod.invoke(serviceBean, paramaters);
+                        else
+                            route.handler(routingContext -> {
+                                try {
+                                    routeMethod.invoke(serviceBean, routingContext);
+                                } catch (Throwable e) {
+                                    logger.error(e.getMessage(), e);
+                                    routingContext.response().setStatusCode(500).end(e.getMessage());
+                                }
+                            });
+
                         LoggerFactory.getLogger(routeMethod.getDeclaringClass()).info(String.format("%s[%s]", route.methods() == null ? "ALL" : route.methods(), pathString));
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
