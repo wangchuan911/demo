@@ -11,6 +11,7 @@ import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
+import io.vertx.core.Future;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -125,6 +126,14 @@ public class BaseOrderService {
     public void dismiss(Long orderId) {
         IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(orderId).getClassId());
         iOrderService.dismiss(orderId);
+    }
+
+    public void modifyOrder(String jsonText){
+        JSONObject jsonObject = JSONObject.parseObject(jsonText);
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(jsonObject.getLong("id")).getClassId());
+        Type orderConditionClass = this.getIOrderServiceRawType(iOrderService)[0];
+        OrderCondition condition = jsonObject.toJavaObject(orderConditionClass);
+        iOrderService.modifyOrder(condition);
     }
 
     Type[] getIOrderServiceRawType(IOrderService iOrderService) {

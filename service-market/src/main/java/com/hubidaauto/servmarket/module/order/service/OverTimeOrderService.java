@@ -202,6 +202,11 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
         UNSUPPORT_METHOD();
     }
 
+    @Override
+    public void modifyOrder(OverTimeOrderCondtion condition) {
+        UNSUPPORT_METHOD();
+    }
+
     static void UNSUPPORT_METHOD() {
         throw new RuntimeException("不支持的方法");
     }

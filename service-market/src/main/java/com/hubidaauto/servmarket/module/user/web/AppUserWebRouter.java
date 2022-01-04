@@ -196,7 +196,8 @@ public class AppUserWebRouter {
                         routingContext.end(JSONObject.toJSONString(entries));
                     })
                     .onFailure(throwable -> {
-                        routingContext.fail(throwable);
+                        throwable.printStackTrace();
+                        routingContext.response().setStatusCode(500).end(throwable.getMessage());
                     });
         });
     }

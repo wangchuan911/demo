@@ -384,7 +384,8 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         }
 
         AddressVO addressVO = addressDao.get(orderVO.getAddressId());
-        list.add(new DetailVO("服务区域", addressVO.getRegion()));
+        if (addressVO != null)
+            list.add(new DetailVO("服务区域", addressVO.getRegion()));
         list.add(new DetailVO("需要人数", String.format("%s%s", orderVO.getWorkerNum(), "人")));
         list.add(new DetailVO("备注信息", orderVO.getRemark()));
         list.add(new DetailVO("支付方式", "微信"));
@@ -412,6 +413,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         workOrderDao.clear(workOrderCondition);
         staffTaskDao.clear(new StaffCondition().setOrderId(orderId));
         flowService.dismiss(flow);
+    }
+
+    @Override
+    public void modifyOrder(ServiceClassOrderCondition condition) {
+
     }
 
 

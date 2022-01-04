@@ -212,7 +212,8 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                                 .onSuccess(entries -> {
                                     routingContext.response().end(entries.toBuffer());
                                 }).onFailure(throwable -> {
-                            routingContext.fail(throwable);
+                                    throwable.printStackTrace();
+                            routingContext.response().setStatusCode(500).end(throwable.getMessage());
                         });
                         break;
                     //获取支付信息
@@ -296,10 +297,10 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                                     })
                                     .onFailure(throwable -> {
                                         logger.error(throwable.getMessage(), throwable);
-                                        routingContext.fail(throwable);
+                                        routingContext.response().setStatusCode(500).end(throwable.getMessage());
                                     });
                         } catch (Throwable t) {
-                            routingContext.fail(t);
+                            routingContext.response().setStatusCode(500).end(t.getMessage());
                         }
                         break;
                     default:
@@ -361,7 +362,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
                     } else {
-                        routingContext.fail(500, stringAsyncResult.cause());
+                        routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
                     }
                 });
 

@@ -171,7 +171,7 @@ public class OrderWebRouter {
                 ;
             } catch (Throwable e) {
                 e.printStackTrace();
-                routingContext.fail(e.getCause());
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }
@@ -194,7 +194,7 @@ public class OrderWebRouter {
                 ;
             } catch (Throwable e) {
                 e.printStackTrace();
-                routingContext.fail(e.getCause());
+                routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
     }

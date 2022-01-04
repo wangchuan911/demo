@@ -37,6 +37,9 @@ public interface IOrderService<O extends OrderCondition, W extends WorkOrderCond
 
     void dismiss(Long orderId);
 
+    void modifyOrder(O condition);
+
+
     /* static void start(final long typeId,String J) {
          ApplicationContextProvider
                  .getApplicationContext()

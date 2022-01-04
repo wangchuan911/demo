@@ -1,7 +1,13 @@
 package com.hubidaauto.servmarket.module.order.entity;
 
+import org.springframework.util.Assert;
+
+import java.util.Arrays;
+
 public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrderVO> {
     Form form;
+    String modify;
+    final static String[] MODIFYS = new String[]{"dispatching"};
 
     public Form getForm() {
         return form;
@@ -108,6 +114,15 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
         public void setTypeId(Long typeId) {
             this.typeId = typeId;
         }
+    }
+
+    public String getModify() {
+        return modify;
+    }
+
+    public void setModify(String modify) {
+        Assert.isTrue(Arrays.stream(MODIFYS).filter(s -> s.equals(modify)).findFirst().isPresent(),"");
+        this.modify = modify;
     }
 }
 

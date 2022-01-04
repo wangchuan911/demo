@@ -13,7 +13,7 @@
         <where>
             <choose>
                 <when test="query=='dispatching'">
-                    and A.STATUS_ID=10001
+                    and A.STATUS_ID=10000
                     AND NOT EXISTS (SELECT 1 FROM STAFF_TASK A1 WHERE A1.ORDER_ID=A.ID)
                     AND EXISTS (
                     SELECT 1 FROM DUAL WHERE A.CUST_ID=#{custId}
@@ -22,7 +22,7 @@
                     )
                 </when>
                 <when test="query=='dispatched'">
-                    and A.STATUS_ID=10001
+                    and A.STATUS_ID=10000
                     AND EXISTS (SELECT 1 FROM STAFF_TASK A1 WHERE A1.ORDER_ID=A.ID)
                     AND EXISTS (
                     SELECT 1 FROM DUAL WHERE A.CUST_ID=#{custId}
