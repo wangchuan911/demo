@@ -34,6 +34,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 @Component
+@Deprecated
 public class CommonAsynService implements ICommonAsynService {
 
     private static final Logger logger = LoggerFactory.getLogger(CommonAsynService.class);

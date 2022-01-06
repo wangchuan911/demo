@@ -10,20 +10,23 @@
             resultType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
 
         SELECT <include refid="columns"></include>,B.*
-        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
-        JOIN OVER_TIME_ORDER B
+        from OVER_TIME_ORDER B
+        JOIN BASE_ORDER A
         ON A.ID=B.ID
+        WHERE #{relaOrderId}=B.RELA_ORDER_ID
 
     </select>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderCondtion"
             resultType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
 
         SELECT <include refid="columns"></include>,B.*
-        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
-        JOIN OVER_TIME_ORDER B
+        from OVER_TIME_ORDER B
+        JOIN BASE_ORDER A
         ON A.ID=B.ID
-
+        WHERE #{relaOrderId}=B.RELA_ORDER_ID
+        <if test="page!=null">
         limit ${page.start},${page.size}
+        </if>
     </select>
     <sql id="condition">
         and a.id=#{data.ID}

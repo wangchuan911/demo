@@ -56,4 +56,17 @@
     <delete id="delete" parameterType="long">
         delete from SERVICE_CLASS_ORDER where ID=#{value}
     </delete>
+
+    <update id="update" parameterType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderCondition">
+        UPDATE SERVICE_CLASS_ORDER t
+        <set>
+        <if test="dispatching">
+             t.BOOK_TIME = #{bookTime},
+            t.WORKER_NUM = #{workerNum},
+        </if>
+        </set>
+
+        WHERE t.ID = #{id}
+
+    </update>
 </mapper>

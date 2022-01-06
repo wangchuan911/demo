@@ -10,7 +10,6 @@ import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 
 import org.reflections.ReflectionUtils;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +70,15 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                 return ApplicationContextProvider.getBean(aClass);
             }
         }).filter(Objects::nonNull).toArray(Register[]::new);
-        ApplicationContextProvider.getBean(Reflections.class).getTypesAnnotatedWith(VertxConfiguration.class)
+        /*ApplicationContextProvider.getBean(Reflections.class).getTypesAnnotatedWith(VertxConfiguration.class)
+                .stream()*/
+        ApplicationContextProvider
+                .getApplicationContext()
+                .getBeansWithAnnotation(VertxConfiguration.class)
+                .entrySet()
                 .stream()
+                .map(Map.Entry::getValue)
+                .map(o -> ApplicationContextProvider.getRealClass(o.getClass()))
                 .forEach(aClass -> {
                     Arrays.stream(initEntry).forEach(entry -> {
                         entry.scan(aClass, map);
@@ -201,13 +207,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
             Class<? extends AbstractCustomVerticle> verticleClass = this.verticleClass;
             if (verticleClass == aClass) {
                 Type VertxRegisterInnerType = this.VertxRegisterInnerType;
-                final Object serviceBean;
-                try {
-                    serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
-                } catch (Throwable t) {
-                    logger.warn(t.getMessage());
-                    return;
-                }
+                final Object serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
                 Object value = null;
                 if (VertxRegisterInnerType == Vertx.class) {
                     value = vertx;

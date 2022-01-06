@@ -9,6 +9,7 @@ import org.welisdoon.web.common.web.Response;
 
 @ProxyGen
 @VertxGen
+@Deprecated
 public interface ICommonAsynService {
 
     void callService(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler);

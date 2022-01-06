@@ -13,12 +13,15 @@ import com.hubidaauto.servmarket.module.order.dao.OverTimeOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
 import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
+import com.hubidaauto.servmarket.module.popularize.service.InviteRebateOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
+import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.MessageConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,10 +36,13 @@ import org.welisdoon.web.entity.wechat.payment.requset.*;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
+import org.welisdoon.web.vertx.annotation.VertxRegister;
+import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @Classname OverTimeOrder
@@ -207,7 +213,31 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
         UNSUPPORT_METHOD();
     }
 
+    @Override
+    public void destroy(Long orderId) {
+        if (orderDao.get(orderId) != null) {
+            orderDao.delete(orderId);
+        } else {
+            for (OverTimeOrderVO overTimeOrderVO : orderDao.list(new OverTimeOrderCondtion().setRelaOrderId(orderId))) {
+                orderDao.delete(overTimeOrderVO.getId());
+            }
+        }
+    }
+
     static void UNSUPPORT_METHOD() {
         throw new RuntimeException("不支持的方法");
+    }
+
+    @VertxRegister(WorkerVerticle.class)
+    public Consumer<Vertx> message() {
+
+        return (Consumer<Vertx>) vertx1 -> {
+            AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
+            MessageConsumer<Long> consumer = vertx1.eventBus().consumer(String.format("app[%s]-%s", configuration.getAppID(), "orderDestroy"));
+            consumer.handler(longMessage -> {
+                logger.info("orderDestroy");
+                this.destroy(longMessage.body());
+            });
+        };
     }
 }

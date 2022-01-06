@@ -15,17 +15,13 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.core.net.SelfSignedCertificate;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
 
 import org.reflections.ReflectionUtils;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
@@ -164,13 +160,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
 
         @Override
         synchronized void inject(Vertx vertx, AbstractCustomVerticle verticle) {
-            final Object serviceBean;
-            try {
-                serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
-            } catch (Throwable t) {
-                logger.warn(t.getMessage());
-                return;
-            }
+            final Object serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
             if (verticle instanceof AbstractWebVerticle) {
                 this.routeMethod.stream().filter(Objects::nonNull).sorted((o1, o2) ->
                         o1.getAnnotation(VertxRouter.class).order() > o2.getAnnotation(VertxRouter.class).order() ? 1 : -1
@@ -180,9 +170,6 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                     RoutingContextChain chain = new RoutingContextChain(route);
 
                     if (vertxRouter.method() != null && vertxRouter.method().length > 0) {
-                        /*Arrays.stream(vertxRouter.method()).forEach(httpMethod -> {
-                            route.method(httpMethod);
-                        });*/
 
                         Arrays.stream(vertxRouter.method()).filter(httpMethodString -> {
                                     Optional<HttpMethod> optional = HttpMethod
@@ -255,7 +242,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                         routeMethod.setAccessible(true);
                         if (paramaters.length > 0)
                             routeMethod.invoke(serviceBean, paramaters);
-                        else
+                        else {
                             route.handler(routingContext -> {
                                 try {
                                     routeMethod.invoke(serviceBean, routingContext);
@@ -264,6 +251,8 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
                                     routingContext.response().setStatusCode(500).end(e.getMessage());
                                 }
                             });
+                        }
+
 
                         LoggerFactory.getLogger(routeMethod.getDeclaringClass()).info(String.format("%s[%s]", route.methods() == null ? "ALL" : route.methods(), pathString));
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {

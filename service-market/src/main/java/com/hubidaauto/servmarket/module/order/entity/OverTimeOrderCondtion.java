@@ -15,8 +15,9 @@ public class OverTimeOrderCondtion extends OrderCondition<OverTimeOrderVO> {
         return relaOrderId;
     }
 
-    public void setRelaOrderId(Long relaOrderId) {
+    public OverTimeOrderCondtion setRelaOrderId(Long relaOrderId) {
         this.relaOrderId = relaOrderId;
+        return this;
     }
 
     public Form getForm() {

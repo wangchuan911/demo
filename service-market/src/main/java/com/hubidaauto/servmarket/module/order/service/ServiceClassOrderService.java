@@ -417,6 +417,12 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
     @Override
     public void modifyOrder(ServiceClassOrderCondition condition) {
+        condition.setData(new ServiceClassOrderVO(condition.getForm()));
+        orderDao.update(condition);
+    }
+
+    @Override
+    public void destroy(Long orderId) {
 
     }
 

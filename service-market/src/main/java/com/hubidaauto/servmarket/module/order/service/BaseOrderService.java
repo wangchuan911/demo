@@ -11,11 +11,14 @@ import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
+import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.core.Future;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
 import java.lang.reflect.ParameterizedType;
@@ -134,6 +137,13 @@ public class BaseOrderService {
         Type orderConditionClass = this.getIOrderServiceRawType(iOrderService)[0];
         OrderCondition condition = jsonObject.toJavaObject(orderConditionClass);
         iOrderService.modifyOrder(condition);
+    }
+
+    public void destroy(Long orderId) {
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(orderId).getClassId());
+        iOrderService.destroy(orderId);
+        AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
+        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderDestroy"), orderId);
     }
 
     Type[] getIOrderServiceRawType(IOrderService iOrderService) {

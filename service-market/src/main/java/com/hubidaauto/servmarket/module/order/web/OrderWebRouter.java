@@ -303,6 +303,47 @@ public class OrderWebRouter {
         });
     }
 
+    @VertxRouter(path = "/", method = "PUT")
+    public void modify(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                orderService
+                        .modifyOrder(routingContext.getBodyAsString())
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end("成功");
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/(?<orderId>\\d+)", method = "DELETE", mode = VertxRouteType.PathRegex)
+    public void del(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                orderService
+                        .destroy(Long.valueOf(routingContext.pathParam("orderId")))
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end("成功");
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
+        });
+    }
+
+
     @VertxRouter(path = "\\/(?<orderId>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
     public void getOrder(RoutingContextChain context) {
         context.handler(routingContext -> {
