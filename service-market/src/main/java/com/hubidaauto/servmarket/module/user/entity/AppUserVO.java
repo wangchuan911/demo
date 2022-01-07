@@ -1,8 +1,10 @@
 package com.hubidaauto.servmarket.module.user.entity;
 
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
+import org.springframework.util.StringUtils;
+import org.welisdoon.web.common.encrypt.WXBizMsgCrypt;
 import org.welisdoon.web.entity.wechat.WeChatUser;
 
 /**
@@ -12,12 +14,13 @@ import org.welisdoon.web.entity.wechat.WeChatUser;
  * @Date 2021/8/11 00:55
  */
 public class AppUserVO {
-    Long id, defAddrId, inviteUser;
-    String appId, session, name;
+    Long id, defAddrId, inviteUser, defCarId;
+    String appId, session, name, phone, unionid;
     Integer type;
 
     public AppUserVO() {
     }
+
 
     public AppUserVO(WeChatUser weChatUser) {
         this.setAppId(weChatUser.getOpenId());
@@ -88,4 +91,44 @@ public class AppUserVO {
         this.inviteUser = inviteUser;
         return this;
     }
+
+    public Long getDefCarId() {
+        return defCarId;
+    }
+
+    public void setDefCarId(Long defCarId) {
+        this.defCarId = defCarId;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    @JsonIgnore
+    @JSONField(deserialize = false, serialize = false)
+    public String getUnionid() {
+        return unionid;
+    }
+
+    public void setUnionid(String unionid) {
+        this.unionid = unionid;
+    }
+
+    /*public AppUserVO userDecrypted(String userEncryptedData, String iv) throws Throwable {
+        JSONObject jsonObject = JSONObject.parseObject(WXBizMsgCrypt.wxDecrypt(userEncryptedData, this.getSession(), iv));
+        this.setUnionid(jsonObject.getString("unionId"));
+        return this;
+    }
+
+    public AppUserVO phoneDecrypted(String phoneEncryptedData, String iv) throws Throwable {
+        JSONObject jsonObject = JSONObject.parseObject(WXBizMsgCrypt.wxDecrypt(phoneEncryptedData, this.getSession(), iv));
+        this.phone = jsonObject.getString("phoneNumber");
+        if (StringUtils.isEmpty(this.phone))
+            this.phone = jsonObject.getString("purePhoneNumber");
+        return this;
+    }*/
 }

@@ -53,7 +53,7 @@
 
     <update id="put" parameterType="com.hubidaauto.servmarket.module.user.entity.AppUserVO">
         update APP_USER set TYPE=#{type},NAME=#{name},SESSION=#{session},APP_ID=#{appId},DEF_ADDR_ID=#{defAddrId},
-        INVITE_USER=#{inviteUser}
+        INVITE_USER=#{inviteUser},PHONE=#{phone,jdbcType=VARCHAR}
         where ID=#{id}
     </update>
 </mapper>

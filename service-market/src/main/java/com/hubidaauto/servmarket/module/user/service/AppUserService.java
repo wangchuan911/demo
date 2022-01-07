@@ -1,5 +1,6 @@
 package com.hubidaauto.servmarket.module.user.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
@@ -9,11 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatUser;
 import org.welisdoon.web.service.wechat.intf.WechatLoginHandler;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Classname AppUserService
@@ -51,6 +57,36 @@ public class AppUserService implements WechatLoginHandler<AppUserVO> {
             appUserDao.put(userVO);
         }
         return userVO;
+    }
+
+    public AppUserVO decrypt(UserCondition userCondition) throws Throwable {
+        AppUserVO userVO = appUserDao.get(userCondition.getId());
+        if (userCondition.getPhone() != null) {
+            JSONObject jsonObject = JSONObject.parseObject(userCondition.getPhone().decrypt(userVO.getSession()));
+            userVO.setPhone(jsonObject.getString("phoneNumber"));
+            if (StringUtils.isEmpty(userVO.getPhone()))
+                userVO.setPhone(jsonObject.getString("purePhoneNumber"));
+        }
+        if (userCondition.getUser() != null) {
+            JSONObject jsonObject = JSONObject.parseObject(userCondition.getUser().decrypt(userVO.getSession()));
+            userVO.setUnionid(jsonObject.getString("unionId"));
+        }
+        return userVO;
+    }
+
+    public void update(UserCondition userCondition) throws Throwable {
+        AppUserVO userVO = this.decrypt(userCondition);
+        if (userCondition.getData() != null) {
+            AppUserVO userVO2 = userCondition.getData();
+            JSONObject target = (JSONObject) JSONObject.toJSON(userVO), destinate = (JSONObject) JSONObject.toJSON(userVO2);
+            for (String s : destinate.keySet()) {
+                if (destinate.containsKey(s)) {
+                    target.put(s, destinate.get(s));
+                }
+            }
+            userVO = target.toJavaObject(AppUserVO.class);
+        }
+        appUserDao.put(userVO);
     }
 
     /* *//**

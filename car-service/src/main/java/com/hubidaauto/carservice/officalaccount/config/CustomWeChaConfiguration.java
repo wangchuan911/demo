@@ -1,24 +1,36 @@
 package com.hubidaauto.carservice.officalaccount.config;
 
+import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
+import com.hubidaauto.carservice.officalaccount.entity.UserVO;
+import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
+import com.hubidaauto.carservice.wxapp.core.entity.TacheVO;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+import org.welisdoon.web.common.CommonConst;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.common.web.Requset;
 import org.welisdoon.web.common.web.intf.ICommonAsynService;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
+import org.welisdoon.web.entity.wechat.push.PublicTamplateMessage;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.verticle.StandaredVerticle;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @VertxConfiguration
@@ -30,7 +42,12 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
     private Long wechatAliveTimerId = null;
 
     ICommonAsynService commonAsynService;
+    OfficalAccoutUserDao officalAccoutUserDao;
 
+    @Autowired
+    public void setOfficalAccoutUserDao(OfficalAccoutUserDao officalAccoutUserDao) {
+        this.officalAccoutUserDao = officalAccoutUserDao;
+    }
 
     @Override
     @PostConstruct
@@ -75,6 +92,11 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
                     }).handler(this::wechatEncryptMsg).failureHandler(routingContext -> {
                 routingContext.response().end(MesseageTypeValue.MSG_REPLY);
             });
+            router.post(this.getPath().getPush() + "/p").handler(bodyHandler).handler(routingContext -> {
+                JsonObject jsonObject = routingContext.getBodyAsJson();
+                send(jsonObject.getString("code"), jsonObject.getString("templateId"), jsonObject.getJsonObject("params").getMap());
+                routingContext.end("");
+            });
             logger.info(String.format("inital request mapping: %s", this.getPath().getPush()));
         };
         return routerConsumer;
@@ -86,6 +108,26 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
             AsyncProxyUtils.createServiceBinder(vertx1, this.getAppID(), ICommonAsynService.class);
         };
         return vertxConsumer;
+    }
+
+
+    private void send(String unionId, String templateId, Map<String, Object> map) {
+        List<UserVO> users = officalAccoutUserDao.list(new UserVO().setUnionid(unionId));
+        if (CollectionUtils.isEmpty(users)) return;
+        UserVO userVO = users.get(0);
+        if (userVO == null || StringUtils.isEmpty(userVO.openData(false).getUnionid())) return;
+        CustomWeChatAppConfiguration appConfiguration = AbstractWechatConfiguration
+                .getConfig(CustomWeChatAppConfiguration.class);
+        AbstractWechatConfiguration.getConfig(CustomWeChaConfiguration.class)
+                .getWechatAsyncMeassger()
+                .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
+                        .setMiniprogram(new PublicTamplateMessage.MiniProgram()
+                                .setAppid(appConfiguration.getAppID())
+                                .setPagepath(appConfiguration.getPath().getAppIndex()))
+                        .setTemplate_id(templateId)
+                        .addDatas(map.entrySet().toArray(Map.Entry[]::new))
+                        .setTouser(userVO
+                                .getId()));
     }
 }
 

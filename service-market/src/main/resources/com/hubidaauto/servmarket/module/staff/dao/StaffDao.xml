@@ -58,7 +58,7 @@
                 )
             </when>
             <when test="query=='INVITE_MAN'">
-
+                AND A.PHONE IS NOT NULL
             </when>
             <otherwise>and 1=2</otherwise>
         </choose>

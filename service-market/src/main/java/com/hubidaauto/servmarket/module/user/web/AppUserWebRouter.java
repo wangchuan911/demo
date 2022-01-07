@@ -341,7 +341,7 @@ public class AppUserWebRouter {
         });
     }
 
-    @VertxRouter(path = "\\/(?<del>(un)?)promote",
+    /*@VertxRouter(path = "\\/(?<del>(un)?)promote",
             mode = VertxRouteType.PathRegex,
             method = "PUT")
     public void promote(RoutingContextChain chain) {
@@ -368,6 +368,6 @@ public class AppUserWebRouter {
                 routingContext.response().setStatusCode(500).end(e.getMessage());
             }
         });
-    }
+    }*/
 
 }

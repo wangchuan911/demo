@@ -1,6 +1,7 @@
 package com.hubidaauto.servmarket.module.popularize.web;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateCountDao;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao;
@@ -8,6 +9,10 @@ import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateCountVO;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO;
 import com.hubidaauto.servmarket.module.popularize.service.InviteRebateOrderService;
+import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
+import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
+import com.hubidaauto.servmarket.module.staff.entity.StaffJob;
+import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +27,10 @@ import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Septem
@@ -37,6 +45,18 @@ public class InviteRebateOrderRouter {
     BaseOrderDao baseOrderDao;
     InviteRebateCountDao inviteRebateCountDao;
     AbstractWechatConfiguration wechatConfiguration;
+    StaffJobDao staffJobDao;
+    InviteRebateOrderService inviteRebateOrderService;
+
+    @Autowired
+    public void setInviteRebateOrderService(InviteRebateOrderService inviteRebateOrderService) {
+        this.inviteRebateOrderService = inviteRebateOrderService;
+    }
+
+    @Autowired
+    public void setStaffJobDao(StaffJobDao staffJobDao) {
+        this.staffJobDao = staffJobDao;
+    }
 
     @Autowired
     public void setBaseOrderDao(BaseOrderDao baseOrderDao) {
@@ -130,5 +150,48 @@ public class InviteRebateOrderRouter {
         });
     }
 
+    @VertxRouter(path = "\\/(?<del>(un)?)promote",
+            mode = VertxRouteType.PathRegex,
+            method = "PUT")
+    public void promote(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            boolean delete = "un".equals(routingContext.pathParam("del"));
+            try {
+                StaffCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), StaffCondition.class);
+                condition.setRegionId(450000L);
+                condition.setRoleId(3L);
+                Set<Long> staffIds = Arrays.stream(condition.getStaffIds()).collect(Collectors.toSet());
+                List<StaffJob> jobs = this.staffJobDao.list(condition);
+                jobs.stream().forEach(staffJob -> {
+                    if (delete)
+                        staffJobDao.delete(staffJob.getId());
+                    staffIds.remove(staffJob.getStaffId());
+                });
+                if (!delete)
+                    staffIds.stream().forEach(staffId -> {
+                        staffJobDao.add(new StaffJob().setName("推广人员").setRegionId(condition.getRegionId()).setRoleId(condition.getRoleId()).setStaffId(staffId));
+                    });
+                routingContext.response().end(JSONObject.toJSONString(jobs));
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/join",
+            mode = VertxRouteType.PathRegex,
+            method = "PUT")
+    public void promoteJoin(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            try {
+                inviteRebateOrderService.promoteJoin(JSONObject.parseObject(routingContext.getBodyAsString()).toJavaObject(UserCondition.class));
+                routingContext.end("成功");
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
+        });
+    }
 
 }

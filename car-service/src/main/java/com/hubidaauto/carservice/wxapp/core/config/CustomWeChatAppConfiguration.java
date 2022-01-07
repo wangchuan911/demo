@@ -73,8 +73,8 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
         };
         return vertxConsumer;
     }*/
-    @Override
-    public void initValue() throws Throwable {
+//    @Override
+    public void initValue(int i) throws Throwable {
         TacheDao tacheDao = ApplicationContextProvider.getBean(TacheDao.class);
 //		orderService = ApplicationContextProvider.getBean(IWechatPayHandler.class);
 //		userHandler = (IWechatUserHandler) ApplicationContextProvider.getBean(IWechatUserHandler.class);
@@ -115,7 +115,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 		return vertxConsumer;
 	}*/
 
-    @VertxRegister(WorkerVerticle.class)
+//    @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
 
         final String KEY = ApplicationContextProvider.getRealClass(this.getClass()).getName().toUpperCase();
@@ -170,9 +170,9 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
 
 //        final String PATH_PRROJECT = this.getClass().getResource("/").getPath();
 
-        this.initAccessTokenSyncTimer(vertx, objectMessage -> {
+        /*this.initAccessTokenSyncTimer(vertx, objectMessage -> {
             this.updateAccessToken(this.getTokenFromMessage(objectMessage));
-        });
+        });*/
 
 
         Consumer<Router> routerConsumer = router -> {

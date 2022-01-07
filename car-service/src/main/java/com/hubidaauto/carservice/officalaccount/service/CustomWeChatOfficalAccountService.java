@@ -42,6 +42,7 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
 		inviteCodeService = ApplicationContextProvider.getBean(InviteCodeService.class);
 	}
 
+	@Override
 	public ResponseMesseage textProcess(TextMesseage msg) {
 		// TODO Auto-generated method stub
 		ResponseMesseage to = null;
@@ -69,7 +70,7 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
 			break;
 			default: {
 				String keyWord;
-				if (text.indexOf(keyWord = "JOINUS@") == 0) {
+				if (text.indexOf(keyWord = "JOINUS@") == 0 && false) {
 					String inviteCode = text.substring(keyWord.length());
 					InviteCodeDto inviteCodeDto = (InviteCodeDto) inviteCodeService.handle(CustomConst.GET, Map.of("code", inviteCode, "type", CustomConst.INVITE_CODE.WORKER));
 					if (inviteCodeDto.getValid() > 0) {

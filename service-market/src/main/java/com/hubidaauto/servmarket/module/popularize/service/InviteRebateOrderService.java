@@ -13,6 +13,8 @@ import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO;
 import com.hubidaauto.servmarket.module.popularize.model.IRebate;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
+import com.hubidaauto.servmarket.module.user.entity.UserCondition;
+import com.hubidaauto.servmarket.module.user.service.AppUserService;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -60,15 +62,17 @@ public class InviteRebateOrderService implements IWechatPayHandler {
     AppConfigDao appConfigDao;
     BaseOrderService baseOrderService;
     InviteRebateCountDao inviteRebateCountDao;
+    AppUserService appUserService;
 
     @Autowired
-    public InviteRebateOrderService(BaseOrderDao b1, InviteRebateOrderDao b2, AppUserDao b3, AppConfigDao b4, BaseOrderService b5, InviteRebateCountDao b6) {
+    public InviteRebateOrderService(BaseOrderDao b1, InviteRebateOrderDao b2, AppUserDao b3, AppConfigDao b4, BaseOrderService b5, InviteRebateCountDao b6, AppUserService b7) {
         this.baseOrderDao = b1;
         this.inviteOrderDao = b2;
         this.appUserDao = b3;
         this.appConfigDao = b4;
         this.baseOrderService = b5;
         this.inviteRebateCountDao = b6;
+        this.appUserService = b7;
     }
 
     public void start(Long orderId) {
@@ -139,5 +143,10 @@ public class InviteRebateOrderService implements IWechatPayHandler {
                 .setAmount(countVO.getTotalRebate() - countVO.getPaidRebate())
                 .setNonceStr(WeChatPayOrder.generateNonce())
                 .setDesc("推广费用");
+    }
+
+    public void promoteJoin(UserCondition userCondition) throws Throwable {
+        userCondition.setRole(3L);
+        appUserService.update(userCondition);
     }
 }
