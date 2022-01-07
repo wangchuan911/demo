@@ -16,6 +16,7 @@ import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
 import com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
+import com.hubidaauto.servmarket.module.message.entity.MessagePushVO;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.consts.WorkLoadUnit;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
@@ -92,10 +93,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     AppUserDao appUserDao;
     OrderPayDaoLog orderPrePayDaoLog;
     AppConfigDao appConfigDao;
+    ServiceMarketConfiguration configuration;
 
     @Autowired
     public void init(AppUserDao appUserDao, AddressDao addressDao, StaffTaskDao staffTaskDao, ServiceClassWorkOrderDao workOrderDao, FlowProxyService flowService, ServiceClassOrderDao orderDao, ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderDao baseOrderDao, OrderPayDaoLog orderPrePayDaoLog,
-                     AppConfigDao appConfigDao) {
+                     AppConfigDao appConfigDao, ServiceMarketConfiguration configuration) {
         this.workOrderDao = workOrderDao;
         this.orderDao = orderDao;
         this.flowService = flowService;
@@ -107,6 +109,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         this.appUserDao = appUserDao;
         this.orderPrePayDaoLog = orderPrePayDaoLog;
         this.appConfigDao = appConfigDao;
+        this.configuration = configuration;
     }
 
     @Override
@@ -252,8 +255,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         ServiceClassOrderVO orderVO = orderDao.find(condition);
         orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
         baseOrderDao.put(orderVO);
-        AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
-        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), orderVO.getId());
+        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), "orderFinished"), orderVO.getId());
     }
 
     @Override
@@ -349,6 +351,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     }
                 }
                 workOrderDao.add(workOrderVO);
+                this.pushMessage("workorder", workOrderVO.getId());
                 break;
             case COMPLETE:
 //                workOrderCondition = new ServiceClassWorkOrderCondition();
@@ -362,6 +365,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 break;
         }
     }
+
+    protected void pushMessage(String key, Object object) {
+        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), key), object);
+    }
+
 
     @Override
     public List<ServiceContent> getServices(OrderVO orderVO) {
@@ -452,9 +460,8 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     @Override
     public PrePayRequsetMesseage payRequset(WeChatPayOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
-        AbstractWechatConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
         PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
-                .setBody(String.format("%s-服务费用结算:\n定单编号：%s\n金额%s", customWeChatAppConfiguration.getAppName(), orderVO.getCode(), OrderUtils.priceFormat(orderVO.getPrice().intValue(), ' ', true, false)))
+                .setBody(String.format("%s-服务费用结算:\n定单编号：%s\n金额%s", configuration.getAppName(), orderVO.getCode(), OrderUtils.priceFormat(orderVO.getPrice().intValue(), ' ', true, false)))
                 .setOutTradeNo(orderVO.getCode())
                 .setTotalFee(orderVO.getPrice().intValue())
                 .setOpenid(weChatPayOrder.getUserId());

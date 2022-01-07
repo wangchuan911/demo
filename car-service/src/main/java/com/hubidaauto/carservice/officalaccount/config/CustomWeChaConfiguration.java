@@ -1,5 +1,6 @@
 package com.hubidaauto.carservice.officalaccount.config;
 
+import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
 import com.hubidaauto.carservice.officalaccount.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
@@ -93,9 +94,15 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
                 routingContext.response().end(MesseageTypeValue.MSG_REPLY);
             });
             router.post(this.getPath().getPush() + "/p").handler(bodyHandler).handler(routingContext -> {
-                JsonObject jsonObject = routingContext.getBodyAsJson();
-                send(jsonObject.getString("code"), jsonObject.getString("templateId"), jsonObject.getJsonObject("params").getMap());
-                routingContext.end("");
+                try {
+                    logger.info(routingContext.getBodyAsString());
+                    JSONObject jsonObject = JSONObject.parseObject(routingContext.getBodyAsString());
+                    send(jsonObject.getString("code"), jsonObject.getString("templateId"), jsonObject.getObject("params", Map.class));
+                    routingContext.end("");
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
+                    routingContext.response().setStatusCode(500).end(e.getMessage());
+                }
             });
             logger.info(String.format("inital request mapping: %s", this.getPath().getPush()));
         };
@@ -112,22 +119,29 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
 
 
     private void send(String unionId, String templateId, Map<String, Object> map) {
-        List<UserVO> users = officalAccoutUserDao.list(new UserVO().setUnionid(unionId));
-        if (CollectionUtils.isEmpty(users)) return;
-        UserVO userVO = users.get(0);
-        if (userVO == null || StringUtils.isEmpty(userVO.openData(false).getUnionid())) return;
+        UserVO userVO = officalAccoutUserDao.get(new UserVO().setUnionid(unionId).openData(false));
+        if (userVO == null || StringUtils.isEmpty(userVO.openData(false).getUnionid()))
+            throw new RuntimeException(userVO == null ? "没找到用户" : "用户没登陆过小程序");
         CustomWeChatAppConfiguration appConfiguration = AbstractWechatConfiguration
                 .getConfig(CustomWeChatAppConfiguration.class);
         AbstractWechatConfiguration.getConfig(CustomWeChaConfiguration.class)
                 .getWechatAsyncMeassger()
-                .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new PublicTamplateMessage()
-                        .setMiniprogram(new PublicTamplateMessage.MiniProgram()
-                                .setAppid(appConfiguration.getAppID())
-                                .setPagepath(appConfiguration.getPath().getAppIndex()))
-                        .setTemplate_id(templateId)
-                        .addDatas(map.entrySet().toArray(Map.Entry[]::new))
-                        .setTouser(userVO
-                                .getId()));
+                .post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND,
+                        new PublicTamplateMessage()
+                                .setMiniprogram(new PublicTamplateMessage.MiniProgram()
+                                        .setAppid(appConfiguration.getAppID())
+                                        .setPagepath(appConfiguration.getPath().getAppIndex()))
+                                .setTemplate_id(templateId)
+                                .addDatas(map.entrySet().toArray(Map.Entry[]::new))
+                                .setTouser(userVO
+                                        .getId()),
+                        bufferHttpResponse -> {
+                            logger.info(bufferHttpResponse.body().toString());
+                        },
+                        throwable -> {
+                            logger.error(throwable.getMessage(), throwable);
+                        });
+        logger.info("发送中");
     }
 }
 

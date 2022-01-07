@@ -15,16 +15,20 @@ import org.welisdoon.web.entity.wechat.WeChatUser;
  */
 public class AppUserVO {
     Long id, defAddrId, inviteUser, defCarId;
-    String appId, session, name, phone, unionid;
+    String appId, session, name, phone, unionId;
     Integer type;
 
     public AppUserVO() {
     }
 
-
+    public AppUserVO weChatUser(WeChatUser weChatUser){
+        this.setSession(weChatUser.getSessionKey());
+        this.setUnionId(weChatUser.getUnionid());
+        return this;
+    }
     public AppUserVO(WeChatUser weChatUser) {
         this.setAppId(weChatUser.getOpenId());
-        this.setSession(weChatUser.getSessionKey());
+        weChatUser(weChatUser);
     }
 
     public Long getId() {
@@ -110,12 +114,12 @@ public class AppUserVO {
 
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public String getUnionid() {
-        return unionid;
+    public String getUnionId() {
+        return unionId;
     }
 
-    public void setUnionid(String unionid) {
-        this.unionid = unionid;
+    public void setUnionId(String unionId) {
+        this.unionId = unionId;
     }
 
     /*public AppUserVO userDecrypted(String userEncryptedData, String iv) throws Throwable {

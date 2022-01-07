@@ -52,8 +52,7 @@ public class AppUserService implements WechatLoginHandler<AppUserVO> {
             userVO = new AppUserVO(weChatUser).setName("新用户");
             appUserDao.add(userVO);
         } else {
-            userVO = users.get(0);
-            userVO.setSession(weChatUser.getSessionKey());
+            userVO = users.get(0).weChatUser(weChatUser);
             appUserDao.put(userVO);
         }
         return userVO;
@@ -69,7 +68,7 @@ public class AppUserService implements WechatLoginHandler<AppUserVO> {
         }
         if (userCondition.getUser() != null) {
             JSONObject jsonObject = JSONObject.parseObject(userCondition.getUser().decrypt(userVO.getSession()));
-            userVO.setUnionid(jsonObject.getString("unionId"));
+            userVO.setUnionId(jsonObject.getString("unionId"));
         }
         return userVO;
     }

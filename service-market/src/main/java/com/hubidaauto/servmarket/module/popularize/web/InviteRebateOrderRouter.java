@@ -116,6 +116,17 @@ public class InviteRebateOrderRouter {
         });
     }
 
+    @VertxRouter(path = "\\/workorder\\/(?<workorderId>\\d+)",
+            method = "POST",
+            mode = VertxRouteType.PathRegex)
+    public void workorder(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
+            WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "workorder"), Long.valueOf(routingContext.pathParam("workorderId")));
+            routingContext.end();
+        });
+    }
+
     @VertxRouter(path = "\\/count\\/(?<userId>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)

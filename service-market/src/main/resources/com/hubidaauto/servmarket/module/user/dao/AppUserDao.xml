@@ -47,13 +47,13 @@
 
     <insert id="add" parameterType="com.hubidaauto.servmarket.module.user.entity.AppUserVO"
             useGeneratedKeys="true" keyProperty="id">
-        insert into APP_USER(TYPE,NAME,SESSION,APP_ID,DEF_ADDR_ID)
-        values (#{type},#{name},#{session},#{appId},#{defAddrId})
+        insert into APP_USER(TYPE,NAME,SESSION,APP_ID,DEF_ADDR_ID,UNION_ID)
+        values (#{type},#{name},#{session},#{appId},#{defAddrId},#{unionId,jdbcType=VARCHAR})
     </insert>
 
     <update id="put" parameterType="com.hubidaauto.servmarket.module.user.entity.AppUserVO">
         update APP_USER set TYPE=#{type},NAME=#{name},SESSION=#{session},APP_ID=#{appId},DEF_ADDR_ID=#{defAddrId},
-        INVITE_USER=#{inviteUser},PHONE=#{phone,jdbcType=VARCHAR}
+        INVITE_USER=#{inviteUser},PHONE=#{phone,jdbcType=VARCHAR},UNION_ID=#{unionId,jdbcType=VARCHAR}
         where ID=#{id}
     </update>
 </mapper>
