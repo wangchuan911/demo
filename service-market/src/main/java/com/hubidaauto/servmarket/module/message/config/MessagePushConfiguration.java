@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.message.entity.MessagePushVO;
+import com.hubidaauto.servmarket.module.message.entity.WorkOrderReadyEvent;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import com.hubidaauto.servmarket.module.order.service.FlowProxyService;
@@ -81,9 +82,9 @@ public class MessagePushConfiguration {
         AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
         MessagePushConfiguration messagePushConfiguration = ApplicationContextProvider.getBean(MessagePushConfiguration.class);
         return (Consumer<Vertx>) vertx1 -> {
-            MessageConsumer<Long> consumer = vertx1.eventBus().consumer(String.format("app[%s]-%s", configuration.getAppID(), "workorder"));
-            consumer.handler(longMessage -> {
-                String body = messagePushConfiguration.workorderEventBody(longMessage.body());
+            MessageConsumer</*Long*/String> consumer = vertx1.eventBus().consumer(String.format("app[%s]-%s", configuration.getAppID(), "workorder_ready"));
+            consumer.handler(message -> {
+                String body = JSONObject.parseObject(message.body(), WorkOrderReadyEvent.class).toBodyString()/*messagePushConfiguration.workorderEventBody(message.body())*/;
                 if (StringUtils.isEmpty(body)) return;
                 webClient.postAbs("https://www.hubidaauto.cn/aczl/p")
                         .sendBuffer(Buffer.buffer(body))
@@ -108,8 +109,8 @@ public class MessagePushConfiguration {
         if (StringUtils.isEmpty(url)) return null;
         OrderVO orderVO = baseOrderService.get(workOrderVO.getOrderId());
         JSONObject params = new JSONObject(), map = new JSONObject();
-        /*toLongKeyMap(map, "order", (JSONObject) JSONObject.toJSON(orderVO));
-        toLongKeyMap(map, "workorder", (JSONObject) JSONObject.toJSON(workOrderVO));*/
+//        toLongKeyMap(map, "order", (JSONObject) JSONObject.toJSON(orderVO));
+//        toLongKeyMap(map, "workorder", (JSONObject) JSONObject.toJSON(workOrderVO));
         map.put("order", orderVO);
         map.put("workorder", workOrderVO);
 
@@ -119,10 +120,10 @@ public class MessagePushConfiguration {
             String key = s.substring(0, i);
             String valueKey = (i == s.length() - 1) ? "" : s.substring(i + 1);
             MagicKey magicKey = getMagic(valueKey);
-            /*if (map.containsKey(valueKey = magicKey.getValue(valueKey)))
-                params.put(key, magicKey.format(map.get(valueKey)));
-            else
-                params.put(key, valueKey);*/
+//            if (map.containsKey(valueKey = magicKey.getValue(valueKey)))
+//                params.put(key, magicKey.format(map.get(valueKey)));
+//            else
+//                params.put(key, valueKey);
             valueKey = magicKey.getValue(valueKey);
             params.put(key, magicKey.format(toLongKeyMap(map, valueKey)));
         });

@@ -2,7 +2,12 @@ package com.hubidaauto.servmarket.module.popularize.web;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.hubidaauto.servmarket.module.message.entity.WorkOrderReadyEvent;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
+import com.hubidaauto.servmarket.module.order.entity.OrderVO;
+import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
+import com.hubidaauto.servmarket.module.order.service.FlowProxyService;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateCountDao;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateCountVO;
@@ -13,10 +18,15 @@ import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffJob;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
+import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
+import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.welisdoon.flow.module.flow.entity.Stream;
+import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.CommonConst;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
@@ -121,9 +131,33 @@ public class InviteRebateOrderRouter {
             mode = VertxRouteType.PathRegex)
     public void workorder(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
-            WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "workorder"), Long.valueOf(routingContext.pathParam("workorderId")));
-            routingContext.end();
+            try {
+
+                AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
+
+                ServiceClassWorkOrderVO workOrderVO = ApplicationContextProvider.getBean(ServiceClassWorkOrderDao.class).get(Long.valueOf(routingContext.pathParam("workorderId")));
+                Stream stream = ApplicationContextProvider.getBean(FlowProxyService.class).getStream(workOrderVO.getStreamId());
+                workOrderVO.setStream(stream);
+                if (stream == null || stream.getValueId() == null || stream.getValue() == null)
+                    throw new RuntimeException();
+                ;
+                JSONObject valueJson = stream.getValue().jsonValue();
+                if (valueJson == null || valueJson.size() == 0 || !valueJson.containsKey("tplt"))
+                    throw new RuntimeException();
+                ;
+                valueJson = valueJson.getJSONObject("tplt");
+                String url = valueJson.getString("url");
+                if (StringUtils.isEmpty(url)) throw new RuntimeException();
+                OrderVO orderVO = ApplicationContextProvider.getBean(BaseOrderService.class).get(workOrderVO.getOrderId());
+
+                WorkerVerticle.pool().getOne().eventBus()
+                        .send(String.format("app[%s]-%s", configuration.getAppID(), "workorder_ready"),
+                                JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO, valueJson), SerializerFeature.WriteClassName));
+                routingContext.end();
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
         });
     }
 

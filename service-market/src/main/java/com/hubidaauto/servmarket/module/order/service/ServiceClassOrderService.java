@@ -3,6 +3,7 @@ package com.hubidaauto.servmarket.module.order.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONPObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.common.dao.AppConfigDao;
 import com.hubidaauto.servmarket.module.common.entity.AppConfig;
@@ -17,6 +18,7 @@ import com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.message.entity.MessagePushVO;
+import com.hubidaauto.servmarket.module.message.entity.WorkOrderReadyEvent;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.consts.WorkLoadUnit;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
@@ -351,7 +353,12 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     }
                 }
                 workOrderDao.add(workOrderVO);
-                this.pushMessage("workorder", workOrderVO.getId());
+                try {
+                    workOrderVO.setStream(stream);
+                    this.pushMessage("workorder_ready", JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO, valueJson.getJSONObject("tplt")), SerializerFeature.WriteClassName));
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
+                }
                 break;
             case COMPLETE:
 //                workOrderCondition = new ServiceClassWorkOrderCondition();
@@ -367,6 +374,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     protected void pushMessage(String key, Object object) {
+        logger.info(String.format("%s-%s", key, object));
         WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), key), object);
     }
 
