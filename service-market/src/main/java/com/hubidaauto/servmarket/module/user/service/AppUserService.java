@@ -77,16 +77,14 @@ public class AppUserService implements WechatLoginHandler<AppUserVO> {
         AppUserVO userVO = this.decrypt(userCondition);
         if (userCondition.getData() != null) {
             AppUserVO userVO2 = userCondition.getData();
-            JSONObject target = (JSONObject) JSONObject.toJSON(userVO), destinate = (JSONObject) JSONObject.toJSON(userVO2);
-            for (String s : destinate.keySet()) {
-                if (destinate.containsKey(s)) {
-                    target.put(s, destinate.get(s));
-                }
-            }
-            userVO = target.toJavaObject(AppUserVO.class);
+            if (!StringUtils.isEmpty(userVO2.getName()))
+                userVO.setName(userVO2.getName());
+            if (!StringUtils.isEmpty(userVO2.getPhone()))
+                userVO.setPhone(userVO2.getPhone());
         }
         appUserDao.put(userVO);
     }
+
 
     /* *//**
      * @author Septem

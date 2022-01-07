@@ -106,7 +106,7 @@ public class InviteRebateOrderRouter {
     }
 
     @VertxRouter(path = "\\/order\\/(?<orderId>\\d+)",
-            method = "POST",
+            method = "DELETE",
             mode = VertxRouteType.PathRegex)
     public void order(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
@@ -117,7 +117,7 @@ public class InviteRebateOrderRouter {
     }
 
     @VertxRouter(path = "\\/workorder\\/(?<workorderId>\\d+)",
-            method = "POST",
+            method = "DELETE",
             mode = VertxRouteType.PathRegex)
     public void workorder(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {

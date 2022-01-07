@@ -85,8 +85,11 @@ public class MessagePushConfiguration {
             consumer.handler(longMessage -> {
                 String body = messagePushConfiguration.workorderEventBody(longMessage.body());
                 if (StringUtils.isEmpty(body)) return;
-                webClient.postAbs("https://hubidaauto.cn/aczl/p")
-                        .sendBuffer(Buffer.buffer());
+                webClient.postAbs("https://www.hubidaauto.cn/aczl/p")
+                        .sendBuffer(Buffer.buffer(body))
+                        .onFailure(e -> {
+                            logger.error(e.getMessage(), e);
+                        });
             });
         };
     }
