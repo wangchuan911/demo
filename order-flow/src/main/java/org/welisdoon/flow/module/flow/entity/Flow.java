@@ -1,5 +1,8 @@
 package org.welisdoon.flow.module.flow.entity;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * @Classname Flow
  * @Description TODO
@@ -34,6 +37,8 @@ public class Flow {
         this.statusId = statusId;
     }
 
+    @JsonIgnore
+    @JSONField(deserialize = false, serialize = false)
     public Stream getStart() {
         return start;
     }

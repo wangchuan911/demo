@@ -1,5 +1,7 @@
 package org.welisdoon.flow.module.template.entity.struct;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.welisdoon.flow.module.template.entity.LinkShow;
 
 import java.util.List;
@@ -50,6 +52,8 @@ public abstract class Tree<T> {
         this.functionId = functionId;
     }
 
+    @JsonIgnore
+    @JSONField(deserialize = false, serialize = false)
     public List<T> getSubTree() {
         return subTree;
     }
