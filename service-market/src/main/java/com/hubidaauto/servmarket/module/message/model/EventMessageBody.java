@@ -33,8 +33,11 @@ public interface EventMessageBody {
         }), MONEY("@money@", (o) -> {
             if (o == null) return "0.00元";
             StringBuilder sb = new StringBuilder(o.toString());
+            for (int i = 2 - sb.length(); i >= 0; i--) {
+                sb.insert(0, "0");
+            }
             sb.insert(sb.length() - 2, ".");
-            return (o != null ? sb.toString() : "0.00") + "元";
+            return sb.toString() + "元";
         }), NONE("", (o) ->
                 o != null ? o.toString() : ""
         );
