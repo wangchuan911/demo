@@ -10,8 +10,8 @@
             resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
 
         SELECT <include refid="columns"></include>,B.*
-        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
-        JOIN SERVICE_CLASS_ORDER B
+        from SERVICE_CLASS_ORDER B
+        JOIN BASE_ORDER A
         ON A.ID=B.ID
 
     </select>
@@ -19,11 +19,38 @@
             resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
 
         SELECT <include refid="columns"></include>,B.*
-        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
-        JOIN SERVICE_CLASS_ORDER B
+        from SERVICE_CLASS_ORDER B
+        JOIN BASE_ORDER A
         ON A.ID=B.ID
-
+        <where>
+            <choose>
+                <when test="query='timeout_pay'">
+                    AND A.STATUS_ID=10003
+                    AND EXISTS (SELECT 1
+                    FROM LOG_WX_PAY AA
+                    WHERE AA.ORDER_ID=B.ID
+                    AND AA.TRANSACTION_ID IS NULL
+                    AND CURRENT_TIMESTAMP>(AA.CREATE_DATE + INTERVAL 2 HOUR))
+                </when>
+                <when test="query='timeout_user_finish'">
+                    A.STATUS_ID = 10000
+                    and exists(
+                    SELECT 1
+                    FROM WORK_ORDER A1
+                    WHERE A1.OPERATION = 'CUST_COMFIRM'
+                    AND A1.STATUS_ID = 11001
+                    AND A1.ORDER_ID = A.ID
+                    AND CURRENT_TIMESTAMP > (A1.CREATE_TIME + INTERVAL 7 DAY)
+                    )
+                </when>
+                <otherwise>
+                   AND 1=2
+                </otherwise>
+            </choose>
+        </where>
+        <if test="page!=null">
         limit ${page.start},${page.size}
+        </if>
     </select>
     <sql id="condition">
         and a.id=#{data.ID}

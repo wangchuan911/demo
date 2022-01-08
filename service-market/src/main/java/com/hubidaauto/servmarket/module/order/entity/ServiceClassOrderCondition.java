@@ -8,6 +8,7 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
     Form form;
     String modify;
     final static String[] MODIFYS = new String[]{"dispatching"};
+    static final private String[] QUERY = {"timeout_pay", "timeout_user_finish"};
 
     public Form getForm() {
         return form;
@@ -121,8 +122,17 @@ public class ServiceClassOrderCondition extends OrderCondition<ServiceClassOrder
     }
 
     public void setModify(String modify) {
-        Assert.isTrue(Arrays.stream(MODIFYS).filter(s -> s.equals(modify)).findFirst().isPresent(),"");
+        Assert.isTrue(Arrays.stream(MODIFYS).filter(s -> s.equals(modify)).findFirst().isPresent(), "");
         this.modify = modify;
+    }
+
+    @Override
+    public void setQuery(String query) {
+        if (Arrays.stream(QUERY).anyMatch(s -> s.equals(query)))
+            this.query = query;
+        else
+            super.setQuery(query);
+
     }
 }
 

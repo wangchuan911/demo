@@ -144,15 +144,11 @@ public class InviteRebateOrderRouter {
                 JSONObject valueJson = stream.getValue().jsonValue();
                 if (valueJson == null || valueJson.size() == 0 || !valueJson.containsKey("tplt"))
                     throw new RuntimeException();
-                ;
-                valueJson = valueJson.getJSONObject("tplt");
-                String url = valueJson.getString("url");
-                if (StringUtils.isEmpty(url)) throw new RuntimeException();
                 OrderVO orderVO = ApplicationContextProvider.getBean(BaseOrderService.class).get(workOrderVO.getOrderId());
 
                 WorkerVerticle.pool().getOne().eventBus()
                         .send(String.format("app[%s]-%s", configuration.getAppID(), "workorder_ready"),
-                                JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO, valueJson), SerializerFeature.WriteClassName));
+                                JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO), SerializerFeature.WriteClassName));
                 routingContext.end();
             } catch (Throwable e) {
                 e.printStackTrace();

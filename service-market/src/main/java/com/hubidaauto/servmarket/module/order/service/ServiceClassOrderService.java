@@ -28,6 +28,7 @@ import com.hubidaauto.servmarket.module.order.model.IOrderService;
 import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
 import com.hubidaauto.servmarket.module.popularize.model.IRebate;
 import com.hubidaauto.servmarket.module.popularize.model.RebateConfig;
+import com.hubidaauto.servmarket.module.scheduler.verticle.SchedulerVerticle;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffTaskVO;
@@ -41,6 +42,7 @@ import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCo
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
+import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +57,8 @@ import org.welisdoon.flow.module.flow.entity.StreamStatus;
 import org.welisdoon.flow.module.flow.intf.FlowEvent;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.web.AsyncProxyUtils;
+import org.welisdoon.web.common.web.intf.ICommonAsynService;
 import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
@@ -62,12 +66,14 @@ import org.welisdoon.web.entity.wechat.payment.requset.*;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
+import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -355,7 +361,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 workOrderDao.add(workOrderVO);
                 try {
                     workOrderVO.setStream(stream);
-                    this.pushMessage("workorder_ready", JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO, valueJson.getJSONObject("tplt")), SerializerFeature.WriteClassName));
+                    this.pushMessage("workorder_ready", JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO), SerializerFeature.WriteClassName));
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
                 }
@@ -610,5 +616,46 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             return 0;
         }
         return json.getObject(key, RebateConfig.class).compute(order.getTotalPrice());
+    }
+
+    @VertxRegister(SchedulerVerticle.class)
+    public Consumer<Vertx> orderWatcher() {
+        ServiceClassOrderService service = ApplicationContextProvider.getBean(ServiceClassOrderService.class);
+        Consumer<Vertx> vertxConsumer = vertx1 -> {
+            ServiceClassOrderCondition unpayTimeOut = new ServiceClassOrderCondition();
+            unpayTimeOut.setQuery("timeout_pay");
+            unpayTimeOut.page(1);
+            vertx1.periodicStream(10 * 60 * 1000).handler(aLong -> {
+                List<ServiceClassOrderVO> list;
+                for (int i = 0; i < 5; i++) {
+                    list = orderDao.list(unpayTimeOut);
+                    if (list.size() == 0) break;
+                    for (ServiceClassOrderVO orderVO : list) {
+                        service.destroy(orderVO.getId());
+                    }
+                }
+            });
+
+            ServiceClassOrderCondition timeoutUserFinish = new ServiceClassOrderCondition();
+            timeoutUserFinish.setQuery("timeout_user_finish");
+            unpayTimeOut.page(1);
+            ServiceClassWorkOrderCondition timeoutUserFinish2 = new ServiceClassWorkOrderCondition();
+            timeoutUserFinish2.setQuery("timeout_user_finish");
+            vertx1.periodicStream(10 * 60 * 60 * 1000).handler(aLong -> {
+                List<ServiceClassOrderVO> list;
+                for (int i = 0; i < 5; i++) {
+                    list = orderDao.list(timeoutUserFinish);
+                    if (list.size() == 0) break;
+                    for (ServiceClassOrderVO orderVO : list) {
+                        timeoutUserFinish2.setOrderId(orderVO.getId());
+                        List<ServiceClassWorkOrderVO> list1 = workOrderDao.list(timeoutUserFinish2);
+                        for (ServiceClassWorkOrderVO workOrderVO : list1) {
+                            service.workOrder((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setId(workOrderVO.getId()));
+                        }
+                    }
+                }
+            });
+        };
+        return vertxConsumer;
     }
 }

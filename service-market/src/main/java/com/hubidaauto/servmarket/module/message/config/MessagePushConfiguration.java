@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.message.entity.MessagePushVO;
-import com.hubidaauto.servmarket.module.message.entity.WorkOrderReadyEvent;
+import com.hubidaauto.servmarket.module.message.model.MessageEvent;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import com.hubidaauto.servmarket.module.order.service.FlowProxyService;
@@ -21,7 +21,6 @@ import io.vertx.ext.web.client.WebClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -35,7 +34,6 @@ import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -84,10 +82,13 @@ public class MessagePushConfiguration {
         return (Consumer<Vertx>) vertx1 -> {
             MessageConsumer</*Long*/String> consumer = vertx1.eventBus().consumer(String.format("app[%s]-%s", configuration.getAppID(), "workorder_ready"));
             consumer.handler(message -> {
-                String body = JSONObject.parseObject(message.body(), WorkOrderReadyEvent.class).toBodyString()/*messagePushConfiguration.workorderEventBody(message.body())*/;
-                if (StringUtils.isEmpty(body)) return;
+                Object body = JSONObject.parseObject(message.body(), MessageEvent.class).toBodyString()/*messagePushConfiguration.workorderEventBody(message.body())*/;
+                if (body == null && !(body instanceof MessagePushVO)) return;
+                String jsonString = JSONObject.toJSONString(body);
+                logger.warn(jsonString);
                 webClient.postAbs("https://www.hubidaauto.cn/aczl/p")
-                        .sendBuffer(Buffer.buffer(body))
+                        .timeout(3000)
+                        .sendBuffer(Buffer.buffer(jsonString))
                         .onFailure(e -> {
                             logger.error(e.getMessage(), e);
                         });

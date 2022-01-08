@@ -18,12 +18,12 @@ import java.util.function.Function;
  * @Author wang.zhidong
  * @Date 2022/1/8 02:14
  */
-public interface EventMessageBody {
+public interface MessageEvent<T> {
     static MagicKey getMagic(String value) {
         return MagicKey.getInstance(value);
     }
 
-    String toBodyString();
+    T toBodyString();
 
     enum MagicKey {
         DATE("@date@", (o) -> {

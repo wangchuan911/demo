@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 public class ServiceClassWorkOrderCondition extends WorkOrderCondition {
     static private String[] UPDATES = {"finish", "start", "skip"};
-    static private String[] QUERY = {"all", "doing"};
+    static private String[] QUERY = {"all", "doing", "timeout_user_finish"};
     String update;
     String query;
     JSONObject data;
