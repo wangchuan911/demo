@@ -44,5 +44,4 @@ public interface IBaseOrderService {
 
     Future<Void> modifyOrder(String jsonText);
 
-    Future<Void> destroy(Long orderId);
 }

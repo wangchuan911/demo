@@ -285,7 +285,7 @@ public class AppUserWebRouter {
 //                                    .put("access_token", abstractWechatConfiguration.getWechatAsyncMeassger().getAccessToken())
                                     .put("page", "pages/index/index")
                                     .put("check_path", true)
-                                    .put("env_version", StringUtils.isEmpty(envVersion) ? null : envVersion)
+//                                    .put("env_version", StringUtils.isEmpty(envVersion) ? null : envVersion)
                                     .put("scene",
                                             Map.of("userId", userId)
                                                     .entrySet().stream().map(e -> String.format("%s=%s", e.getKey(), e.getValue())).collect(Collectors.joining("&")))

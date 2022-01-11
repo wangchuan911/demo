@@ -435,6 +435,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         workOrderDao.clear(workOrderCondition);
         staffTaskDao.clear(new StaffCondition().setOrderId(orderId));
         flowService.dismiss(flow);
+        orderPrePayDaoLog.delete(orderId);
     }
 
     @Override
@@ -443,10 +444,6 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         orderDao.update(condition);
     }
 
-    @Override
-    public void destroy(Long orderId) {
-
-    }
 
 
     @Override
@@ -631,7 +628,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     list = orderDao.list(unpayTimeOut);
                     if (list.size() == 0) break;
                     for (ServiceClassOrderVO orderVO : list) {
-                        service.destroy(orderVO.getId());
+                        service.dismiss(orderVO.getId());
                     }
                 }
             });

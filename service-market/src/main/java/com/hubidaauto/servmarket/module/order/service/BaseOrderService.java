@@ -129,6 +129,8 @@ public class BaseOrderService {
     public void dismiss(Long orderId) {
         IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(orderId).getClassId());
         iOrderService.dismiss(orderId);
+        AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
+        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderDestroy"), orderId);
     }
 
     public void modifyOrder(String jsonText){
@@ -139,12 +141,6 @@ public class BaseOrderService {
         iOrderService.modifyOrder(condition);
     }
 
-    public void destroy(Long orderId) {
-        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(orderId).getClassId());
-        iOrderService.destroy(orderId);
-        AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
-        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderDestroy"), orderId);
-    }
 
     Type[] getIOrderServiceRawType(IOrderService iOrderService) {
         return ((ParameterizedType) Arrays

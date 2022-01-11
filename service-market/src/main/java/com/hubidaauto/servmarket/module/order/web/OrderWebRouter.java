@@ -328,7 +328,7 @@ public class OrderWebRouter {
         context.handler(routingContext -> {
             try {
                 orderService
-                        .destroy(Long.valueOf(routingContext.pathParam("orderId")))
+                        .dismiss(Long.valueOf(routingContext.pathParam("orderId")))
                         .onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
                                 routingContext.end("成功");

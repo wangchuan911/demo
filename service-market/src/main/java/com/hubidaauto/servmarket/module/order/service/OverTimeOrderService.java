@@ -205,16 +205,6 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
 
     @Override
     public void dismiss(Long orderId) {
-        UNSUPPORT_METHOD();
-    }
-
-    @Override
-    public void modifyOrder(OverTimeOrderCondtion condition) {
-        UNSUPPORT_METHOD();
-    }
-
-    @Override
-    public void destroy(Long orderId) {
         if (orderDao.get(orderId) != null) {
             orderDao.delete(orderId);
         } else {
@@ -223,6 +213,12 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
             }
         }
     }
+
+    @Override
+    public void modifyOrder(OverTimeOrderCondtion condition) {
+        UNSUPPORT_METHOD();
+    }
+
 
     static void UNSUPPORT_METHOD() {
         throw new RuntimeException("不支持的方法");
@@ -236,7 +232,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
             MessageConsumer<Long> consumer = vertx1.eventBus().consumer(String.format("app[%s]-%s", configuration.getAppID(), "orderDestroy"));
             consumer.handler(longMessage -> {
                 logger.info("orderDestroy");
-                this.destroy(longMessage.body());
+                this.dismiss(longMessage.body());
             });
         };
     }

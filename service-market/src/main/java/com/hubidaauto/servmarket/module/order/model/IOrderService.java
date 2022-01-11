@@ -39,8 +39,6 @@ public interface IOrderService<O extends OrderCondition, W extends WorkOrderCond
 
     void modifyOrder(O condition);
 
-    void destroy(Long orderId);
-
 
     /* static void start(final long typeId,String J) {
          ApplicationContextProvider
