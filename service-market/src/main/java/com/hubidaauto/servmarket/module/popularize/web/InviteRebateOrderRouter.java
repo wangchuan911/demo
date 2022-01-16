@@ -10,9 +10,11 @@ import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import com.hubidaauto.servmarket.module.order.service.FlowProxyService;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateCountDao;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao;
+import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateRegistDao;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateCountVO;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO;
+import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateRegistVO;
 import com.hubidaauto.servmarket.module.popularize.service.InviteRebateOrderService;
 import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
@@ -57,6 +59,7 @@ public class InviteRebateOrderRouter {
     AbstractWechatConfiguration wechatConfiguration;
     StaffJobDao staffJobDao;
     InviteRebateOrderService inviteRebateOrderService;
+    InviteRebateRegistDao inviteRebateRegistDao;
 
     @Autowired
     public void setInviteRebateOrderService(InviteRebateOrderService inviteRebateOrderService) {
@@ -86,6 +89,11 @@ public class InviteRebateOrderRouter {
     @Autowired
     public void setWechatConfiguration(ServiceMarketConfiguration wechatConfiguration) {
         this.wechatConfiguration = wechatConfiguration;
+    }
+
+    @Autowired
+    public void setInviteRebateRegistDao(InviteRebateRegistDao inviteRebateRegistDao) {
+        this.inviteRebateRegistDao = inviteRebateRegistDao;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -226,8 +234,24 @@ public class InviteRebateOrderRouter {
     public void promoteJoin(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             try {
-                inviteRebateOrderService.promoteJoin(JSONObject.parseObject(routingContext.getBodyAsString()).toJavaObject(UserCondition.class));
+                JSONObject input = JSONObject.parseObject(routingContext.getBodyAsString());
+                inviteRebateOrderService.promoteJoin(input.getJSONObject("user").toJavaObject(UserCondition.class),
+                        input.getJSONObject("regist").toJavaObject(InviteRebateRegistVO.class));
                 routingContext.end("成功");
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/register\\/(?<staffId>\\d+)",
+            mode = VertxRouteType.PathRegex,
+            method = "GET")
+    public void register(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            try {
+                routingContext.end(JSON.toJSONString(inviteRebateRegistDao.get(Long.valueOf(routingContext.pathParam("staffId")))));
             } catch (Throwable e) {
                 e.printStackTrace();
                 routingContext.response().setStatusCode(500).end(e.getMessage());

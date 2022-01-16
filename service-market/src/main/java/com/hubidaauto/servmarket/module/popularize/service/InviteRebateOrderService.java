@@ -7,10 +7,14 @@ import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateCountDao;
 import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao;
+import com.hubidaauto.servmarket.module.popularize.dao.InviteRebateRegistDao;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateCountVO;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition;
 import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO;
+import com.hubidaauto.servmarket.module.popularize.entity.InviteRebateRegistVO;
 import com.hubidaauto.servmarket.module.popularize.model.IRebate;
+import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
+import com.hubidaauto.servmarket.module.staff.entity.StaffJob;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
@@ -63,9 +67,11 @@ public class InviteRebateOrderService implements IWechatPayHandler {
     BaseOrderService baseOrderService;
     InviteRebateCountDao inviteRebateCountDao;
     AppUserService appUserService;
+    StaffJobDao staffJobDao;
+    InviteRebateRegistDao inviteRebateRegistDao;
 
     @Autowired
-    public InviteRebateOrderService(BaseOrderDao b1, InviteRebateOrderDao b2, AppUserDao b3, AppConfigDao b4, BaseOrderService b5, InviteRebateCountDao b6, AppUserService b7) {
+    public InviteRebateOrderService(BaseOrderDao b1, InviteRebateOrderDao b2, AppUserDao b3, AppConfigDao b4, BaseOrderService b5, InviteRebateCountDao b6, AppUserService b7, StaffJobDao b8, InviteRebateRegistDao b9) {
         this.baseOrderDao = b1;
         this.inviteOrderDao = b2;
         this.appUserDao = b3;
@@ -73,6 +79,8 @@ public class InviteRebateOrderService implements IWechatPayHandler {
         this.baseOrderService = b5;
         this.inviteRebateCountDao = b6;
         this.appUserService = b7;
+        this.staffJobDao = b8;
+        this.inviteRebateRegistDao = b9;
     }
 
     public void start(Long orderId) {
@@ -144,9 +152,12 @@ public class InviteRebateOrderService implements IWechatPayHandler {
                 .setNonceStr(WeChatPayOrder.generateNonce())
                 .setDesc("推广费用");
     }
+    public void promoteJoin(UserCondition userCondition, InviteRebateRegistVO registVO) throws Throwable {
 
-    public void promoteJoin(UserCondition userCondition) throws Throwable {
-        userCondition.setRole(3L);
+        userCondition.setRole(5L);
         appUserService.update(userCondition);
+        registVO.setId(userCondition.getId());
+        inviteRebateRegistDao.add(registVO);
+        staffJobDao.add(new StaffJob().setStaffId(userCondition.getId()).setName("分销资格申请").setRegionId(450000L).setRoleId(5L));
     }
 }

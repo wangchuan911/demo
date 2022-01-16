@@ -58,7 +58,12 @@
                 )
             </when>
             <when test="query=='INVITE_MAN'">
-                AND A.PHONE IS NOT NULL
+                and A.ID IN (
+                SELECT A1.STAFF_ID FROM  STAFF_JOB A1
+                JOIN STAFF_ROLE B1
+                ON B1.ID=A1.ROLE_ID
+                AND B1.ID=5
+                )
             </when>
             <otherwise>and 1=2</otherwise>
         </choose>
