@@ -43,6 +43,7 @@ import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.core.Vertx;
+import io.vertx.core.shareddata.SharedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +67,7 @@ import org.welisdoon.web.entity.wechat.payment.requset.*;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
+import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
@@ -87,6 +89,7 @@ import java.util.stream.Collectors;
 @Transactional(rollbackFor = Throwable.class)
 @OrderClass(
         id = 1000L)
+@VertxConfiguration
 public class ServiceClassOrderService implements FlowEvent, IOrderService<ServiceClassOrderCondition, ServiceClassWorkOrderCondition>, IWechatPayHandler, IOverTimeOperationable, IRebate {
     private static final Logger logger = LoggerFactory.getLogger(ServiceClassOrderService.class);
     static long TEMPLATE_ID = 1L, SIMPLE_NODE_ID = 6L;
@@ -445,7 +448,6 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
 
-
     @Override
     public PayBillResponseMesseage payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
         OrderVO orderVO;
@@ -619,38 +621,56 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     public Consumer<Vertx> orderWatcher() {
         ServiceClassOrderService service = ApplicationContextProvider.getBean(ServiceClassOrderService.class);
         Consumer<Vertx> vertxConsumer = vertx1 -> {
+            SharedData sharedData = vertx1.sharedData();
             ServiceClassOrderCondition unpayTimeOut = new ServiceClassOrderCondition();
             unpayTimeOut.setQuery("timeout_pay");
             unpayTimeOut.page(1);
             vertx1.periodicStream(10 * 60 * 1000).handler(aLong -> {
-                List<ServiceClassOrderVO> list;
-                for (int i = 0; i < 5; i++) {
-                    list = orderDao.list(unpayTimeOut);
-                    if (list.size() == 0) break;
-                    for (ServiceClassOrderVO orderVO : list) {
-                        service.dismiss(orderVO.getId());
-                    }
-                }
+                sharedData.getLock(String.format("%s_%s", ServiceClassOrderService.class.getName(), unpayTimeOut.getQuery()))
+                        .onSuccess(lock -> {
+                            long timer = vertx1.setTimer(9 * 60 * 1000, aLong1 -> {
+                                lock.release();
+                            });
+                            List<ServiceClassOrderVO> list;
+                            for (int i = 0; i < 5; i++) {
+                                list = orderDao.list(unpayTimeOut);
+                                if (list.size() == 0) break;
+                                for (ServiceClassOrderVO orderVO : list) {
+                                    service.dismiss(orderVO.getId());
+                                }
+                            }
+                            vertx1.cancelTimer(timer);
+                            lock.release();
+                        }).onFailure(throwable -> logger.error(throwable.getMessage(), throwable));
             });
 
             ServiceClassOrderCondition timeoutUserFinish = new ServiceClassOrderCondition();
             timeoutUserFinish.setQuery("timeout_user_finish");
-            unpayTimeOut.page(1);
+            timeoutUserFinish.page(1);
             ServiceClassWorkOrderCondition timeoutUserFinish2 = new ServiceClassWorkOrderCondition();
             timeoutUserFinish2.setQuery("timeout_user_finish");
-            vertx1.periodicStream(10 * 60 * 60 * 1000).handler(aLong -> {
-                List<ServiceClassOrderVO> list;
-                for (int i = 0; i < 5; i++) {
-                    list = orderDao.list(timeoutUserFinish);
-                    if (list.size() == 0) break;
-                    for (ServiceClassOrderVO orderVO : list) {
-                        timeoutUserFinish2.setOrderId(orderVO.getId());
-                        List<ServiceClassWorkOrderVO> list1 = workOrderDao.list(timeoutUserFinish2);
-                        for (ServiceClassWorkOrderVO workOrderVO : list1) {
-                            service.workOrder((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setId(workOrderVO.getId()));
-                        }
-                    }
-                }
+            vertx1.periodicStream(1 * 60 * 60 * 1000).handler(aLong -> {
+                sharedData.getLock(String.format("%s_%s", ServiceClassOrderService.class.getName(), timeoutUserFinish2.getQuery()))
+                        .onSuccess(lock -> {
+                            long timer = vertx1.setTimer(59 * 60 * 1000, aLong1 -> {
+                                lock.release();
+                            });
+                            List<ServiceClassOrderVO> list;
+                            for (int i = 0; i < 5; i++) {
+                                list = orderDao.list(timeoutUserFinish);
+                                if (list.size() == 0) break;
+                                for (ServiceClassOrderVO orderVO : list) {
+                                    timeoutUserFinish2.setOrderId(orderVO.getId());
+                                    List<ServiceClassWorkOrderVO> list1 = workOrderDao.list(timeoutUserFinish2);
+                                    for (ServiceClassWorkOrderVO workOrderVO : list1) {
+                                        service.workOrder((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setId(workOrderVO.getId()));
+                                    }
+                                }
+                            }
+                            vertx1.cancelTimer(timer);
+                            lock.release();
+                        }).onFailure(throwable -> logger.error(throwable.getMessage(), throwable));
+
             });
         };
         return vertxConsumer;
