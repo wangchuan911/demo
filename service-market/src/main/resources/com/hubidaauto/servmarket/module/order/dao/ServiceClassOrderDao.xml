@@ -24,7 +24,7 @@
         ON A.ID=B.ID
         <where>
             <choose>
-                <when test="query='timeout_pay'">
+                <when test="query=='timeout_pay'">
                     AND A.STATUS_ID=10003
                     AND EXISTS (SELECT 1
                     FROM LOG_WX_PAY AA
@@ -32,7 +32,7 @@
                     AND AA.TRANSACTION_ID IS NULL
                     AND CURRENT_TIMESTAMP>(AA.CREATE_DATE + INTERVAL 2 HOUR))
                 </when>
-                <when test="query='timeout_user_finish'">
+                <when test="query=='timeout_user_finish'">
                     A.STATUS_ID = 10000
                     and exists(
                     SELECT 1
