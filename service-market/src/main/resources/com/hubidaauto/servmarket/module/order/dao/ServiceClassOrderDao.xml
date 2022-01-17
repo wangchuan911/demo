@@ -26,11 +26,25 @@
             <choose>
                 <when test="query=='timeout_pay'">
                     AND A.STATUS_ID=10003
-                    AND EXISTS (SELECT 1
+                    /*AND EXISTS (SELECT 1
                     FROM LOG_WX_PAY AA
                     WHERE AA.ORDER_ID=B.ID
                     AND AA.TRANSACTION_ID IS NULL
-                    AND CURRENT_TIMESTAMP>(AA.CREATE_DATE + INTERVAL 2 HOUR))
+                    AND CURRENT_TIMESTAMP>(AA.CREATE_DATE + INTERVAL 2 HOUR))*/
+                    AND (CASE
+                    WHEN EXISTS(SELECT 1
+                    FROM LOG_WX_PAY AA
+                    WHERE AA.ORDER_ID = B.ID
+                    AND AA.TRANSACTION_ID IS NULL
+                    AND CURRENT_TIMESTAMP > (AA.CREATE_DATE + INTERVAL 2 HOUR)) THEN 1
+                    WHEN EXISTS(
+                    SELECT 1
+                    FROM DUAL
+                    WHERE NOT EXISTS(SELECT 1
+                    FROM LOG_WX_PAY AA
+                    WHERE AA.ORDER_ID = B.ID)
+                    AND CURRENT_TIMESTAMP > (A.CREATE_TIME + INTERVAL 2 HOUR)) THEN 1
+                    ELSE 0 END) = 1
                 </when>
                 <when test="query=='timeout_user_finish'">
                     A.STATUS_ID = 10000
