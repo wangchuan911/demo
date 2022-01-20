@@ -10,10 +10,9 @@
             resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
 
         SELECT <include refid="columns"></include>,B.*
-        from SERVICE_CLASS_ORDER B
-        JOIN BASE_ORDER A
+        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
+        JOIN SERVICE_CLASS_ORDER B
         ON A.ID=B.ID
-
     </select>
     <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
             resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
