@@ -150,7 +150,7 @@ public class InviteRebateOrderRouter {
                     throw new RuntimeException();
                 ;
                 JSONObject valueJson = stream.getValue().jsonValue();
-                if (valueJson == null || valueJson.size() == 0 || !valueJson.containsKey("tplt"))
+                if (valueJson == null || valueJson.size() == 0 || !(valueJson.containsKey("tplt") || valueJson.containsKey("tpltId")))
                     throw new RuntimeException();
                 OrderVO orderVO = ApplicationContextProvider.getBean(BaseOrderService.class).get(workOrderVO.getOrderId());
 

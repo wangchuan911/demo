@@ -82,6 +82,7 @@
             <if test="code!=null">
                 and A.CODE=#{code}
             </if>
+            and 1=1
         </where>
     </sql>
     <select id="get" parameterType="long" resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">

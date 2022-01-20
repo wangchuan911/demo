@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.hubidaauto.servmarket.common.utils.JsonUtils;
+import com.hubidaauto.servmarket.module.message.entity.MagicKey;
 import com.hubidaauto.servmarket.module.message.entity.MessagePushVO;
 import com.hubidaauto.servmarket.module.message.model.MessageEvent;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
@@ -120,13 +122,13 @@ public class MessagePushConfiguration {
             if (i < 0) return;
             String key = s.substring(0, i);
             String valueKey = (i == s.length() - 1) ? "" : s.substring(i + 1);
-            MagicKey magicKey = getMagic(valueKey);
+            MagicKey magicKey = MagicKey.getMagic(valueKey);
 //            if (map.containsKey(valueKey = magicKey.getValue(valueKey)))
 //                params.put(key, magicKey.format(map.get(valueKey)));
 //            else
 //                params.put(key, valueKey);
             valueKey = magicKey.getValue(valueKey);
-            params.put(key, magicKey.format(toLongKeyMap(map, valueKey)));
+            params.put(key, magicKey.format(JsonUtils.toLongKeyMap(map, valueKey)));
         });
         String jsonString = JSONObject.toJSONString(new MessagePushVO()
                 .setCode(appUserDao.get(workOrderVO.getStaffId()).getUnionId())
@@ -135,110 +137,7 @@ public class MessagePushConfiguration {
         return jsonString;
     }
 
-    MagicKey getMagic(String value) {
-        return MagicKey.getInstance(value);
-    }
 
-    enum MagicKey {
-        DATE("@date@", (o) -> {
-            if (o == null) return "";
-            Date date = TypeUtils.castToDate(o);
-            return new SimpleDateFormat("yyyy年MM月dd日HH时mm分").format(date);
-        }), MONEY("@money@", (o) -> {
-            if (o == null) return "0.00元";
-            StringBuilder sb = new StringBuilder(o.toString());
-            sb.insert(sb.length() - 2, ".");
-            return (o != null ? sb.toString() : "0.00") + "元";
-        }), NONE("", (o) ->
-                o != null ? o.toString() : ""
-        );
-        String key;
-        Function<Object, String> function;
 
-        MagicKey(String key, Function<Object, String> function) {
-            this.key = key;
-            this.function = function;
-        }
 
-        public String getValue(String key) {
-            if (StringUtils.isEmpty(this.key)) return key;
-            return key.substring(this.key.length());
-        }
-
-        public String format(Object object) {
-            return function.apply(object);
-        }
-
-        static MagicKey getInstance(String keyWord) {
-            return Arrays.stream(values()).filter(magicKey -> magicKey != NONE && keyWord.startsWith(magicKey.key)).findFirst().orElse(NONE);
-        }
-    }
-
-    void toLongKeyMap(Map<String, Object> map, String key, JSONObject jsonObject) {
-        Object object, json;
-        for (String s : jsonObject.keySet()) {
-            object = jsonObject.get(s);
-            if (object == null) continue;
-            json = JSON.toJSON(object);
-            if (json instanceof JSONObject) {
-                toLongKeyMap(map, String.format("%s.%s", key, s), (JSONObject) json);
-            } else if (json instanceof JSONArray) {
-                toLongKeyMap(map, String.format("%s.%s", key, s), (JSONArray) json);
-            } else if (json == object) {
-                map.put(String.format("%s.%s", key, s), json);
-            }
-        }
-    }
-
-    void toLongKeyMap(Map<String, Object> map, String key, JSONArray jsonArray) {
-        Object object, json;
-        for (int i = 0, len = jsonArray.size(); i < len; i++) {
-            object = jsonArray.get(i);
-            if (object == null) continue;
-            json = JSON.toJSON(object);
-            if (json instanceof JSONObject) {
-                toLongKeyMap(map, String.format("%[%d]", key, i), (JSONObject) json);
-            } else if (json instanceof JSONArray) {
-                toLongKeyMap(map, String.format("%s[%d]", key, i), (JSONArray) json);
-            } else if (json == object) {
-                map.put(String.format("%s[%d]", key, i), json);
-            }
-        }
-    }
-
-    Object toLongKeyMap(JSONObject map, String longKey) {
-        int i = longKey.indexOf(".");
-        Object object, json;
-        String curKey = i < 0 ? longKey : longKey.substring(0, i);
-        object = map.get(curKey);
-        if (object == null) return null;
-        json = JSON.toJSON(object);
-        if (json instanceof JSONObject) {
-            return toLongKeyMap((JSONObject) json, longKey.substring(i + 1));
-        } else if (json instanceof JSONArray) {
-            return toLongKeyMap((JSONArray) json, longKey.substring(i + 1));
-        } else if (json == object) {
-            return object;
-        }
-        return null;
-    }
-
-    Object toLongKeyMap(JSONArray arr, String longKey) {
-        int i = longKey.indexOf(".");
-        Object object, json;
-        String curKey = i < 0 ? longKey : longKey.substring(0, i);
-        int index = Integer.valueOf(curKey.substring(1, curKey.length() - 1));
-        if (index >= arr.size()) return null;
-        object = arr.get(index);
-        if (object == null) return null;
-        json = JSON.toJSON(object);
-        if (json instanceof JSONObject) {
-            return toLongKeyMap((JSONObject) json, longKey.substring(i + 1));
-        } else if (json instanceof JSONArray) {
-            return toLongKeyMap((JSONArray) json, longKey.substring(i + 1));
-        } else if (json == object) {
-            return object;
-        }
-        return null;
-    }
 }
