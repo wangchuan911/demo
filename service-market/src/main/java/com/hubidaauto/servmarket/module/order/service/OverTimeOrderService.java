@@ -159,9 +159,10 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
         orderVO.setFlowId(-1L);
         orderVO.setStatusId(OrderStatus.PRE_PAY.statusId());
         orderVO.setDesc("增加服务时间");
+        orderVO.setRegionId(relaOrder.getRegionId());
         baseOrderDao.add(orderVO);
         orderDao.add(orderVO);
-        orderVO.setCode(String.format("%6d%s%04d%s%09d", relaOrder.getRegionId(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYYMMddHH")), orderVO.getCustId(), "OTO", orderVO.getId()));
+        orderVO.setCode(OrderVO.generateCode(orderVO));
         baseOrderDao.put(orderVO);
         return orderVO;
     }

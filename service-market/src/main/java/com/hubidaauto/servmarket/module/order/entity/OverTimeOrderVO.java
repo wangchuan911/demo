@@ -74,4 +74,9 @@ public class OverTimeOrderVO extends OrderVO {
     public void setItem(ItemVO item) {
         this.item = item;
     }
+
+    @Override
+    public String getSymbol() {
+        return "oto";
+    }
 }

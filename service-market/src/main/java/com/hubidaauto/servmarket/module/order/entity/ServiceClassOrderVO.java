@@ -170,4 +170,9 @@ public class ServiceClassOrderVO extends OrderVO {
     public void setTotalWorkLoad(Integer totalWorkLoad) {
         this.totalWorkLoad = totalWorkLoad;
     }
+
+    @Override
+    public String getSymbol() {
+        return "sco";
+    }
 }

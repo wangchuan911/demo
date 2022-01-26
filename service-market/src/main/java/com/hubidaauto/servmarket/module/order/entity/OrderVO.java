@@ -1,5 +1,6 @@
 package com.hubidaauto.servmarket.module.order.entity;
 
+import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -8,6 +9,8 @@ import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 /**
@@ -100,5 +103,13 @@ public class OrderVO {
 
     public void setTotalPrice(Integer totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public String getSymbol() {
+        return null;
+    }
+
+    public static String generateCode(OrderVO orderVO) {
+        return String.format("%6d%s%04d%s%09d", orderVO.getRegionId(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYYMMddHH")), orderVO.getCustId(), orderVO.getSymbol().toUpperCase().substring(0, 3), orderVO.getId());
     }
 }

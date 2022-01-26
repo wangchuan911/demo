@@ -182,35 +182,18 @@ public abstract class AbstractWechatConfiguration {
     }
 
     public static class Path {
-        Map<String, String> pays;
-        Map<String, String> refunds;
+        Map<String, Payment> payment;
         String app;
         String push;
         String appIndex;
         Map<String, String> other;
 
-        public Map<String, String> getPays() {
-            return pays;
+        public Map<String, Payment> getPayment() {
+            return payment;
         }
 
-        public String getPay(String key) {
-            return pays.get(key);
-        }
-
-        public String getRefund(String key) {
-            return refunds.get(key);
-        }
-
-        public Map<String, String> getRefunds() {
-            return refunds;
-        }
-
-        public void setRefunds(Map<String, String> refunds) {
-            this.refunds = refunds;
-        }
-
-        public void setPays(Map<String, String> pays) {
-            this.pays = pays;
+        public void setPayment(Map<String, Payment> payment) {
+            this.payment = payment;
         }
 
         public String getApp() {
@@ -245,25 +228,40 @@ public abstract class AbstractWechatConfiguration {
             this.other = other;
         }
 
-        public String path(String code) {
-            String path;
-            if (code.startsWith("pays.")) {
-                path = this.getPay(code.split(".")[1]);
-            } else if (code.startsWith("refunds.")) {
-                path = this.getRefund(code.split(".")[1]);
-            } else {
-                switch (code) {
-                    case "app":
-                        path = this.getApp();
-                        break;
-                    case "push":
-                        path = this.getPush();
-                        break;
-                    default:
-                        path = this.getOther().get(code);
-                }
+        public static class Payment {
+            String paying, paid, refunded, refunding;
+
+            public String getPaying() {
+                return paying;
             }
-            return path;
+
+            public void setPaying(String paying) {
+                this.paying = paying;
+            }
+
+            public String getPaid() {
+                return paid;
+            }
+
+            public void setPaid(String paid) {
+                this.paid = paid;
+            }
+
+            public String getRefunded() {
+                return refunded;
+            }
+
+            public void setRefunded(String refunded) {
+                this.refunded = refunded;
+            }
+
+            public String getRefunding() {
+                return refunding;
+            }
+
+            public void setRefunding(String refunding) {
+                this.refunding = refunding;
+            }
         }
     }
 
@@ -443,7 +441,6 @@ public abstract class AbstractWechatConfiguration {
         cls = ApplicationContextProvider.getRealClass(cls);
         WECHAT_CONFIGS.put(cls, this);
 
-
         readOnly = true;
     }
 
@@ -500,7 +497,7 @@ public abstract class AbstractWechatConfiguration {
                         .setMchId(this.getMerchant().getMchId())
                         .setNonceStr(weChatPayOrder.getNonce())
                         .setSpbillCreateIp(this.getNetIp())
-                        .setNotifyUrl(this.getAddress() + this.getPath().getPay(weChatPayOrder.getPayClass()))
+                        .setNotifyUrl(this.getAddress() + this.getPath().getPayment().get(weChatPayOrder.getPayClass()).getPaid())
                         .setTradeType("JSAPI")
                         .setSign(this.getMerchant().getMchKey())
                 ));
@@ -548,8 +545,8 @@ public abstract class AbstractWechatConfiguration {
     public void wechatPayResult(RoutingContext routingContext) {
         try {
             String path = routingContext.request().path();
-            Optional<String> optional = getPath().getPays().entrySet().stream().filter(stringStringEntry ->
-                    path.indexOf(stringStringEntry.getValue()) >= 0
+            Optional<String> optional = getPath().getPayment().entrySet().stream().filter(paymentEntry ->
+                    path.indexOf(paymentEntry.getValue().getPaid()) >= 0
             ).map(Map.Entry::getKey).findFirst();
             if (optional.isEmpty()) {
                 routingContext.fail(404, new RuntimeException("无效的地址"));
@@ -580,7 +577,7 @@ public abstract class AbstractWechatConfiguration {
                         .setAppId(this.getAppID())
                         .setMchId(this.getMerchant().getMchId())
                         .setNonceStr(weChatRefundOrder.getNonce())
-                        .setNotifyUrl(String.format("%s%s", this.getAddress(), this.getPath().getRefund(weChatRefundOrder.getPayClass())))
+                        .setNotifyUrl(String.format("%s%s", this.getAddress(), this.getPath().getPayment().get(weChatRefundOrder.getPayClass()).getRefunded()))
                         .setSign(this.getMerchant().getMchKey())
                 ));
 /*
@@ -620,8 +617,8 @@ public abstract class AbstractWechatConfiguration {
     public void weChatRefundCallBack(RoutingContext routingContext) {
         try {
             String path = routingContext.request().path();
-            Optional<String> optional = getPath().getRefunds().entrySet().stream().filter(stringStringEntry ->
-                    path.indexOf(stringStringEntry.getValue()) >= 0
+            Optional<String> optional = getPath().getPayment().entrySet().stream().filter(paymentEntry ->
+                    path.indexOf(paymentEntry.getValue().getRefunded()) >= 0
             ).map(Map.Entry::getKey).findFirst();
             if (optional.isEmpty()) {
                 routingContext.fail(404, new RuntimeException("无效的地址"));

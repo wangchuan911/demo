@@ -11,13 +11,19 @@ wechat-app-hubida:
   appName: 爱车智联AUTOCAR
   address: https://www.welisdoon.xyz
   path:
-    pays:
-      com.hubidaauto.carservice.wxapp.core.service.OrderService: /wxAppPay
-      com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService: /wxApp/order/pay/sco
-      com.hubidaauto.servmarket.module.order.service.OverTimeOrderService: /wxApp/order/pay/oto
-    refunds:
-      com.hubidaauto.carservice.wxapp.core.service.OrderService: /wxAppRefund
-      com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService: /wxApp/order/refund/sco
+    payment:
+      "[com.hubidaauto.carservice.wxapp.core.service.OrderService]":
+        paying: /wxAppPay
+        paid: /wxAppPay
+        refunding: /wxAppRefund
+      "[com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService]":
+        refunding: ${wechat-app-hubida.path.app}/order/refund/sco
+        refunded: ${wechat-app-hubida.path.app}/order/refund/sco
+        paying: ${wechat-app-hubida.path.app}/order/pay/sco
+        paid: ${wechat-app-hubida.path.app}/order/pay/sco
+      "[com.hubidaauto.servmarket.module.order.service.OverTimeOrderService]":
+        paying: ${wechat-app-hubida.path.app}/order/pay/oto
+        paid: ${wechat-app-hubida.path.app}/order/pay/oto
     app: /wxApp
     push: /wxPush
     appIndex: /pages/index2/index/index
