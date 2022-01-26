@@ -6,7 +6,7 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 
 public class ItemVO {
-    Long id, type, price, contentId;
+    Long id, type, price, contentId, orderClass;
     String name, imgs, desc, typesGroupDesc;
     ContentVO detail;
     List<ItemTypeVO> types;
@@ -108,5 +108,13 @@ public class ItemVO {
 
     public void setTypesGroupDesc(String typesGroupDesc) {
         this.typesGroupDesc = typesGroupDesc;
+    }
+
+    public Long getOrderClass() {
+        return orderClass;
+    }
+
+    public void setOrderClass(Long orderClass) {
+        this.orderClass = orderClass;
     }
 }

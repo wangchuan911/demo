@@ -618,7 +618,8 @@ public abstract class AbstractWechatConfiguration {
         try {
             String path = routingContext.request().path();
             Optional<String> optional = getPath().getPayment().entrySet().stream().filter(paymentEntry ->
-                    path.indexOf(paymentEntry.getValue().getRefunded()) >= 0
+                    paymentEntry.getValue().getRefunded() != null
+                            && path.indexOf(paymentEntry.getValue().getRefunded()) >= 0
             ).map(Map.Entry::getKey).findFirst();
             if (optional.isEmpty()) {
                 routingContext.fail(404, new RuntimeException("无效的地址"));
