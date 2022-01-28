@@ -277,18 +277,20 @@ public class AppUserWebRouter {
             List<ImageContentVO> images = imageContentDao.list(contentVO);
             if (!CollectionUtils.isEmpty(images)) {
                 htmlTemplateWebRouter.cacheImage(routingContext, Utils.pathOffset(routingContext.request().path(), routingContext), () -> imageContentDao.get(images.get(0).getId()));
+                routingContext.response().setChunked(true);
+                routingContext.next();
                 return;
             }
             abstractWechatConfiguration.getWechatAsyncMeassger()
                     .post("getwxacodeunlimit",
-                            new JsonObject()
+                            Map.of(
 //                                    .put("access_token", abstractWechatConfiguration.getWechatAsyncMeassger().getAccessToken())
-                                    .put("page", "pages/index/index")
-                                    .put("check_path", true)
+                                    "page", "pages/index/index"
+                                    , "check_path", true
 //                                    .put("env_version", StringUtils.isEmpty(envVersion) ? null : envVersion)
-                                    .put("scene",
-                                            Map.of("userId", userId)
-                                                    .entrySet().stream().map(e -> String.format("%s=%s", e.getKey(), e.getValue())).collect(Collectors.joining("&"))))
+                                    , "scene",
+                                    Map.of("userId", userId)
+                                            .entrySet().stream().map(e -> String.format("%s=%s", e.getKey(), e.getValue())).collect(Collectors.joining("&"))))
                     .onSuccess(
                             bufferHttpResponse -> {
                                 Buffer buffer = bufferHttpResponse.body();
@@ -299,6 +301,7 @@ public class AppUserWebRouter {
                                 routingContext.response().end(buffer);
                             })
                     .onFailure(throwable -> {
+                        throwable.printStackTrace();
                         routingContext.response().setStatusCode(500).end(throwable.getMessage());
                     });
 

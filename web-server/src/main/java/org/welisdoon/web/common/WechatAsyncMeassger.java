@@ -36,7 +36,7 @@ public class WechatAsyncMeassger {
         String param = JSONObject.toJSONString(o);
         logger.info(String.format("param:%s", param));
         return webClient.postAbs(url)
-                /*.putHeader(HttpHeaders.CONTENT_TYPE.toString(), "application/json")*/
+                .putHeader(HttpHeaders.CONTENT_TYPE.toString(), "application/json")
                 .sendBuffer(Buffer.buffer(param))
                 .compose(bufferHttpResponse -> {
                     logger.debug(String.format("response:%s", bufferHttpResponse.body()));
