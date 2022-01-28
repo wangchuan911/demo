@@ -4,10 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
 import com.hubidaauto.carservice.officalaccount.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
-import com.hubidaauto.carservice.wxapp.core.entity.TacheVO;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -15,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.CommonConst;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
@@ -30,7 +27,6 @@ import org.welisdoon.web.vertx.verticle.StandaredVerticle;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -131,13 +127,15 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
                                 .setMiniprogram(new PublicTamplateMessage.MiniProgram()
                                         .setAppid(appConfiguration.getAppID())
                                         .setPagepath(appConfiguration.getPath().getAppIndex()))
-                                .setTemplate_id(templateId)
+                                .setTemplateId(templateId)
                                 .addDatas(map.entrySet().toArray(Map.Entry[]::new))
                                 .setTouser(userVO
-                                        .getId()),
+                                        .getId()))
+                .onSuccess(
                         bufferHttpResponse -> {
                             logger.info(bufferHttpResponse.body().toString());
-                        },
+                        })
+                .onFailure(
                         throwable -> {
                             logger.error(throwable.getMessage(), throwable);
                         });

@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.github.pagehelper.Page;
 
-
+@Deprecated
 public interface IDao<T, K> {
     /*select one by key*/
     <T> T one(K key);

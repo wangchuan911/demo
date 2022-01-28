@@ -1,5 +1,7 @@
 package org.welisdoon.web.entity.wechat.push;
 
+import com.alibaba.fastjson.annotation.JSONField;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -13,7 +15,7 @@ public abstract class PushMessage {
 
     * */
     String touser;
-    String template_id;
+    String templateId;
     Map<String, Entry> data;
 
     public static class Entry {
@@ -38,12 +40,13 @@ public abstract class PushMessage {
         return this;
     }
 
-    public String getTemplate_id() {
-        return template_id;
+    @JSONField(name = "template_id")
+    public String getTemplateId() {
+        return templateId;
     }
 
-    public PushMessage setTemplate_id(String template_id) {
-        this.template_id = template_id;
+    public PushMessage setTemplateId(String templateId) {
+        this.templateId = templateId;
         return this;
     }
 
@@ -101,7 +104,7 @@ public abstract class PushMessage {
     public String toString() {
         final StringBuilder sb = new StringBuilder("PushMessage{");
         sb.append("touser='").append(touser).append('\'');
-        sb.append(", template_id='").append(template_id).append('\'');
+        sb.append(", template_id='").append(templateId).append('\'');
         sb.append('}');
         return sb.toString();
     }

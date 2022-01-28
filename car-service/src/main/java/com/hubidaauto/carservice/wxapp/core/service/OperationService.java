@@ -399,7 +399,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
 									.getWechatAsyncMeassger()
 									.post(CommonConst.WecharUrlKeys.SUBSCRIBE_SEND, new SubscribeMessage()
 											.setPage(pushConfig.getJump())
-											.setTemplate_id(pushConfig
+											.setTemplateId(pushConfig
 													.getTemplateId())
 											.addDatas(entrys)
 											.setTouser(userId));
@@ -455,7 +455,7 @@ public class OperationService extends AbstractBaseService<OperationVO> {
 						.setMiniprogram(new PublicTamplateMessage.MiniProgram()
 								.setAppid(appConfiguration.getAppID())
 								.setPagepath(appConfiguration.getPath().getAppIndex()))
-						.setTemplate_id(pushConfig.getTemplateId())
+						.setTemplateId(pushConfig.getTemplateId())
 						.addDatas(entrys)
 						.setTouser(userVO
 								.getId()));

@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
+@Deprecated
 public interface EntityObjectUtils {
     Logger logger = LoggerFactory.getLogger(EntityObjectUtils.class);
     Map<Class<?>, EntityObjectDeclare> CLASS_SET_MAP = new HashMap<>();
