@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 
 public class WechatAsyncMeassger {
@@ -21,48 +22,13 @@ public class WechatAsyncMeassger {
     private static final Logger logger = LoggerFactory.getLogger(WechatAsyncMeassger.class);
     WebClient webClient;
     Map url;
-    String accessToken;
-    /*final static Map<Class<?>, WechatAsyncMeassger> MAP = new HashMap(4);*/
+    Supplier<String> accessTokenGetter;
 
-	/*public WechatAsyncMeassger(AbstractWechatConfiguration configuration, WebClient webClient) {
-		this.webClient = webClient;
-		this.url = configuration.getUrls();
-		Class<?> cls = configuration.getClass();
-		if (MAP.containsKey(cls))
-			throw new RuntimeException(String.format("%s is exists", cls.getName()));
-		if (cls.getName().indexOf("EnhancerBySpringCGLIB") > 0) {
-			cls = cls.getSuperclass();
-		}
-		MAP.put(cls, this);
-	}*/
-
-    public WechatAsyncMeassger(Map urls, WebClient webClient) {
+    public WechatAsyncMeassger(Map urls, WebClient webClient, Supplier<String> accessTokenGetter) {
         this.webClient = webClient;
         this.url = urls;
+        this.accessTokenGetter = accessTokenGetter;
     }
-
-	/*public static WechatAsyncMeassger get(Class<? extends AbstractWechatConfiguration> cls) {
-		return MAP.get(cls);
-	}*/
-
-    public WechatAsyncMeassger setWebClient(WebClient webClient) {
-        this.webClient = webClient;
-        return this;
-    }
-
-    public void setUrl(String key, String url) {
-        this.url.put(key, url);
-    }
-
-    public WechatAsyncMeassger setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-        return this;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
 
     public Future<HttpResponse<Buffer>> post(String key, Object o) {
         final String url = setUrlParamValue(key, null);
@@ -103,7 +69,7 @@ public class WechatAsyncMeassger {
                 replace(url, String.format("{{%s}}", o.getKey().toString()), o.getValue().toString());
             });
         }
-        replace(url, "{{ACCESS_TOKEN}}", this.accessToken);
+        replace(url, "{{ACCESS_TOKEN}}", this.accessTokenGetter.get());
         return url.toString();
     }
 

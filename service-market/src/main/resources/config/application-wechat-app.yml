@@ -5,6 +5,7 @@ wechat-app-hubida:
   key: AC32OLzYAjjkPqzxilsPiMPbqYCHESnOuPzyYpjFyVw
   afterUpdateTokenTime: -6000
   orderCycleTime: 0
+  accessToken: xxx
   merchant:
     mchId: xxxx
     mchKey: xxx

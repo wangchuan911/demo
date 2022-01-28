@@ -53,23 +53,24 @@ import java.util.function.Consumer;
 public abstract class AbstractWechatConfiguration {
     public final Logger logger = LoggerFactory.getLogger(ApplicationContextProvider.getRealClass(this.getClass()));
 
-    private String appID;
-    private String appsecret;
-    private String token;
-    private String key;
-    private Integer afterUpdateTokenTime;
-    private Map urls;
-    private Map schedul;
-    private String appName;
-    private String address;
-    private Path path;
-    private String netIp;
-    private WXBizMsgCrypt wxBizMsgCrypt;
-    private WechatAsyncMeassger wechatAsyncMeassger;
-    private WechatAsyncMeassger mchApiAsyncMeassger;
-    private boolean readOnly = false;
-    private String classPath;
-    private Merchant merchant;
+    protected String appID;
+    protected String appsecret;
+    protected String token;
+    protected String key;
+    protected Integer afterUpdateTokenTime;
+    protected Map urls;
+    protected Map schedul;
+    protected String appName;
+    protected String address;
+    protected Path path;
+    protected String netIp;
+    protected WXBizMsgCrypt wxBizMsgCrypt;
+    protected WechatAsyncMeassger wechatAsyncMeassger;
+    protected WechatAsyncMeassger mchApiAsyncMeassger;
+    protected boolean readOnly = false;
+    protected String classPath;
+    protected Merchant merchant;
+    protected String accessToken;
 
     public String getAppID() {
         return appID;
@@ -409,13 +410,13 @@ public abstract class AbstractWechatConfiguration {
     public synchronized void setWechatAsyncMeassger(WebClient webClient) {
         if (this.wechatAsyncMeassger != null)
             return;
-        this.wechatAsyncMeassger = new WechatAsyncMeassger(urls, webClient);
+        this.wechatAsyncMeassger = new WechatAsyncMeassger(urls, webClient,this::getAccessToken);
     }
 
     public synchronized void initApiAsyncMeassger(Vertx vertx) {
         if (this.mchApiAsyncMeassger != null || this.merchant == null)
             return;
-        this.mchApiAsyncMeassger = new WechatAsyncMeassger(urls, WebClient.create(vertx, new WebClientOptions().setPemKeyCertOptions(new PemKeyCertOptions().setKeyPath(this.merchant.keyPath).setCertPath(this.merchant.certPath))));
+        this.mchApiAsyncMeassger = new WechatAsyncMeassger(urls, WebClient.create(vertx, new WebClientOptions().setPemKeyCertOptions(new PemKeyCertOptions().setKeyPath(this.merchant.keyPath).setCertPath(this.merchant.certPath))),this::getAccessToken);
     }
 
     public WechatAsyncMeassger getWechatAsyncMeassger() {
@@ -735,8 +736,10 @@ public abstract class AbstractWechatConfiguration {
     }
 
     public void setAccessToken(String accessToken) {
-        this.wechatAsyncMeassger.setAccessToken(accessToken);
-        if (this.mchApiAsyncMeassger != null)
-            this.mchApiAsyncMeassger.setAccessToken(accessToken);
+        this.accessToken = accessToken;
+    }
+
+    public String getAccessToken() {
+        return this.accessToken;
     }
 }
