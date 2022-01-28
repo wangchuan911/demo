@@ -26,7 +26,7 @@ wechat-app-hubida:
         paid: ${wechat-app-hubida.path.app}/order/pay/oto
     app: /wxApp
     push: /wxPush
-    appIndex: /pages/index2/index/index
+    appIndex: /pages/index/index
     other:
       invite: /pages/home/mime/mine
       mallPay: /wxMallPay
