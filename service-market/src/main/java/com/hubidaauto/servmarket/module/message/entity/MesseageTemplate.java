@@ -11,8 +11,8 @@ import java.util.Map;
  * @Date 2022/1/17 21:26
  */
 public class MesseageTemplate {
-    Long id, mode;
-    String code;
+    Long id;
+    String code, mode;
     MesseageTemplateAttribute[] attributes;
 
     public Long getId() {
@@ -23,11 +23,11 @@ public class MesseageTemplate {
         this.id = id;
     }
 
-    public Long getMode() {
+    public String getMode() {
         return mode;
     }
 
-    public void setMode(Long mode) {
+    public void setMode(String mode) {
         this.mode = mode;
     }
 

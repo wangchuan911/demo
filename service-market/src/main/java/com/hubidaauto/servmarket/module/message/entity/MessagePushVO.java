@@ -50,12 +50,10 @@ public class MessagePushVO {
     }
 
     public enum Mode {
-        WechatMiniApp("wxApp"), WechatOfficialAccounts("wxAcc");
+        WechatMiniApp, WechatOfficialAccounts;
+    }
 
-        String code;
-
-        Mode(String code) {
-            this.code = code;
-        }
+    public enum Reciver {
+        Staff, Custom;
     }
 }

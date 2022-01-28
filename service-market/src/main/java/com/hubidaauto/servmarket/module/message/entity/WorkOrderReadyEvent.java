@@ -1,8 +1,10 @@
 package com.hubidaauto.servmarket.module.message.entity;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.servmarket.module.message.model.MessageEvent;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
+import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.slf4j.Logger;
@@ -26,7 +28,7 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
     private static final Logger logger = LoggerFactory.getLogger(WorkOrderReadyEvent.class);
     OrderVO orderVO;
     WorkOrderVO workOrderVO;
-    JSONObject templateInfo;
+    List<Long> templateIds;
 
     public WorkOrderReadyEvent(OrderVO orderVO, WorkOrderVO workOrderVO) {
         this.orderVO = orderVO;
@@ -34,7 +36,11 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
         if (this.workOrderVO.getStream() != null
                 && this.workOrderVO.getStream().getValue() != null && this.workOrderVO.getStream().getValue().getValue() != null) {
             JSONObject valueJson = this.workOrderVO.getStream().getValue().jsonValue();
-            this.templateInfo = valueJson.getJSONObject("tplt");
+            JSONArray array = valueJson.getJSONArray("tpltIds");
+
+            if (array != null && array.size() > 0) {
+                templateIds = array.toJavaList(Long.class);
+            }
         }
     }
 
@@ -43,29 +49,33 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
         List<MessagePushVO> list = new LinkedList<>();
         Stream stream = workOrderVO.getStream();
         if (stream == null) return null;
-        if (templateInfo != null && templateInfo.size() > 0) {
-            Arrays.stream(MessagePushVO.Mode.values()).forEach(platform -> {
+        if (templateIds != null) {
+            this.orderVO = ApplicationContextProvider.getBean(BaseOrderService.class).get(orderVO.getId());
+            for (Long templateId : templateIds) {
                 try {
-                    if (templateInfo.containsKey(platform.code)) {
-                        MesseageTemplate template = ApplicationContextProvider.getBean(MesseageTemplateDao.class).get(templateInfo.getLong(platform.code));
-                        if (template == null) return;
-                        MessagePushVO vo = new MessagePushVO()
-                                .setTemplateId(template.code).setParams(template.toMap(this.params()))
-                                .setMode(platform);
-                        switch (platform) {
-                            case WechatOfficialAccounts:
-                                vo.setCode(ApplicationContextProvider.getBean(AppUserDao.class).get(workOrderVO.getStaffId()).getUnionId());
-                                break;
-                            case WechatMiniApp:
-                                vo.setCode(ApplicationContextProvider.getBean(AppUserDao.class).get(orderVO.getCustId()).getAppId());
-                                break;
-                        }
-                        list.add(vo);
+                    MesseageTemplate template = ApplicationContextProvider.getBean(MesseageTemplateDao.class).get(templateId);
+                    if (template == null) continue;
+                    int index = template.mode.indexOf("@");
+                    MessagePushVO.Mode platform = MessagePushVO.Mode.valueOf(template.mode.substring(0, index));
+                    MessagePushVO.Reciver reciver = MessagePushVO.Reciver.valueOf(template.mode.substring(index + 1));
+                    if (platform == null) continue;
+                    MessagePushVO vo = new MessagePushVO()
+                            .setTemplateId(template.code).setParams(template.toMap(this.params()))
+                            .setMode(platform);
+                    switch (reciver) {
+                        case Staff:
+                            vo.setCode(ApplicationContextProvider.getBean(AppUserDao.class).get(workOrderVO.getStaffId()).getUnionId());
+                            break;
+                        case Custom:
+                            vo.setCode(ApplicationContextProvider.getBean(AppUserDao.class).get(orderVO.getCustId()).getAppId());
+                            break;
                     }
+                    list.add(vo);
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
                 }
-            });
+            }
+
 
         }
         return list.toArray(MessagePushVO[]::new);
@@ -82,11 +92,11 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
         return orderVO;
     }
 
-    public WorkOrderVO getWorkOrderVO() {
-        return workOrderVO;
+    public List<Long> getTemplateIds() {
+        return templateIds;
     }
 
-    public JSONObject getTemplateInfo() {
-        return templateInfo;
+    public WorkOrderVO getWorkOrderVO() {
+        return workOrderVO;
     }
 }
