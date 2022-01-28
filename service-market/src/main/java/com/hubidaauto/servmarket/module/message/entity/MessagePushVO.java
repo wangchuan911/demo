@@ -11,6 +11,7 @@ import java.util.Map;
 public class MessagePushVO {
     String code, templateId;
     Map<String, Object> params;
+    Mode mode;
 
     public String getCode() {
         return code;
@@ -37,5 +38,24 @@ public class MessagePushVO {
     public MessagePushVO setParams(Map<String, Object> params) {
         this.params = params;
         return this;
+    }
+
+    public Mode getMode() {
+        return mode;
+    }
+
+    public MessagePushVO setMode(Mode mode) {
+        this.mode = mode;
+        return this;
+    }
+
+    public enum Mode {
+        WechatMiniApp("wxApp"), WechatOfficialAccounts("wxAcc");
+
+        String code;
+
+        Mode(String code) {
+            this.code = code;
+        }
     }
 }

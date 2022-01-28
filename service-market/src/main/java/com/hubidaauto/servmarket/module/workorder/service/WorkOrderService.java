@@ -1,4 +1,4 @@
-package com.hubidaauto.servmarket.module.order.service;
+package com.hubidaauto.servmarket.module.workorder.service;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @Date 2021/8/28 17:09
  */
 @DS("shop")
-@Service
+//@Service
 @Transactional(rollbackFor = Throwable.class)
 public class WorkOrderService {
 }

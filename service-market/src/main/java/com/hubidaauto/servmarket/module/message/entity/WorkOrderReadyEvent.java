@@ -7,12 +7,13 @@ import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import com.hubidaauto.servmarket.module.message.dao.MesseageTemplateDao;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @Classname WorkOrderReadyEvent
@@ -26,7 +27,6 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
     OrderVO orderVO;
     WorkOrderVO workOrderVO;
     JSONObject templateInfo;
-    Long templateId;
 
     public WorkOrderReadyEvent(OrderVO orderVO, WorkOrderVO workOrderVO) {
         this.orderVO = orderVO;
@@ -35,41 +35,40 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
                 && this.workOrderVO.getStream().getValue() != null && this.workOrderVO.getStream().getValue().getValue() != null) {
             JSONObject valueJson = this.workOrderVO.getStream().getValue().jsonValue();
             this.templateInfo = valueJson.getJSONObject("tplt");
-            this.templateId = valueJson.getLong("tpltId");
         }
     }
 
     @Override
-    public MessagePushVO toBodyString() {
+    public MessagePushVO[] toBodyString() {
+        List<MessagePushVO> list = new LinkedList<>();
         Stream stream = workOrderVO.getStream();
         if (stream == null) return null;
-        if (templateInfo != null && templateInfo.containsKey("url")) {
-            String url = templateInfo.getString("url");
-            JSONObject params = new JSONObject(), map = this.params();
-            Arrays.stream(url.split("&")).forEach(s -> {
-                int i = s.indexOf("=");
-                if (i < 0) return;
-                String key = s.substring(0, i);
-                String valueKey = (i == s.length() - 1) ? "" : s.substring(i + 1);
-                MagicKey magicKey = MessageEvent.getMagic(valueKey);
-            /*if (map.containsKey(valueKey = magicKey.getValue(valueKey)))
-                params.put(key, magicKey.format(map.get(valueKey)));
-            else
-                params.put(key, valueKey);*/
-                valueKey = magicKey.getValue(valueKey);
-                params.put(key, magicKey.format(MessageEvent.toLongKeyMap(map, valueKey)));
+        if (templateInfo != null && templateInfo.size() > 0) {
+            Arrays.stream(MessagePushVO.Mode.values()).forEach(platform -> {
+                try {
+                    if (templateInfo.containsKey(platform.code)) {
+                        MesseageTemplate template = ApplicationContextProvider.getBean(MesseageTemplateDao.class).get(templateInfo.getLong(platform.code));
+                        if (template == null) return;
+                        MessagePushVO vo = new MessagePushVO()
+                                .setTemplateId(template.code).setParams(template.toMap(this.params()))
+                                .setMode(platform);
+                        switch (platform) {
+                            case WechatOfficialAccounts:
+                                vo.setCode(ApplicationContextProvider.getBean(AppUserDao.class).get(workOrderVO.getStaffId()).getUnionId());
+                                break;
+                            case WechatMiniApp:
+                                vo.setCode(ApplicationContextProvider.getBean(AppUserDao.class).get(orderVO.getCustId()).getAppId());
+                                break;
+                        }
+                        list.add(vo);
+                    }
+                } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
+                }
             });
-            return new MessagePushVO()
-                    .setCode(ApplicationContextProvider.getBean(AppUserDao.class).get(workOrderVO.getStaffId()).getUnionId())
-                    .setTemplateId(templateInfo.getString("tpid")).setParams(params);
-        } else if (templateId != null) {
-            MesseageTemplate template = ApplicationContextProvider.getBean(MesseageTemplateDao.class).get(templateId);
-            if (template == null) return null;
-            return new MessagePushVO()
-                    .setCode(ApplicationContextProvider.getBean(AppUserDao.class).get(workOrderVO.getStaffId()).getUnionId())
-                    .setTemplateId(template.code).setParams(template.toMap(this.params()));
+
         }
-        return null;
+        return list.toArray(MessagePushVO[]::new);
     }
 
     protected JSONObject params() {

@@ -23,7 +23,7 @@ public interface MessageEvent<T> {
         return MagicKey.getInstance(value);
     }
 
-    T toBodyString();
+    T[] toBodyString();
 
     enum MagicKey {
         DATE("@date@", (o) -> {

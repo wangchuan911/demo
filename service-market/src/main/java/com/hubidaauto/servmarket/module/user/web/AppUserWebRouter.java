@@ -288,17 +288,19 @@ public class AppUserWebRouter {
 //                                    .put("env_version", StringUtils.isEmpty(envVersion) ? null : envVersion)
                                     .put("scene",
                                             Map.of("userId", userId)
-                                                    .entrySet().stream().map(e -> String.format("%s=%s", e.getKey(), e.getValue())).collect(Collectors.joining("&")))
-                            , bufferHttpResponse -> {
+                                                    .entrySet().stream().map(e -> String.format("%s=%s", e.getKey(), e.getValue())).collect(Collectors.joining("&"))))
+                    .onSuccess(
+                            bufferHttpResponse -> {
                                 Buffer buffer = bufferHttpResponse.body();
 
                                 contentVO.setContent(buffer.getBytes());
                                 imageContentDao.add(contentVO);
 
                                 routingContext.response().end(buffer);
-                            }, throwable -> {
-                                routingContext.response().setStatusCode(500).end(throwable.getMessage());
-                            });
+                            })
+                    .onFailure(throwable -> {
+                        routingContext.response().setStatusCode(500).end(throwable.getMessage());
+                    });
 
         }).handler(staticHandler);
     }
