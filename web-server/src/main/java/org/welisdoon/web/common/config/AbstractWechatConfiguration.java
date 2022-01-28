@@ -734,7 +734,7 @@ public abstract class AbstractWechatConfiguration {
         }
     }
 
-    public void updateAccessToken(String accessToken) {
+    public void setAccessToken(String accessToken) {
         this.wechatAsyncMeassger.setAccessToken(accessToken);
         if (this.mchApiAsyncMeassger != null)
             this.mchApiAsyncMeassger.setAccessToken(accessToken);

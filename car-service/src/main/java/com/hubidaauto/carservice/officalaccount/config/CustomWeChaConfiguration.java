@@ -57,7 +57,7 @@ public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
     public Consumer<Router> routeMapping(Vertx vertx) {
 
         this.initAccessTokenSyncTimer(vertx, objectMessage -> {
-            this.updateAccessToken(this.getTokenFromMessage(objectMessage));
+            this.setAccessToken(this.getTokenFromMessage(objectMessage));
         });
 
         commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
