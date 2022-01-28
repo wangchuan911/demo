@@ -21,7 +21,7 @@
                 AND A.OPERATION = 'CUST_COMFIRM'
                 AND A.STATUS_ID = 11001
                 AND A.ORDER_ID = #{orderId}
-                AND CURRENT_TIMESTAMP > (A1.CREATE_TIME + INTERVAL 7 DAY)
+                AND CURRENT_TIMESTAMP > (A.CREATE_TIME + INTERVAL 7 DAY)
             </when>
             <when test="streamId!=null">
                 and #{streamId}=STREAM_ID
