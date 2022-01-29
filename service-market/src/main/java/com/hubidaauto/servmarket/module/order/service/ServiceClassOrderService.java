@@ -76,6 +76,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -327,8 +328,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             case READY:
                 workOrderCondition = new ServiceClassWorkOrderCondition();
                 workOrderCondition.setStreamId(stream.getId());
-                workOrderVO = workOrderDao.find(workOrderCondition);
-                if (workOrderVO != null) break;
+                if (workOrderDao.find(workOrderCondition) != null) break;
 
                 workOrderVO = new ServiceClassWorkOrderVO();
                 ServiceClassOrderVO orderVO = orderDao.find((ServiceClassOrderCondition) new ServiceClassOrderCondition().setFlowId(flow.getId()));
@@ -362,12 +362,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     }
                 }
                 workOrderDao.add(workOrderVO);
-                try {
+
+                this.pushMessage("workorder_ready", () -> {
                     workOrderVO.setStream(stream);
-                    this.pushMessage("workorder_ready", JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO), SerializerFeature.WriteClassName));
-                } catch (Throwable e) {
-                    logger.error(e.getMessage(), e);
-                }
+                    return JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO), SerializerFeature.WriteClassName);
+                });
                 break;
             case COMPLETE:
 //                workOrderCondition = new ServiceClassWorkOrderCondition();
@@ -382,9 +381,14 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         }
     }
 
-    protected void pushMessage(String key, Object object) {
-        logger.info(String.format("%s-%s", key, object));
-        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), key), object);
+    protected void pushMessage(String key, Supplier<Object> supplier) {
+        try {
+            Object object = supplier.get();
+            logger.info(String.format("%s-%s", key, object));
+            WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), key), object);
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
 
