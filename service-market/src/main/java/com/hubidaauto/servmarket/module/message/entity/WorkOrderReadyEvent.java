@@ -13,6 +13,8 @@ import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import com.hubidaauto.servmarket.module.message.dao.MesseageTemplateDao;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -84,6 +86,8 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
     protected JSONObject params() {
         JSONObject map = new JSONObject();
         map.put("order", orderVO);
+        if (workOrderVO.getCreateTime() == null)
+            workOrderVO.setCreateTime(Timestamp.valueOf(LocalDateTime.now()));
         map.put("workorder", workOrderVO);
         return map;
     }

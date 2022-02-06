@@ -81,7 +81,11 @@ public class MessagePushConfiguration implements Self<MessagePushConfiguration> 
                                             .setPage(configuration.getPath().getAppIndex())
                                             .setTemplateId(vo.getTemplateId())
                                             .addDatas(vo.getParams().entrySet().toArray(Map.Entry[]::new))
-                                            .setTouser(vo.getCode()));
+                                            .setTouser(vo.getCode()))
+                                    .onSuccess(bufferHttpResponse -> {
+                                        logger.warn(bufferHttpResponse.bodyAsString());
+                                    })
+                                    .onFailure(throwable -> logger.error(throwable.getMessage(), throwable));
                             break;
                         case WechatOfficialAccounts:
                             String jsonString = JSONObject.toJSONString(vo);
