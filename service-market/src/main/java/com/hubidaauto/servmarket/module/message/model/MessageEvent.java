@@ -40,7 +40,15 @@ public interface MessageEvent<T> {
             return sb.toString() + "元";
         }), NONE("", (o) ->
                 o != null ? o.toString() : ""
-        );
+        ), TIME("@time@", o -> {
+            if (o == null) return "";
+            Date date = TypeUtils.castToDate(o);
+            return new SimpleDateFormat("HH:mm").format(date);
+        }), DATE_TIME("@datetime@", o -> {
+            if (o == null) return "";
+            Date date = TypeUtils.castToDate(o);
+            return new SimpleDateFormat("yyyy年MM月dd日 HH:mm").format(date);
+        });
         String key;
         Function<Object, String> function;
 

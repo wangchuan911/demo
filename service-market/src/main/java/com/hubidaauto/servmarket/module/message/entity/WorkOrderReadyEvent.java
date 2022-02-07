@@ -34,6 +34,8 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
 
     public WorkOrderReadyEvent(OrderVO orderVO, WorkOrderVO workOrderVO) {
         this.orderVO = orderVO;
+        if (workOrderVO.getCreateTime() == null)
+            workOrderVO.setCreateTime(Timestamp.valueOf(LocalDateTime.now()));
         this.workOrderVO = workOrderVO;
         if (this.workOrderVO.getStream() != null
                 && this.workOrderVO.getStream().getValue() != null && this.workOrderVO.getStream().getValue().getValue() != null) {
@@ -86,8 +88,6 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
     protected JSONObject params() {
         JSONObject map = new JSONObject();
         map.put("order", orderVO);
-        if (workOrderVO.getCreateTime() == null)
-            workOrderVO.setCreateTime(Timestamp.valueOf(LocalDateTime.now()));
         map.put("workorder", workOrderVO);
         return map;
     }
