@@ -66,7 +66,7 @@
         </if>
     </select>
     <sql id="condition">
-        and a.id=#{data.ID}
+        and a.id=#{data.id}
     </sql>
     <select id="get" parameterType="long"
             resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
@@ -100,10 +100,14 @@
     <update id="update" parameterType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderCondition">
         UPDATE SERVICE_CLASS_ORDER t
         <set>
-        <if test="dispatching">
-             t.BOOK_TIME = #{bookTime},
-            t.WORKER_NUM = #{workerNum},
-        </if>
+            <if test="modify=='dispatching'">
+                <if test="data.bookTime!=null">
+                    t.BOOK_TIME = #{data.bookTime},
+                </if>
+                <if test="data.workerNum!=null">
+                    t.WORKER_NUM = #{data.workerNum},
+                </if>
+            </if>
         </set>
 
         WHERE t.ID = #{id}
