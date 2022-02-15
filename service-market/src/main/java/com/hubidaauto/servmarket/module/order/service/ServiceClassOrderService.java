@@ -42,6 +42,7 @@ import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCo
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.shareddata.SharedData;
 import org.slf4j.Logger;
@@ -453,7 +454,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
 
     @Override
-    public PayBillResponseMesseage payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+    public Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
         OrderVO orderVO;
         {
             OrderCondition<OrderVO> condition = new OrderCondition<>();
@@ -471,22 +472,22 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         } else {
             payBillResponseMesseage.fail("定单不存在");
         }
-        return payBillResponseMesseage;
+        return Future.succeededFuture(payBillResponseMesseage);
     }
 
     @Override
-    public PrePayRequsetMesseage payRequset(WeChatPayOrder weChatPayOrder) {
+    public Future<PrePayRequsetMesseage> payRequset(WeChatPayOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
         PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
                 .setBody(String.format("%s-服务费用结算:\n定单编号：%s\n金额%s", configuration.getAppName(), orderVO.getCode(), OrderUtils.priceFormat(orderVO.getPrice().intValue(), ' ', true, false)))
                 .setOutTradeNo(orderVO.getCode())
                 .setTotalFee(orderVO.getPrice().intValue())
                 .setOpenid(weChatPayOrder.getUserId());
-        return messeage;
+        return Future.succeededFuture(messeage);
     }
 
     @Override
-    public RefundReplyMesseage refundCallBack(RefundResultMesseage refundResultMesseage) {
+    public Future<RefundReplyMesseage> refundCallBack(RefundResultMesseage refundResultMesseage) {
         RefundReplyMesseage messeage = new RefundReplyMesseage();
         OrderVO orderVO;
         OrderCondition<OrderVO> condition = new OrderCondition<>();
@@ -495,11 +496,11 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
         baseOrderDao.put(orderVO);
         messeage.ok();
-        return messeage;
+        return Future.succeededFuture(messeage);
     }
 
     @Override
-    public RefundRequestMesseage refundRequset(WeChatRefundOrder weChatPayOrder) {
+    public Future<RefundRequestMesseage> refundRequset(WeChatRefundOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
         List<ServiceClassWorkOrderVO> doing = (List) this.getWorkOrders((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setQuery("all").setOrderId(orderVO.getId()));
         if (CollectionUtils.isEmpty(doing))
@@ -540,15 +541,12 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 break;
         }
         OrderPayLogVO payLogVO = orderPrePayDaoLog.get(orderVO.getId());
-        return new RefundRequestMesseage().setOutTradeNo(orderVO.getCode()).
+        return Future.succeededFuture(new RefundRequestMesseage().setOutTradeNo(orderVO.getCode()).
                 setOutRefundNo(orderVO.getCode()).setRefundFee(orderVO.getPrice().intValue()).
-                setTotalFee(orderVO.getPrice().intValue()).setTransactionId(payLogVO.getTransactionId());
+                setTotalFee(orderVO.getPrice().intValue()).setTransactionId(payLogVO.getTransactionId()));
     }
 
-    @Override
-    public MarketTransferRequsetMesseage marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
-        return null;
-    }
+
 
     @Override
     public void overtime(OverTimeOrderVO overTimeOrder) {

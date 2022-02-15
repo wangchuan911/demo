@@ -7,6 +7,7 @@ import com.hubidaauto.carservice.wxapp.core.entity.CarVO;
 import com.hubidaauto.carservice.wxapp.core.entity.OrderVO;
 import com.hubidaauto.carservice.wxapp.core.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.increment.service.CouponService;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,7 +119,7 @@ public class UserService extends AbstractBaseService<UserVO> implements WechatLo
 
 	@Override
 	@Transactional(rollbackFor = Throwable.class)
-	public JsonObject login(WeChatUser weChatUser) {
+	public Future<JsonObject> login(WeChatUser weChatUser) {
 		UserVO wxUserInfo=new UserVO(weChatUser);
 		JsonObject jsonObject = new JsonObject();
 		if (wxUserInfo != null && !StringUtils.isEmpty(wxUserInfo.getId())) {
@@ -151,6 +152,6 @@ public class UserService extends AbstractBaseService<UserVO> implements WechatLo
 				}
 			}
 		}
-		return jsonObject;
+		return Future.succeededFuture(jsonObject);
 	}
 }

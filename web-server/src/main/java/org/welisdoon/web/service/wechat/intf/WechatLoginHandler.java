@@ -1,8 +1,9 @@
 package org.welisdoon.web.service.wechat.intf;
 
+import io.vertx.core.Future;
 import org.welisdoon.web.entity.wechat.WeChatUser;
 
 @FunctionalInterface
 public interface WechatLoginHandler<T> {
-    T login(WeChatUser weChatUser);
+    Future<T> login(WeChatUser weChatUser);
 }

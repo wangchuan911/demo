@@ -9,6 +9,7 @@ import com.hubidaauto.carservice.wxapp.core.entity.PictureVO;
 import com.hubidaauto.carservice.wxapp.core.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.increment.service.CouponService;
 import com.hubidaauto.carservice.wxapp.increment.service.UserOperRecordService;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -195,7 +196,7 @@ public class OrderService extends AbstractBaseService<OrderVO> implements IWecha
 	}
 
 	@Override
-	public PayBillResponseMesseage payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+	public Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
 		OrderVO orderVO = new OrderVO()
 				.setOrderCode(payBillRequsetMesseage.getOutTradeNo())
 				.setCustId(payBillRequsetMesseage.getOpenId());
@@ -220,11 +221,11 @@ public class OrderService extends AbstractBaseService<OrderVO> implements IWecha
 		}
 		payBillResponseMesseage.setReturnCode(code);
 		payBillResponseMesseage.setReturnMsg(msg);
-		return payBillResponseMesseage;
+		return Future.succeededFuture(payBillResponseMesseage);
 	}
 
 	@Override
-	public PrePayRequsetMesseage payRequset(WeChatPayOrder payOrder) {
+	public Future<PrePayRequsetMesseage> payRequset(WeChatPayOrder payOrder) {
 
 		OrderVO orderVo = orderDao.get(new OrderVO(payOrder));
 		CustomWeChatAppConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);
@@ -233,21 +234,8 @@ public class OrderService extends AbstractBaseService<OrderVO> implements IWecha
 				.setOutTradeNo(orderVo.getOrderCode())
 				.setTotalFee(orderVo.getCost())
 				.setOpenid(orderVo.getCustId());
-		return messeage;
+		return Future.succeededFuture(messeage);
 	}
 
-	@Override
-	public RefundReplyMesseage refundCallBack(RefundResultMesseage refundResultMesseage) {
-		return null;
-	}
 
-	@Override
-	public RefundRequestMesseage refundRequset(WeChatRefundOrder weChatPayOrder) {
-		return null;
-	}
-
-	@Override
-	public MarketTransferRequsetMesseage marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
-		return null;
-	}
 }

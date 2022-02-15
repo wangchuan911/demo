@@ -20,6 +20,7 @@ import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import org.slf4j.Logger;
@@ -78,7 +79,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
     }
 
     @Override
-    public PayBillResponseMesseage payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+    public Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
         OrderVO orderVO;
 
         OrderCondition<OrderVO> condition = new OrderCondition<>();
@@ -96,11 +97,11 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
         } else {
             payBillResponseMesseage.fail("定单不存在");
         }
-        return payBillResponseMesseage;
+        return Future.succeededFuture(payBillResponseMesseage);
     }
 
     @Override
-    public PrePayRequsetMesseage payRequset(WeChatPayOrder weChatPayOrder) {
+    public Future<PrePayRequsetMesseage> payRequset(WeChatPayOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
         AbstractWechatConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
         PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
@@ -108,23 +109,9 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
                 .setOutTradeNo(orderVO.getCode())
                 .setTotalFee(orderVO.getPrice().intValue())
                 .setOpenid(weChatPayOrder.getUserId());
-        return messeage;
+        return Future.succeededFuture(messeage);
     }
 
-    @Override
-    public RefundReplyMesseage refundCallBack(RefundResultMesseage refundResultMesseage) {
-        throw new RuntimeException("不支持退款");
-    }
-
-    @Override
-    public RefundRequestMesseage refundRequset(WeChatRefundOrder weChatPayOrder) {
-        throw new RuntimeException("不支持退款");
-    }
-
-    @Override
-    public MarketTransferRequsetMesseage marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
-        return null;
-    }
 
     @Override
     public void start(OverTimeOrderCondtion condition) {

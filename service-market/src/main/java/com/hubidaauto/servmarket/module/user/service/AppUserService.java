@@ -6,6 +6,7 @@ import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
+import io.vertx.core.Future;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,7 @@ public class AppUserService implements WechatLoginHandler<AppUserVO> {
     }
 
     @Override
-    public AppUserVO login(WeChatUser weChatUser) {
+    public Future<AppUserVO> login(WeChatUser weChatUser) {
         List<AppUserVO> users = appUserDao.list(new UserCondition().setOpenId(weChatUser.getOpenId()));
         AppUserVO userVO;
         if (CollectionUtils.isEmpty(users)) {
@@ -55,7 +56,7 @@ public class AppUserService implements WechatLoginHandler<AppUserVO> {
             userVO = users.get(0).weChatUser(weChatUser);
             appUserDao.put(userVO);
         }
-        return userVO;
+        return Future.succeededFuture(userVO);
     }
 
     public AppUserVO decrypt(UserCondition userCondition) throws Throwable {
