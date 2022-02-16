@@ -3,6 +3,7 @@ package org.welisdoon.web.common.web;
 
 import com.github.pagehelper.PageHelper;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
@@ -94,19 +95,31 @@ public class CommonAsynService implements ICommonAsynService {
         promise.future().onComplete(outputBodyHandler);
         Response response = new Response();
         JsonObject params = StringUtils.isEmpty(requset.getParams()) ? null : (JsonObject) Json.decodeValue(requset.getParams());
+        boolean isAsynMethod = false;
         try {
             Object sprngService = ApplicationContextProvider.getBean(requset.getService());
             switch (requset.getMode()) {
                 case Requset.WECHAT:
+                    isAsynMethod = true;
                     RequestMesseageBody requestMesseageBody = JAXBUtils.fromXML(requset.getBody(), RequestMesseageBody.class);
                     //处理数据
-                    ResponseMesseage responseMesseage = ((AbstractWeChatService) sprngService).receive(requestMesseageBody);
+                    /*ResponseMesseage responseMesseage = ((AbstractWeChatService) sprngService).receive(requestMesseageBody).onSuccess();*/
+                    ((Future<ResponseMesseage>) ((AbstractWeChatService) sprngService).receive(requestMesseageBody))
+                            .onSuccess(responseMesseage -> {
+                                if (responseMesseage != null) {
+                                    try {
+                                        response.setResult(JAXBUtils.toXML(responseMesseage));
+                                        promise.complete(response);
+                                    } catch (Throwable e) {
+                                        e.printStackTrace();
+                                        promise.fail(MesseageTypeValue.MSG_REPLY);
+                                    }
+                                } else
+                                    promise.fail(MesseageTypeValue.MSG_REPLY);
+                            }).onFailure(promise::fail);
                     //报文转对象;
-                    if (responseMesseage != null)
-                        response.setResult(JAXBUtils.toXML(responseMesseage));
-                    else
-                        promise.fail(MesseageTypeValue.MSG_REPLY);
-                    break;
+
+                    return;
                 default:
                     Object input = requset.bodyAsJson();
                     if (input instanceof JsonArray) {
@@ -172,7 +185,7 @@ public class CommonAsynService implements ICommonAsynService {
             logger.error(e.getMessage(), e);
             promise.fail(e);
         } finally {
-            if (!promise.future().isComplete()) {
+            if (!isAsynMethod && !promise.future().isComplete()) {
                 promise.complete(response);
             }
         }

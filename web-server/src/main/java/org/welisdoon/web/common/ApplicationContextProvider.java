@@ -5,6 +5,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Arrays;
+
 @Component
 public class ApplicationContextProvider implements ApplicationContextAware {
     /**
@@ -71,5 +75,19 @@ public class ApplicationContextProvider implements ApplicationContextAware {
 
     public static boolean isGCLIBProxy(Class aClass) {
         return aClass.getName().indexOf("EnhancerBySpringCGLIB") > 0;
+    }
+
+    public static Type[] getRawType(Object bean, Class targetClass) {
+        return Arrays
+                .stream(getRealClass(bean.getClass())
+                        .getGenericInterfaces())
+                .filter(type -> {
+                    if (type instanceof ParameterizedType) {
+                        return ((ParameterizedType) type).getRawType() == targetClass;
+                    }
+                    return false;
+                }).map(type -> ((ParameterizedType) type).getActualTypeArguments())
+                .findFirst()
+                .get();
     }
 }

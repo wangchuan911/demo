@@ -28,7 +28,7 @@ import java.util.Map;
 
 @Service
 @ConditionalOnProperty(prefix = "wechat-public-hubida", name = "appID")
-public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
+public class CustomWeChatOfficalAccountService extends AbstractWeChatService<CustomWeChatAppConfiguration> {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomWeChatOfficalAccountService.class);
     @Autowired
@@ -42,7 +42,8 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
         inviteCodeService = ApplicationContextProvider.getBean(InviteCodeService.class);
     }
 
-    @Override
+//    @Override
+    @Deprecated
     public ResponseMesseage textProcess(TextMesseage msg) {
         // TODO Auto-generated method stub
         ResponseMesseage to = null;
@@ -108,4 +109,5 @@ public class CustomWeChatOfficalAccountService extends AbstractWeChatService {
         }
         return userVO;
     }
+
 }

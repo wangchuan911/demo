@@ -1,13 +1,45 @@
 package org.welisdoon.web.service.wechat.service;
 
+import io.vertx.core.Future;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
+import org.welisdoon.web.entity.wechat.messeage.handler.MesseageHandler;
 import org.welisdoon.web.entity.wechat.messeage.request.*;
-import org.welisdoon.web.entity.wechat.messeage.response.ArticleMesseage;
 import org.welisdoon.web.entity.wechat.messeage.response.ResponseMesseage;
 
-public abstract class AbstractWeChatService {
+import javax.annotation.PostConstruct;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 
-    public ResponseMesseage receive(RequestMesseage message) {
+public abstract class AbstractWeChatService<T extends AbstractWechatConfiguration> {
+
+    protected Class<T> configType() {
+        System.out.println(this.getClass().getGenericSuperclass());
+        return (Class<T>) ObjectUtils.getGenericTypes(this.getClass(), AbstractWeChatService.class, 0);
+    }
+
+    protected Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    protected static final Map<String, Class<? extends RequestMesseage>> mapper;
+
+    static {
+        mapper = new HashMap<>(8, 1.0f);
+        mapper.put(MesseageTypeValue.TEXT, TextMesseage.class);
+        mapper.put(MesseageTypeValue.IMAGE, ImageMesseage.class);
+        mapper.put(MesseageTypeValue.VIDEO, VideoMesseage.class);
+        mapper.put(MesseageTypeValue.VOICE, VoiceMesseage.class);
+        mapper.put(MesseageTypeValue.LINK, LinkMesseage.class);
+        mapper.put(MesseageTypeValue.LOCATION, LocationMesseage.class);
+        mapper.put(MesseageTypeValue.SHORT_VIDEO, ShortVideoMesseage.class);
+    }
+
+    /*public ResponseMesseage receive(RequestMesseage message) {
         ResponseMesseage msgBody = null;
         String type = message.getMsgType();
         switch (type) {
@@ -37,9 +69,62 @@ public abstract class AbstractWeChatService {
                 ((org.welisdoon.web.entity.wechat.messeage.response.TextMesseage) msgBody).setContent("你发的是什么鬼啊");
         }
         return msgBody;
+    }*/
+
+    protected MesseageHandler[] messeageHandlers;
+
+    @PostConstruct
+    void catchHandler() {
+        messeageHandlers = ApplicationContextProvider.getApplicationContext()
+                .getBeansOfType(MesseageHandler.class)
+                .entrySet()
+                .stream()
+                .map(Map.Entry::getValue)
+                .filter(messeageHandler -> this.priority(messeageHandler) != null)
+                .sorted(Comparator.comparingInt(messeageHandler -> this.priority(messeageHandler).value()))
+                .toArray(MesseageHandler[]::new);
+
     }
 
-    public ResponseMesseage textProcess(TextMesseage msg) {
+    protected MesseageHandler.Priority priority(MesseageHandler messeageHandler) {
+        Class<?> clz = ApplicationContextProvider
+                .getRealClass(messeageHandler.getClass());
+        MesseageHandler.Prioritys prioritys = clz
+                .getAnnotation(MesseageHandler.Prioritys.class);
+        return (Arrays
+                .stream(prioritys != null ? prioritys
+                        .value() : new MesseageHandler.Priority[]{clz.getAnnotation(MesseageHandler.Priority.class)})
+                .filter(priority -> {
+                    if (priority == null) return false;
+                    System.out.println(priority.config());
+                    System.out.println(this.configType());
+                    return priority.config().isAssignableFrom(this.configType());
+                })
+
+                .findFirst()
+                .orElse(null));
+    }
+
+    public Future<ResponseMesseage> receive(RequestMesseage message) {
+        Future<ResponseMesseage> future = Arrays
+                .stream(messeageHandlers)
+                .filter(entry -> {
+                    try {
+                        return mapper.get(message.getMsgType()).equals(ApplicationContextProvider.getRawType(entry, MesseageHandler.class)[0])
+                                && entry.matched(message);
+                    } catch (Throwable e) {
+                        logger.error(e.getMessage(), e);
+                        return false;
+                    }
+                })
+                .findFirst()
+                .get()
+                .handle(message);
+        return future;
+    }
+
+
+    /*public ResponseMesseage textProcess(TextMesseage msg) {
         // TODO Auto-generated method stub
         ResponseMesseage to = null;
         to = new org.welisdoon.web.entity.wechat.messeage.response.TextMesseage(msg);
@@ -81,7 +166,7 @@ public abstract class AbstractWeChatService {
         ResponseMesseage to = new org.welisdoon.web.entity.wechat.messeage.response.VoiceMesseage(msg);
         ((org.welisdoon.web.entity.wechat.messeage.response.VoiceMesseage) to).setMediaId(msg.getMediaId());
         return to;
-    }
+    }*/
 
 
 }

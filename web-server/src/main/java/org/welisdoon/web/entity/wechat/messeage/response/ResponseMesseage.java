@@ -69,7 +69,7 @@ public abstract class ResponseMesseage {//http://blog.csdn.net/howingtian/articl
 	}
 
 	public ResponseMesseage(String toUserName, String fromUserName, String msgType) {
-		this(toUserName, fromUserName, new Date().getTime(), msgType);
+		this(toUserName, fromUserName, System.currentTimeMillis(), msgType);
 	}
 
 	public ResponseMesseage(RequestMesseage msg, Long createTime, String msgType) {
@@ -79,7 +79,7 @@ public abstract class ResponseMesseage {//http://blog.csdn.net/howingtian/articl
 	}
 
 	public ResponseMesseage(RequestMesseage msg, String msgType) {
-		this(msg, new Date().getTime(), msgType);
+		this(msg, System.currentTimeMillis(), msgType);
 	}
 
 	@Override

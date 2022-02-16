@@ -31,9 +31,50 @@ public class ObjectUtils {
         return map.get(key);
     }
 
-    public static Class<?>[] getGenericTypes(Class<?> type) {
-        Type superClass = type.getGenericSuperclass();
-        Type[] t = ((ParameterizedType) superClass).getActualTypeArguments();
+    public static Class<?> getGenericTypes(Class<?> type, Class<?> targetClass, int index) {
+        Class[] cs = getGenericTypes(type, targetClass);
+        if (cs.length < index + 1) {
+            return null;
+        }
+        return cs[index];
+    }
+
+    public static Class<?>[] getGenericTypes(Class<?> type, Class<?> targetClass) {
+        Type[] t;
+        if (targetClass.isInterface()) {
+            t = Arrays.stream(type.getGenericInterfaces()).filter(type1 -> {
+                if (type1 instanceof ParameterizedType) {
+                    return ((ParameterizedType) type1).getRawType() == targetClass;
+                } else if (type1 instanceof Class) {
+                    return type1 == targetClass;
+                }
+                return false;
+            }).map(type1 -> {
+                if (type1 instanceof ParameterizedType) {
+                    return ((ParameterizedType) type1).getActualTypeArguments();
+                } else {
+                    return new Type[]{};
+                }
+            }).findFirst().orElseGet(() -> new Type[]{});
+        } else {
+            Type superClass = type;
+            while (superClass != null) {
+                if (superClass instanceof ParameterizedType) {
+                    if (((ParameterizedType) superClass).getRawType() == targetClass) break;
+                    superClass = ((ParameterizedType) superClass).getRawType();
+                } else if (superClass instanceof Class) {
+                    if (superClass == targetClass) break;
+                } else {
+                    superClass = null;
+                    break;
+                }
+                superClass = ((Class) superClass).getGenericSuperclass();
+            }
+            if (superClass == null)
+                t = new Type[]{};
+            else
+                t = ((ParameterizedType) superClass).getActualTypeArguments();
+        }
         return Arrays.stream(t).map(type1 -> {
             if (type1 instanceof ParameterizedType) {
                 return (Class<?>) ((ParameterizedType) type1).getRawType();
@@ -41,7 +82,7 @@ public class ObjectUtils {
                 return (Class<?>) type1;
             } else {
                 System.out.println(type1);
-                return null;
+                return Object.class;
             }
         }).toArray(Class[]::new);
 
@@ -49,7 +90,7 @@ public class ObjectUtils {
 
 
     public static void main(String[] args) throws InterruptedException {
-        Map map = new HashMap<String, Integer>();
+        Map<String, Integer> map = new HashMap<String, Integer>();
         /*final int[] j = {0};
         int[] i=new int[1000];
         Arrays.stream(i).parallel().forEach(value -> {
@@ -60,7 +101,7 @@ public class ObjectUtils {
         Thread.sleep(5000);
         System.out.println(map);
         System.out.println(map.size());*/
-        System.out.println(Arrays.toString(getGenericTypes(map.getClass())));
+        System.out.println(Arrays.toString(getGenericTypes(map.getClass(), Map.class)));
         ;
     }
 }

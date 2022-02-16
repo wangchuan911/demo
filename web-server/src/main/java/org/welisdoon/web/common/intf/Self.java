@@ -1,6 +1,5 @@
 package org.welisdoon.web.common.intf;
 
-import org.springframework.aop.support.AopUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 /**
@@ -12,6 +11,6 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 public interface Self<T> {
 
     default T self() {
-        return (T) ApplicationContextProvider.getBean(AopUtils.getTargetClass(this));
+        return (T) ApplicationContextProvider.getBean(ApplicationContextProvider.getRealClass(this.getClass()));
     }
 }
