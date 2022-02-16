@@ -1,5 +1,8 @@
 package org.welisdoon.web.entity.wechat.messeage.request;
 
+import org.welisdoon.common.JAXBUtils;
+
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -269,5 +272,9 @@ public class RequestMesseageBody implements ImageMesseage, LinkMesseage, Locatio
                 ", content='" + content + '\'' +
                 ", recognition='" + recognition + '\'' +
                 '}';
+    }
+
+    public static RequestMesseageBody toInstance(String xml) throws JAXBException {
+        return JAXBUtils.fromXML(xml, RequestMesseageBody.class);
     }
 }

@@ -57,35 +57,9 @@ public class MyHomeConfiguration extends AbstractWechatConfiguration {
 
     @VertxRouter(path = "", method = "POST", mode = VertxRouteType.PathRegex)
     void wxPost(RoutingContextChain chain) {
-        AbstractWeChatService weChatService = ApplicationContextProvider.getApplicationContext()
-                .getBeansOfType(AbstractWeChatService.class)
-                .entrySet()
-                .stream()
-                .map(Map.Entry::getValue)
-                .filter(service -> service.configType() == ApplicationContextProvider.getRealClass(this.getClass()))
-                .findFirst().get();
+        AbstractWeChatService weChatService = AbstractWeChatService.findService(this.getClass());
         chain.handler(this::wechatDecryptMsg)
-                .handler(routingContext -> {
-                    try {
-                        ((Future<ResponseMesseage>) weChatService.receive(JAXBUtils.fromXML(routingContext.getBodyAsString(), RequestMesseageBody.class)))
-                                .onSuccess(responseMesseage -> {
-                                    try {
-                                        routingContext.setBody(Buffer.buffer(JAXBUtils.toXML(responseMesseage)));
-                                        routingContext.next();
-                                    } catch (Throwable e) {
-                                        logger.error(e.getMessage(), e);
-                                        routingContext.response().setStatusCode(500).end();
-                                    }
-                                })
-                                .onFailure(e -> {
-                                    logger.error(e.getMessage(), e);
-                                    routingContext.response().setStatusCode(500).end();
-                                });
-                    } catch (Throwable e) {
-                        logger.error(e.getMessage(), e);
-                        routingContext.response().setStatusCode(500).end();
-                    }
-                })
+                .handler(weChatService::receive)
                 .handler(this::wechatEncryptMsg)
                 .failureHandler(routingContext -> {
                     routingContext.response().end(MesseageTypeValue.MSG_REPLY);

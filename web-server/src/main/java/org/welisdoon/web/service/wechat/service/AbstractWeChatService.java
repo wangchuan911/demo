@@ -1,15 +1,19 @@
 package org.welisdoon.web.service.wechat.service;
 
 import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
+import org.welisdoon.common.JAXBUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.web.entity.wechat.messeage.handler.MesseageHandler;
 import org.welisdoon.web.entity.wechat.messeage.request.*;
+import org.welisdoon.web.entity.wechat.messeage.response.NoReplyMesseage;
 import org.welisdoon.web.entity.wechat.messeage.response.ResponseMesseage;
 
 import javax.annotation.PostConstruct;
@@ -166,5 +170,40 @@ public abstract class AbstractWeChatService<T extends AbstractWechatConfiguratio
         return to;
     }*/
 
+    public void receive(RoutingContext routingContext) {
+        try {
+            this.receive(RequestMesseageBody.toInstance(routingContext.getBodyAsString()))
+                    .onSuccess(responseMesseage -> {
+                        try {
+                            if (responseMesseage instanceof NoReplyMesseage) {
+                                routingContext.response().end(Buffer.buffer(responseMesseage.toXMLString()));
+                                return;
+                            }
+                            routingContext.response().setChunked(true);
+                            routingContext.setBody(Buffer.buffer(responseMesseage.toXMLString()));
+                            routingContext.next();
+                        } catch (Throwable e) {
+                            logger.error(e.getMessage(), e);
+                            routingContext.response().setStatusCode(500).end();
+                        }
+                    })
+                    .onFailure(e -> {
+                        logger.error(e.getMessage(), e);
+                        routingContext.response().setStatusCode(500).end();
+                    });
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+            routingContext.response().setStatusCode(500).end();
+        }
+    }
 
+    public static AbstractWeChatService findService(Class<? extends AbstractWechatConfiguration> configClass) {
+        return ApplicationContextProvider.getApplicationContext()
+                .getBeansOfType(AbstractWeChatService.class)
+                .entrySet()
+                .stream()
+                .map(Map.Entry::getValue)
+                .filter(service -> service.configType() == ApplicationContextProvider.getRealClass(configClass))
+                .findFirst().get();
+    }
 }

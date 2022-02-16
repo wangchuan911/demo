@@ -10,6 +10,7 @@
         <module name="car-service" />
         <module name="order-flow" />
         <module name="service-market" />
+        <module name="my-wxoa" />
       </profile>
       <profile name="Annotation profile for micro-server-demo" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />

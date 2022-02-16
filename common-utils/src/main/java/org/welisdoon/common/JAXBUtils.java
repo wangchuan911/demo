@@ -51,10 +51,16 @@ public interface JAXBUtils {
         Unmarshaller unmarshaller = context.createUnmarshaller();
         return (T) unmarshaller.unmarshal(new StringReader(xml));
     }
-/*---------------------
-    作者：醉蝶依
-    来源：CSDN
-    原文：https://blog.csdn.net/qq_27949963/article/details/80915099
-    版权声明：本文为博主原创文章，转载请附上博文链接！
-*/
+
+    /*---------------------
+        作者：醉蝶依
+        来源：CSDN
+        原文：https://blog.csdn.net/qq_27949963/article/details/80915099
+        版权声明：本文为博主原创文章，转载请附上博文链接！
+    */
+    interface XmlSerializable {
+        default String toXMLString() throws JAXBException {
+            return JAXBUtils.toXML(this);
+        }
+    }
 }
