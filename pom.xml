@@ -16,6 +16,7 @@
         <module>common-utils</module>
         <module>service-market</module>
         <module>order-flow</module>
+        <module>my-wxoa</module>
     </modules>
 
     <properties>

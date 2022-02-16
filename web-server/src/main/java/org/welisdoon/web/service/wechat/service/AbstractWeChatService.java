@@ -19,7 +19,7 @@ import java.util.*;
 
 public abstract class AbstractWeChatService<T extends AbstractWechatConfiguration> {
 
-    protected Class<T> configType() {
+    public Class<T> configType() {
         System.out.println(this.getClass().getGenericSuperclass());
         return (Class<T>) ObjectUtils.getGenericTypes(this.getClass(), AbstractWeChatService.class, 0);
     }
@@ -96,8 +96,6 @@ public abstract class AbstractWeChatService<T extends AbstractWechatConfiguratio
                         .value() : new MesseageHandler.Priority[]{clz.getAnnotation(MesseageHandler.Priority.class)})
                 .filter(priority -> {
                     if (priority == null) return false;
-                    System.out.println(priority.config());
-                    System.out.println(this.configType());
                     return priority.config().isAssignableFrom(this.configType());
                 })
 

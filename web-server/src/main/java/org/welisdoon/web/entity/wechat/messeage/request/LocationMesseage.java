@@ -3,17 +3,17 @@ package org.welisdoon.web.entity.wechat.messeage.request;
 
 public interface LocationMesseage extends RequestMesseage {
 
-    public String getLocation_X();
+    public String getLocationX();
 
-    public String getLocation_Y();
+    public String getLocationY();
 
     public String getScale();
 
     public String getLabel();
 
-    public void setLocation_X(String location_X);
+    public void setLocationX(String locationX);
 
-    public void setLocation_Y(String location_Y);
+    public void setLocationY(String locationY);
 
     public void setScale(String scale);
 
