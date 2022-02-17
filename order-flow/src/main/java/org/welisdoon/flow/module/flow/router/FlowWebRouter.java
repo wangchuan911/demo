@@ -47,7 +47,7 @@ public class FlowWebRouter {
         this.flowService = flowService;
     }
 
-    @VertxRouter(path = "*", method = "GET")
+    @VertxRouter(path = "(?:\\/.*)", method = "GET", mode = VertxRouteType.PathRegex, order = -1)
     public void all(RoutingContextChain context) {
         context.handler(BodyHandler.create());
     }

@@ -71,9 +71,13 @@ public class VirtualNode extends SimpleNode {
     }
 
     public interface VirtualNodeInitializer {
-        List<Stream> onInstantiated(Stream templateStream);
+        default List<Stream> onInstantiated(Stream templateStream) {
+            throw new RuntimeException("无效节点");
+        }
 
-        void onStart(Stream currentStream);
+        default void onStart(Stream currentStream) {
+            throw new RuntimeException("无效节点");
+        }
     }
 
     /*public void rollback(Stream stream) {
