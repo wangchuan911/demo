@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 import org.welisdoon.common.JAXBUtils;
+import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
@@ -20,11 +21,12 @@ import javax.annotation.PostConstruct;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractWeChatService<T extends AbstractWechatConfiguration> {
 
     public Class<T> configType() {
-        System.out.println(this.getClass().getGenericSuperclass());
+//        System.out.println(this.getClass().getGenericSuperclass());
         return (Class<T>) ObjectUtils.getGenericTypes(this.getClass(), AbstractWeChatService.class, 0);
     }
 
@@ -87,7 +89,7 @@ public abstract class AbstractWeChatService<T extends AbstractWechatConfiguratio
                 .filter(messeageHandler -> this.priority(messeageHandler) != null)
                 .sorted(Comparator.comparingInt(messeageHandler -> this.priority(messeageHandler).value()))
                 .toArray(MesseageHandler[]::new);
-
+        logger.warn(LogUtils.format(String.format("wechat offical account [%s] handlers list:", this.getClass().getName()), Arrays.stream(messeageHandlers).map(MesseageHandler::toString).toArray(CharSequence[]::new)));
     }
 
     protected MesseageHandler.Priority priority(MesseageHandler messeageHandler) {
