@@ -45,7 +45,7 @@ public class VirtualNode extends SimpleNode {
             this.getFlowValueDao().add(value);
             stream.setValueId(value.getId());
         } else {
-            this.getFlowValueDao().update(value);
+            this.getFlowValueDao().put(value);
         }
 
         this.getStreamDao().put(stream);
