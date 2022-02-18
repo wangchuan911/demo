@@ -49,7 +49,7 @@ public class PictureService extends AbstractBaseService<PictureVO> {
         try {
             inputStream = new FileInputStream(new File(MapUtils.getString(fileUpload, "uploadedFileName")));
             outputStream = new ByteArrayOutputStream();
-            StreamUtils.writeStream(inputStream, outputStream);
+            StreamUtils.write(inputStream, outputStream);
             byte[] bytes = outputStream.toByteArray();
             PictureVO pictureVO = new PictureVO()
                     .setData(bytes)
@@ -60,9 +60,6 @@ public class PictureService extends AbstractBaseService<PictureVO> {
             returnObj = pictureVO.setData(null);
         } catch (Throwable e) {
             e.printStackTrace();
-        } finally {
-            StreamUtils.close(inputStream);
-            StreamUtils.close(outputStream);
         }
         return returnObj;
     }
