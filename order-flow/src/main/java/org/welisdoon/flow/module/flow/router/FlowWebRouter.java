@@ -52,12 +52,12 @@ public class FlowWebRouter {
         context.handler(BodyHandler.create());
     }
 
-    @VertxRouter(path = "", method = "GET")
+    @VertxRouter(path = "\\/(?<tempId>\\d+)\\/(?<funcId>\\d+)", method = "GET", mode = VertxRouteType.PathRegex)
     public void flow(RoutingContextChain context) {
         context.handler(routingContext -> {
             Flow flow = new Flow();
-            flow.setTemplateId(1L);
-            flow.setFunctionId(1L);
+            flow.setTemplateId(Long.valueOf(routingContext.pathParam("tempId")));
+            flow.setFunctionId(Long.valueOf(routingContext.pathParam("funcId")));
             flowService.flow(flow);
             routingContext.end(JSONObject.toJSONString(flow));
         });

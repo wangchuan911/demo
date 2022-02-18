@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Throwable.class)
-public class ToCustOperation implements VirtualNode.VirtualNodeInitializer {
+public class ToCustOperation implements VirtualNode.OnInstantiated{
     BaseOrderDao baseOrderDao;
 
     @Autowired
@@ -34,7 +34,7 @@ public class ToCustOperation implements VirtualNode.VirtualNodeInitializer {
     @DS("shop")
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     @Override
-    public List<Stream> onInstantiated(Stream templateStream) {
+    public List<Stream> apply(Stream templateStream) {
         OrderVO orderVO = baseOrderDao.find(new OrderCondition<>().setFlowId(templateStream.getFlowId()));
         Stream stream = new Stream();
 
@@ -60,8 +60,4 @@ public class ToCustOperation implements VirtualNode.VirtualNodeInitializer {
         return List.of(stream);
     }
 
-    @Override
-    public void onStart(Stream currentStream) {
-        throw new RuntimeException("不支持的节点");
-    }
 }

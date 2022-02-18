@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Throwable.class)
-public class AppointWorkOperation implements VirtualNode.VirtualNodeInitializer {
+public class AppointWorkOperation implements VirtualNode.OnStart {
     ServiceClassOrderDao orderDao;
 
     @Autowired
@@ -36,14 +36,9 @@ public class AppointWorkOperation implements VirtualNode.VirtualNodeInitializer 
         this.flowService = flowService;
     }
 
-    @Override
-    @DS("shop")
-    public List<Stream> onInstantiated(Stream templateStream) {
-        return List.of(templateStream);
-    }
 
     @Override
-    public void onStart(Stream currentStream) {
+    public void apply(Stream currentStream) {
         Template template = new Template();
         template.setId(OrderFlowTemplate.SERVICE_CHOICE.getTemplateId());
         flowService.streamExpandByTemplate(template, currentStream);

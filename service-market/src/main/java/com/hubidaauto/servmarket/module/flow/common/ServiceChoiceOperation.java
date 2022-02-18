@@ -27,7 +27,7 @@ import java.util.List;
  */
 @Component
 @Transactional(rollbackFor = Throwable.class)
-public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitializer {
+public class ServiceChoiceOperation implements VirtualNode.OnInstantiated{
 
     FlowService flowService;
 
@@ -53,7 +53,7 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
     @Override
     @DS("shop")
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
-    public List<Stream> onInstantiated(Stream templateStream) {
+    public List<Stream> apply(Stream templateStream) {
         List<Stream> list = new LinkedList();
         OrderVO orderVO = baseOrderDao.find(new OrderCondition<>().setFlowId(templateStream.getFlowId()));
         List<ServiceContent> services = baseOrderService.getServices(orderVO);
@@ -77,8 +77,4 @@ public class ServiceChoiceOperation implements VirtualNode.VirtualNodeInitialize
         return list;
     }
 
-    @Override
-    public void onStart(Stream currentStream) {
-        throw new RuntimeException("无效节点");
-    }
 }

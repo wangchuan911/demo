@@ -1,4 +1,4 @@
-package org.welisdoon.flow.module.flow.service;
+package org.welisdoon.flow.module.flow.demo;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -17,18 +17,7 @@ import java.util.List;
  */
 @Component
 @ConditionalOnProperty(prefix = "order-flow.demo", name = "router")
-public class DemoOrderOperation implements VirtualNode.VirtualNodeInitializer, FlowEvent {
-    @Override
-    public List<Stream> onInstantiated(Stream templateStream) {
-        templateStream.setNodeId(6L);
-        templateStream.setFunctionId(null);
-        return List.of(templateStream, templateStream);
-    }
-
-    @Override
-    public void onStart(Stream templateStream) {
-
-    }
+public class DemoOrderOperation implements FlowEvent {
 
     @Override
     public void onPreCreate(Flow flow) {

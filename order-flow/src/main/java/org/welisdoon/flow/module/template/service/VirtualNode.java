@@ -27,11 +27,11 @@ public class VirtualNode extends SimpleNode {
     @Override
     public void start(Stream stream) {
         LinkFunction function = this.getFunction(stream);
-        VirtualNodeInitializer processor = ApplicationContextProvider.getBean(function.targetClass());
+        OnStart processor = ApplicationContextProvider.getBean(function.targetClass());
         if (processor == null) {
             throw new RuntimeException("stream not allow link VirtualNode!");
         }
-        processor.onStart(stream);
+        processor.apply(stream);
         AbstractNode nodeService = getInstance(stream.getNodeId());
         if (nodeService instanceof VirtualNode) {
             throw new RuntimeException("stream not allow link VirtualNode!");
@@ -41,6 +41,12 @@ public class VirtualNode extends SimpleNode {
         jsonValue.put("virtual", true);
         jsonValue.put("virtualFunctionId", function.getId());
         stream.setValue((FlowValue) value.saveJsonValue());
+        if (value.getId() == null) {
+            this.getFlowValueDao().add(value);
+            stream.setValueId(value.getId());
+        } else {
+            this.getFlowValueDao().update(value);
+        }
 
         this.getStreamDao().put(stream);
         nodeService.start(stream);
@@ -54,7 +60,6 @@ public class VirtualNode extends SimpleNode {
     @Override
     public List<Stream> createSubStreams(Stream superStream, Link currentLink) {
         LinkFunction function = this.getFunction(currentLink);
-        VirtualNodeInitializer processor = ApplicationContextProvider.getBean(function.targetClass());
         Stream currentStream = new Stream();
         currentStream.sync(superStream);
         currentStream.sync(currentLink);
@@ -67,17 +72,22 @@ public class VirtualNode extends SimpleNode {
         currentStream.setSuperId(superStream.getId());
         currentStream.setStatusId(StreamStatus.FUTURE.statusId());
         currentStream.setName(currentLink.getName());*/
-        return processor.onInstantiated(currentStream);
+
+        /*OnInstantiated processor = ApplicationContextProvider.getBean(function.targetClass());
+        return processor.onInstantiated(currentStream);*/
+
+        Object processor = ApplicationContextProvider.getBean(function.targetClass());
+        if (processor instanceof OnInstantiated) {
+            return ((OnInstantiated) processor).apply(currentStream);
+        }
+        return List.of(currentStream);
     }
 
-    public interface VirtualNodeInitializer {
-        default List<Stream> onInstantiated(Stream templateStream) {
-            throw new RuntimeException("无效节点");
-        }
-
-        default void onStart(Stream currentStream) {
-            throw new RuntimeException("无效节点");
-        }
+    public interface OnInstantiated {
+        List<Stream> apply(Stream templateStream);
+    }
+    public interface OnStart {
+        void apply(Stream currentStream);
     }
 
     /*public void rollback(Stream stream) {

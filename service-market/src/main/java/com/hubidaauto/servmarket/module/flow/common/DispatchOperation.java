@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Transactional(rollbackFor = Throwable.class)
-public class DispatchOperation implements VirtualNode.VirtualNodeInitializer {
+public class DispatchOperation implements VirtualNode.OnInstantiated{
 
     BaseOrderDao baseOrderDao;
     StaffDao staffDao;
@@ -49,7 +49,7 @@ public class DispatchOperation implements VirtualNode.VirtualNodeInitializer {
     @Override
     @DS("shop")
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
-    public List<Stream> onInstantiated(Stream templateStream) {
+    public List<Stream> apply(Stream templateStream) {
         List<Stream> list = new LinkedList<>();
         OrderCondition condition = new OrderCondition();
         condition.setFlowId(templateStream.getFlowId());
@@ -83,8 +83,4 @@ public class DispatchOperation implements VirtualNode.VirtualNodeInitializer {
         }).collect(Collectors.toList());
     }
 
-    @Override
-    public void onStart(Stream currentStream) {
-        throw new RuntimeException("无效节点");
-    }
 }

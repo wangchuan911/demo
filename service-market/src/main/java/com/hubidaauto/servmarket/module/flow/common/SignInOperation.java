@@ -22,7 +22,7 @@ import java.util.List;
 @Service
 @DS("shop")
 @Transactional(rollbackFor = Throwable.class)
-public class SignInOperation implements VirtualNode.VirtualNodeInitializer {
+public class SignInOperation implements VirtualNode.OnStart {
 
     ServiceClassOrderDao orderDao;
 
@@ -38,13 +38,9 @@ public class SignInOperation implements VirtualNode.VirtualNodeInitializer {
         this.orderDao = orderDao;
     }
 
-    @Override
-    public List<Stream> onInstantiated(Stream templateStream) {
-        return List.of(templateStream);
-    }
 
     @Override
-    public void onStart(Stream currentStream) {
+    public void apply(Stream currentStream) {
         Template template = new Template();
         template.setId(OrderFlowTemplate.SIGN_IN.getTemplateId());
         flowService.streamExpandByTemplate(template, currentStream);
