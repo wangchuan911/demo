@@ -5,12 +5,10 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
-import org.welisdoon.common.JAXBUtils;
 import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.config.AbstractWechatOfficialAccountConfiguration;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.web.entity.wechat.messeage.handler.MesseageHandler;
 import org.welisdoon.web.entity.wechat.messeage.request.*;
@@ -18,16 +16,13 @@ import org.welisdoon.web.entity.wechat.messeage.response.NoReplyMesseage;
 import org.welisdoon.web.entity.wechat.messeage.response.ResponseMesseage;
 
 import javax.annotation.PostConstruct;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public abstract class AbstractWeChatService<T extends AbstractWechatConfiguration> {
+public abstract class AbstractWeChatOfficialAccountService<T extends AbstractWechatOfficialAccountConfiguration> {
 
-    public Class<T> configType() {
+    protected Class<T> configType() {
 //        System.out.println(this.getClass().getGenericSuperclass());
-        return (Class<T>) ObjectUtils.getGenericTypes(this.getClass(), AbstractWeChatService.class, 0);
+        return (Class<T>) ObjectUtils.getGenericTypes(this.getClass(), AbstractWeChatOfficialAccountService.class, 0);
     }
 
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -199,9 +194,9 @@ public abstract class AbstractWeChatService<T extends AbstractWechatConfiguratio
         }
     }
 
-    public static AbstractWeChatService findService(Class<? extends AbstractWechatConfiguration> configClass) {
+    public static AbstractWeChatOfficialAccountService findService(Class<? extends AbstractWechatOfficialAccountConfiguration> configClass) {
         return ApplicationContextProvider.getApplicationContext()
-                .getBeansOfType(AbstractWeChatService.class)
+                .getBeansOfType(AbstractWeChatOfficialAccountService.class)
                 .entrySet()
                 .stream()
                 .map(Map.Entry::getValue)

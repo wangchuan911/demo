@@ -1,7 +1,7 @@
 package org.welisdoon.individual.wechat.oa;
 
 import org.springframework.stereotype.Service;
-import org.welisdoon.web.service.wechat.service.AbstractWeChatService;
+import org.welisdoon.web.service.wechat.service.AbstractWeChatOfficialAccountService;
 
 /**
  * @Classname MyHomeWeChatService
@@ -10,6 +10,6 @@ import org.welisdoon.web.service.wechat.service.AbstractWeChatService;
  * @Date 2022/2/16 14:58
  */
 @Service
-public class MyHomeWeChatService extends AbstractWeChatService<MyHomeConfiguration> {
+public class MyHomeWeChatService extends AbstractWeChatOfficialAccountService<MyHomeConfiguration> {
 
 }

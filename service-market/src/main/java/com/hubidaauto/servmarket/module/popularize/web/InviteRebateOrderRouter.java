@@ -31,6 +31,7 @@ import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.CommonConst;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
@@ -56,7 +57,7 @@ public class InviteRebateOrderRouter {
     InviteRebateOrderDao inviteOrderDao;
     BaseOrderDao baseOrderDao;
     InviteRebateCountDao inviteRebateCountDao;
-    AbstractWechatConfiguration wechatConfiguration;
+    AbstractWechatMiniProgramsConfiguration wechatConfiguration;
     StaffJobDao staffJobDao;
     InviteRebateOrderService inviteRebateOrderService;
     InviteRebateRegistDao inviteRebateRegistDao;

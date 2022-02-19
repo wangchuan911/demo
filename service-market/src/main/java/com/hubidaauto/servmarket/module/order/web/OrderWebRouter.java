@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
 import org.welisdoon.web.entity.wechat.payment.response.PrePayResponseMesseage;
@@ -38,7 +38,7 @@ import java.time.LocalDateTime;
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/order")
 public class OrderWebRouter {
-    AbstractWechatConfiguration customWeChatAppConfiguration;
+    AbstractWechatMiniProgramsConfiguration customWeChatAppConfiguration;
     AppUserDao appUserDao;
     IBaseOrderService orderService;
     OrderPayDaoLog orderPrePayDaoLog;

@@ -24,6 +24,7 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.CommonConst;
 import org.welisdoon.common.JAXBUtils;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.entity.wechat.payment.requset.PayBillRequsetMesseage;
 import org.welisdoon.web.entity.wechat.payment.requset.PrePayRequsetMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
@@ -45,7 +46,7 @@ import java.util.function.Consumer;
 public class WechatAppMallConfiguration {
 	private static final Logger logger = LoggerFactory.getLogger(WechatAppMallConfiguration.class);
 
-	AbstractWechatConfiguration configuration;
+	AbstractWechatMiniProgramsConfiguration configuration;
 	WebClient webClient;
 	MallOrderService mallOrderService;
 	MallService mallService;

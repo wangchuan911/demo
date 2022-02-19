@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.welisdoon.web.common.config.AbstractWechatOfficialAccountConfiguration;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.common.web.Requset;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
@@ -13,7 +14,6 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 import org.welisdoon.web.vertx.verticle.StandaredVerticle;
-import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.common.web.intf.ICommonAsynService;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
@@ -26,10 +26,10 @@ import javax.annotation.PostConstruct;
 import java.util.function.Consumer;
 
 @VertxConfiguration
-@ConfigurationProperties("wechat-app")
+@ConfigurationProperties("wechat")
 @Configuration
-@ConditionalOnProperty(prefix = "wechat-app", name = "appID")
-public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
+@ConditionalOnProperty(prefix = "wechat", name = "appID")
+public class WeChatServiceConfiguration extends AbstractWechatOfficialAccountConfiguration {
 
     private Long wechatAliveTimerId = null;
 
@@ -210,7 +210,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
     public Consumer<Vertx> initStandaredVerticle() {
         Consumer<Vertx> vertxConsumer = vertx -> {
             commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
-            setWechatAsyncMeassger(WebClient.create(vertx));
+            /*setWechatAsyncMeassger(WebClient.create(vertx));
             this.initApiAsyncMeassger(vertx);
 
             this.initAccessTokenSyncTimer(vertx, objectMessage -> {
@@ -221,7 +221,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                 } else {
                     logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
                 }
-            });
+            });*/
         };
         return vertxConsumer;
     }

@@ -26,7 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.CommonConst;
-import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.common.web.Requset;
 import org.welisdoon.web.common.web.RequsetOption;
@@ -44,7 +44,7 @@ import java.util.function.Consumer;
 @ConfigurationProperties("wechat-app-hubida")
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
+public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConfiguration {
     //    final static String REQUEST_NAME = "requestService";
     private int orderCycleTime;
 
@@ -161,10 +161,10 @@ public class CustomWeChatAppConfiguration extends AbstractWechatConfiguration {
                 .setMethodNameKey(CommonConst.WebParamsKeys.BEAN_METHOD)
                 .setServerNameKey(CommonConst.WebParamsKeys.SPRING_BEAN)
                 .setRequestType(CommonConst.WebParamsKeys.REQUSET_TYPE);
-
+/*
         WebClient webClient = WebClient.create(vertx);
         setWechatAsyncMeassger(webClient);
-        initApiAsyncMeassger(vertx);
+        initApiAsyncMeassger(vertx);*/
 
         commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
 

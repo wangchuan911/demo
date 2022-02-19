@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.CommonConst;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.config.AbstractWechatOfficialAccountConfiguration;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.common.web.Requset;
 import org.welisdoon.web.common.web.intf.ICommonAsynService;
@@ -34,7 +35,7 @@ import java.util.function.Consumer;
 @ConfigurationProperties("wechat-public-hubida")
 @Configuration
 @ConditionalOnProperty(prefix = "wechat-public-hubida", name = "appID")
-public class CustomWeChaConfiguration extends AbstractWechatConfiguration {
+public class CustomWeChaConfiguration extends AbstractWechatOfficialAccountConfiguration {
 
     private Long wechatAliveTimerId = null;
 

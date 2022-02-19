@@ -30,6 +30,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -53,7 +54,7 @@ public class AppUserWebRouter {
     AppUserDao appUserDao;
     AddressDao addressDao;
     AppUserService appUserService;
-    AbstractWechatConfiguration abstractWechatConfiguration;
+    AbstractWechatMiniProgramsConfiguration abstractWechatConfiguration;
     StaffDao staffDao;
     StaffJobDao staffJobDao;
     HtmlTemplateWebRouter htmlTemplateWebRouter;

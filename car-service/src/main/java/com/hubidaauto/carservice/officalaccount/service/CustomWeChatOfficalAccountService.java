@@ -21,14 +21,14 @@ import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.custom.CustomTextMessage;
 import org.welisdoon.web.entity.wechat.messeage.request.TextMesseage;
 import org.welisdoon.web.entity.wechat.messeage.response.ResponseMesseage;
-import org.welisdoon.web.service.wechat.service.AbstractWeChatService;
+import org.welisdoon.web.service.wechat.service.AbstractWeChatOfficialAccountService;
 
 import javax.annotation.PostConstruct;
 import java.util.Map;
 
 @Service
 @ConditionalOnProperty(prefix = "wechat-public-hubida", name = "appID")
-public class CustomWeChatOfficalAccountService extends AbstractWeChatService<CustomWeChatAppConfiguration> {
+public class CustomWeChatOfficalAccountService extends AbstractWeChatOfficialAccountService<CustomWeChaConfiguration> {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomWeChatOfficalAccountService.class);
     @Autowired

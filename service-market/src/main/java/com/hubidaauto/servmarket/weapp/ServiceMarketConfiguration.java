@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 @ConfigurationProperties("wechat-app-hubida")
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-public class ServiceMarketConfiguration extends AbstractWechatConfiguration {
+public class ServiceMarketConfiguration extends AbstractWechatMiniProgramsConfiguration {
     private int orderCycleTime;
 
     public Integer getOrderCycleTime() {
@@ -69,7 +69,7 @@ public class ServiceMarketConfiguration extends AbstractWechatConfiguration {
         return vertxConsumer;
     }
 
-    @VertxRegister(StandaredVerticle.class)
+    /*@VertxRegister(StandaredVerticle.class)
     public Consumer<Vertx> standaredverticle() {
         return vertx -> {
             WebClient webClient = WebClient.create(vertx);
@@ -80,7 +80,7 @@ public class ServiceMarketConfiguration extends AbstractWechatConfiguration {
                 this.setAccessToken(this.getTokenFromMessage(objectMessage));
             });
         };
-    }
+    }*/
 
 
     @VertxRegister(WorkerVerticle.class)

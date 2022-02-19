@@ -168,7 +168,7 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
         @Override
         public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
-            ReflectionUtils.getAllMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class))
+            ReflectionUtils.getAllMethods(aClass, method -> method.getDeclaredAnnotation(VertxRegister.class) != null)
                     .stream()
                     .forEach(method -> {
                         VertxRegister annotation = method.getDeclaredAnnotation(VertxRegister.class);

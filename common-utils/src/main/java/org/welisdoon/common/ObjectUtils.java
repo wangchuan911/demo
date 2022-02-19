@@ -42,24 +42,27 @@ public class ObjectUtils {
     public static Class<?>[] getGenericTypes(Class<?> type, Class<?> targetClass) {
         Type[] t;
         if (targetClass.isInterface()) {
-            t = Arrays.stream(type.getGenericInterfaces()).filter(type1 -> {
-                if (type1 instanceof ParameterizedType) {
+            Optional<Type> optionalTypes;
+            while ((optionalTypes = Arrays.stream(type.getGenericInterfaces()).filter(type1 -> {
+                /*if (type1 instanceof ParameterizedType) {
                     return ((ParameterizedType) type1).getRawType() == targetClass;
                 } else if (type1 instanceof Class) {
                     return type1 == targetClass;
                 }
-                return false;
-            }).map(type1 -> {
-                if (type1 instanceof ParameterizedType) {
-                    return ((ParameterizedType) type1).getActualTypeArguments();
-                } else {
-                    return new Type[]{};
-                }
-            }).findFirst().orElseGet(() -> new Type[]{});
+                return false;*/
+                return getTypeClass(type1) == targetClass;
+            }).findFirst()).isEmpty() && (type = getTypeClass(type.getGenericSuperclass())) != Object.class) {
+            }
+            Type t1 = optionalTypes.orElse(Object.class);
+            if (t1 instanceof ParameterizedType) {
+                t = ((ParameterizedType) t1).getActualTypeArguments();
+            } else {
+                t = new Type[]{};
+            }
         } else {
             Type superClass = type;
             while (superClass != null) {
-                if (superClass instanceof ParameterizedType) {
+                /*if (superClass instanceof ParameterizedType) {
                     if (((ParameterizedType) superClass).getRawType() == targetClass) break;
                     superClass = ((ParameterizedType) superClass).getRawType();
                 } else if (superClass instanceof Class) {
@@ -67,25 +70,28 @@ public class ObjectUtils {
                 } else {
                     superClass = null;
                     break;
-                }
-                superClass = ((Class) superClass).getGenericSuperclass();
+                }*/
+                if (getTypeClass(superClass) == targetClass) break;
+                superClass = getTypeClass(superClass).getGenericSuperclass();
             }
-            if (superClass == null)
+            if (superClass == Object.class)
                 t = new Type[]{};
             else
                 t = ((ParameterizedType) superClass).getActualTypeArguments();
         }
-        return Arrays.stream(t).map(type1 -> {
-            if (type1 instanceof ParameterizedType) {
-                return (Class<?>) ((ParameterizedType) type1).getRawType();
-            } else if (type1 instanceof Class) {
-                return (Class<?>) type1;
-            } else {
-                System.out.println(type1);
-                return Object.class;
-            }
-        }).toArray(Class[]::new);
+        return Arrays.stream(t).map(ObjectUtils::getTypeClass).toArray(Class[]::new);
 
+    }
+
+    static Class getTypeClass(Type type) {
+        if (type instanceof ParameterizedType) {
+            return (Class<?>) ((ParameterizedType) type).getRawType();
+        } else if (type instanceof Class) {
+            return (Class<?>) type;
+        } else {
+            System.out.println(type);
+            return Object.class;
+        }
     }
 
 

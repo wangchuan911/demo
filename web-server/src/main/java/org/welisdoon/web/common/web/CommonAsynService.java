@@ -22,7 +22,7 @@ import org.welisdoon.common.JNIFieldDescriptors;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.web.entity.wechat.messeage.request.RequestMesseageBody;
 import org.welisdoon.web.entity.wechat.messeage.response.ResponseMesseage;
-import org.welisdoon.web.service.wechat.service.AbstractWeChatService;
+import org.welisdoon.web.service.wechat.service.AbstractWeChatOfficialAccountService;
 import org.welisdoon.web.common.web.intf.ICommonAsynService;
 
 import org.slf4j.Logger;
@@ -104,7 +104,7 @@ public class CommonAsynService implements ICommonAsynService {
                     RequestMesseageBody requestMesseageBody = JAXBUtils.fromXML(requset.getBody(), RequestMesseageBody.class);
                     //处理数据
                     /*ResponseMesseage responseMesseage = ((AbstractWeChatService) sprngService).receive(requestMesseageBody).onSuccess();*/
-                    ((Future<ResponseMesseage>) ((AbstractWeChatService) sprngService).receive(requestMesseageBody))
+                    ((Future<ResponseMesseage>) ((AbstractWeChatOfficialAccountService) sprngService).receive(requestMesseageBody))
                             .onSuccess(responseMesseage -> {
                                 if (responseMesseage != null) {
                                     try {

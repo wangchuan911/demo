@@ -7,6 +7,6 @@ import org.welisdoon.web.config.WeChatServiceConfiguration;
 
 @Service
 @ConditionalOnProperty(prefix = "wechat", name = "appID")
-public class WeChatService extends AbstractWeChatService<WeChatServiceConfiguration> {
+public class WeChatService extends AbstractWeChatOfficialAccountService<WeChatServiceConfiguration> {
 
 }
