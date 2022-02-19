@@ -12,7 +12,7 @@ import org.welisdoon.web.vertx.annotation.Verticle;
 @Component("workerVerticle")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Verticle(worker = true)
-public class WorkerVerticle extends AbstractCustomVerticle {
+public class WorkerVerticle extends AbstractMyVerticle {
 
     static Pool<Vertx> pool = new Pool<>();
 

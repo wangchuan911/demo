@@ -1,10 +1,8 @@
 package com.hubidaauto.servmarket.module.scheduler.verticle;
 
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.welisdoon.web.vertx.annotation.Verticle;
-import org.welisdoon.web.vertx.verticle.AbstractCustomVerticle;
+import org.welisdoon.web.vertx.verticle.AbstractMyVerticle;
 
 /**
  * @Classname SchedulerVerticle
@@ -14,5 +12,5 @@ import org.welisdoon.web.vertx.verticle.AbstractCustomVerticle;
  */
 @Component("schedulerVerticle")
 @Verticle
-public class SchedulerVerticle extends AbstractCustomVerticle {
+public class SchedulerVerticle extends AbstractMyVerticle {
 }

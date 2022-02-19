@@ -20,7 +20,7 @@ public interface AsyncProxyUtils {
         new ServiceBinder(vertx).setAddress(address = name(type, address))
                 .register(type, bean)
                 .completionHandler(Promise.promise());
-        LoggerFactory.getLogger(AsyncProxyUtils.class).info(String.format("create ServiceBinder:%s", address));
+        LoggerFactory.getLogger(type).info(String.format("create ServiceBinder:%s", address));
         return bean;
     }
 
@@ -28,7 +28,7 @@ public interface AsyncProxyUtils {
         T bean = new ServiceProxyBuilder(vertx)
                 .setAddress(address = name(type, address))
                 .build(type);
-        LoggerFactory.getLogger(AsyncProxyUtils.class).info(String.format("create ServiceProxyBuilder:%s", address));
+        LoggerFactory.getLogger(type).info(String.format("create ServiceProxyBuilder:%s", address));
         return bean;
     }
 

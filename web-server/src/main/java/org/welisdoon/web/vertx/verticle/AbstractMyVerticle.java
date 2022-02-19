@@ -5,6 +5,8 @@ import io.vertx.core.*;
 import io.vertx.ext.web.Router;
 
 
+import org.welisdoon.common.GCUtils;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
@@ -15,12 +17,11 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public abstract class AbstractCustomVerticle extends AbstractVerticle {
+public abstract class AbstractMyVerticle extends AbstractVerticle {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractCustomVerticle.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractMyVerticle.class);
 
     private static Entry[] ENTRYS;
 
@@ -142,11 +143,11 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
             return Arrays.stream(objects).map(Object::toString).collect(Collectors.joining("-"));
         }
 
-        abstract void inject(Vertx vertx, AbstractCustomVerticle verticle);
+        abstract void inject(Vertx vertx, AbstractMyVerticle verticle);
     }
 
     final public static class VertxRegisterEntry extends Entry implements Register {
-        Class<? extends AbstractCustomVerticle> verticleClass;
+        Class<? extends AbstractMyVerticle> verticleClass;
         Type VertxRegisterInnerType;
         Set<Method> methods;
 
@@ -168,43 +169,56 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
 
         @Override
         public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
-            ReflectionUtils.getAllMethods(aClass, method -> method.getDeclaredAnnotation(VertxRegister.class) != null)
+            Set<String> distinct = new HashSet<>();
+            ReflectionUtils
+                    .getAllMethods(aClass, method -> {
+                        Type[] type = method.getGenericParameterTypes();
+                        String key = String.format("%s-%s", method.getName(), Arrays.toString(type));
+                        if (method.getDeclaredAnnotation(VertxRegister.class) != null) {
+                            if (method.getDeclaringClass() == aClass) {
+                                distinct.add(key);
+                                return true;
+                            } else {
+                                return !distinct.contains(key) && type.length == 0 ? true : Arrays.stream(type).filter(type1 -> type1 instanceof TypeVariable).count() > 0;
+                            }
+                        }
+                        return false;
+                    })
                     .stream()
                     .forEach(method -> {
                         VertxRegister annotation = method.getDeclaredAnnotation(VertxRegister.class);
                         try {
                             Class vertCls = annotation.value();
-                            Type retunType = (method.getGenericReturnType());
-                            if (retunType != null) {
-                                if (retunType instanceof ParameterizedType) {
-                                    Type innertype = retunType == null ? null : ((ParameterizedType) retunType).getActualTypeArguments()[0];
-                                    if (vertCls == null || vertCls == Verticle.class) return;
-                                    VertxRegisterEntry vertxRegisterEntry;
-                                    String key = Entry.key(this.getClass(), vertCls, innertype, aClass);
-                                    if (map.containsKey(key)) {
-                                        vertxRegisterEntry = (VertxRegisterEntry) map.get(key);
-                                        vertxRegisterEntry.methods.add(method);
-                                    } else {
-                                        vertxRegisterEntry = new VertxRegisterEntry();
-                                        vertxRegisterEntry.verticleClass = vertCls;
-                                        vertxRegisterEntry.VertxRegisterInnerType = innertype;
-                                        vertxRegisterEntry.ServiceClass = aClass;
-                                        vertxRegisterEntry.methods = new HashSet<>();
-                                        vertxRegisterEntry.methods.add(method);
-                                        map.put(key, vertxRegisterEntry);
-                                    }
-                                }
+                            Type retunType = (method.getGenericReturnType()), innertype;
+                            innertype = (ObjectUtils.getTypeClass(retunType).getAnnotation(FunctionalInterface.class) != null
+                                    && retunType instanceof ParameterizedType) ? ((ParameterizedType) retunType).getActualTypeArguments()[0] : void.class;
+
+                            if (vertCls == Verticle.class) return;
+                            VertxRegisterEntry vertxRegisterEntry;
+                            String key = Entry.key(this.getClass(), vertCls, innertype, aClass);
+                            if (map.containsKey(key)) {
+                                vertxRegisterEntry = (VertxRegisterEntry) map.get(key);
+                                vertxRegisterEntry.methods.add(method);
+                            } else {
+                                vertxRegisterEntry = new VertxRegisterEntry();
+                                vertxRegisterEntry.verticleClass = vertCls;
+                                vertxRegisterEntry.VertxRegisterInnerType = innertype;
+                                vertxRegisterEntry.ServiceClass = aClass;
+                                vertxRegisterEntry.methods = new HashSet<>();
+                                vertxRegisterEntry.methods.add(method);
+                                map.put(key, vertxRegisterEntry);
                             }
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            logger.error(e.getMessage(), e);
                         }
                     });
+            GCUtils.release(distinct);
         }
 
         @Override
-        public void inject(Vertx vertx, AbstractCustomVerticle verticle) {
-            Class<? extends AbstractCustomVerticle> aClass = verticle.getClass();
-            Class<? extends AbstractCustomVerticle> verticleClass = this.verticleClass;
+        public void inject(Vertx vertx, AbstractMyVerticle verticle) {
+            Class<? extends AbstractMyVerticle> aClass = verticle.getClass();
+            Class<? extends AbstractMyVerticle> verticleClass = this.verticleClass;
             if (verticleClass == aClass) {
                 Type VertxRegisterInnerType = this.VertxRegisterInnerType;
                 final Object serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
@@ -213,9 +227,6 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                     value = vertx;
                 } else if (VertxRegisterInnerType == Router.class) {
                     value = getRouter(aClass);
-                }
-                if (value == null) {
-                    return;
                 }
                 final Object finalValue = value;
                 this.methods.stream().forEach(method -> {
@@ -234,13 +245,15 @@ public abstract class AbstractCustomVerticle extends AbstractVerticle {
                             }
                         }
                         Object obj = method.invoke(serviceBean, parameterValue);
-                        if (obj instanceof Consumer) {
-                            ((Consumer) obj).accept(finalValue);
-                        } else if (obj instanceof Handler) {
-                            ((Handler) obj).handle(finalValue);
+                        if (obj != null && obj.getClass().isInterface() && obj.getClass().getAnnotation(FunctionalInterface.class) != null) {
+                            Arrays.stream(obj.getClass().getMethods())
+                                    .filter(method1 -> !method1.isDefault())
+                                    .findFirst()
+                                    .get()
+                                    .invoke(obj, finalValue);
                         }
                     } catch (Throwable e) {
-                        e.printStackTrace();
+                        logger.error(e.getMessage(), e);
                     }
                 });
             }

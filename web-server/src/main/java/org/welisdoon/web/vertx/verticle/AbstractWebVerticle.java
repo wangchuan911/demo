@@ -26,7 +26,7 @@ import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
+public abstract class AbstractWebVerticle extends AbstractMyVerticle {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractWebVerticle.class);
 
@@ -159,7 +159,7 @@ public abstract class AbstractWebVerticle extends AbstractCustomVerticle {
 
 
         @Override
-        synchronized void inject(Vertx vertx, AbstractCustomVerticle verticle) {
+        synchronized void inject(Vertx vertx, AbstractMyVerticle verticle) {
             final Object serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
             if (verticle instanceof AbstractWebVerticle) {
                 this.routeMethod.stream().filter(Objects::nonNull).sorted((o1, o2) ->

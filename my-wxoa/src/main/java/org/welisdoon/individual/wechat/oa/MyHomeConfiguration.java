@@ -71,6 +71,7 @@ public class MyHomeConfiguration extends AbstractWechatOfficialAccountConfigurat
     @VertxRegister(StandaredVerticle.class)
     @Override
     public void vertxConfiguration(Vertx vertx) {
+        System.out.println("hehe");
         super.vertxConfiguration(vertx);
     }
 }

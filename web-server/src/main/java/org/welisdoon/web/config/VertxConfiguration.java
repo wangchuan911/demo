@@ -11,12 +11,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.welisdoon.web.WebserverApplication;
 import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.common.web.AsyncProxyUtils;
-import org.welisdoon.web.common.web.intf.ICommonAsynService;
 import org.welisdoon.web.vertx.SpringVerticleFactory;
 import org.welisdoon.web.vertx.annotation.Verticle;
-import org.welisdoon.web.vertx.annotation.VertxRegister;
-import org.welisdoon.web.vertx.verticle.AbstractCustomVerticle;
+import org.welisdoon.web.vertx.verticle.AbstractMyVerticle;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import org.slf4j.Logger;
@@ -167,7 +164,7 @@ public class VertxConfiguration {
 
     private Consumer<Vertx> deployVerticles() {
         Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
-        AbstractCustomVerticle.initVertxInSpring(new AbstractCustomVerticle.Options());
+        AbstractMyVerticle.initVertxInSpring(new AbstractMyVerticle.Options());
         Consumer<Vertx> runner = vertx -> {
             // The verticle factory is registered manually because it is created by the Spring container
             vertx.registerVerticleFactory(verticleFactory);
@@ -228,11 +225,11 @@ public class VertxConfiguration {
         return runner;
     }
 
-    @VertxRegister(WorkerVerticle.class)
+    /*@VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
         Consumer<Vertx> vertxConsumer = vertx1 -> {
             logger.info(String.format("create AsyncService:%s", AsyncProxyUtils.createServiceBinder(vertx1, null, ICommonAsynService.class)));
         };
         return vertxConsumer;
-    }
+    }*/
 }

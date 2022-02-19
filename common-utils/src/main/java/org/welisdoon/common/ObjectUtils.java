@@ -83,7 +83,7 @@ public class ObjectUtils {
 
     }
 
-    static Class getTypeClass(Type type) {
+    public static Class getTypeClass(Type type) {
         if (type instanceof ParameterizedType) {
             return (Class<?>) ((ParameterizedType) type).getRawType();
         } else if (type instanceof Class) {
