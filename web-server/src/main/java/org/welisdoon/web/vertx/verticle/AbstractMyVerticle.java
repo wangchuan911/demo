@@ -5,6 +5,7 @@ import io.vertx.core.*;
 import io.vertx.ext.web.Router;
 
 
+import org.springframework.boot.util.LambdaSafe;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -179,7 +180,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                                 distinct.add(key);
                                 return true;
                             } else {
-                                return !distinct.contains(key) && type.length == 0 ? true : Arrays.stream(type).filter(type1 -> type1 instanceof TypeVariable).count() > 0;
+                                return !distinct.contains(key) && type.length == 0 ? true : Arrays.stream(type).filter(type1 -> type1 instanceof TypeVariable).count() == 0;
                             }
                         }
                         return false;
@@ -190,7 +191,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                         try {
                             Class vertCls = annotation.value();
                             Type retunType = (method.getGenericReturnType()), innertype;
-                            innertype = (ObjectUtils.getTypeClass(retunType).getAnnotation(FunctionalInterface.class) != null
+                            innertype = (this.isFunctionInterface(retunType)
                                     && retunType instanceof ParameterizedType) ? ((ParameterizedType) retunType).getActualTypeArguments()[0] : void.class;
 
                             if (vertCls == Verticle.class) return;
@@ -245,12 +246,13 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                             }
                         }
                         Object obj = method.invoke(serviceBean, parameterValue);
-                        if (obj != null && obj.getClass().isInterface() && obj.getClass().getAnnotation(FunctionalInterface.class) != null) {
-                            Arrays.stream(obj.getClass().getMethods())
+                        if (this.isFunctionInterface(method.getReturnType())) {
+                            method = Arrays.stream(obj.getClass().getMethods())
                                     .filter(method1 -> !method1.isDefault())
                                     .findFirst()
-                                    .get()
-                                    .invoke(obj, finalValue);
+                                    .get();
+                            method.setAccessible(true);
+                            method.invoke(obj, finalValue);
                         }
                     } catch (Throwable e) {
                         logger.error(e.getMessage(), e);
@@ -258,6 +260,11 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                 });
             }
 
+        }
+
+        protected boolean isFunctionInterface(Type type) {
+            Class<?> clz = ObjectUtils.getTypeClass(type);
+            return clz.isInterface() && clz.getAnnotation(FunctionalInterface.class) != null;
         }
     }
 
