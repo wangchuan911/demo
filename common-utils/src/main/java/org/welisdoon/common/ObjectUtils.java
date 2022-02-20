@@ -1,10 +1,14 @@
 package org.welisdoon.common;
 
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @Classname ObjectUtils
@@ -95,19 +99,109 @@ public class ObjectUtils {
     }
 
 
-    public static void main(String[] args) throws InterruptedException {
-        Map<String, Integer> map = new HashMap<String, Integer>();
-        /*final int[] j = {0};
-        int[] i=new int[1000];
-        Arrays.stream(i).parallel().forEach(value -> {
-            int jj = j[0]++;
-            System.out.println(Thread.currentThread().getName());
-            System.out.println(jj);
+    /*public static void main(String[] args) {
+//        SpringApplication.run(WebserverApplication.class, args);
+        Arrays.stream(ObjectUtils.class.getMethods()).filter(method -> method.getName().equals("a")).forEach(method -> {
+            System.out.println(method.getName());
+            System.out.println(Arrays.stream(method.getGenericParameterTypes()).map(Objects::toString).collect(Collectors.joining("\n")));
+            System.out.println("#");
+            Arrays.stream(method.getGenericParameterTypes()).forEach(type -> {
+                *//*if (type.toString().startsWith("class ")) {
+                    if (type.toString().startsWith("[L", 6)) {
+                        return type.toString().substring(8, type.toString().length() - 1) + "[]";
+                    } else {
+                        return type.toString().substring(6);
+                    }
+                }
+                if (type.toString().startsWith("interface ")) {
+                    return type.toString().substring(10);
+                }
+                return type.toString();*//*
+                System.out.println(new ParamDef(type).toString());
+                ;
+            });
         });
-        Thread.sleep(5000);
-        System.out.println(map);
-        System.out.println(map.size());*/
-        System.out.println(Arrays.toString(getGenericTypes(map.getClass(), Map.class)));
-        ;
+    }
+
+    public void a(List<Map<String, Object>> a, List<Function<Object, Character>> b, List<List[]>[] c, List l, Map m, Map<String, ?> ma,
+                  List<Character>[] c1, Object[] v, ParamType c2, Object aa, List aaa, AA AAA, char ac, Character ac1) {
+    }
+
+
+    abstract class AA {
+    }*/
+
+    public static class ParamDef {
+        String name;
+        ParamDef[] innerTypes;
+        ParamType type;
+
+        public ParamDef(Type type) {
+            this.type = ParamType.getInstance(type);
+            this.name = this.type.name.apply(type);
+            this.innerTypes = Arrays.stream(this.type.subTypes.apply(type)).map(type1 -> new ParamDef(type1)).toArray(ParamDef[]::new);
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", ParamDef.class.getSimpleName() + "[", "]")
+                    .add("name='" + name + "'")
+                    .add("innerTypes=" + Arrays.toString(innerTypes))
+                    .add("type=" + type)
+                    .toString();
+        }
+    }
+
+    public enum ParamType {
+        ObjectArray(t -> t instanceof Class && ((Class) t).isArray(), s -> ((Class) s).getName(), s -> new Type[]{}),
+        TypeArray(s -> s instanceof GenericArrayType, s -> getTypeClass(((GenericArrayType) s).getGenericComponentType()).getName(), s -> getInnerTypeClass(s)),
+        Base(s -> s instanceof Class && List.of(byte.class, Byte.class,
+                short.class, Short.class,
+                int.class, Integer.class,
+                long.class, Long.class,
+                float.class, Float.class,
+                double.class, Double.class,
+                char.class, Character.class, CharSequence.class).stream().filter(aClass -> aClass.isAssignableFrom((Class) s)).findFirst().isPresent(), s -> ((Class) s).getName(), s -> new Type[]{}),
+        Types(s -> s instanceof ParameterizedType, s -> getTypeClass(s).getName(), ParamType::getInnerTypeClass),
+        Interface(s -> s instanceof Class && ((Class) s).isInterface(), s -> getTypeClass(s).getName(), s -> new Type[]{}),
+        Object(s -> s instanceof Class && !((Class) s).isInterface() || s instanceof WildcardType, s -> getTypeClass(s).getName(), s -> new Type[]{});
+
+        Function<Type, Boolean> matched;
+        Function<Type, String> name;
+        Function<Type, Type[]> subTypes;
+
+        ParamType(Function<Type, Boolean> matched, Function<Type, String> name, Function<Type, Type[]> subTypes) {
+            this.matched = matched;
+            this.name = name;
+            this.subTypes = subTypes;
+        }
+
+        static ParamType getInstance(Type s) {
+            return Arrays.stream(values()).filter(paramType -> paramType.matched.apply(s)).findFirst().get();
+        }
+
+        static Class getTypeClass(Type type) {
+            if (type instanceof ParameterizedType) {
+                return (Class<?>) ((ParameterizedType) type).getRawType();
+            } else if (type instanceof Class) {
+                return (Class<?>) type;
+            } else if (type instanceof GenericArrayType) {
+                return getTypeClass(((GenericArrayType) type).getGenericComponentType());
+            } else {
+                System.out.println(type);
+                return Object.class;
+            }
+        }
+
+        static Type[] getInnerTypeClass(Type type) {
+            if (type instanceof ParameterizedType) {
+                return Arrays.stream(((ParameterizedType) type).getActualTypeArguments()).toArray(Type[]::new);
+            } else if (type instanceof GenericArrayType) {
+                return getInnerTypeClass(((GenericArrayType) type).getGenericComponentType());
+            } else {
+                System.out.println(type);
+                return new Type[]{};
+            }
+        }
     }
 }
