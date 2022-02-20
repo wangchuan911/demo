@@ -99,62 +99,78 @@ public class ObjectUtils {
     }
 
 
-    /*public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException {
 //        SpringApplication.run(WebserverApplication.class, args);
         Arrays.stream(ObjectUtils.class.getMethods()).filter(method -> method.getName().equals("a")).forEach(method -> {
             System.out.println(method.getName());
-            System.out.println(Arrays.stream(method.getGenericParameterTypes()).map(Objects::toString).collect(Collectors.joining("\n")));
+            System.out.println(Arrays.stream(method.getGenericParameterTypes()).map(Type::getTypeName).collect(Collectors.joining("\n")));
+            System.out.println("#");
+            System.out.println(Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(Collectors.joining("\n")));
             System.out.println("#");
             Arrays.stream(method.getGenericParameterTypes()).forEach(type -> {
-                *//*if (type.toString().startsWith("class ")) {
-                    if (type.toString().startsWith("[L", 6)) {
-                        return type.toString().substring(8, type.toString().length() - 1) + "[]";
-                    } else {
-                        return type.toString().substring(6);
-                    }
-                }
-                if (type.toString().startsWith("interface ")) {
-                    return type.toString().substring(10);
-                }
-                return type.toString();*//*
-                System.out.println(new ParamDef(type).toString());
-                ;
+                System.out.println(getTypeClass(type).getName());
+                System.out.println(new ObjectDefineInfo(type).toString());
+                System.out.println();
             });
         });
     }
 
-    public void a(List<Map<String, Object>> a, List<Function<Object, Character>> b, List<List[]>[] c, List l, Map m, Map<String, ?> ma,
-                  List<Character>[] c1, Object[] v, ParamType c2, Object aa, List aaa, AA AAA, char ac, Character ac1) {
+    public void a(List<Map<String, Object>> a, List<Function<Object, Character>> b, List<List<List[][]>[][]>[][] c, List l, Map m, Map<String, ?> ma,
+                  List<Character>[] c1, Object[] v, ObjectDefineType c2, Object aa, List aaa, AA AAA, char ac, Character ac1) {
     }
 
 
     abstract class AA {
-    }*/
+    }
 
-    public static class ParamDef {
-        String name;
-        ParamDef[] innerTypes;
-        ParamType type;
+    public static class ObjectDefineInfo {
+        protected String name;
+        protected ObjectDefineInfo[] innerTypes;
+        protected ObjectDefineType type;
 
-        public ParamDef(Type type) {
-            this.type = ParamType.getInstance(type);
+        public ObjectDefineInfo(Type type) {
+            this.type = ObjectDefineType.getInstance(type);
             this.name = this.type.name.apply(type);
-            this.innerTypes = Arrays.stream(this.type.subTypes.apply(type)).map(type1 -> new ParamDef(type1)).toArray(ParamDef[]::new);
+            this.innerTypes = Arrays.stream(this.type.subTypes.apply(type)).map(type1 -> new ObjectDefineInfo(type1)).toArray(ObjectDefineInfo[]::new);
         }
 
         @Override
         public String toString() {
-            return new StringJoiner(", ", ParamDef.class.getSimpleName() + "[", "]")
+            return new StringJoiner(", ", ObjectDefineInfo.class.getSimpleName() + "[", "]")
                     .add("name='" + name + "'")
                     .add("innerTypes=" + Arrays.toString(innerTypes))
                     .add("type=" + type)
                     .toString();
         }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public ObjectDefineInfo[] getInnerTypes() {
+            return innerTypes;
+        }
+
+        public void setInnerTypes(ObjectDefineInfo[] innerTypes) {
+            this.innerTypes = innerTypes;
+        }
+
+        public ObjectDefineType getType() {
+            return type;
+        }
+
+        public void setType(ObjectDefineType type) {
+            this.type = type;
+        }
     }
 
-    public enum ParamType {
+    public enum ObjectDefineType {
         ObjectArray(t -> t instanceof Class && ((Class) t).isArray(), s -> ((Class) s).getName(), s -> new Type[]{}),
-        TypeArray(s -> s instanceof GenericArrayType, s -> getTypeClass(((GenericArrayType) s).getGenericComponentType()).getName(), s -> getInnerTypeClass(s)),
+        TypeArray(s -> s instanceof GenericArrayType, s -> getTypeClass(s).getName(), s -> getInnerTypeClass(s)),
         Base(s -> s instanceof Class && List.of(byte.class, Byte.class,
                 short.class, Short.class,
                 int.class, Integer.class,
@@ -162,7 +178,7 @@ public class ObjectUtils {
                 float.class, Float.class,
                 double.class, Double.class,
                 char.class, Character.class, CharSequence.class).stream().filter(aClass -> aClass.isAssignableFrom((Class) s)).findFirst().isPresent(), s -> ((Class) s).getName(), s -> new Type[]{}),
-        Types(s -> s instanceof ParameterizedType, s -> getTypeClass(s).getName(), ParamType::getInnerTypeClass),
+        Types(s -> s instanceof ParameterizedType, s -> getTypeClass(s).getName(), ObjectDefineType::getInnerTypeClass),
         Interface(s -> s instanceof Class && ((Class) s).isInterface(), s -> getTypeClass(s).getName(), s -> new Type[]{}),
         Object(s -> s instanceof Class && !((Class) s).isInterface() || s instanceof WildcardType, s -> getTypeClass(s).getName(), s -> new Type[]{});
 
@@ -170,13 +186,15 @@ public class ObjectUtils {
         Function<Type, String> name;
         Function<Type, Type[]> subTypes;
 
-        ParamType(Function<Type, Boolean> matched, Function<Type, String> name, Function<Type, Type[]> subTypes) {
+        ObjectDefineType(Function<Type, Boolean> matched, Function<Type, String> name, Function<Type, Type[]> subTypes) {
             this.matched = matched;
             this.name = name;
             this.subTypes = subTypes;
+
+
         }
 
-        static ParamType getInstance(Type s) {
+        static ObjectDefineType getInstance(Type s) {
             return Arrays.stream(values()).filter(paramType -> paramType.matched.apply(s)).findFirst().get();
         }
 
@@ -186,12 +204,23 @@ public class ObjectUtils {
             } else if (type instanceof Class) {
                 return (Class<?>) type;
             } else if (type instanceof GenericArrayType) {
-                return getTypeClass(((GenericArrayType) type).getGenericComponentType());
+                StringBuilder name = new StringBuilder("[");
+                while ((type = ((GenericArrayType) type).getGenericComponentType()) instanceof GenericArrayType) {
+                    name.append("[");
+                }
+                name.append("L").append(getTypeClass(type).getName()).append(";");
+                try {
+                    return Class.forName(name.toString());
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                    return null;
+                }
             } else {
                 System.out.println(type);
                 return Object.class;
             }
         }
+
 
         static Type[] getInnerTypeClass(Type type) {
             if (type instanceof ParameterizedType) {
@@ -203,5 +232,6 @@ public class ObjectUtils {
                 return new Type[]{};
             }
         }
+
     }
 }
