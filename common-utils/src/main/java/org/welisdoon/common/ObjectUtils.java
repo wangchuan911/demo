@@ -194,7 +194,7 @@ public class ObjectUtils {
 
         }
 
-        static ObjectDefineType getInstance(Type s) {
+        public static ObjectDefineType getInstance(Type s) {
             return Arrays.stream(values()).filter(paramType -> paramType.matched.apply(s)).findFirst().get();
         }
 

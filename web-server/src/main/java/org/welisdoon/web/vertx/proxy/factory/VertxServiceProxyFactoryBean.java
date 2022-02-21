@@ -2,26 +2,27 @@ package org.welisdoon.web.vertx.proxy.factory;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.cglib.proxy.InvocationHandler;
 import org.springframework.cglib.proxy.Proxy;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.vertx.annotation.VertxServiceProxy;
 import org.welisdoon.web.vertx.proxy.IVertxInvoker;
+import org.welisdoon.web.vertx.proxy.VertxInvoker;
 import org.welisdoon.web.vertx.verticle.StandaredVerticle;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @Classname VertxInvokerProxyFactoryBean
@@ -110,7 +111,7 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
 
     }
 
-    @Override
+    /*@Override
     public Future invoke(Object o, Method method, Object[] objects) throws Throwable {
         Promise promise = Promise.promise();
         Type retunType = ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0],
@@ -165,5 +166,50 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
 
     boolean match(Type a, Type... b) {
         return b.length == 0 ? false : Arrays.stream(b).anyMatch(aClass -> aClass == a);
+    }*/
+
+    static class MethodInfo {
+        final Class[] paramTypes;
+        final String paramTypesStr;
+        final ObjectUtils.ObjectDefineInfo returnType;
+
+        MethodInfo(Method method) {
+            this.returnType = new ObjectUtils.ObjectDefineInfo(((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
+            this.paramTypes = method.getParameterTypes();
+            this.paramTypesStr = JSONArray.toJSONString(Arrays.stream(this.paramTypes).map(Class::getName));
+        }
+    }
+
+    final static Map<Method, MethodInfo> METHDO_INFO_MAP = new HashMap<>();
+
+
+    @Override
+
+    public Future invoke(Object o, Method method, Object[] objects) throws Throwable {
+        Promise promise = Promise.promise();
+        if (this.iVertxInvoker == null) {
+            this.initInvoker();
+        }
+        MethodInfo methdoInfo = ObjectUtils.getMapValueOrNewSafe(METHDO_INFO_MAP, method, () -> new MethodInfo(method));
+        this.iVertxInvoker.invoke(
+                tagetClass.getTypeName(),
+                method.getName(),
+                methdoInfo.paramTypesStr,
+                JSONArray.toJSONString(objects, SerializerFeature.WriteClassName),
+                "",
+                stringAsyncResult -> {
+                    if (!stringAsyncResult.succeeded()) {
+                        promise.fail(stringAsyncResult.cause());
+                        return;
+                    }
+                    String resultString = stringAsyncResult.result();
+                    try {
+                        promise.complete(TypeUtils.castToJavaBean(resultString, Class.forName(methdoInfo.returnType.getName())));
+                    } catch (Throwable e) {
+                        promise.fail(e);
+                    }
+                }
+        );
+        return promise.future();
     }
 }

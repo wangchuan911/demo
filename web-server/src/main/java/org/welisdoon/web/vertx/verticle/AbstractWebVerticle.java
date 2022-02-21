@@ -73,7 +73,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                 .listen(port, httpServerAsyncResult -> {
                     if (httpServerAsyncResult.succeeded()) {
                         promise.complete();
-                        logger.info(String.format("HTTP server started on http%s://localhost:%s", sslEnable ? "s" : "", port));
+                        logger.info("HTTP server started on {}://localhost:{}", sslEnable ? "https" : "http", port);
                     } else {
                         promise.fail(httpServerAsyncResult.cause());
                     }

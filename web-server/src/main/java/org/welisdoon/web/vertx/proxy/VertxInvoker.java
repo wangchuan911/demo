@@ -1,25 +1,27 @@
 package org.welisdoon.web.vertx.proxy;
 
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cglib.reflect.FastClass;
+import org.springframework.cglib.reflect.FastMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.welisdoon.common.GCUtils;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Component
 public class VertxInvoker implements IVertxInvoker {
@@ -52,7 +54,7 @@ public class VertxInvoker implements IVertxInvoker {
         }
     }*/
 
-    @Override
+    /*@Override
     public void invoke(String clzName, String methodName, String paramTypesJson, String paramsJson, String threadParamsJson, Handler<AsyncResult<String>> handler) {
         String[] paramTypes = JSONArray.parseArray(paramTypesJson, String.class).toArray(String[]::new);
         JSONArray params = JSONArray.parseArray(paramsJson);
@@ -145,28 +147,15 @@ public class VertxInvoker implements IVertxInvoker {
             }
         });
         f.onComplete(handler);
-    }
+    }*/
 
     @Override
     public void check(String clzName, String methodName, String paramTypesJson, String returnType, Handler<AsyncResult<Void>> handler) {
         Future<Void> f = Future.future(promise -> {
             try {
-                String[] params = JSONArray.parseArray(paramTypesJson, String.class).toArray(String[]::new);
-                Class[] types = new Class[params.length];
-                String paramType;
-                for (int i = 0; i < params.length; i++) {
-                    paramType = params[i];
-                    int index = paramType.indexOf("<");
-                    if (index > 0) {
-                        paramType = paramType.substring(0, index);
-                    }
-                    types[i] = Class.forName(paramType);
-                }
-
-                Class<?> clazz = Class.forName(clzName);
-                Method method = clazz.getMethod(methodName, types);
-                if (!method.getReturnType().isAssignableFrom(Class.forName(returnType))) {
-                    throw new NoSuchMethodException(String.format("Method [ %s ] return type is not matched! expect:[ %s ]; actual:[ %s ];", methodName, method.getReturnType().getName(), returnType));
+                ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
+                if (!methodInfo.method.getReturnType().isAssignableFrom(Class.forName(returnType)) || Class.forName(returnType).isAssignableFrom(methodInfo.method.getReturnType())) {
+                    throw new NoSuchMethodException(String.format("Method [ %s ] return type is not matched! expect:[ %s ]; actual:[ %s ];", methodName, methodInfo.method.getReturnType().getName(), returnType));
                 }
                 promise.complete();
             } catch (Throwable e) {
@@ -176,5 +165,133 @@ public class VertxInvoker implements IVertxInvoker {
         f.onComplete(handler);
     }
 
+    /*final static Map<Class, ParamHandler> BASE_CLASS_MAP = new HashMap<>();
 
+    static <T> void ADD(ParamHandler<T> function, Class<T>... classes) {
+        for (Class<T> aClass : classes) {
+            BASE_CLASS_MAP.put(aClass, function);
+        }
+    }
+
+    public static ParamHandler GET_BASE_CLASS_HANDLER(Class clz) {
+        return BASE_CLASS_MAP.get(clz);
+    }
+
+    @FunctionalInterface
+    public interface ParamHandler<T> {
+        T handler(Object o) throws Throwable;
+    }
+
+
+    static {
+        ADD((o) -> TypeUtils.castToDouble(o), double.class, Double.class);
+        ADD((o) -> TypeUtils.castToByte(o), byte.class, Byte.class);
+        ADD((o) -> TypeUtils.castToShort(o), short.class, Short.class);
+        ADD((o) -> TypeUtils.castToInt(o), int.class, Integer.class);
+        ADD((o) -> TypeUtils.castToLong(o), long.class, Long.class);
+        ADD((o) -> TypeUtils.castToFloat(o), float.class, Float.class);
+        ADD((o) -> TypeUtils.castToString(o).charAt(0), char.class, Character.class);
+        ADD((o) -> TypeUtils.castToString(o), String.class);
+        ADD((o) -> new StringBuilder(TypeUtils.castToString(o)), StringBuilder.class);
+        ADD((o) -> new StringBuffer(TypeUtils.castToString(o)), StringBuffer.class);
+    }
+*/
+    class ClassInfo {
+        final Class clz;
+        final Object target;
+        final FastClass fastClass;
+        final Map<String, MethodInfo> methodInfos;
+
+        public ClassInfo(String className) throws ClassNotFoundException {
+            this.clz = Class.forName(className);
+            this.target = ApplicationContextProvider.getRealClass(this.clz);
+            this.fastClass = FastClass.create(clz);
+            this.methodInfos = new HashMap<>();
+        }
+
+        MethodInfo getMethod(String methodName, String paramTypesJson) throws NoSuchMethodException, ClassNotFoundException {
+            String key = methodName + paramTypesJson;
+            if (!methodInfos.containsKey(key)) {
+                synchronized (methodInfos) {
+                    if (!methodInfos.containsKey(key)) {
+                        methodInfos.put(key, new MethodInfo(methodName, paramTypesJson));
+                    }
+                }
+            }
+            return methodInfos.get(key);
+        }
+
+        class MethodInfo {
+            final Method method;
+            final FastMethod fastMethod;
+            final Class[] params;
+            final ObjectUtils.ObjectDefineType returnType;
+
+            MethodInfo(String methodName, String paramTypesJson) throws ClassNotFoundException, NoSuchMethodException {
+                List<String> pClasses = JSONArray.parseArray(paramTypesJson).toJavaList(String.class);
+                this.params = new Class[pClasses.size()];
+                for (int i = 0; i < pClasses.size(); i++) {
+                    this.params[i] = Class.forName(pClasses.get(i));
+                }
+                this.method = clz.getMethod(methodName, this.params);
+                this.fastMethod = fastClass.getMethod(method);
+                this.returnType = ObjectUtils.ObjectDefineType.getInstance(this.method.getGenericReturnType());
+            }
+
+            Object invoke(String paramsJson) throws Throwable {
+                JSONArray params = JSONArray.parseArray(paramsJson);
+                int len = this.params.length;
+                Object[] values = new Object[len];
+                for (int i = 0; i < len; i++) {
+                    values[i] = params.get(i);
+                    if (values[i] == null) continue;
+                    values[i] = TypeUtils.castToJavaBean(values[i], this.params[i]);
+                }
+                return this.fastMethod.invoke(target, values);
+            }
+
+
+        }
+    }
+
+    final static Map<String, ClassInfo> METHDO_INFO_MAP = new HashMap<>();
+
+    ClassInfo.MethodInfo getMethodInfo(String clzName, String methodName, String paramTypesJson) throws ClassNotFoundException, NoSuchMethodException {
+        ClassInfo classInfo;
+        String key = clzName;
+        if (!METHDO_INFO_MAP.containsKey(key)) {
+            synchronized (METHDO_INFO_MAP) {
+                if (!METHDO_INFO_MAP.containsKey(key)) {
+                    METHDO_INFO_MAP.put(key, new ClassInfo(clzName));
+                }
+            }
+        }
+        classInfo = METHDO_INFO_MAP.get(key);
+        key = GCUtils.release(key);
+        return classInfo.getMethod(methodName, paramTypesJson);
+    }
+
+    @Override
+    public void invoke(String clzName, String methodName, String paramTypesJson, String paramsJson, String threadParamsJson, Handler<AsyncResult<String>> handler) {
+
+        Future<String> f = Future.future(promise -> {
+            try {
+
+                ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
+                Object result = methodInfo.invoke(paramsJson);
+                promise.complete(result != null ? JSONObject.toJSONString(result, SerializerFeature.WriteClassName) : null);
+            } catch (InvocationTargetException e) {
+                Throwable t = e.getCause();
+                logger.error(t.getMessage(), t);
+                if (t instanceof NullPointerException) {
+                    t = new RuntimeException("空数据异常", t);
+                }
+                promise.fail(t);
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+                promise.fail(e);
+            }
+        });
+        f.onComplete(handler);
+    }
 }
