@@ -204,21 +204,13 @@ public class VertxInvoker implements IVertxInvoker {
 
         public ClassInfo(String className) throws ClassNotFoundException {
             this.clz = Class.forName(className);
-            this.target = ApplicationContextProvider.getRealClass(this.clz);
+            this.target = ApplicationContextProvider.getBean(this.clz);
             this.fastClass = FastClass.create(clz);
             this.methodInfos = new HashMap<>();
         }
 
-        MethodInfo getMethod(String methodName, String paramTypesJson) throws NoSuchMethodException, ClassNotFoundException {
-            String key = methodName + paramTypesJson;
-            if (!methodInfos.containsKey(key)) {
-                synchronized (methodInfos) {
-                    if (!methodInfos.containsKey(key)) {
-                        methodInfos.put(key, new MethodInfo(methodName, paramTypesJson));
-                    }
-                }
-            }
-            return methodInfos.get(key);
+        MethodInfo getMethod(String methodName, String paramTypesJson) throws Throwable {
+            return ObjectUtils.getMapValueOrNewSafe(methodInfos, methodName + paramTypesJson, () -> new MethodInfo(methodName, paramTypesJson));
         }
 
         class MethodInfo {
@@ -256,18 +248,8 @@ public class VertxInvoker implements IVertxInvoker {
 
     final static Map<String, ClassInfo> METHDO_INFO_MAP = new HashMap<>();
 
-    ClassInfo.MethodInfo getMethodInfo(String clzName, String methodName, String paramTypesJson) throws ClassNotFoundException, NoSuchMethodException {
-        ClassInfo classInfo;
-        String key = clzName;
-        if (!METHDO_INFO_MAP.containsKey(key)) {
-            synchronized (METHDO_INFO_MAP) {
-                if (!METHDO_INFO_MAP.containsKey(key)) {
-                    METHDO_INFO_MAP.put(key, new ClassInfo(clzName));
-                }
-            }
-        }
-        classInfo = METHDO_INFO_MAP.get(key);
-        key = GCUtils.release(key);
+    ClassInfo.MethodInfo getMethodInfo(String clzName, String methodName, String paramTypesJson) throws Throwable {
+        ClassInfo classInfo = ObjectUtils.getMapValueOrNewSafe(METHDO_INFO_MAP, clzName, () -> new ClassInfo(clzName));
         return classInfo.getMethod(methodName, paramTypesJson);
     }
 
@@ -279,7 +261,19 @@ public class VertxInvoker implements IVertxInvoker {
 
                 ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
                 Object result = methodInfo.invoke(paramsJson);
-                promise.complete(result != null ? JSONObject.toJSONString(result, SerializerFeature.WriteClassName) : null);
+                if (result == null) {
+                    promise.complete(null);
+                    return;
+                }
+
+                switch (methodInfo.returnType) {
+                    case Base:
+                        promise.complete(result.toString());
+                        break;
+                    default:
+                        promise.complete(JSONObject.toJSONString(result, SerializerFeature.WriteClassName));
+                        break;
+                }
             } catch (InvocationTargetException e) {
                 Throwable t = e.getCause();
                 logger.error(t.getMessage(), t);
@@ -290,6 +284,8 @@ public class VertxInvoker implements IVertxInvoker {
             } catch (Throwable e) {
                 logger.error(e.getMessage(), e);
                 promise.fail(e);
+            } finally {
+
             }
         });
         f.onComplete(handler);

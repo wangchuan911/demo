@@ -2,6 +2,7 @@ package org.welisdoon.web.vertx.proxy.factory;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
@@ -9,6 +10,7 @@ import io.vertx.core.Promise;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.cglib.proxy.InvocationHandler;
 import org.springframework.cglib.proxy.Proxy;
+import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
@@ -172,16 +174,17 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
         final Class[] paramTypes;
         final String paramTypesStr;
         final ObjectUtils.ObjectDefineInfo returnType;
+        final Class returnClass;
 
-        MethodInfo(Method method) {
+        MethodInfo(Method method) throws ClassNotFoundException {
             this.returnType = new ObjectUtils.ObjectDefineInfo(((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
             this.paramTypes = method.getParameterTypes();
-            this.paramTypesStr = JSONArray.toJSONString(Arrays.stream(this.paramTypes).map(Class::getName));
+            this.paramTypesStr = JSONArray.toJSONString(Arrays.stream(this.paramTypes).map(Class::getName).toArray(String[]::new));
+            this.returnClass = Class.forName(this.returnType.getName());
         }
     }
 
     final static Map<Method, MethodInfo> METHDO_INFO_MAP = new HashMap<>();
-
 
     @Override
 
@@ -198,15 +201,24 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
                 JSONArray.toJSONString(objects, SerializerFeature.WriteClassName),
                 "",
                 stringAsyncResult -> {
-                    if (!stringAsyncResult.succeeded()) {
-                        promise.fail(stringAsyncResult.cause());
-                        return;
-                    }
-                    String resultString = stringAsyncResult.result();
                     try {
-                        promise.complete(TypeUtils.castToJavaBean(resultString, Class.forName(methdoInfo.returnType.getName())));
+                        if (!stringAsyncResult.succeeded()) {
+                            promise.fail(stringAsyncResult.cause());
+                            return;
+                        }
+                        String resultString = stringAsyncResult.result();
+                        switch (methdoInfo.returnType.getType()) {
+                            case Base:
+                                promise.complete(TypeUtils.castToJavaBean(resultString, methdoInfo.returnClass));
+                                break;
+                            default:
+                                promise.complete(JSON.toJavaObject((JSON) JSON.parse(resultString), methdoInfo.returnClass));
+                                break;
+                        }
                     } catch (Throwable e) {
                         promise.fail(e);
+                    } finally {
+
                     }
                 }
         );

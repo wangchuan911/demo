@@ -17,10 +17,14 @@ import java.util.stream.Collectors;
  * @Date 2021/4/23 10:17
  */
 public class ObjectUtils {
+    @FunctionalInterface
+    public interface IfNull<T> {
+        T get() throws Throwable;
+    }
 
     final static ReentrantLock REENTRANT_LOCK = new ReentrantLock();
 
-    public static <K, V> V getMapValueOrNewSafe(Map<K, V> map, K key, Supplier<V> function) {
+    public static <K, V> V getMapValueOrNewSafe(Map<K, V> map, K key, IfNull<V> function) throws Throwable {
         if (!map.containsKey(key)) {
             REENTRANT_LOCK.lock();
             try {

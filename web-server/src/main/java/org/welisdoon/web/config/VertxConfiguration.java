@@ -1,5 +1,6 @@
 package org.welisdoon.web.config;
 
+import com.alibaba.fastjson.parser.ParserConfig;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -73,7 +74,7 @@ public class VertxConfiguration {
     Reflections getReflections() {
         ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
         {
-            final Collection<URL> CollectUrl = new LinkedList<>();
+            final Collection<URL> CollectUrl = new HashSet<>();
             ApplicationContextProvider.getApplicationContext()
                     .getBeansWithAnnotation(ComponentScan.class).entrySet()
                     .stream()
@@ -88,19 +89,22 @@ public class VertxConfiguration {
                                     .basePackageClasses() : new Class[]{clz})
                     )
                     .forEach(aClass -> {
-                        CollectUrl.addAll(ClasspathHelper.forPackage(aClass.getPackageName()));
+                        addPathToReflections(CollectUrl, aClass);
                     });
             Arrays.stream(extraScanPath).forEach(path -> {
                 CollectUrl.addAll(ClasspathHelper.forPackage(path));
             });
-            URL url = ClasspathHelper.forClass(WebserverApplication.class);
-            if (!CollectUrl.contains(url))
-                CollectUrl.add(url);
+            addPathToReflections(CollectUrl, WebserverApplication.class);
             logger.warn(CollectUrl.toString());
             configurationBuilder.setUrls(CollectUrl);
             configurationBuilder.setInputsFilter(s -> s.toLowerCase().endsWith(".class") || s.toLowerCase().endsWith(".java"));
         }
         return new Reflections(configurationBuilder);
+    }
+
+    protected void addPathToReflections(Collection<URL> CollectUrl, Class clz) {
+        CollectUrl.addAll(ClasspathHelper.forPackage(clz.getPackageName()));
+        ParserConfig.getGlobalInstance().addAccept(String.format("%s.", clz.getPackageName()));
     }
 
     /**

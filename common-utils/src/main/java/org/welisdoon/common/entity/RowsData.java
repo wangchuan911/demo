@@ -36,7 +36,7 @@ public class RowsData<E> {
         this.headers = headers;
     }
 
-    public RowsData(Collection<E> collections, Class<E> eClass) {
+    public RowsData(Collection<E> collections, Class<E> eClass) throws Throwable {
         DataCache cache;
         /*if (!classMap.containsKey(collections.getClass())) {
             synchronized (classMap) {
@@ -140,7 +140,7 @@ public class RowsData<E> {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Throwable {
         List<Foo> integers = new LinkedList<>();
         integers.add(new Foo("a1", "b1"));
         integers.add(new Foo("a2", "b2"));
