@@ -3,6 +3,7 @@ package org.welisdoon.web.vertx.proxy;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 
@@ -15,7 +16,7 @@ import io.vertx.core.json.JsonArray;
 @ProxyGen
 @VertxGen
 public interface IVertxInvoker {
-    void invoke(String clzName, String method, String paramTypes, String params, String threadParams, Handler<AsyncResult<String>> handler);
+    Future<String> invoke(String clzName, String method, String paramTypes, String params, String threadParams);
 
-    void check(String clzName, String method, String paramTypes, String returnType, Handler<AsyncResult<Void>> handler);
+    Future<Void> check(String clzName, String method, String paramTypes, String returnType);
 }

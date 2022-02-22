@@ -150,8 +150,8 @@ public class VertxInvoker implements IVertxInvoker {
     }*/
 
     @Override
-    public void check(String clzName, String methodName, String paramTypesJson, String returnType, Handler<AsyncResult<Void>> handler) {
-        Future<Void> f = Future.future(promise -> {
+    public Future<Void> check(String clzName, String methodName, String paramTypesJson, String returnType) {
+        return Future.future(promise -> {
             try {
                 ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
                 if (!methodInfo.method.getReturnType().isAssignableFrom(Class.forName(returnType)) || Class.forName(returnType).isAssignableFrom(methodInfo.method.getReturnType())) {
@@ -162,7 +162,6 @@ public class VertxInvoker implements IVertxInvoker {
                 promise.fail(e);
             }
         });
-        f.onComplete(handler);
     }
 
     /*final static Map<Class, ParamHandler> BASE_CLASS_MAP = new HashMap<>();
@@ -202,7 +201,7 @@ public class VertxInvoker implements IVertxInvoker {
         final FastClass fastClass;
         final Map<String, MethodInfo> methodInfos;
 
-        public ClassInfo(String className) throws ClassNotFoundException {
+        ClassInfo(String className) throws ClassNotFoundException {
             this.clz = Class.forName(className);
             this.target = ApplicationContextProvider.getBean(this.clz);
             this.fastClass = FastClass.create(clz);
@@ -254,9 +253,9 @@ public class VertxInvoker implements IVertxInvoker {
     }
 
     @Override
-    public void invoke(String clzName, String methodName, String paramTypesJson, String paramsJson, String threadParamsJson, Handler<AsyncResult<String>> handler) {
+    public Future<String> invoke(String clzName, String methodName, String paramTypesJson, String paramsJson, String threadParamsJson) {
 
-        Future<String> f = Future.future(promise -> {
+        return Future.future(promise -> {
             try {
 
                 ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
@@ -288,6 +287,5 @@ public class VertxInvoker implements IVertxInvoker {
 
             }
         });
-        f.onComplete(handler);
     }
 }

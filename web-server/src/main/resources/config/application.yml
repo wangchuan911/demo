@@ -19,7 +19,7 @@ vertx:
       size: 4
   workerVerticle:
     instances: 2
-  clusterMode: hazelcast1
+  clusterMode: hazelcast
   scanPath: org.welisdoon.web
   dns:
     enable: false

@@ -11,6 +11,7 @@ import org.reflections.util.ConfigurationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.welisdoon.web.WebserverApplication;
+import org.welisdoon.web.cluster.ICluster;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.SpringVerticleFactory;
 import org.welisdoon.web.vertx.annotation.Verticle;
@@ -32,7 +33,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @Configuration
-@AutoConfigureAfter({ClusterConfiguration.class})
 @org.welisdoon.web.vertx.annotation.VertxConfiguration
 public class VertxConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(VertxConfiguration.class);
@@ -58,9 +58,6 @@ public class VertxConfiguration {
 
     @Value("${vertx.extraScanPath}")
     private String[] extraScanPath;
-
-    @Autowired
-    ClusterConfiguration clusterConfiguration;
 
     @Value("${vertx.dns.enable}")
     boolean dnsEnable;
@@ -115,41 +112,34 @@ public class VertxConfiguration {
         VertxOptions vertxOptions = new VertxOptions()
                 .setWorkerPoolSize(workerPoolSize)
                 .setMaxEventLoopExecuteTime(Long.MAX_VALUE);
-        this.optionManager(vertxOptions);
 
+        this.dnsManger(vertxOptions);
+        ICluster[] clusters = ApplicationContextProvider.getApplicationContext().getBeansOfType(ICluster.class).entrySet().stream().map(Map.Entry::getValue).toArray(ICluster[]::new);
+        switch (clusters.length) {
+            case 0:
+                this.deployVerticles().accept(Vertx.vertx(vertxOptions));
+                logger.info("service is running with single cluster.");
+                break;
+            case 1:
+                vertxOptions.setClusterManager(clusters[0].create());
+                Vertx.clusteredVertx(
+                        vertxOptions,
+                        result -> {
+                            if (result.succeeded()) {
+                                this.deployVerticles().accept(result.result());
+                                logger.info("service is running with cluster by {{}}.", clusters[0].name());
+                            } else {
+                                logger.error("cluster running with error: "
+                                        + result.cause().getMessage());
+                            }
+                        });
+                break;
+            default:
+                throw new RuntimeException("too many clusters!");
 
-        if (vertxOptions.getClusterManager() != null) {
-            Vertx.clusteredVertx(
-                    vertxOptions,
-                    result -> {
-                        if (result.succeeded()) {
-                            Vertx vertx = result.result();
-                            this.deployVerticles().accept(vertx);
-                            logger.info("service is running with cluster by hazelcast.");
-                            vertx.sharedData().getAsyncMap("aa", asyncMapAsyncResult -> {
-                                asyncMapAsyncResult.result().put("aa", "aa", voidAsyncResult -> {
-                                    System.out.println(voidAsyncResult.result());
-                                });
-                            });
-                        } else {
-                            logger.error("cluster running with error: "
-                                    + result.cause().getMessage());
-                        }
-                    });
-        } else {
-            Vertx vertx = Vertx.vertx(vertxOptions);
-            this.deployVerticles().accept(vertx);
-            logger.info("service is running with single instance hazelcast.");
         }
     }
 
-    //option初始化
-    void optionManager(VertxOptions vertxOptions) {
-        //集群配置
-        clusterConfiguration.clusterManager(vertxOptions);
-        this.dnsManger(vertxOptions);
-
-    }
 
     private void dnsManger(VertxOptions vertxOptions) {
         AddressResolverOptions options = new AddressResolverOptions();

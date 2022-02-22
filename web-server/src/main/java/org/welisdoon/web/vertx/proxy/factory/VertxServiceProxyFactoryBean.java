@@ -189,39 +189,29 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
     @Override
 
     public Future invoke(Object o, Method method, Object[] objects) throws Throwable {
-        Promise promise = Promise.promise();
         if (this.iVertxInvoker == null) {
             this.initInvoker();
         }
         MethodInfo methdoInfo = ObjectUtils.getMapValueOrNewSafe(METHDO_INFO_MAP, method, () -> new MethodInfo(method));
-        this.iVertxInvoker.invoke(
+        return this.iVertxInvoker.invoke(
                 tagetClass.getTypeName(),
                 method.getName(),
                 methdoInfo.paramTypesStr,
                 JSONArray.toJSONString(objects, SerializerFeature.WriteClassName),
-                "",
-                stringAsyncResult -> {
+                "")
+                .compose(resultString -> {
                     try {
-                        if (!stringAsyncResult.succeeded()) {
-                            promise.fail(stringAsyncResult.cause());
-                            return;
-                        }
-                        String resultString = stringAsyncResult.result();
                         switch (methdoInfo.returnType.getType()) {
                             case Base:
-                                promise.complete(TypeUtils.castToJavaBean(resultString, methdoInfo.returnClass));
-                                break;
+                                return Future.succeededFuture(TypeUtils.castToJavaBean(resultString, methdoInfo.returnClass));
                             default:
-                                promise.complete(JSON.toJavaObject((JSON) JSON.parse(resultString), methdoInfo.returnClass));
-                                break;
+                                return Future.succeededFuture(resultString == null ? null : JSON.toJavaObject((JSON) JSON.parse(resultString), methdoInfo.returnClass));
                         }
                     } catch (Throwable e) {
-                        promise.fail(e);
+                        return Future.failedFuture(e);
                     } finally {
 
                     }
-                }
-        );
-        return promise.future();
+                });
     }
 }
