@@ -170,22 +170,13 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
         @Override
         public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
-            Set<String> distinct = new HashSet<>();
             ReflectionUtils
-                    .getAllMethods(aClass, method -> {
-                        Type[] type = method.getGenericParameterTypes();
-                        String key = String.format("%s-%s", method.getName(), Arrays.toString(type));
-                        if (method.getDeclaredAnnotation(VertxRegister.class) != null) {
-                            if (method.getDeclaringClass() == aClass) {
-                                distinct.add(key);
-                                return true;
-                            } else {
-                                return !distinct.contains(key) && type.length == 0 ? true : Arrays.stream(type).filter(type1 -> type1 instanceof TypeVariable).count() == 0;
-                            }
-                        }
-                        return false;
-                    })
+                    .getAllMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class))
                     .stream()
+                    .collect(Collectors.toMap(method -> String.format("%s-%s", method.getName(), Arrays.toString(method.getGenericExceptionTypes())), method -> method, (o, o2) -> o2.getDeclaringClass() == aClass ? o2 : o))
+                    .entrySet()
+                    .stream()
+                    .map(Map.Entry::getValue)
                     .forEach(method -> {
                         VertxRegister annotation = method.getDeclaredAnnotation(VertxRegister.class);
                         try {
@@ -213,7 +204,6 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                             logger.error(e.getMessage(), e);
                         }
                     });
-            GCUtils.release(distinct);
         }
 
         @Override
