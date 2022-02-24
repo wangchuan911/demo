@@ -1,6 +1,7 @@
 package org.welisdoon.web.common;
 
 public interface CommonConst {
+    @Deprecated
     interface WebParamsKeys {
         String SPRING_BEAN = "A1",
                 BEAN_METHOD = "A2",
