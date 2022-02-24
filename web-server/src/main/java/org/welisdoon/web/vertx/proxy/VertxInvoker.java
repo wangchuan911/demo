@@ -148,7 +148,7 @@ public class VertxInvoker implements IVertxInvoker {
     public Future<Void> check(String clzName, String methodName, String paramTypesJson, String returnType) {
         return Future.future(promise -> {
             try {
-                ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
+                ClassInfo.MethodInfo methodInfo = ClassInfo.getMethodInfo(clzName, methodName, paramTypesJson);
                 if (!methodInfo.method.getReturnType().isAssignableFrom(Class.forName(returnType)) || Class.forName(returnType).isAssignableFrom(methodInfo.method.getReturnType())) {
                     throw new NoSuchMethodException(String.format("Method [ %s ] return type is not matched! expect:[ %s ]; actual:[ %s ];", methodName, methodInfo.method.getReturnType().getName(), returnType));
                 }
@@ -196,6 +196,7 @@ public class VertxInvoker implements IVertxInvoker {
         final Object target;
         final FastClass fastClass;
         final static Map<String, ClassInfo.MethodInfo> METHOD_INFO_MAP = new HashMap<>();
+        final static Map<String, ClassInfo> CLASS_INFO_MAP = new HashMap<>();
 
         ClassInfo(String className) throws ClassNotFoundException {
             this.clz = Class.forName(className);
@@ -239,13 +240,11 @@ public class VertxInvoker implements IVertxInvoker {
                 return this.fastMethod.invoke(target, values);
             }
         }
-    }
 
-    final static Map<String, ClassInfo> CLASS_INFO_MAP = new HashMap<>();
-
-    ClassInfo.MethodInfo getMethodInfo(String clzName, String methodName, String paramTypesJson) throws Throwable {
-        ClassInfo classInfo = ObjectUtils.getMapValueOrNewSafe(CLASS_INFO_MAP, clzName, () -> new ClassInfo(clzName));
-        return classInfo.getMethod(methodName, paramTypesJson);
+        static ClassInfo.MethodInfo getMethodInfo(String clzName, String methodName, String paramTypesJson) throws Throwable {
+            ClassInfo classInfo = ObjectUtils.getMapValueOrNewSafe(CLASS_INFO_MAP, clzName, () -> new ClassInfo(clzName));
+            return classInfo.getMethod(methodName, paramTypesJson);
+        }
     }
 
     @Override
@@ -253,8 +252,7 @@ public class VertxInvoker implements IVertxInvoker {
 
         return Future.future(promise -> {
             try {
-
-                ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
+                ClassInfo.MethodInfo methodInfo = ClassInfo.getMethodInfo(clzName, methodName, paramTypesJson);
                 Object result = methodInfo.invoke(paramsJson);
                 if (result == null) {
                     promise.complete(null);
