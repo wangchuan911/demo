@@ -278,8 +278,6 @@ public class AppUserWebRouter {
             List<ImageContentVO> images = imageContentDao.list(contentVO);
             if (!CollectionUtils.isEmpty(images)) {
                 htmlTemplateWebRouter.cacheImage(routingContext, Utils.pathOffset(routingContext.request().path(), routingContext), () -> imageContentDao.get(images.get(0).getId()));
-                routingContext.response().setChunked(true);
-                routingContext.next();
                 return;
             }
             abstractWechatConfiguration.getWechatAsyncMeassger()
