@@ -20,6 +20,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.FileSystemAccess;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -262,9 +263,7 @@ public class AppUserWebRouter {
 
 
         Environment environment = ApplicationContextProvider.getBean(Environment.class);
-        StaticHandler staticHandler = StaticHandler.create()
-                .setAllowRootFileSystemAccess(true)
-                .setWebRoot(environment.getProperty("temp.filePath"));
+        StaticHandler staticHandler = StaticHandler.create(FileSystemAccess.ROOT, environment.getProperty("temp.filePath"));
         staticHandler.setAlwaysAsyncFS(true);
         staticHandler.setCachingEnabled(false);
 

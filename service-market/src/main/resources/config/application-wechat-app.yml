@@ -66,3 +66,4 @@ wechat-public-hubida:
     subscribeSend:  https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={{ACCESS_TOKEN}}
     userInfo:  https://api.weixin.qq.com/cgi-bin/user/info?access_token={{ACCESS_TOKEN}}&openid={{OPEN_ID}}&lang=zh_CN
     customSend: https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token={{ACCESS_TOKEN}}
+    getuserphonenumber: https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token={{ACCESS_TOKEN}}
