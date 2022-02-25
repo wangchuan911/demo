@@ -1,4 +1,4 @@
-package com.hubidaauto.servmarket.module.scheduler.verticle;
+package org.welisdoon.web.vertx.verticle;
 
 import org.springframework.stereotype.Component;
 import org.welisdoon.web.vertx.annotation.Verticle;
