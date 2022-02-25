@@ -33,6 +33,7 @@ import org.welisdoon.web.common.CommonConst;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
+import org.welisdoon.web.entity.wechat.WeChatRefundOrder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -184,7 +185,8 @@ public class InviteRebateOrderRouter {
                     .wechatMarketTransfersRequest((WeChatMarketTransferOrder)
                             new WeChatMarketTransferOrder()
                                     .setUserId(userId.toString())
-                                    .setPayClass(InviteRebateOrderService.class.getName()))
+                                    .setPayClass(InviteRebateOrderService.class.getName())
+                                    .setNonce(WeChatMarketTransferOrder.generateNonce()))
                     .onSuccess(jsonObject -> {
                         InviteRebateCountVO countVO = inviteRebateCountDao.get(userId);
                         countVO.setPaidRebate(countVO.getTotalRebate());

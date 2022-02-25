@@ -143,14 +143,14 @@ public class InviteRebateOrderService implements IWechatPayHandler {
     @Override
     public Future<MarketTransferRequsetMesseage> marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
         Long userid = Long.valueOf(weChatPayOrder.getUserId());
+        appUserDao.get(userid);
         InviteRebateCountVO countVO = inviteRebateCountDao.get(userid);
         AppUserVO userVO = appUserDao.get(userid);
         return Future.succeededFuture(new MarketTransferRequsetMesseage()
-                .setPartnerTradeNo(String.format("%08dMT%020d", weChatPayOrder.getUserId(), System.currentTimeMillis()))
+                .setPartnerTradeNo(String.format("IRO%04dC%04dS%018dD", countVO.getTotalRebate() - countVO.getPaidRebate(), weChatPayOrder.getUserId(), System.currentTimeMillis()))
                 .setOpenid(userVO.getAppId())
                 .setCheckName("NO_CHECK")
                 .setAmount(countVO.getTotalRebate() - countVO.getPaidRebate())
-                .setNonceStr(WeChatPayOrder.generateNonce())
                 .setDesc("推广费用"));
     }
 

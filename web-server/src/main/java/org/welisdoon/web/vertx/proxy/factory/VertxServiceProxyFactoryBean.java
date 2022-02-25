@@ -205,7 +205,7 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
                             case Base:
                                 return Future.succeededFuture(TypeUtils.castToJavaBean(resultString, methdoInfo.returnClass));
                             default:
-                                return Future.succeededFuture(resultString == null ? null : JSON.toJavaObject((JSON) JSON.parse(resultString), methdoInfo.returnClass));
+                                return Future.succeededFuture(this.toJavaObject(JSON.parse(resultString), methdoInfo.returnClass));
                         }
                     } catch (Throwable e) {
                         return Future.failedFuture(e);
@@ -213,5 +213,11 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
 
                     }
                 });
+    }
+
+    Object toJavaObject(Object object, Class<?> tagetClass) {
+        if (object instanceof JSON)
+            return JSON.toJavaObject((JSON) object, tagetClass);
+        return object;
     }
 }

@@ -10,6 +10,8 @@ import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.ext.web.handler.BodyHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -38,6 +40,7 @@ import java.time.LocalDateTime;
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
 @VertxRoutePath("{wechat-app-hubida.path.app}/order")
 public class OrderWebRouter {
+    Logger logger = LoggerFactory.getLogger(this.getClass());
     AbstractWechatMiniProgramsConfiguration customWeChatAppConfiguration;
     AppUserDao appUserDao;
     IBaseOrderService orderService;
@@ -148,6 +151,7 @@ public class OrderWebRouter {
             orderService.order(routingContext.getBodyAsString()).onSuccess(value -> {
                 routingContext.end(JSONObject.toJSONString(value));
             }).onFailure(throwable -> {
+                logger.error(throwable.getMessage(), throwable);
                 routingContext.response().setStatusCode(500).end(throwable.getMessage());
             });
         });
