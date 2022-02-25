@@ -117,7 +117,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
     public void start(OverTimeOrderCondtion condition) {
 
         OverTimeOrderVO orderVO = orderDao.get(condition.getId());
-        OrderVO relaOrder = orderDao.get(orderVO.getRelaOrderId());
+        OrderVO relaOrder = baseOrderDao.get(orderVO.getRelaOrderId());
         Object service = BaseOrderService.ORDER_CLASSES.get(relaOrder.getClassId());
         if (!IOverTimeOperationable.class.isAssignableFrom(ApplicationContextProvider.getRealClass(service.getClass()))) {
             throw new RuntimeException(String.format("该类型[%s]单子不允许加时", relaOrder.getClassId()));
