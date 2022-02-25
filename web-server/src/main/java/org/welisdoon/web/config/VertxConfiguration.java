@@ -156,9 +156,12 @@ public class VertxConfiguration {
         vertxOptions.setAddressResolverOptions(options);
     }
 
+    @Autowired(required = false)
+    AbstractMyVerticle.Options options;
+
     private Consumer<Vertx> deployVerticles() {
         Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
-        AbstractMyVerticle.initVertxInSpring(new AbstractMyVerticle.Options());
+        AbstractMyVerticle.initVertxInSpring(options == null ? new AbstractMyVerticle.Options() : options);
         Consumer<Vertx> runner = vertx -> {
             // The verticle factory is registered manually because it is created by the Spring container
             vertx.registerVerticleFactory(verticleFactory);

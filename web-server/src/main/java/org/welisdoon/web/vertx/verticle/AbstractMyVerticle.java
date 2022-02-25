@@ -1,5 +1,6 @@
 package org.welisdoon.web.vertx.verticle;
 
+import com.google.common.base.Predicate;
 import io.vertx.core.*;
 
 import io.vertx.ext.web.Router;
@@ -65,7 +66,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     final public synchronized static void initVertxInSpring(Options options) {
         if (ENTRYS != null) return;
         Map<String, Entry> map = new HashMap<>();
-        Register[] initEntry = Arrays.stream(options.getRegister()).map(aClass -> {
+        Register[] initEntry = options.getRegister().stream().map(aClass -> {
             try {
                 return aClass.getConstructor().newInstance();
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
@@ -121,6 +122,16 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
     public static interface Register {
         void scan(Class<?> aClass, Map<String, Entry> map);
+
+        default Method[] getMethod(Class<?> aClass, Predicate<? super Method>... predicates) {
+            return ReflectionUtils
+                    .getAllMethods(aClass, predicates)
+                    .stream()
+                    .collect(Collectors.toMap(method -> String.format("%s-%s", method.getName(), Arrays.toString(method.getGenericExceptionTypes())), method -> method, (o, o2) -> o2.getDeclaringClass() == aClass ? o2 : o))
+                    .entrySet()
+                    .stream()
+                    .map(Map.Entry::getValue).toArray(Method[]::new);
+        }
     }
 
     public abstract static class Entry {
@@ -140,8 +151,8 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
             return false;
         }
 
-        static String key(Object... objects) {
-            return Arrays.stream(objects).map(Object::toString).collect(Collectors.joining("-"));
+        String key(Object... objects) {
+            return this.getClass().getName() + (objects.length > 0 ? "-" : "") + Arrays.stream(objects).map(Object::toString).collect(Collectors.joining("-"));
         }
 
         abstract void inject(Vertx vertx, AbstractMyVerticle verticle);
@@ -170,13 +181,14 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
         @Override
         public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
-            ReflectionUtils
+            /*ReflectionUtils
                     .getAllMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class))
                     .stream()
                     .collect(Collectors.toMap(method -> String.format("%s-%s", method.getName(), Arrays.toString(method.getGenericExceptionTypes())), method -> method, (o, o2) -> o2.getDeclaringClass() == aClass ? o2 : o))
                     .entrySet()
                     .stream()
-                    .map(Map.Entry::getValue)
+                    .map(Map.Entry::getValue)*/
+            Arrays.stream(this.getMethod(aClass, ReflectionUtils.withAnnotation(VertxRegister.class)))
                     .forEach(method -> {
                         VertxRegister annotation = method.getDeclaredAnnotation(VertxRegister.class);
                         try {
@@ -187,7 +199,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
                             if (vertCls == Verticle.class) return;
                             VertxRegisterEntry vertxRegisterEntry;
-                            String key = Entry.key(this.getClass(), vertCls, innertype, aClass);
+                            String key = this.key(vertCls, innertype, aClass);
                             if (map.containsKey(key)) {
                                 vertxRegisterEntry = (VertxRegisterEntry) map.get(key);
                                 vertxRegisterEntry.methods.add(method);
@@ -260,17 +272,16 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
 
     public static class Options {
-        Class<? extends Register>[] register;
-
+        Set<Class<? extends Register>> register = Set.of(VertxRegisterEntry.class, AbstractWebVerticle.VertxRouterEntry.class);
 
         public void setRegister(Class<? extends Register>... register) {
-            this.register = register;
+            Collection<Class<? extends Register>> set = new LinkedList<>(List.of(register));
+            set.addAll(this.register);
+            this.register = Set.copyOf(set);
         }
 
-        public Class<? extends Register>[] getRegister() {
-            if (register == null)
-                return new Class[]{VertxRegisterEntry.class, AbstractWebVerticle.VertxRouterEntry.class};
-            return register;
+        public Set<Class<? extends Register>> getRegister() {
+            return this.register;
         }
     }
 }

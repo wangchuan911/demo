@@ -137,12 +137,13 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
 
         @Override
         public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
-            ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
-                    .stream()
+            /*ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
+                    .stream()*/
+            Arrays.stream(this.getMethod(aClass, ReflectionUtils.withAnnotation(VertxRouter.class)))
                     .filter(method -> Arrays.stream(method.getParameterTypes())
                             .filter(bClass -> bClass == RoutingContextChain.class).findFirst().isPresent())
                     .forEach(method -> {
-                        String key = Entry.key(this.getClass(), aClass);
+                        String key = this.key(aClass);
                         VertxRouterEntry routerEntry;
                         if (map.containsKey(key)) {
                             routerEntry = (VertxRouterEntry) map.get(key);
