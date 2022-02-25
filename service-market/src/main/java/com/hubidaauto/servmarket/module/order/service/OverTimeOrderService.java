@@ -124,7 +124,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
         }
         ((IOverTimeOperationable) service).overtime(orderVO);
         orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
-        orderDao.put(orderVO);
+        baseOrderDao.put(orderVO);
     }
 
     @Override
