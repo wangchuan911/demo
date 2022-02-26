@@ -66,8 +66,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
 
     final public synchronized static Future<CompositeFuture> prepare(Vertx vertx, Options options) {
-        if (prepare) return Future.failedFuture("isLoading");
-        vertx.registerVerticleFactory(options.factory);
+        if (prepare) return Future.failedFuture(new StackOverflowError("verticle is running!"));
         prepare = true;
         Map<String, Entry> map = new HashMap<>();
         Register[] initEntry = options.getRegister().stream().map(aClass -> {
@@ -98,6 +97,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                         .filter(entry -> register.getClass().isAssignableFrom(entry.getClass())))
                 .toArray(Entry[]::new);
 
+        vertx.registerVerticleFactory(options.factory);
         return CompositeFuture
                 .all(options.verticle
                         .stream()
@@ -111,12 +111,17 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                                         // deploy multiple instances to avoid serializing requests.
                                         .setInstances(options.workerInstancesMax);
                             }
-                            return vertx.deployVerticle(verticleName, deploymentOptions)
-                                    .onSuccess(event -> {
-                                        logger.info("deploy success!{}", verticleName);
-                                    }).onFailure(event -> {
-                                        logger.error("Failed to deploy book verticle", event);
-                                    });
+                            Promise<Void> promise = Promise.promise();
+                            vertx.deployVerticle(verticleName, deploymentOptions, event -> {
+                                promise.complete();
+                                if (event.succeeded())
+                                    logger.info("deploy success!{}", verticleName);
+                                else {
+                                    logger.error("Failed to deploy book verticle", event);
+                                    logger.error(event.cause().getMessage(), event.cause());
+                                }
+                            });
+                            return promise.future();
                         })
                         .collect(Collectors.toList()))
                 .onComplete(event -> {
