@@ -9,6 +9,7 @@ import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Component;
@@ -33,7 +34,7 @@ import java.util.*;
  * @Date 2022/1/8 15:10
  */
 @Component("schedulerVerticle")
-@ConfigurationProperties(prefix = "vertx.scheduler")
+@ConditionalOnProperty(prefix = "vertx", name = "scheduler")
 @Verticle
 public class SchedulerVerticle extends AbstractMyVerticle {
     protected static final Logger logger = LoggerFactory.getLogger(SchedulerVerticle.class);
