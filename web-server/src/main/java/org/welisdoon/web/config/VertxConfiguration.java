@@ -117,8 +117,8 @@ public class VertxConfiguration {
         ICluster[] clusters = ApplicationContextProvider.getApplicationContext().getBeansOfType(ICluster.class).entrySet().stream().map(Map.Entry::getValue).toArray(ICluster[]::new);
         switch (clusters.length) {
             case 0:
-                this.deployVerticles().accept(Vertx.vertx(vertxOptions));
-                logger.info("service is running with single cluster.");
+                this.deployVerticles(Vertx.vertx(vertxOptions));
+                logger.info("service is running with single instance.");
                 break;
             case 1:
                 vertxOptions.setClusterManager(clusters[0].create());
@@ -126,8 +126,8 @@ public class VertxConfiguration {
                         vertxOptions,
                         result -> {
                             if (result.succeeded()) {
-                                this.deployVerticles().accept(result.result());
-                                logger.info("service is running with cluster by {{}}.", clusters[0].name());
+                                this.deployVerticles(result.result());
+                                logger.info("service is running with cluster by {}.", clusters[0].name());
                             } else {
                                 logger.error("cluster running with error: "
                                         + result.cause().getMessage());
@@ -159,31 +159,31 @@ public class VertxConfiguration {
     @Autowired(required = false)
     AbstractMyVerticle.Options options;
 
-    private Consumer<Vertx> deployVerticles() {
+    protected void deployVerticles(Vertx vertx) {
         Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
         AbstractMyVerticle.initVertxInSpring(options == null ? new AbstractMyVerticle.Options() : options);
-        Consumer<Vertx> runner = vertx -> {
-            // The verticle factory is registered manually because it is created by the Spring container
-            vertx.registerVerticleFactory(verticleFactory);
 
-            reflections.getTypesAnnotatedWith(Verticle.class).stream().forEach(clz -> {
-                Verticle verticle = clz.getAnnotation(Verticle.class);
-                DeploymentOptions options = new DeploymentOptions();
-                String verticleName = verticleFactory.naming(clz.getName());
-                if (verticle.worker()) {
-                    options.setWorker(true)
-                            // As worker verticles are never executed concurrently by Vert.x by more than one thread,
-                            // deploy multiple instances to avoid serializing requests.
-                            .setInstances(workerInstancesMax);
+        // The verticle factory is registered manually because it is created by the Spring container
+        vertx.registerVerticleFactory(verticleFactory);
+
+        reflections.getTypesAnnotatedWith(Verticle.class).stream().forEach(clz -> {
+            Verticle verticle = clz.getAnnotation(Verticle.class);
+            DeploymentOptions options = new DeploymentOptions();
+            String verticleName = verticleFactory.naming(clz.getName());
+            if (verticle.worker()) {
+                options.setWorker(true)
+                        // As worker verticles are never executed concurrently by Vert.x by more than one thread,
+                        // deploy multiple instances to avoid serializing requests.
+                        .setInstances(workerInstancesMax);
+            }
+            vertx.deployVerticle(verticleName, options, ar -> {
+                if (ar.failed()) {
+                    logger.error("Failed to deploy book verticle", ar.cause());
+                } else {
+                    logger.info("deploy success!{}", verticleName);
                 }
-                vertx.deployVerticle(verticleName, options, ar -> {
-                    if (ar.failed()) {
-                        logger.error("Failed to deploy book verticle", ar.cause());
-                    } else {
-                        logger.info("deploy success!{}", verticleName);
-                    }
-                });
             });
+        });
 
             /*//多线程计数
             CountDownLatch deployLatch = new CountDownLatch(1);
@@ -218,8 +218,6 @@ public class VertxConfiguration {
                     deployLatch.countDown();
                 });
             }*/
-        };
-        return runner;
     }
 
     /*@VertxRegister(WorkerVerticle.class)

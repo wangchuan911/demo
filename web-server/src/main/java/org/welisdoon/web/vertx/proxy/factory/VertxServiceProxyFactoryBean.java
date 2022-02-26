@@ -2,26 +2,21 @@ package org.welisdoon.web.vertx.proxy.factory;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.cglib.proxy.InvocationHandler;
 import org.springframework.cglib.proxy.Proxy;
-import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.vertx.annotation.VertxServiceProxy;
 import org.welisdoon.web.vertx.proxy.IVertxInvoker;
-import org.welisdoon.web.vertx.proxy.VertxInvoker;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -100,7 +95,7 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
                     if (!iVertxInvokers.containsKey(key)) {
                         this.iVertxInvoker = AsyncProxyUtils.
                                 createServiceProxyBuilder(
-                                        ApplicationContextProvider.getBean(StandaredVerticle.class).getVertx(),
+                                        ApplicationContextProvider.getBean(MainWebVerticle.class).getVertx(),
                                         key,
                                         IVertxInvoker.class);
                         iVertxInvokers.put(key, this.iVertxInvoker);

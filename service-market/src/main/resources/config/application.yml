@@ -1,12 +1,5 @@
 ################### HTTP Configuration   ##########################
-server:
-  web:
-    port: 443
-    sslEnable: true
-    sslKeyType: pfx
-    sslKeyStore: /opt/wechat/thekeystore
-    sslPassword: e75M8y7K
-    sslKeyPath:
+
 spring:
   profiles:
     active: [atomSrv,database,wechat-app,order-flow]
@@ -15,6 +8,14 @@ spring:
 ################### Vert.x Configuration ##########################
 
 vertx:
+  webs:
+    main:
+      port: 443
+      sslEnable: true
+      sslKeyType: pfx
+      sslKeyStore: /opt/wechat/thekeystore
+      sslPassword: e75M8y7K
+      sslKeyPath:
   worker:
     pool:
       size: 4
