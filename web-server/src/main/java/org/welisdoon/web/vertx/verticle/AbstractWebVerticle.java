@@ -198,8 +198,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                         });
 
                     }
-                    String suffix = getRegexPath(vertxRouter.path()),
-                            pathString;
+                    String pathString;
 
                     /*String pathString = vertxRouter.path(), part0, part1, part2;
                     final String replaceFormat = "%s$3";
@@ -223,13 +222,13 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                     }*/
                     switch (vertxRouter.mode()) {
                         case Path:
-                            route.path(pathString = prefix + suffix);
+                            route.path(pathString = prefix + getRegexPath(vertxRouter.path()));
                             break;
                         case PathRegex:
-                            route.pathRegex(pathString = prefix.replaceAll("\\/", "\\\\/") + suffix);
+                            route.pathRegex(pathString = prefix.replaceAll("\\/", "\\\\/") + getRegexPath(vertxRouter.path()));
                             break;
                         case VirtualHost:
-                            route.virtualHost(pathString = prefix + suffix);
+                            route.virtualHost(pathString = prefix + getRegexPath(vertxRouter.path()));
                             break;
                         default:
                             throw new RuntimeException(String.format("no support mode[%s]", vertxRouter.mode().toString()));
