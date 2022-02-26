@@ -165,7 +165,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
 
                 VertxRoutePath routePath = this.ServiceClass.getAnnotation(VertxRoutePath.class);
                 if ((routePath != null ?
-                        routePath.verticle().isAssignableFrom(this.ServiceClass)
+                        routePath.verticle().isAssignableFrom(ApplicationContextProvider.getRealClass(verticle.getClass()))
                         : MainWebVerticle.class != ApplicationContextProvider.getRealClass(verticle.getClass())))
                     return;
 
