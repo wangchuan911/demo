@@ -1,15 +1,14 @@
 package org.welisdoon.web.config;
 
 import com.alibaba.fastjson.parser.ParserConfig;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
+import io.vertx.core.*;
 import io.vertx.core.dns.AddressResolverOptions;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 import org.welisdoon.web.WebserverApplication;
 import org.welisdoon.web.cluster.ICluster;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -23,14 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
 import java.net.URL;
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Configuration
 @org.welisdoon.web.vertx.annotation.VertxConfiguration
@@ -161,70 +159,19 @@ public class VertxConfiguration {
 
     protected void deployVerticles(Vertx vertx) {
         Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
-        AbstractMyVerticle.initVertxInSpring(options == null ? new AbstractMyVerticle.Options() : options);
 
-        // The verticle factory is registered manually because it is created by the Spring container
-        vertx.registerVerticleFactory(verticleFactory);
-
-        reflections.getTypesAnnotatedWith(Verticle.class).stream().forEach(clz -> {
-            Verticle verticle = clz.getAnnotation(Verticle.class);
-            DeploymentOptions options = new DeploymentOptions();
-            String verticleName = verticleFactory.naming(clz.getName());
-            if (verticle.worker()) {
-                options.setWorker(true)
-                        // As worker verticles are never executed concurrently by Vert.x by more than one thread,
-                        // deploy multiple instances to avoid serializing requests.
-                        .setInstances(workerInstancesMax);
-            }
-            vertx.deployVerticle(verticleName, options, ar -> {
-                if (ar.failed()) {
-                    logger.error("Failed to deploy book verticle", ar.cause());
-                } else {
-                    logger.info("deploy success!{}", verticleName);
-                }
-            });
-        });
-
-            /*//多线程计数
-            CountDownLatch deployLatch = new CountDownLatch(1);
-            //多线程时使用该类可以提供原子性操作
-            AtomicBoolean failed = new AtomicBoolean(false);
-            {
-                String verticleName = verticleFactory.prefix() + ":" + StandaredVerticle.class.getName();
-                vertx.deployVerticle(verticleName, ar -> {
-                    if (ar.failed()) {
-                        logger.error("Failed to deploy book verticle", ar.cause());
-                        //如果failed的值是false则置为true
-                        failed.compareAndSet(false, true);
-                    }
-                    //发布成功计数减1
-                    deployLatch.countDown();
-                });
-            }
-            {
-                DeploymentOptions workerDeploymentOptions = new DeploymentOptions()
-                        .setWorker(true)
-                        // As worker verticles are never executed concurrently by Vert.x by more than one thread,
-                        // deploy multiple instances to avoid serializing requests.
-                        .setInstances(workerInstancesMax);
-                String workerVerticleName = verticleFactory.prefix() + ":" + WorkerVerticle.class.getName();
-                vertx.deployVerticle(workerVerticleName, workerDeploymentOptions, ar -> {
-                    if (ar.failed()) {
-                        logger.error("Failed to deploy verticle", ar.cause());
-                        //如果failed的值是false则置为true
-                        failed.compareAndSet(false, true);
-                    }
-                    //发布成功计数减1
-                    deployLatch.countDown();
-                });
-            }*/
+        AbstractMyVerticle.prepare(vertx, options != null ? options :
+                new AbstractMyVerticle.Options()
+                        .setRegister(reflections.getSubTypesOf(AbstractMyVerticle.Register.class).toArray(Class[]::new))
+                        .setFactory(verticleFactory)
+                        .setVerticle(reflections
+                                .getTypesAnnotatedWith(Verticle.class)
+                                .stream()
+                                .filter(aClass -> ApplicationContextProvider.getApplicationContext()
+                                        .containsBean(aClass.getAnnotation(Component.class).value())).toArray(Class[]::new)
+                        )
+                        .setWorkerInstancesMax(workerInstancesMax)
+        );
     }
 
-    /*@VertxRegister(WorkerVerticle.class)
-    public Consumer<Vertx> createAsyncService() {
-        Consumer<Vertx> vertxConsumer = vertx1 -> {
-            logger.info(String.format("create AsyncService:%s", AsyncProxyUtils.createServiceBinder(vertx1, null, ICommonAsynService.class)));
-        };
-        return vertxConsumer;
-    }*/
 }

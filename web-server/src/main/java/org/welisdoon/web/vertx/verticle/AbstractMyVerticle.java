@@ -3,6 +3,7 @@ package org.welisdoon.web.vertx.verticle;
 import com.google.common.base.Predicate;
 import io.vertx.core.*;
 
+import io.vertx.core.spi.VerticleFactory;
 import io.vertx.ext.web.Router;
 
 
@@ -26,6 +27,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(AbstractMyVerticle.class);
 
     private static Entry[] ENTRYS;
+    private static volatile boolean prepare = false;
 
     @Override
     public void start() {
@@ -63,8 +65,10 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     }*/
 
 
-    final public synchronized static void initVertxInSpring(Options options) {
-        if (ENTRYS != null) return;
+    final public synchronized static Future<CompositeFuture> prepare(Vertx vertx, Options options) {
+        if (prepare) return Future.failedFuture("isLoading");
+        vertx.registerVerticleFactory(options.factory);
+        prepare = true;
         Map<String, Entry> map = new HashMap<>();
         Register[] initEntry = options.getRegister().stream().map(aClass -> {
             try {
@@ -73,8 +77,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                 return ApplicationContextProvider.getBean(aClass);
             }
         }).filter(Objects::nonNull).toArray(Register[]::new);
-        /*ApplicationContextProvider.getBean(Reflections.class).getTypesAnnotatedWith(VertxConfiguration.class)
-                .stream()*/
+
         ApplicationContextProvider
                 .getApplicationContext()
                 .getBeansWithAnnotation(VertxConfiguration.class)
@@ -87,8 +90,38 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                         entry.scan(aClass, map);
                     });
                 });
-        ENTRYS = map.entrySet().stream().map(handlerEntryListEntry -> handlerEntryListEntry.getValue()).toArray(Entry[]::new);
-        ENTRYS = Arrays.stream(initEntry).flatMap(register -> Arrays.stream(ENTRYS).filter(entry -> register.getClass().isAssignableFrom(entry.getClass()))).toArray(Entry[]::new);
+
+        ENTRYS = Arrays
+                .stream(initEntry)
+                .flatMap(register -> map.entrySet()
+                        .stream().map(handlerEntryListEntry -> handlerEntryListEntry.getValue())
+                        .filter(entry -> register.getClass().isAssignableFrom(entry.getClass())))
+                .toArray(Entry[]::new);
+
+        return CompositeFuture
+                .all(options.verticle
+                        .stream()
+                        .map(clz -> {
+                            org.welisdoon.web.vertx.annotation.Verticle verticle = clz.getAnnotation(org.welisdoon.web.vertx.annotation.Verticle.class);
+                            DeploymentOptions deploymentOptions = new DeploymentOptions();
+                            String verticleName = String.format("%s:%s", options.factory.prefix(), clz.getName());
+                            if (verticle.worker()) {
+                                deploymentOptions.setWorker(true)
+                                        // As worker verticles are never executed concurrently by Vert.x by more than one thread,
+                                        // deploy multiple instances to avoid serializing requests.
+                                        .setInstances(options.workerInstancesMax);
+                            }
+                            return vertx.deployVerticle(verticleName, deploymentOptions)
+                                    .onSuccess(event -> {
+                                        logger.info("deploy success!{}", verticleName);
+                                    }).onFailure(event -> {
+                                        logger.error("Failed to deploy book verticle", event);
+                                    });
+                        })
+                        .collect(Collectors.toList()))
+                .onComplete(event -> {
+                    ENTRYS = GCUtils.release(ENTRYS);
+                });
     }
 
 
@@ -272,16 +305,41 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
 
     public static class Options {
-        Set<Class<? extends Register>> register = Set.of(VertxRegisterEntry.class, AbstractWebVerticle.VertxRouterEntry.class);
+        Set<Class<? extends Register>> register;
+        Set<Class<? extends Verticle>> verticle;
+        VerticleFactory factory;
+        int workerInstancesMax = 1;
 
-        public void setRegister(Class<? extends Register>... register) {
-            Collection<Class<? extends Register>> set = new LinkedList<>(List.of(register));
-            set.addAll(this.register);
-            this.register = Set.copyOf(set);
+        public Options setRegister(Class<? extends Register>... register) {
+            this.register = Set.of(register);
+            return this;
+        }
+
+        public Options setVerticle(Class<? extends Verticle>... verticle) {
+            this.verticle = Set.of(verticle);
+            return this;
+        }
+
+        public Options setFactory(VerticleFactory factory) {
+            this.factory = factory;
+            return this;
+        }
+
+        public Set<Class<? extends Verticle>> getVerticle() {
+            return verticle;
+        }
+
+        public VerticleFactory getFactory() {
+            return factory;
         }
 
         public Set<Class<? extends Register>> getRegister() {
             return this.register;
+        }
+
+        public Options setWorkerInstancesMax(int workerInstancesMax) {
+            this.workerInstancesMax = Math.max(workerInstancesMax, 1);
+            return this;
         }
     }
 }
