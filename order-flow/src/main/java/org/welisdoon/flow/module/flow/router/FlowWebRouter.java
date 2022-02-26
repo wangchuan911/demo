@@ -1,7 +1,6 @@
 package org.welisdoon.flow.module.flow.router;
 
 import com.alibaba.fastjson.JSONObject;
-import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,7 +24,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
  */
 @Component
 @ConditionalOnProperty(prefix = "order-flow.demo", name = "router")
-@VertxRoutePath("/demo/flow")
+@VertxRoutePath(prefix = "/demo/flow")
 @VertxConfiguration
 public class FlowWebRouter {
     FlowService flowService;

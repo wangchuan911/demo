@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -23,7 +22,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 @Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-@VertxRoutePath("{wechat-app-hubida.path.app}/region")
+@VertxRoutePath(prefix = "{wechat-app-hubida.path.app}/region")
 public class RegionWebRouter {
 
 

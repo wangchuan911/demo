@@ -3,10 +3,8 @@ package com.hubidaauto.servmarket.module.order.web;
 import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.goods.dao.OverTimeItemLinkDao;
-import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
 import com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO;
 import com.hubidaauto.servmarket.module.goods.entity.OverTimeItemVO;
-import com.hubidaauto.servmarket.module.order.dao.OverTimeOrderDao;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,7 +24,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 @Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-@VertxRoutePath("{wechat-app-hubida.path.app}/overtime")
+@VertxRoutePath(prefix = "{wechat-app-hubida.path.app}/overtime")
 public class OverWorkRouter {
     ItemTypeDao itemTypeDao;
     OverTimeItemLinkDao overTimeItemLinkDao;

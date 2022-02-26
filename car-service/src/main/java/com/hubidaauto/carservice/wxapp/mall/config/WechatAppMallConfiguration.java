@@ -31,7 +31,7 @@ import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.PrePayResponseMesseage;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
@@ -58,7 +58,7 @@ public class WechatAppMallConfiguration {
 		mallOrderService = ApplicationContextProvider.getBean(MallOrderService.class);
 	}
 
-	@VertxRegister(StandaredVerticle.class)
+	@VertxRegister(MainWebVerticle.class)
 	public Consumer<Router> routeMapping(Vertx vertx) {
 		BodyHandler bodyHandler=BodyHandler.create();
 		final String URL_UNIFIEDORDERON = configuration.getUrls().get(CommonConst.WecharUrlKeys.UNIFIED_ORDER).toString();

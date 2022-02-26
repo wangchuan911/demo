@@ -38,7 +38,7 @@ import java.time.LocalDateTime;
 @Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-@VertxRoutePath("{wechat-app-hubida.path.app}/order")
+@VertxRoutePath(prefix = "{wechat-app-hubida.path.app}/order")
 public class OrderWebRouter {
     Logger logger = LoggerFactory.getLogger(this.getClass());
     AbstractWechatMiniProgramsConfiguration customWeChatAppConfiguration;

@@ -24,7 +24,7 @@ import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.web.entity.wechat.push.PublicTamplateMessage;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
@@ -54,7 +54,7 @@ public class CustomWeChaConfiguration extends AbstractWechatOfficialAccountConfi
     }
 
 
-    @VertxRegister(StandaredVerticle.class)
+    @VertxRegister(MainWebVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
 
         this.initAccessTokenSyncTimer(vertx, objectMessage -> {

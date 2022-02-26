@@ -25,7 +25,7 @@ import org.welisdoon.web.entity.wechat.payment.response.RefundResponseMesseage;
 import org.welisdoon.web.service.wechat.intf.IWechatPayHandler;
 import org.welisdoon.web.service.wechat.intf.WechatLoginHandler;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 
 import javax.xml.bind.JAXBException;
 import java.util.Map;
@@ -362,7 +362,7 @@ public class AbstractWechatMiniProgramsConfiguration extends AbstractWechatConfi
     }
 
     @Override
-    @VertxRegister(StandaredVerticle.class)
+    @VertxRegister(MainWebVerticle.class)
     public synchronized void vertxConfiguration(Vertx vertx) {
         super.vertxConfiguration(vertx);
         initApiAsyncMeassger(vertx);

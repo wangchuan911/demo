@@ -1,12 +1,8 @@
 package com.hubidaauto.servmarket.module.goods.web;
 
 import com.hubidaauto.servmarket.common.utils.JsonUtils;
-import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
-import com.hubidaauto.servmarket.module.common.dao.TextContentDao;
-import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.goods.entity.AddedValueVO;
 import com.hubidaauto.servmarket.module.goods.entity.ItemCondition;
-import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import com.hubidaauto.servmarket.module.goods.service.ItemService;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -15,12 +11,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
-import org.welisdoon.web.vertx.proxy.VertxInvoker;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 import java.util.List;
@@ -31,7 +25,7 @@ import java.util.List;
 @Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-@VertxRoutePath("{wechat-app-hubida.path.app}/goods")
+@VertxRoutePath(prefix = "{wechat-app-hubida.path.app}/goods")
 public class GoodsWebRouter {
     private static final Logger logger = LoggerFactory.getLogger(GoodsWebRouter.class);
 

@@ -1,22 +1,17 @@
 package com.hubidaauto.servmarket.module.comment.web;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.hubidaauto.servmarket.common.utils.JsonUtils;
 import com.hubidaauto.servmarket.module.comment.dao.OrderCommentDao;
-import com.hubidaauto.servmarket.module.comment.entity.CommentVO;
 import com.hubidaauto.servmarket.module.comment.entity.OrderCommentCondition;
 import com.hubidaauto.servmarket.module.comment.entity.OrderCommentVO;
 import com.hubidaauto.servmarket.module.common.annotation.ContentType;
 import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
 import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
-import io.vertx.core.json.Json;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -31,7 +26,7 @@ import java.util.List;
 @Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-@VertxRoutePath("{wechat-app-hubida.path.app}/comment")
+@VertxRoutePath(prefix = "{wechat-app-hubida.path.app}/comment")
 public class CommentWebRouter {
     OrderCommentDao orderCommentDao;
 

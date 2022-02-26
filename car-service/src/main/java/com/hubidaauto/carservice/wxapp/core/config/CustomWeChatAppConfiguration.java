@@ -34,8 +34,7 @@ import org.welisdoon.web.common.web.intf.ICommonAsynService;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
-import org.welisdoon.web.vertx.verticle.WorkerVerticle;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -148,7 +147,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
         return vertxConsumer;
     }
 
-    @VertxRegister(StandaredVerticle.class)
+    @VertxRegister(MainWebVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
 //        final String PATH_WX_APP = "/wxApp(?:/([^\\/]+))*";
 //        final String PATH_WX_APP = "/wxApp";

@@ -25,3 +25,5 @@ vertx:
     enable: false
     ip: 134.192.232.18,134.192.232.17
     maxQueries: 10
+  scheduler:
+

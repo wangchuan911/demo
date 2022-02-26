@@ -2,8 +2,6 @@ package org.welisdoon.web.config;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.welisdoon.web.common.config.AbstractWechatOfficialAccountConfiguration;
@@ -13,7 +11,7 @@ import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 import org.welisdoon.web.common.web.intf.ICommonAsynService;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
@@ -206,7 +204,7 @@ public class WeChatServiceConfiguration extends AbstractWechatOfficialAccountCon
     }
 
 
-    @VertxRegister(StandaredVerticle.class)
+    @VertxRegister(MainWebVerticle.class)
     public Consumer<Vertx> initStandaredVerticle() {
         Consumer<Vertx> vertxConsumer = vertx -> {
             commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAppID(), ICommonAsynService.class);
