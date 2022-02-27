@@ -19,6 +19,7 @@ vertx:
   options:
     vertxOptions:
       workerPoolSize: 4
+      eventLoopPoolSize: 4
       maxEventLoopExecuteTime: 5000000000
 #      addressResolverOptions:
 #        servers:
