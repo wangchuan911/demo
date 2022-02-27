@@ -167,9 +167,8 @@ public class VertxConfiguration {
                 logger.info("service is running with single instance.");
                 break;
             case 1:
-                new VertxOptions().setClusterManager(clusters[0].create());
                 Vertx.clusteredVertx(
-                        this.vertxOptions,
+                        this.vertxOptions.setClusterManager(clusters[0].create()),
                         result -> {
                             if (result.succeeded()) {
                                 promise.complete(result.result());
