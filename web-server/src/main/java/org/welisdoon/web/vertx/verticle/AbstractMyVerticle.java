@@ -8,6 +8,7 @@ import io.vertx.ext.web.Router;
 
 
 import org.springframework.boot.util.LambdaSafe;
+import org.springframework.core.env.Environment;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -65,7 +66,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     }*/
 
 
-    final public synchronized static Future<CompositeFuture> prepare(Vertx vertx, Options options) {
+    final public synchronized static Future<CompositeFuture> prepare(Vertx vertx, org.welisdoon.web.config.VertxConfiguration options) {
         if (prepare) return Future.failedFuture(new StackOverflowError("verticle is running!"));
         prepare = true;
         Map<String, Entry> map = new HashMap<>();
@@ -97,27 +98,25 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                         .filter(entry -> register.getClass().isAssignableFrom(entry.getClass())))
                 .toArray(Entry[]::new);
 
-        vertx.registerVerticleFactory(options.factory);
+        vertx.registerVerticleFactory(options.getFactory());
         return CompositeFuture
-                .all(options.verticle
+                .all(options.getDeployOptions().entrySet()
                         .stream()
-                        .map(clz -> {
-                            org.welisdoon.web.vertx.annotation.Verticle verticle = clz.getAnnotation(org.welisdoon.web.vertx.annotation.Verticle.class);
-                            DeploymentOptions deploymentOptions = new DeploymentOptions();
-                            String verticleName = String.format("%s:%s", options.factory.prefix(), clz.getName());
-                            if (verticle.worker()) {
-                                deploymentOptions.setWorker(true)
-                                        // As worker verticles are never executed concurrently by Vert.x by more than one thread,
-                                        // deploy multiple instances to avoid serializing requests.
-                                        .setInstances(options.workerInstancesMax);
-                            }
+                        .map(entry -> {
+                            org.welisdoon.web.vertx.annotation.Verticle verticle = entry.getKey().getAnnotation(org.welisdoon.web.vertx.annotation.Verticle.class);
+                            DeploymentOptions deploymentOptions = entry.getValue();
+                            String verticleName = String.format("%s:%s", options.getFactory().prefix(), entry.getKey().getName());
+                            deploymentOptions.setWorker(verticle.worker());
+                            // As worker verticles are never executed concurrently by Vert.x by more than one thread,
+                            // deploy multiple instances to avoid serializing requests.
+
                             Promise<Void> promise = Promise.promise();
                             vertx.deployVerticle(verticleName, deploymentOptions, event -> {
                                 promise.complete();
                                 if (event.succeeded())
                                     logger.info("deploy success!{}", verticleName);
                                 else {
-                                    logger.error("Failed to deploy book verticle", event);
+                                    logger.error("Failed to deploy verticle");
                                     logger.error(event.cause().getMessage(), event.cause());
                                 }
                             });
@@ -309,44 +308,6 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     }
 
 
-    public static class Options {
-        Set<Class<? extends Register>> register;
-        Set<Class<? extends Verticle>> verticle;
-        VerticleFactory factory;
-        int workerInstancesMax = 1;
-
-        public Options setRegister(Class<? extends Register>... register) {
-            this.register = Set.of(register);
-            return this;
-        }
-
-        public Options setVerticle(Class<? extends Verticle>... verticle) {
-            this.verticle = Set.of(verticle);
-            return this;
-        }
-
-        public Options setFactory(VerticleFactory factory) {
-            this.factory = factory;
-            return this;
-        }
-
-        public Set<Class<? extends Verticle>> getVerticle() {
-            return verticle;
-        }
-
-        public VerticleFactory getFactory() {
-            return factory;
-        }
-
-        public Set<Class<? extends Register>> getRegister() {
-            return this.register;
-        }
-
-        public Options setWorkerInstancesMax(int workerInstancesMax) {
-            this.workerInstancesMax = Math.max(workerInstancesMax, 1);
-            return this;
-        }
-    }
 }
 
 

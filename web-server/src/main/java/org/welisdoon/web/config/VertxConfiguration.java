@@ -1,11 +1,16 @@
 package org.welisdoon.web.config;
 
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.ParserConfig;
+import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.*;
 import io.vertx.core.dns.AddressResolverOptions;
+import io.vertx.core.impl.NoStackTraceThrowable;
+import io.vertx.core.spi.VerticleFactory;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
@@ -32,38 +37,83 @@ import java.util.stream.Collectors;
 
 @Configuration
 @org.welisdoon.web.vertx.annotation.VertxConfiguration
+@ConfigurationProperties(prefix = "vertx.options")
 public class VertxConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(VertxConfiguration.class);
+    @Autowired
+    Reflections reflections;
 
+    VertxOptions vertxOptions;
+    Map<Class<? extends AbstractMyVerticle>, DeploymentOptions> deployOptions;
+    Set<Class<? extends AbstractMyVerticle.Register>> register;
+    VerticleFactory factory;
+
+    public void setRegister(Set<Class<? extends AbstractMyVerticle.Register>> register) {
+        this.register = register;
+    }
+
+    public VerticleFactory getFactory() {
+        return factory;
+    }
+
+    public Set<Class<? extends AbstractMyVerticle.Register>> getRegister() {
+        if (this.register == null)
+            this.register = reflections.getSubTypesOf(AbstractMyVerticle.Register.class);
+        return register;
+    }
 
     @Autowired
-    @Qualifier("verticleFactory")
-    private SpringVerticleFactory verticleFactory;
+    public void setFactory(VerticleFactory factory) {
+        this.factory = factory;
+    }
 
-    /**
-     * The Vert.x worker pool size, configured in the {@code application.properties} file.
-     * <p>
-     * Make sure this is greater than {@link #workerInstancesMax}.
-     */
-    @Value("${vertx.worker.pool.size}")
-    int workerPoolSize;
+    public void setVertxOptions(VertxOptions vertxOptions) {
+        this.vertxOptions = vertxOptions;
+    }
+
+    public void setDeployOptions(Map<String, Object> deployOptions) {
+        this.deployOptions = deployOptions
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(stringObjectEntry -> {
+                    try {
+                        return (Class<? extends AbstractMyVerticle>) Class.forName(stringObjectEntry.getKey());
+                    } catch (Throwable e) {
+                        return null;
+                    }
+                }, o -> TypeUtils.castToJavaBean(o.getValue(), DeploymentOptions.class)));
+    }
+
+    public VertxOptions getVertxOptions() {
+        return vertxOptions;
+    }
+
+    public Map<Class<? extends AbstractMyVerticle>, DeploymentOptions> getDeployOptions() {
+        if (this.deployOptions == null)
+            this.deployOptions = reflections
+                    .getTypesAnnotatedWith(Verticle.class)
+                    .stream()
+                    .collect(Collectors.toMap(
+                            aClass -> (Class<? extends AbstractMyVerticle>) aClass,
+                            aClass ->
+                                    new DeploymentOptions()
+                                            .setMaxWorkerExecuteTime(vertxOptions.getMaxWorkerExecuteTime())
+                                            .setWorkerPoolSize(vertxOptions.getWorkerPoolSize())
+                                            .setWorker(aClass.getAnnotation(Verticle.class).worker())
+                    ));
+        return deployOptions;
+    }
 
     /**
      * The number of {@link WorkerVerticle} instances to deploy, configured in the {@code application.properties} file.
      */
-    @Value("${vertx.workerVerticle.instances}")
-    int workerInstancesMax;
 
-    @Value("${vertx.extraScanPath}")
-    private String[] extraScanPath;
+//    @Value("${vertx.extraScanPath}")
+    private String[] extraScanPath = new String[]{};
 
-    @Value("${vertx.dns.enable}")
-    boolean dnsEnable;
-    @Value("${vertx.dns.ip}")
-    String[] dnsIp;
-    @Value("${vertx.dns.maxQueries}")
-    Integer dnsMaxQueries;
-
+    public void setExtraScanPath(String[] extraScanPath) {
+        this.extraScanPath = extraScanPath;
+    }
 
     @Bean
     Reflections getReflections() {
@@ -106,72 +156,40 @@ public class VertxConfiguration {
      * Verticles deploy after  springboot ready
      */
     @EventListener
-    public void deployVerticles(ApplicationReadyEvent event) {
-        VertxOptions vertxOptions = new VertxOptions()
-                .setWorkerPoolSize(workerPoolSize)
-                .setMaxEventLoopExecuteTime(Long.MAX_VALUE);
+    void deployVerticles(ApplicationReadyEvent event) {
+        Promise<Vertx> promise = Promise.promise();
+        promise.future().onSuccess(this::deployVerticles);
 
-        this.dnsManger(vertxOptions);
         ICluster[] clusters = ApplicationContextProvider.getApplicationContext().getBeansOfType(ICluster.class).entrySet().stream().map(Map.Entry::getValue).toArray(ICluster[]::new);
         switch (clusters.length) {
             case 0:
-                this.deployVerticles(Vertx.vertx(vertxOptions));
+                promise.complete(Vertx.vertx(this.vertxOptions));
                 logger.info("service is running with single instance.");
                 break;
             case 1:
-                vertxOptions.setClusterManager(clusters[0].create());
+                new VertxOptions().setClusterManager(clusters[0].create());
                 Vertx.clusteredVertx(
-                        vertxOptions,
+                        this.vertxOptions,
                         result -> {
                             if (result.succeeded()) {
-                                this.deployVerticles(result.result());
+                                promise.complete(result.result());
                                 logger.info("service is running with cluster by {}.", clusters[0].name());
                             } else {
+                                promise.fail(result.cause());
                                 logger.error("cluster running with error: "
                                         + result.cause().getMessage());
                             }
                         });
                 break;
             default:
+                promise.fail(new NoStackTraceThrowable("too many clusters!"));
                 throw new RuntimeException("too many clusters!");
 
         }
     }
 
-
-    private void dnsManger(VertxOptions vertxOptions) {
-        AddressResolverOptions options = new AddressResolverOptions();
-        if (dnsEnable) {
-            if (dnsIp != null) {
-                for (int i = 0; i < dnsIp.length; i++) {
-                    options.addServer(dnsIp[i]);
-                }
-            }
-            if (dnsMaxQueries > 0) {
-                options.setMaxQueries(10);
-            }
-        }
-        vertxOptions.setAddressResolverOptions(options);
-    }
-
-    @Autowired(required = false)
-    AbstractMyVerticle.Options options;
-
     protected void deployVerticles(Vertx vertx) {
-        Reflections reflections = ApplicationContextProvider.getBean(Reflections.class);
-
-        AbstractMyVerticle.prepare(vertx, options != null ? options :
-                new AbstractMyVerticle.Options()
-                        .setRegister(reflections.getSubTypesOf(AbstractMyVerticle.Register.class).toArray(Class[]::new))
-                        .setFactory(verticleFactory)
-                        .setVerticle(reflections
-                                .getTypesAnnotatedWith(Verticle.class)
-                                .stream()
-                                .filter(aClass -> ApplicationContextProvider.getApplicationContext()
-                                        .containsBean(aClass.getAnnotation(Component.class).value())).toArray(Class[]::new)
-                        )
-                        .setWorkerInstancesMax(workerInstancesMax)
-        );
+        AbstractMyVerticle.prepare(vertx, this);
     }
 
 }

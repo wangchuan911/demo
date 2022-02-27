@@ -30,7 +30,15 @@ public class SpringVerticleFactory implements VerticleFactory {
     public void createVerticle(String verticleName, ClassLoader classLoader, Promise<Callable<Verticle>> var3) {
         // Our convention in this example is to give the class name as verticle name
         String clazz = VerticleFactory.removePrefix(verticleName);
-        var3.complete(() -> (Verticle) ApplicationContextProvider.getBean(Class.forName(clazz)));
+        try {
+            Verticle verticle;
+            verticle = (Verticle) ApplicationContextProvider.getBean(Class.forName(clazz));
+            verticle.hashCode();
+            var3.complete(() -> verticle);
+        } catch (Throwable e) {
+            var3.fail(e);
+        }
+
     }
 
 }
