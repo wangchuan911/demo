@@ -57,9 +57,13 @@ public class VertxConfiguration {
     }
 
     public Set<Class<? extends AbstractMyVerticle.Register>> getRegister() {
-        if (this.register == null)
-            this.register = reflections.getSubTypesOf(AbstractMyVerticle.Register.class);
         return register;
+    }
+
+    public Set<Class<? extends AbstractMyVerticle.Register>> getRegister(boolean GetOrNew) {
+        if (GetOrNew && this.register == null)
+            this.register = reflections.getSubTypesOf(AbstractMyVerticle.Register.class);
+        return getRegister();
     }
 
     @Autowired
@@ -88,8 +92,8 @@ public class VertxConfiguration {
         return vertxOptions;
     }
 
-    public Map<Class<? extends AbstractMyVerticle>, DeploymentOptions> getDeployOptions() {
-        if (this.deployOptions == null)
+    public Map<Class<? extends AbstractMyVerticle>, DeploymentOptions> getDeployOptions(boolean GetOrNew) {
+        if (GetOrNew && this.deployOptions == null)
             this.deployOptions = reflections
                     .getTypesAnnotatedWith(Verticle.class)
                     .stream()
@@ -101,6 +105,10 @@ public class VertxConfiguration {
                                             .setWorkerPoolSize(vertxOptions.getWorkerPoolSize())
                                             .setWorker(aClass.getAnnotation(Verticle.class).worker())
                     ));
+        return getDeployOptions();
+    }
+
+    public Map<Class<? extends AbstractMyVerticle>, DeploymentOptions> getDeployOptions() {
         return deployOptions;
     }
 

@@ -87,13 +87,7 @@ public class SchedulerVerticle extends AbstractMyVerticle {
             }).toArray();
             return verticle.getVertx().executeBlocking(promise -> {
                 try {
-                    Object o = method.invoke(ApplicationContextProvider.getBean(this.ServiceClass), params);
-                    if (o instanceof Future) {
-                        ((Future<?>) o).onComplete(promise::complete);
-                    } else {
-                        promise.complete();
-                    }
-
+                    ((Future) method.invoke(ApplicationContextProvider.getBean(this.ServiceClass), params)).onComplete(promise::complete);
                 } catch (Throwable e) {
                     logger.error(e.getMessage(), e);
                     promise.fail(e);
@@ -112,6 +106,10 @@ public class SchedulerVerticle extends AbstractMyVerticle {
                             register.methods = new HashSet<>();
                             map.put(this.key(), register);
                             register.ServiceClass = ApplicationContextProvider.getRealClass(aClass);
+                        }
+                        if (method.getReturnType() != Future.class) {
+                            logger.error("mothod :{} is invail cron method", method.getName());
+                            return;
                         }
                         register.methods.add(method);
                     });

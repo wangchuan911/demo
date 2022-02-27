@@ -70,7 +70,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
         if (prepare) return Future.failedFuture(new StackOverflowError("verticle is running!"));
         prepare = true;
         Map<String, Entry> map = new HashMap<>();
-        Register[] initEntry = options.getRegister().stream().map(aClass -> {
+        Register[] initEntry = options.getRegister(true).stream().map(aClass -> {
             try {
                 return aClass.getConstructor().newInstance();
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
@@ -100,7 +100,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
         vertx.registerVerticleFactory(options.getFactory());
         return CompositeFuture
-                .all(options.getDeployOptions().entrySet()
+                .all(options.getDeployOptions(true).entrySet()
                         .stream()
                         .map(entry -> {
                             org.welisdoon.web.vertx.annotation.Verticle verticle = entry.getKey().getAnnotation(org.welisdoon.web.vertx.annotation.Verticle.class);
