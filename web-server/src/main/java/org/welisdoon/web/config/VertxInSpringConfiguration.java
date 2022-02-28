@@ -11,6 +11,7 @@ import org.reflections.util.ConfigurationBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.util.StringUtils;
 import org.welisdoon.web.WebserverApplication;
 import org.welisdoon.web.cluster.ICluster;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -71,16 +72,15 @@ public class VertxInSpringConfiguration {
     }
 
     public void setDeployOptions(Map<String, Object> deployOptions) {
-        this.deployOptions = deployOptions
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(stringObjectEntry -> {
-                    try {
-                        return (Class<? extends AbstractMyVerticle>) Class.forName(stringObjectEntry.getKey());
-                    } catch (Throwable e) {
-                        return null;
-                    }
-                }, o -> TypeUtils.castToJavaBean(o.getValue(), DeploymentOptions.class)));
+        this.deployOptions = new HashMap<>();
+        for (Map.Entry<String, Object> entry : deployOptions.entrySet()) {
+            try {
+                this.deployOptions.put((Class<? extends AbstractMyVerticle>) Class.forName(entry.getKey()),
+                        StringUtils.isEmpty(entry.getValue()) ? null : TypeUtils.castToJavaBean(entry.getValue(), DeploymentOptions.class));
+            } catch (Throwable e) {
+                continue;
+            }
+        }
     }
 
     public VertxOptions getVertxOptions() {

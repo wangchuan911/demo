@@ -103,6 +103,11 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                         .map(entry -> {
                             org.welisdoon.web.vertx.annotation.Verticle verticle = entry.getKey().getAnnotation(org.welisdoon.web.vertx.annotation.Verticle.class);
                             DeploymentOptions deploymentOptions = entry.getValue();
+                            if (deploymentOptions == null) {
+                                deploymentOptions = new DeploymentOptions();
+                                deploymentOptions.setWorkerPoolSize(options.getVertxOptions().getWorkerPoolSize());
+                                deploymentOptions.setMaxWorkerExecuteTime(options.getVertxOptions().getMaxWorkerExecuteTime());
+                            }
                             String verticleName = String.format("%s:%s", options.getFactory().prefix(), entry.getKey().getName());
                             deploymentOptions.setWorker(verticle.worker());
                             // As worker verticles are never executed concurrently by Vert.x by more than one thread,
