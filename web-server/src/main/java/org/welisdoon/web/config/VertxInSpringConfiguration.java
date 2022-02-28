@@ -1,10 +1,8 @@
 package org.welisdoon.web.config;
 
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.*;
-import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.impl.NoStackTraceThrowable;
 import io.vertx.core.spi.VerticleFactory;
 import org.reflections.Reflections;
@@ -13,20 +11,17 @@ import org.reflections.util.ConfigurationBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.stereotype.Component;
 import org.welisdoon.web.WebserverApplication;
 import org.welisdoon.web.cluster.ICluster;
 import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.vertx.SpringVerticleFactory;
 import org.welisdoon.web.vertx.annotation.Verticle;
+import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.verticle.AbstractMyVerticle;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
@@ -36,10 +31,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Configuration
-@org.welisdoon.web.vertx.annotation.VertxConfiguration
+@VertxConfiguration
 @ConfigurationProperties(prefix = "vertx.options")
-public class VertxConfiguration {
-    private static final Logger logger = LoggerFactory.getLogger(VertxConfiguration.class);
+public class VertxInSpringConfiguration {
+    private static final Logger logger = LoggerFactory.getLogger(VertxInSpringConfiguration.class);
     @Autowired
     Reflections reflections;
 

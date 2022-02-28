@@ -3,15 +3,13 @@ package org.welisdoon.web.vertx.verticle;
 import com.google.common.base.Predicate;
 import io.vertx.core.*;
 
-import io.vertx.core.spi.VerticleFactory;
 import io.vertx.ext.web.Router;
 
 
-import org.springframework.boot.util.LambdaSafe;
-import org.springframework.core.env.Environment;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.config.VertxInSpringConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 
@@ -66,7 +64,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     }*/
 
 
-    final public synchronized static Future<CompositeFuture> prepare(Vertx vertx, org.welisdoon.web.config.VertxConfiguration options) {
+    final public synchronized static Future<CompositeFuture> prepare(Vertx vertx, VertxInSpringConfiguration options) {
         if (prepare) return Future.failedFuture(new StackOverflowError("verticle is running!"));
         prepare = true;
         Map<String, Entry> map = new HashMap<>();
