@@ -167,7 +167,9 @@ public class Line {
                     s.put(key, new Line.Section().setHead(point));
                 }
             });
-            return s.entrySet().stream().map(stringSectionEntry -> stringSectionEntry.getValue()).toArray(Line.Section[]::new);
+            return s.entrySet().stream().map(stringSectionEntry -> stringSectionEntry.getValue())
+                    .filter(section -> section.foot != null && section.head != null)
+                    .toArray(Line.Section[]::new);
         }
     }
 
@@ -196,7 +198,7 @@ public class Line {
             List<Line.Section.Point> list = new LinkedList<>();
             Line.Section.Point point = point1;
             list.add(point);
-            while ((point = lines.get(point)) != END_POINT && point != null) {
+            while ((point = lines.remove(point)) != END_POINT && point != null) {
                 list.add(point);
             }
             return new Line().setPoints(list.toArray(Line.Section.Point[]::new)).setLineId(point1.lineId);
@@ -281,7 +283,7 @@ public class Line {
             }
             point.setSectionId(Math.floor(i / 2) + "");
             points.add(point);
-        }
+        }*/
         System.out.println(Arrays.toString(Line.toLine(points.stream().toArray(Line.Section.Point[]::new))));
     }
 }
