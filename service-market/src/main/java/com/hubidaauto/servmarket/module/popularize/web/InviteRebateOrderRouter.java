@@ -19,6 +19,8 @@ import com.hubidaauto.servmarket.module.popularize.service.InviteRebateOrderServ
 import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.staff.entity.StaffJob;
+import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
+import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.user.entity.UserCondition;
 import com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao;
 import com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO;
@@ -59,6 +61,7 @@ public class InviteRebateOrderRouter {
     StaffJobDao staffJobDao;
     InviteRebateOrderService inviteRebateOrderService;
     InviteRebateRegistDao inviteRebateRegistDao;
+    AppUserDao appUserDao;
 
     @Autowired
     public void setInviteRebateOrderService(InviteRebateOrderService inviteRebateOrderService) {
@@ -93,6 +96,11 @@ public class InviteRebateOrderRouter {
     @Autowired
     public void setInviteRebateRegistDao(InviteRebateRegistDao inviteRebateRegistDao) {
         this.inviteRebateRegistDao = inviteRebateRegistDao;
+    }
+
+    @Autowired
+    public void setAppUserDao(AppUserDao appUserDao) {
+        this.appUserDao = appUserDao;
     }
 
     @VertxRouter(path = "/*", order = -1)
@@ -250,6 +258,23 @@ public class InviteRebateOrderRouter {
         chain.blockingHandler(routingContext -> {
             try {
                 routingContext.end(JSON.toJSONString(inviteRebateRegistDao.get(Long.valueOf(routingContext.pathParam("staffId")))));
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
+        });
+    }
+
+    @VertxRouter(path = "\\/state\\/(?<staffId>\\d+)",
+            mode = VertxRouteType.PathRegex,
+            method = "DELETE")
+    public void clearState(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            try {
+                AppUserVO userVO = appUserDao.get(Long.valueOf(routingContext.pathParam("staffId")));
+                userVO.setInviteUser(null);
+                appUserDao.put(userVO);
+                routingContext.end("成功");
             } catch (Throwable e) {
                 e.printStackTrace();
                 routingContext.response().setStatusCode(500).end(e.getMessage());
