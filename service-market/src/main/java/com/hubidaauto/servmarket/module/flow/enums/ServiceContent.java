@@ -44,7 +44,7 @@ public final class ServiceContent {
 
     public final static ServiceContent getInstance(Long id) {
         Optional<ServiceContent> optional = UNIQUE.stream().filter(serviceContent -> serviceContent.id.equals(id)).findFirst();
-        return optional.orElse(SIMPLE_CLEAM);
+        return optional.orElse(null);
     }
 
     public Long getId() {

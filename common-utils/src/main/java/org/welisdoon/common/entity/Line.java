@@ -259,7 +259,7 @@ public class Line {
     }
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) /*throws IOException*/ {
         /*FileInputStream stream = new FileInputStream(new File("D:\\Downloads\\FeHelper-20220316114712.json"));
         ByteArrayOutputStream stream1 = new ByteArrayOutputStream();
         StreamUtils.write(stream, stream1);
