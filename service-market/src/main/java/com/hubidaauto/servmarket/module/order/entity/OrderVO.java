@@ -1,5 +1,6 @@
 package com.hubidaauto.servmarket.module.order.entity;
 
+import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
@@ -55,6 +56,10 @@ public class OrderVO {
 
     public void setStatusId(Long statusId) {
         this.statusId = statusId;
+    }
+
+    public void setStatus(OrderStatus status) {
+        setStatusId(status.statusId());
     }
 
     public Long getCustId() {

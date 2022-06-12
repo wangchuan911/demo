@@ -62,5 +62,5 @@ public final class ServiceContent {
     public final static ServiceContent
             INNER_CAR_WASH = new ServiceContent(-100L, "INNER_CAR_WASH", "车内清洗"),
             OUT_CAR_WASH = new ServiceContent(-101L, "OUT_CAR_WASH", "车外清洗"),
-            SIMPLE_CLEAM = new ServiceContent(-111L, "SIMPLE_CLEAM", "作业施工");
+            SIMPLE_WORK = new ServiceContent(-111L, "SIMPLE_WORK", "作业施工");
 }

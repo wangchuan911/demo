@@ -183,6 +183,10 @@ public class FlowService {
         return streamDao.get(streamId);
     }
 
+    public Flow getFlow(Long flowId) {
+        return flowDao.get(flowId);
+    }
+
     public FlowValue getValue(Long valueId) {
         return flowValueDao.get(valueId);
     }

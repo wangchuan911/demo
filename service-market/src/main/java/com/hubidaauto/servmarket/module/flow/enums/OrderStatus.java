@@ -23,6 +23,6 @@ public enum OrderStatus {
     }
 
     public static OrderStatus getInstance(long id) {
-       return Arrays.stream(values()).filter(orderStatus -> orderStatus.id == id).findFirst().get();
+        return Arrays.stream(values()).filter(orderStatus -> orderStatus.id == id).findFirst().get();
     }
 }

@@ -1,12 +1,14 @@
 package com.hubidaauto.servmarket.module.goods.entity;
 
 import com.hubidaauto.servmarket.module.common.entity.ContentVO;
+import com.hubidaauto.servmarket.module.flow.enums.PayType;
 import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class ItemVO {
-    Long id, type, price, contentId, orderClass;
+    Long id, type, price, contentId, orderClass, payType;
     String name, imgs, desc, typesGroupDesc;
     ContentVO detail;
     List<ItemTypeVO> types;
@@ -106,15 +108,30 @@ public class ItemVO {
         return typesGroupDesc;
     }
 
-    public void setTypesGroupDesc(String typesGroupDesc) {
+    public ItemVO setTypesGroupDesc(String typesGroupDesc) {
         this.typesGroupDesc = typesGroupDesc;
+        return this;
     }
 
     public Long getOrderClass() {
         return orderClass;
     }
 
-    public void setOrderClass(Long orderClass) {
+    public ItemVO setOrderClass(Long orderClass) {
         this.orderClass = orderClass;
+        return this;
+    }
+
+    public Long getPayType() {
+        return payType;
+    }
+
+    public ItemVO setPayType(Long payType) {
+        this.payType = payType;
+        return this;
+    }
+
+    public PayType payType() {
+        return Arrays.stream(PayType.values()).filter(payType1 -> payType1.getId() == this.payType).findFirst().get();
     }
 }

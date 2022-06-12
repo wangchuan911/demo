@@ -49,6 +49,11 @@ public class FlowProxyService {
     }
 
     @DS("flow")
+    public Flow getFlow(Long flowId) {
+        return this.flowService.getFlow(flowId);
+    }
+
+    @DS("flow")
     public void streamExpandByTemplate(Template template, Stream superStream) {
         this.flowService.streamExpandByTemplate(template, superStream);
     }

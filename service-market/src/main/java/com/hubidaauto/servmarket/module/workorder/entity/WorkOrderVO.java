@@ -1,5 +1,6 @@
 package com.hubidaauto.servmarket.module.workorder.entity;
 
+import com.hubidaauto.servmarket.module.flow.enums.WorkOrderStatus;
 import org.welisdoon.flow.module.flow.entity.Stream;
 
 import java.sql.Timestamp;
@@ -85,6 +86,8 @@ public class WorkOrderVO {
     }
 
     public void setStream(Stream stream) {
+        if (stream != null)
+            this.streamId = stream.getId();
         this.stream = stream;
     }
 
@@ -94,5 +97,9 @@ public class WorkOrderVO {
 
     public void setDeadLineTime(Timestamp deadLineTime) {
         this.deadLineTime = deadLineTime;
+    }
+
+    public void setStatus(WorkOrderStatus status) {
+        setStatusId(status.statusId());
     }
 }

@@ -35,7 +35,8 @@
                     and A.STATUS_ID=10003
                 </when>
                 <when test="query=='running'">
-                    and A.STATUS_ID=10000
+                    and A.STATUS_ID in (10000,10003)
+                    AND exists (SELECT 1 FROM WORK_ORDER A1 WHERE A1.ORDER_ID=A.ID LIMIT 0, 1)
                     and exists (
                     SELECT 1 FROM DUAL WHERE A.CUST_ID=#{custId}
                     UNION ALL

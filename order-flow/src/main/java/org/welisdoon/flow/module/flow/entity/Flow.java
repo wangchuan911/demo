@@ -3,6 +3,8 @@ package org.welisdoon.flow.module.flow.entity;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.Arrays;
+
 /**
  * @Classname Flow
  * @Description TODO
@@ -33,6 +35,10 @@ public class Flow {
         return statusId;
     }
 
+    public FlowStatus status() {
+        return Arrays.stream(FlowStatus.values()).filter(flowStatus -> flowStatus.statusId == this.statusId).findFirst().orElse(null);
+    }
+
     public void setStatusId(Long statusId) {
         this.statusId = statusId;
     }
@@ -55,7 +61,7 @@ public class Flow {
         this.functionId = functionId;
     }
 
-    public void sync(Flow flow){
+    public void sync(Flow flow) {
         this.setTemplateId(flow.getTemplateId());
         this.setStatusId(flow.getStatusId());
         this.setFunctionId(flow.getFunctionId());

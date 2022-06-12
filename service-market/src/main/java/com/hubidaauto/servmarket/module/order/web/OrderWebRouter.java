@@ -5,10 +5,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
+import com.hubidaauto.servmarket.module.order.error.NoPaymentException;
 import com.hubidaauto.servmarket.module.order.model.IBaseOrderService;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,6 +112,11 @@ public class OrderWebRouter {
                                 .setPrepayId(jsonObject.getString("prepayId")));
                 routingContext.end(jsonObject.toBuffer());
             }).onFailure(throwable -> {
+                if (throwable instanceof NoPaymentException) {
+                    JsonObject jsonObject = new JsonObject().put("pass", true);
+                    routingContext.end(jsonObject.toBuffer());
+                    return;
+                }
                 routingContext.response().setStatusCode(500).end(throwable.getMessage());
             });
         });

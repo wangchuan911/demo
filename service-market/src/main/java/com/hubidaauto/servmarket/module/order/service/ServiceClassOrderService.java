@@ -1,14 +1,12 @@
 package com.hubidaauto.servmarket.module.order.service;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.common.dao.AppConfigDao;
 import com.hubidaauto.servmarket.module.common.entity.AppConfig;
-import com.hubidaauto.servmarket.module.flow.enums.OperationType;
-import com.hubidaauto.servmarket.module.flow.enums.OrderStatus;
-import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
-import com.hubidaauto.servmarket.module.flow.enums.WorkOrderStatus;
+import com.hubidaauto.servmarket.module.flow.enums.*;
 import com.hubidaauto.servmarket.module.goods.dao.ItemDao;
 import com.hubidaauto.servmarket.module.goods.dao.ItemTypeDao;
 import com.hubidaauto.servmarket.module.goods.entity.ItemTypeVO;
@@ -20,10 +18,13 @@ import com.hubidaauto.servmarket.module.order.consts.WorkLoadUnit;
 import com.hubidaauto.servmarket.module.order.dao.BaseOrderDao;
 import com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao;
 import com.hubidaauto.servmarket.module.order.entity.*;
+import com.hubidaauto.servmarket.module.order.error.NoPaymentException;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
 import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
 import com.hubidaauto.servmarket.module.popularize.model.IRebate;
 import com.hubidaauto.servmarket.module.popularize.model.RebateConfig;
+import org.welisdoon.flow.module.flow.entity.FlowStatus;
+import org.welisdoon.flow.module.template.entity.LinkShow;
 import org.welisdoon.web.vertx.verticle.SchedulerVerticle;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
@@ -133,7 +134,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         this.flowService.flow(flow);
 
         orderVO.setFlowId(flow.getId());
-        orderVO.setStatusId(OrderStatus.PRE_PAY.statusId());
+        orderVO.setStatus(OrderStatus.PRE_PAY);
         orderVO.setDesc(this.orderDetail(orderVO.getId()).stream().filter(detailVO -> detailVO.getValue() != null).map(detailVO -> detailVO.getValue().toString()).collect(Collectors.joining(" ")));
         orderVO.setCode(OrderVO.generateCode(orderVO));
         baseOrderDao.put(orderVO);
@@ -144,7 +145,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     @Override
     public void start(ServiceClassOrderCondition condition) {
         ServiceClassOrderVO orderVO = orderDao.get(condition.getId());
-        orderVO.setStatusId(OrderStatus.READY.statusId());
+        orderVO.setStatus(OrderStatus.READY);
         baseOrderDao.put(orderVO);
 
         this.flowService.start(orderVO.getFlowId());
@@ -183,6 +184,9 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                     throw new RuntimeException("未知操作");
             }
         }
+        if (!this.passPayment(orderVO, workOrderVO)) {
+            return;
+        }
         try {
             this.flowService.stream(workOrderVO.getStreamId());
         } catch (Throwable e) {
@@ -193,12 +197,13 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
     @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
     public void undo(ServiceClassWorkOrderVO workOrderVO) {
-        workOrderVO.setStatusId(WorkOrderStatus.READY.statusId());
+        workOrderVO.setStatus(WorkOrderStatus.READY);
         workOrderDao.put(workOrderVO);
     }
 
     @Transactional(rollbackFor = Throwable.class, propagation = Propagation.REQUIRES_NEW)
     public void addStaffTask(List<Long> staffIds, ServiceClassOrderVO orderVO) {
+        staffTaskDao.clear(new StaffCondition().setOrderId(orderVO.getId()));
         for (Long staffId : staffIds) {
             staffTaskDao.add(new StaffTaskVO().setOrderId(orderVO.getId()).setStaffId(staffId).setTaskTime(orderVO.getBookTime()));
         }
@@ -258,7 +263,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         ServiceClassOrderCondition condition = new ServiceClassOrderCondition();
         condition.setFlowId(flow.getId());
         ServiceClassOrderVO orderVO = orderDao.find(condition);
-        orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
+        orderVO.setStatus(OrderStatus.COMPLETE);
         baseOrderDao.put(orderVO);
         WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), "orderFinished"), orderVO.getId());
     }
@@ -329,8 +334,9 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 JSONObject valueJson = stream.getValue() != null ? stream.getValue().jsonValue() : stream.getValueId() != null ? flowService.getValue(stream.getValueId()).jsonValue() : new JSONObject();
                 if (stream.getNodeId() == SIMPLE_NODE_ID)
                     workOrderVO.setStaffId(valueJson.getLong("staffId"));
-                workOrderVO.setStatusId(WorkOrderStatus.READY.statusId());
-                workOrderVO.setStreamId(stream.getId());
+                workOrderVO.setStatus(WorkOrderStatus.READY);
+//                workOrderVO.setStreamId(stream.getId());
+                workOrderVO.setStream(stream);
                 long functionId = valueJson.getLongValue("id");
                 if (functionId < 0) {
                     OperationType operationType = OperationType.getInstance(functionId);
@@ -352,6 +358,10 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                             break;
                         default:
                             break;
+                    }
+                    if (!this.passPayment(orderVO, workOrderVO)) {
+                        orderVO.setStatus(OrderStatus.PRE_PAY);
+                        baseOrderDao.put(orderVO);
                     }
                 }
                 workOrderDao.add(workOrderVO);
@@ -387,7 +397,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
     @Override
     public List<ServiceContent> getServices(OrderVO orderVO) {
-        return List.of(ServiceContent.SIMPLE_CLEAM);
+        return List.of(ServiceContent.SIMPLE_WORK);
     }
 
     @Override
@@ -444,6 +454,46 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         orderDao.update(condition);
     }
 
+    protected boolean passPayment(ServiceClassOrderVO orderVO, ServiceClassWorkOrderVO workOrderVO) {
+        if (orderVO.getItem() == null) {
+            orderVO.setItemType(itemTypeDao.get(orderVO.getItemTypeId()));
+            orderVO.setItem(itemDao.get(orderVO.getItemType().getItemId()));
+        }
+        if (workOrderVO.getStream() == null) {
+            workOrderVO.setStream(flowService.getStream(workOrderVO.getStreamId()));
+        }
+        switch (orderVO.getItem().payType()) {
+            case PRE_PAY:
+                return true;
+            case ASSIGN:
+                switch (OrderStatus.getInstance(orderVO.getStatusId())) {
+                    case READY:
+                        AppConfig config = appConfigDao.get(String.format("PAY_TYPE_ITEM_TYPE_%d", orderVO.getItemType().getId()));
+                        if (config == null) {
+                            config = appConfigDao.get(String.format("PAY_TYPE_ITEM_%d", orderVO.getItemType().getItemId()));
+                        }
+                        if (config != null) {
+                            LinkShow show = JSON.toJavaObject(JSONObject.parseObject(config.getValue()), LinkShow.class);
+                            return !(orderVO.getCustId().equals(workOrderVO.getStaffId())
+                                    && show.getId().equals(workOrderVO.getStream().getShowId()));
+                        }
+                        break;
+                    case PRE_PAY:
+                        return (flowService.getFlow(orderVO.getFlowId()).status() == FlowStatus.FUTURE);
+                }
+                break;
+        }
+        return false;
+    }
+
+    protected WorkOrderVO paymentWorkOrder(ServiceClassOrderVO orderVO) {
+        List<WorkOrderVO> list = getWorkOrders((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setQuery("doing").setOrderId(orderVO.getId()));
+        for (WorkOrderVO workOrderVO : list) {
+            if (!passPayment(orderVO, (ServiceClassWorkOrderVO) workOrderVO))
+                return workOrderVO;
+        }
+        return null;
+    }
 
     @Override
     public Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
@@ -460,7 +510,15 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         if (orderVO != null) {
             orderPrePayDaoLog.put(new OrderPayLogVO().setOrderId(orderVO.getId()).setTransactionId(payBillRequsetMesseage.getTransactionId()));
             payBillResponseMesseage.ok();
-            this.start((ServiceClassOrderCondition) new ServiceClassOrderCondition().setId(orderVO.getId()));
+            switch (getOrder(orderVO.getId()).getItem().payType()) {
+                case PRE_PAY:
+                    this.start((ServiceClassOrderCondition) new ServiceClassOrderCondition().setId(orderVO.getId()));
+                    break;
+                case ASSIGN:
+                    this.flowService.stream(this.paymentWorkOrder(getOrder(orderVO.getId())).getStreamId());
+                    break;
+
+            }
         } else {
             payBillResponseMesseage.fail("定单不存在");
         }
@@ -469,7 +527,16 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
     @Override
     public Future<PrePayRequsetMesseage> payRequset(WeChatPayOrder weChatPayOrder) {
-        OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
+        ServiceClassOrderVO orderVO = getOrder(Long.parseLong(weChatPayOrder.getId()));
+        switch (orderVO.getItem().payType()) {
+            case ASSIGN:
+                if (this.paymentWorkOrder(orderVO) != null) {
+                    break;
+                } else if ((flowService.getFlow(orderVO.getFlowId()).status() == FlowStatus.FUTURE)) {
+                    this.start((ServiceClassOrderCondition) new ServiceClassOrderCondition().setId(orderVO.getId()));
+                }
+                return Future.failedFuture(new NoPaymentException());
+        }
         PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
                 .setBody(String.format("%s-服务费用结算:\n定单编号：%s\n金额%s", configuration.getAppName(), orderVO.getCode(), OrderUtils.priceFormat(orderVO.getPrice().intValue(), ' ', true, false)))
                 .setOutTradeNo(orderVO.getCode())
@@ -485,7 +552,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         OrderCondition<OrderVO> condition = new OrderCondition<>();
         condition.setCode(refundResultMesseage.getOutTradeNo());
         orderVO = baseOrderDao.find(condition);
-        orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
+        orderVO.setStatus(OrderStatus.COMPLETE);
         baseOrderDao.put(orderVO);
         messeage.ok();
         return Future.succeededFuture(messeage);
@@ -537,7 +604,6 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 setOutRefundNo(orderVO.getCode()).setRefundFee(orderVO.getPrice().intValue()).
                 setTotalFee(orderVO.getPrice().intValue()).setTransactionId(payLogVO.getTransactionId()));
     }
-
 
 
     @Override
