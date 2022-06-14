@@ -483,7 +483,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 }
                 break;
         }
-        return false;
+        return true;
     }
 
     protected WorkOrderVO paymentWorkOrder(ServiceClassOrderVO orderVO) {
