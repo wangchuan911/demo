@@ -146,7 +146,7 @@ public class InviteRebateOrderService implements IWechatPayHandler {
         InviteRebateCountVO countVO = inviteRebateCountDao.get(userid);
         AppUserVO userVO = appUserDao.get(userid);
         return Future.succeededFuture(new MarketTransferRequsetMesseage()
-                .setPartnerTradeNo(String.format("IRO%04dC%04dS%018dD", countVO.getTotalRebate() - countVO.getPaidRebate(), userid, System.currentTimeMillis()))
+                .setPartnerTradeNo(String.format("IRO%09dS%018dD", countVO.getTotalRebate() - countVO.getPaidRebate(), userid, System.currentTimeMillis()))
                 .setOpenid(userVO.getAppId())
                 .setCheckName("NO_CHECK")
                 .setAmount(countVO.getTotalRebate() - countVO.getPaidRebate())
