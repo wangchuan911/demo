@@ -107,6 +107,9 @@
                 <if test="data.workerNum!=null">
                     t.WORKER_NUM = #{data.workerNum},
                 </if>
+                <if test="data.remark!=null">
+                    t.REMARK = #{remark},
+                </if>
             </if>
         </set>
 
