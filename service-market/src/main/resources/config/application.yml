@@ -28,9 +28,7 @@ vertx:
 #        maxQueries: 10
     deployOptions:
       "[org.welisdoon.web.vertx.verticle.WorkerVerticle]":
-        maxEventLoopExecuteTime: ${vertx.options.vertxOptions.maxEventLoopExecuteTime}
       "[org.welisdoon.web.vertx.verticle.MainWebVerticle]":
-        maxEventLoopExecuteTime: ${vertx.options.vertxOptions.maxEventLoopExecuteTime}
       "[org.welisdoon.web.vertx.verticle.SchedulerVerticle]":
         maxEventLoopExecuteTime: ${vertx.options.vertxOptions.maxEventLoopExecuteTime}
   clusterMode: hazelcast1

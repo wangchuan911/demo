@@ -3,7 +3,6 @@ package com.hubidaauto.carservice.officalaccount.service.handler;
 import com.hubidaauto.carservice.officalaccount.config.CustomWeChaConfiguration;
 import com.hubidaauto.carservice.officalaccount.dao.OfficalAccoutUserDao;
 import com.hubidaauto.carservice.officalaccount.entity.UserVO;
-import com.hubidaauto.carservice.officalaccount.service.CustomWeChatOfficalAccountService;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -63,8 +62,8 @@ public class UpdateUserInfoTextHandler implements MesseageHandler<TextMesseage, 
     }
 
     @Override
-    public boolean matched(TextMesseage msg) {
-        return "同步".equals(StringUtils.isEmpty(msg.getContent()) ? "" : msg.getContent());
+    public Future<Boolean> matched(TextMesseage msg) {
+        return Future.succeededFuture("同步".equals(StringUtils.isEmpty(msg.getContent()) ? "" : msg.getContent()));
     }
 
     UserVO getOrAddUser(String userId) {

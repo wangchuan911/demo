@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.entity.wechat.messeage.request.RequestMesseage;
 import org.welisdoon.web.entity.wechat.messeage.request.RequestMesseageBody;
+import org.welisdoon.web.entity.wechat.messeage.request.TextMesseage;
 import org.welisdoon.web.entity.wechat.messeage.response.ResponseMesseage;
 
 import java.lang.annotation.*;
@@ -17,7 +18,9 @@ import java.lang.annotation.*;
 public interface MesseageHandler<I extends RequestMesseage, O extends ResponseMesseage> {
     Future<O> handle(I i);
 
-    boolean matched(I i);
+    default Future<Boolean> matched(I i){
+        return Future.succeededFuture(true);
+    };
 
 
     @Target({ElementType.TYPE})
@@ -34,4 +37,5 @@ public interface MesseageHandler<I extends RequestMesseage, O extends ResponseMe
     @interface Prioritys {
         Priority[] value();
     }
+
 }

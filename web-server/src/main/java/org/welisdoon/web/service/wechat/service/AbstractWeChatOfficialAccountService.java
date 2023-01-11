@@ -1,7 +1,9 @@
 package org.welisdoon.web.service.wechat.service;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.impl.NoStackTraceThrowable;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,7 @@ import org.welisdoon.web.entity.wechat.messeage.response.ResponseMesseage;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AbstractWeChatOfficialAccountService<T extends AbstractWechatOfficialAccountConfiguration> {
 
@@ -28,6 +31,8 @@ public abstract class AbstractWeChatOfficialAccountService<T extends AbstractWec
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected static final Map<String, Class<? extends RequestMesseage>> mapper;
+
+    final int part = 3;
 
     static {
         mapper = new HashMap<>(8, 1.0f);
@@ -105,23 +110,62 @@ public abstract class AbstractWeChatOfficialAccountService<T extends AbstractWec
     }
 
     public Future<ResponseMesseage> receive(RequestMesseage message) {
-        Future<ResponseMesseage> future = Arrays
+        List<MesseageHandler> matcheds = Arrays
                 .stream(messeageHandlers)
                 .filter(entry -> {
                     try {
-                        return mapper.get(message.getMsgType()).equals(ApplicationContextProvider.getRawType(entry, MesseageHandler.class)[0])
-                                && entry.matched(message);
+                        return mapper.get(message.getMsgType()).equals(ApplicationContextProvider.getRawType(entry, MesseageHandler.class)[0]);
                     } catch (Throwable e) {
                         logger.error(e.getMessage(), e);
                         return false;
                     }
-                })
-                .findFirst()
-                .get()
-                .handle(message);
-        return future;
+                }).collect(Collectors.toList());
+
+        List<MesseageHandler>[] tasks = this.splitTask(matcheds);
+
+
+        return this.matched(this.splitTask(matcheds), 0, message).compose(entry -> matcheds.get(entry.getKey()).handle(message));
+
+
+
+        /*Future<CompositeFuture> compositeFuture = CompositeFuture.all(matcheds.stream().map(messeageHandler -> messeageHandler.matched(message)).collect(Collectors.toList()));
+        return compositeFuture.compose(compositeFuture1 -> {
+            List<Boolean> list = compositeFuture1.list();
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i)) {
+                    return matcheds.get(i).handle(message);
+                }
+            }
+            return Future.succeededFuture(new NoReplyMesseage(message));
+        });*/
     }
 
+    protected Future<Map.Entry<Integer, Object>> matched(List<MesseageHandler>[] tasks, int index, RequestMesseage message) {
+        if (tasks.length >= index)
+            return Future.failedFuture("解析失败");
+        return CompositeFuture.all(tasks[index].stream().map(messeageHandler -> messeageHandler.matched(message)).collect(Collectors.toList()))
+                .compose(compositeFuture -> {
+                    List<Boolean> list = compositeFuture.list();
+                    for (int i = 0; i < list.size(); i++) {
+                        if (list.get(i)) {
+                            return Future.succeededFuture(Map.entry(i + (this.part * index), null));
+                        }
+                    }
+                    return matched(tasks, index + 1, message);
+                });
+    }
+
+    protected List<MesseageHandler>[] splitTask(List<MesseageHandler> matcheds) {
+        int size = matcheds.size(), index = 0;
+        int start = 0, end = this.part;
+        List<MesseageHandler>[] lists = new List[(int) Math.ceil((1.0F * size) / 3)];
+        while (Math.min(end, size) < size) {
+            lists[index++] = matcheds.subList(start, end);
+            start = end;
+            end = Math.min(end + 3, size);
+        }
+        return lists;
+    }
 
     /*public ResponseMesseage textProcess(TextMesseage msg) {
         // TODO Auto-generated method stub

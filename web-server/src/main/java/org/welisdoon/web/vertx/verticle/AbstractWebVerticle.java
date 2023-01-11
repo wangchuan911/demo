@@ -170,13 +170,14 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                     return;
 
                 final String prefix = (routePath != null && !StringUtils.isEmpty(routePath.prefix())) ? getRegexPath(routePath.prefix()) : "";
+
+                RoutingContextChain chain = new RoutingContextChain();
                 this.routeMethod.stream().filter(Objects::nonNull).sorted((o1, o2) ->
                         o1.getAnnotation(VertxRouter.class).order() > o2.getAnnotation(VertxRouter.class).order() ? 1 : -1
                 ).forEach(routeMethod -> {
                     VertxRouter vertxRouter = routeMethod.getAnnotation(VertxRouter.class);
                     Route route = ((AbstractWebVerticle) verticle).router.route();
-                    RoutingContextChain chain = new RoutingContextChain(route);
-
+                    chain.setRoute(route);
                     if (vertxRouter.method() != null && vertxRouter.method().length > 0) {
 
                         Arrays.stream(vertxRouter.method()).filter(httpMethodString -> {
@@ -261,6 +262,8 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
                         return;
+                    } finally {
+                        chain.setRoute(null);
                     }
 
                 });

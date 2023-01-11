@@ -23,8 +23,4 @@ public class GetLocationHandler implements MesseageHandler<LocationMesseage, Tex
         return Future.succeededFuture(textMesseage);
     }
 
-    @Override
-    public boolean matched(LocationMesseage locationMesseage) {
-        return true;
-    }
 }
