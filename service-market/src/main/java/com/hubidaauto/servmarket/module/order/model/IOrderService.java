@@ -5,6 +5,8 @@ import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
 import com.hubidaauto.servmarket.module.order.entity.DetailVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
+import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
+import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -38,6 +40,10 @@ public interface IOrderService<O extends OrderCondition, W extends WorkOrderCond
     void dismiss(Long orderId);
 
     void modifyOrder(O condition);
+
+    default List<AppUserVO> getWorkingUser(Long orderId) {
+        return List.of();
+    }
 
 
     /* static void start(final long typeId,String J) {

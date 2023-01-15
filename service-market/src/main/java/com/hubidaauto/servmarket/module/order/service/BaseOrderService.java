@@ -1,6 +1,9 @@
 package com.hubidaauto.servmarket.module.order.service;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.util.TypeUtils;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.hubidaauto.servmarket.module.flow.enums.ServiceContent;
 import com.hubidaauto.servmarket.module.order.annotation.OrderClass;
@@ -9,18 +12,28 @@ import com.hubidaauto.servmarket.module.order.entity.DetailVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.model.IOrderService;
+import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
+import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
+import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
+import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.core.Future;
+import org.reflections.ReflectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
+import org.welisdoon.web.vertx.annotation.VertxMethod;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -139,6 +152,12 @@ public class BaseOrderService {
         Type orderConditionClass = this.getIOrderServiceRawType(iOrderService)[0];
         OrderCondition condition = jsonObject.toJavaObject(orderConditionClass);
         iOrderService.modifyOrder(condition);
+    }
+
+
+    public List<AppUserVO> getWorkingUser(Long orderId) {
+        IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(orderId).getClassId());
+        return iOrderService.getWorkingUser(orderId);
     }
 
 

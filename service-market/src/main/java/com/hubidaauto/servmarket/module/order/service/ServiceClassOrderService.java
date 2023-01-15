@@ -24,6 +24,7 @@ import com.hubidaauto.servmarket.module.order.model.IOrderService;
 import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
 import com.hubidaauto.servmarket.module.popularize.model.IRebate;
 import com.hubidaauto.servmarket.module.popularize.model.RebateConfig;
+import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
 import org.welisdoon.web.vertx.verticle.SchedulerVerticle;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
@@ -428,6 +429,9 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     public void dismiss(Long orderId) {
         Flow flow = new Flow();
         flow.setId(orderDao.get(orderId).getFlowId());
+        OrderVO orderVO = baseOrderDao.get(orderId);
+        orderVO.setStatusId(OrderStatus.DISMISS.statusId());
+        baseOrderDao.put(orderVO);
         orderDao.delete(orderId);
         baseOrderDao.delete(orderId);
         ServiceClassWorkOrderCondition workOrderCondition = new ServiceClassWorkOrderCondition();
@@ -485,8 +489,18 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         OrderCondition<OrderVO> condition = new OrderCondition<>();
         condition.setCode(refundResultMesseage.getOutTradeNo());
         orderVO = baseOrderDao.find(condition);
-        orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
+        orderVO.setStatusId(OrderStatus.REFUNDED.statusId());
         baseOrderDao.put(orderVO);
+
+        Flow flow = new Flow();
+        flow.setId(orderVO.getFlowId());
+        ServiceClassWorkOrderCondition workOrderCondition = new ServiceClassWorkOrderCondition();
+        workOrderCondition.setOrderId(orderVO.getId());
+        workOrderDao.clear(workOrderCondition);
+        staffTaskDao.clear(new StaffCondition().setOrderId(orderVO.getId()));
+        flowService.dismiss(flow);
+        orderPrePayDaoLog.delete(orderVO.getId());
+
         messeage.ok();
         return Future.succeededFuture(messeage);
     }
@@ -532,13 +546,24 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             default:
                 break;
         }
+        orderVO.setStatusId(OrderStatus.REFUNDING.statusId());
+        baseOrderDao.put(orderVO);
         OrderPayLogVO payLogVO = orderPrePayDaoLog.get(orderVO.getId());
         return Future.succeededFuture(new RefundRequestMesseage().setOutTradeNo(orderVO.getCode()).
                 setOutRefundNo(orderVO.getCode()).setRefundFee(orderVO.getPrice().intValue()).
                 setTotalFee(orderVO.getPrice().intValue()).setTransactionId(payLogVO.getTransactionId()));
     }
 
-
+    @Override
+    public void refundOnRequsetFinish(WeChatRefundOrder weChatPayOrder) {
+        try {
+            OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
+            orderVO.setStatusId(OrderStatus.REFUNDING.statusId());
+            baseOrderDao.put(orderVO);
+        } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
 
     @Override
     public void overtime(OverTimeOrderVO overTimeOrder) {
@@ -668,5 +693,14 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             });
         };
         return vertxConsumer;
+    }
+
+    public List<AppUserVO> getWorkingUser(Long orderId) {
+        return this.getWorkOrders((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setQuery("all").setOrderId(orderId))
+                .stream()
+                .filter(orderVO -> Objects.equals(orderVO.getStatusId(), WorkOrderStatus.READY.statusId()))
+                .map(workOrderVO ->
+                        appUserDao.get(workOrderVO.getStaffId())
+                ).collect(Collectors.toList());
     }
 }

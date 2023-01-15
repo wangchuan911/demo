@@ -196,7 +196,7 @@ public class OrderService extends AbstractBaseService<OrderVO> implements IWecha
 	}
 
 	@Override
-	public Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+	public Future<PayBillResponseMesseage> payOnCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
 		OrderVO orderVO = new OrderVO()
 				.setOrderCode(payBillRequsetMesseage.getOutTradeNo())
 				.setCustId(payBillRequsetMesseage.getOpenId());
@@ -225,7 +225,7 @@ public class OrderService extends AbstractBaseService<OrderVO> implements IWecha
 	}
 
 	@Override
-	public Future<PrePayRequsetMesseage> payRequset(WeChatPayOrder payOrder) {
+	public Future<PrePayRequsetMesseage> payOnRequest(WeChatPayOrder payOrder) {
 
 		OrderVO orderVo = orderDao.get(new OrderVO(payOrder));
 		CustomWeChatAppConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(CustomWeChatAppConfiguration.class);

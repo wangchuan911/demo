@@ -18,7 +18,7 @@ public class OrderCondition<T extends OrderVO> extends AbstractBaseCondition<Lon
     int typeId;
     Long flowId, classId, custId, statusId;
     String query, code;
-    static final private String[] QUERY = {"pay", "running", "comment", "finish", "dispatching", "dispatched"};
+    static final private String[] QUERY = {"pay", "running", "comment", "finish", "dispatching", "dispatched", "all"};
 
     public int getTypeId() {
         return typeId;
