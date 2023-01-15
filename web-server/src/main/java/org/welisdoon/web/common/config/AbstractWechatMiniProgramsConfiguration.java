@@ -74,7 +74,7 @@ public class AbstractWechatMiniProgramsConfiguration extends AbstractWechatConfi
                 Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(weChatPayOrder.getPayClass());
                 IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
                 /*PrePayRequsetMesseage prePayRequsetMesseage = iWechatPayHandler.payRequset(weChatPayOrder);*/
-                iWechatPayHandler.payRequset(weChatPayOrder).onSuccess(prePayRequsetMesseage -> {
+                iWechatPayHandler.payOnRequest(weChatPayOrder).onSuccess(prePayRequsetMesseage -> {
                     try {
                         Buffer buffer = Buffer.buffer(JAXBUtils.toXML(prePayRequsetMesseage
                                 .setAppId(this.getAppID())
@@ -151,7 +151,7 @@ public class AbstractWechatMiniProgramsConfiguration extends AbstractWechatConfi
             /*PayBillResponseMesseage payBillResponseMesseage = iWechatPayHandler.payCallBack(payBillRequsetMesseage);
             routingContext.response()
                     .end(Buffer.buffer(JAXBUtils.toXML(payBillResponseMesseage)));*/
-            iWechatPayHandler.payCallBack(payBillRequsetMesseage)
+            iWechatPayHandler.payOnCallBack(payBillRequsetMesseage)
                     .onSuccess(payBillResponseMesseage -> {
                         try {
                             routingContext.response()
@@ -176,7 +176,7 @@ public class AbstractWechatMiniProgramsConfiguration extends AbstractWechatConfi
                 Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(weChatRefundOrder.getPayClass());
                 IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
                 /*RefundRequestMesseage requset = iWechatPayHandler.refundRequset(weChatRefundOrder);*/
-                iWechatPayHandler.refundRequset(weChatRefundOrder).onSuccess(requset -> {
+                iWechatPayHandler.refundOnRequest(weChatRefundOrder).onSuccess(requset -> {
                     try {
                         Buffer buffer = Buffer.buffer(JAXBUtils.toXML(requset
                                 .setAppId(this.getAppID())
@@ -205,6 +205,7 @@ public class AbstractWechatMiniProgramsConfiguration extends AbstractWechatConfi
                                                     messeage.getErrCodeDes()));
                                         } else {
                                             JsonObject resultBodyJson = new JsonObject().put("success", messeage.getReturnMsg());
+                                            iWechatPayHandler.refundOnRequsetFinish(weChatRefundOrder);
                                             jsonObjectPromise.complete(resultBodyJson);
                                         }
                                     } catch (Throwable t) {
@@ -242,7 +243,7 @@ public class AbstractWechatMiniProgramsConfiguration extends AbstractWechatConfi
             logger.info(String.format("%s,%s", "微信回调", routingContext.getBodyAsString()));
             RefundResultMesseage resultMesseage = JAXBUtils.fromXML(routingContext.getBodyAsString(), RefundResultMesseage.class).decrypt(this.getMerchant().getMchKey());
             /*RefundReplyMesseage responseMesseage = iWechatPayHandler.refundCallBack(resultMesseage);*/
-            iWechatPayHandler.refundCallBack(resultMesseage).onSuccess(responseMesseage -> {
+            iWechatPayHandler.refundOnCallBack(resultMesseage).onSuccess(responseMesseage -> {
                 try {
                     routingContext.response()
                             .end(Buffer.buffer(JAXBUtils.toXML(responseMesseage)));
@@ -265,7 +266,7 @@ public class AbstractWechatMiniProgramsConfiguration extends AbstractWechatConfi
                 Class<IWechatPayHandler> iWechatPayHandlerClass = (Class<IWechatPayHandler>) Class.forName(transferOrder.getPayClass());
                 IWechatPayHandler iWechatPayHandler = ApplicationContextProvider.getBean(iWechatPayHandlerClass);
                 /* MarketTransferRequsetMesseage requset = iWechatPayHandler.marketTransferRequset(transferOrder);*/
-                iWechatPayHandler.marketTransferRequset(transferOrder).onSuccess(requset -> {
+                iWechatPayHandler.marketTransferOnRequset(transferOrder).onSuccess(requset -> {
                     try {
 
                         Buffer buffer = Buffer.buffer(JAXBUtils.toXML(requset

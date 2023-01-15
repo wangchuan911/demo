@@ -51,7 +51,10 @@
                 </when>
                 <when test="query=='finish'">
                     and A.CUST_ID=#{custId}
-                    and A.STATUS_ID=10001
+                    and A.STATUS_ID in (10001,10002,10006)
+                </when>
+                <when test="query=='all'">
+
                 </when>
                 <otherwise>
                     and 1=2

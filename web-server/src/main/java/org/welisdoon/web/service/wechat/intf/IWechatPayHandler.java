@@ -9,23 +9,27 @@ import org.welisdoon.web.entity.wechat.payment.response.PayBillResponseMesseage;
 import org.welisdoon.web.entity.wechat.payment.response.RefundReplyMesseage;
 
 public interface IWechatPayHandler {
-	default Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage){
+	default Future<PayBillResponseMesseage> payOnCallBack(PayBillRequsetMesseage payBillRequsetMesseage){
 		return Future.failedFuture("不支持的操作");
 	}
 
-	default Future<PrePayRequsetMesseage> payRequset(WeChatPayOrder weChatPayOrder){
+	default Future<PrePayRequsetMesseage> payOnRequest(WeChatPayOrder weChatPayOrder){
 		return Future.failedFuture("不支持的操作");
 	}
 
-	default Future<RefundReplyMesseage> refundCallBack(RefundResultMesseage refundResultMesseage){
+	default Future<RefundReplyMesseage> refundOnCallBack(RefundResultMesseage refundResultMesseage){
 		return Future.failedFuture("不支持的操作");
 	}
 
-	default Future<RefundRequestMesseage> refundRequset(WeChatRefundOrder weChatPayOrder){
+	default Future<RefundRequestMesseage> refundOnRequest(WeChatRefundOrder weChatPayOrder){
 		return Future.failedFuture("不支持的操作");
 	}
 
-	default Future<MarketTransferRequsetMesseage> marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
+	default void refundOnRequsetFinish(WeChatRefundOrder weChatPayOrder){
+
+	}
+
+	default Future<MarketTransferRequsetMesseage> marketTransferOnRequset(WeChatMarketTransferOrder weChatPayOrder) {
 		return Future.failedFuture("不支持的操作");
 	}
 

@@ -446,7 +446,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
 
 
     @Override
-    public Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+    public Future<PayBillResponseMesseage> payOnCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
         OrderVO orderVO;
         {
             OrderCondition<OrderVO> condition = new OrderCondition<>();
@@ -468,7 +468,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    public Future<PrePayRequsetMesseage> payRequset(WeChatPayOrder weChatPayOrder) {
+    public Future<PrePayRequsetMesseage> payOnRequest(WeChatPayOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
         PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()
                 .setBody(String.format("%s-服务费用结算:\n定单编号：%s\n金额%s", configuration.getAppName(), orderVO.getCode(), OrderUtils.priceFormat(orderVO.getPrice().intValue(), ' ', true, false)))
@@ -479,7 +479,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    public Future<RefundReplyMesseage> refundCallBack(RefundResultMesseage refundResultMesseage) {
+    public Future<RefundReplyMesseage> refundOnCallBack(RefundResultMesseage refundResultMesseage) {
         RefundReplyMesseage messeage = new RefundReplyMesseage();
         OrderVO orderVO;
         OrderCondition<OrderVO> condition = new OrderCondition<>();
@@ -492,7 +492,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
     }
 
     @Override
-    public Future<RefundRequestMesseage> refundRequset(WeChatRefundOrder weChatPayOrder) {
+    public Future<RefundRequestMesseage> refundOnRequest(WeChatRefundOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
         List<ServiceClassWorkOrderVO> doing = (List) this.getWorkOrders((ServiceClassWorkOrderCondition) new ServiceClassWorkOrderCondition().setQuery("all").setOrderId(orderVO.getId()));
         if (CollectionUtils.isEmpty(doing))

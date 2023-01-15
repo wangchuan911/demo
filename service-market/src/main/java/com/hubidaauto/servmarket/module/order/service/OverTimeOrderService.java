@@ -79,7 +79,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
     }
 
     @Override
-    public Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+    public Future<PayBillResponseMesseage> payOnCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
         OrderVO orderVO;
 
         OrderCondition<OrderVO> condition = new OrderCondition<>();
@@ -101,7 +101,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
     }
 
     @Override
-    public Future<PrePayRequsetMesseage> payRequset(WeChatPayOrder weChatPayOrder) {
+    public Future<PrePayRequsetMesseage> payOnRequest(WeChatPayOrder weChatPayOrder) {
         OrderVO orderVO = baseOrderDao.get(Long.parseLong(weChatPayOrder.getId()));
         AbstractWechatConfiguration customWeChatAppConfiguration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
         PrePayRequsetMesseage messeage = new PrePayRequsetMesseage()

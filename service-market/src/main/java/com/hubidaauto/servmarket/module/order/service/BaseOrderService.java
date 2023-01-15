@@ -133,7 +133,7 @@ public class BaseOrderService {
         WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderDestroy"), orderId);
     }
 
-    public void modifyOrder(String jsonText){
+    public void modifyOrder(String jsonText) {
         JSONObject jsonObject = JSONObject.parseObject(jsonText);
         IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(jsonObject.getLong("id")).getClassId());
         Type orderConditionClass = this.getIOrderServiceRawType(iOrderService)[0];
@@ -158,7 +158,7 @@ public class BaseOrderService {
                 .getActualTypeArguments();
     }
 
-    public static IOrderService getOrderService(Long classId){
+    public static IOrderService getOrderService(Long classId) {
         return ORDER_CLASSES.get(classId);
     }
 }
