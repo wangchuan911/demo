@@ -119,12 +119,6 @@
             <artifactId>commons-codec</artifactId>
         </dependency>
 
-        <!-- 扫描 -->
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.9.11</version>
-        </dependency>
 
         <!-- maven build  -->
         <!--<dependency>
@@ -144,12 +138,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>4.4</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>1.2.75</version>
         </dependency>
         <!--mysql-->
         <dependency>
