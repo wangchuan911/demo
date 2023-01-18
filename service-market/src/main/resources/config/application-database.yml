@@ -1,10 +1,7 @@
 #spring:
 #  datasource:
 #    enabled: true
-#    username: hubidaauto
-#              #welisdoon
-#    password: Mengyan209810$$
-#              #We1i$d00n
+
 #    #驱动
 #    driver-class-name: com.mysql.jdbc.Driver
 #    #数据库连接路径
@@ -37,13 +34,13 @@ values:
   db:
     jdbc: jdbc:mysql://123.207.114.46/
     param: serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true
-    username: hubidaauto
-    password: Mengyan209810$$
+    username:
+    password:
   db2:
     jdbc: jdbc:mysql://47.112.217.148/
     param: serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true
-    username: root
-    password: Jx@@114805
+    username:
+    password:
 
 
 spring:
