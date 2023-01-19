@@ -1,8 +1,6 @@
 package org.welisdoon.common.data;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.fastjson.util.TypeUtils;
 import org.reflections.Reflections;
 import org.welisdoon.common.ObjectUtils;
@@ -17,13 +15,13 @@ public interface IData<ID> {
 
     void setId(ID id);
 
-    String getModelAlias();
+    String getDataMarker();
 
-    void setModelAlias(String modelAlias);
+    void setDataMarker(String dataMarker);
 
     abstract class DataObject<ID> implements IData<ID> {
         ID id;
-        String modelAlias;
+        String dataMarker;
 
         public void setId(ID id) {
             this.id = id;
@@ -35,19 +33,19 @@ public interface IData<ID> {
         }
 
         @Override
-        public String getModelAlias() {
-            return modelAlias == null || modelAlias.isEmpty() ? ObjectUtils.getAnnotations(this.getClass(), DataModelAlias.class)[0].value()[0] : this.modelAlias;
+        public String getDataMarker() {
+            return dataMarker == null || dataMarker.isEmpty() ? ObjectUtils.getAnnotations(this.getClass(), DataMarker.class)[0].value()[0] : this.dataMarker;
         }
 
-        public void setModelAlias(String modelAlias) {
-            this.modelAlias = modelAlias;
+        public void setDataMarker(String dataMarker) {
+            this.dataMarker = dataMarker;
         }
     }
 
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.RUNTIME)
-    @Repeatable(DataModelAliases.class)
-    @interface DataModelAlias {
+    @Repeatable(DataMarkers.class)
+    @interface DataMarker {
         String[] value();
 
         Class<?> processor() default Object.class;
@@ -55,8 +53,8 @@ public interface IData<ID> {
 
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.RUNTIME)
-    @interface DataModelAliases {
-        DataModelAlias[] value();
+    @interface DataMarkers {
+        DataMarker[] value();
 
         Class<?> processor() default Object.class;
     }
@@ -66,15 +64,15 @@ public interface IData<ID> {
     static void scan(Reflections reflections) {
         Stream
                 .of(
-                        reflections.getTypesAnnotatedWith(DataModelAlias.class),
-                        reflections.getTypesAnnotatedWith(DataModelAliases.class)
+                        reflections.getTypesAnnotatedWith(DataMarker.class),
+                        reflections.getTypesAnnotatedWith(DataMarkers.class)
                 )
                 .flatMap(objects -> objects.stream())
                 .forEach(aClass -> {
                     if (!IData.class.isAssignableFrom(aClass)) return;
-                    DataModelAlias[] dataModelAliases = ObjectUtils.getAnnotations(aClass, DataModelAlias.class);
-                    for (DataModelAlias dataModelAlias : dataModelAliases) {
-                        for (String s : dataModelAlias.value()) {
+                    DataMarker[] dataMarkers = ObjectUtils.getAnnotations(aClass, DataMarker.class);
+                    for (DataMarker dataMarker : dataMarkers) {
+                        for (String s : dataMarker.value()) {
                             if (!DATA_MAP.containsKey(s) || DATA_MAP.get(s).isAssignableFrom(aClass)) {
                                 DATA_MAP.put(s, (Class<IData>) aClass);
                             }
