@@ -10,18 +10,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public interface IData<ID> {
+public interface IData<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>> {
     ID getId();
 
     void setId(ID id);
 
-    String getDataMarker();
+    DATA_MARKER getDataMarker();
 
-    void setDataMarker(String dataMarker);
+    void setDataMarker(DATA_MARKER dataMarker);
 
-    abstract class DataObject<ID> implements IData<ID> {
+    abstract class DataObject<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>> implements IData<ID, DATA_MARKER> {
         ID id;
-        String dataMarker;
+        DATA_MARKER dataMarker;
 
         public void setId(ID id) {
             this.id = id;
@@ -33,60 +33,45 @@ public interface IData<ID> {
         }
 
         @Override
-        public String getDataMarker() {
-            return dataMarker == null || dataMarker.isEmpty() ? ObjectUtils.getAnnotations(this.getClass(), DataMarker.class)[0].value()[0] : this.dataMarker;
+        public DATA_MARKER getDataMarker() {
+            return dataMarker;
         }
 
-        public void setDataMarker(String dataMarker) {
+        public void setDataMarker(DATA_MARKER dataMarker) {
             this.dataMarker = dataMarker;
         }
     }
 
-    @Target(ElementType.TYPE)
-    @Retention(RetentionPolicy.RUNTIME)
-    @Repeatable(DataMarkers.class)
-    @interface DataMarker {
-        String[] value();
-
-        Class<?> processor() default Object.class;
+    interface IDataMarker {
     }
 
-    @Target(ElementType.TYPE)
-    @Retention(RetentionPolicy.RUNTIME)
-    @interface DataMarkers {
-        DataMarker[] value();
 
-        Class<?> processor() default Object.class;
+    Map<Class<Enum<? extends IDataMarker>>, Map<Enum<? extends IDataMarker>, Class<? extends IData>>> DATA_MAP = new HashMap<>();
+
+
+    static void add(Enum<? extends IDataMarker> marker, Class<? extends IData> dataType) {
+        Map<Enum<? extends IDataMarker>, Class<? extends IData>> map = DATA_MAP.get(marker.getClass());
+        if (map == null) {
+            map = new HashMap<>();
+            DATA_MAP.put((Class<Enum<? extends IDataMarker>>) marker.getClass(), map);
+        }
+        map.put(marker, dataType);
     }
 
-    Map<String, Class<IData>> DATA_MAP = new HashMap<>();
-
-    static void scan(Reflections reflections) {
-        Stream
-                .of(
-                        reflections.getTypesAnnotatedWith(DataMarker.class),
-                        reflections.getTypesAnnotatedWith(DataMarkers.class)
-                )
-                .flatMap(objects -> objects.stream())
-                .forEach(aClass -> {
-                    if (!IData.class.isAssignableFrom(aClass)) return;
-                    DataMarker[] dataMarkers = ObjectUtils.getAnnotations(aClass, DataMarker.class);
-                    for (DataMarker dataMarker : dataMarkers) {
-                        for (String s : dataMarker.value()) {
-                            if (!DATA_MAP.containsKey(s) || DATA_MAP.get(s).isAssignableFrom(aClass)) {
-                                DATA_MAP.put(s, (Class<IData>) aClass);
-                            }
-                        }
-                    }
-                });
+    static void add(Enum<? extends IDataMarker> marker, IData data) {
+        add(marker, data.getClass());
     }
 
-    static <T extends IData> T jsonToDataEntity(JSONObject object) {
-        return (T) TypeUtils.castToJavaBean(object, DATA_MAP.get(object.getString("modelAlias")));
+    static void add(IData data) {
+        add(data.getDataMarker(), data.getClass());
     }
 
-    static <T extends IData> T jsonToDataEntity(String jsonString) {
-        return jsonToDataEntity(JSONObject.parseObject(jsonString));
+    static <T extends IData> T jsonToDataEntity(Class<? extends IDataMarker> enumClass, JSONObject object) {
+        return (T) TypeUtils.castToJavaBean(object, DATA_MAP.get(enumClass).get(Enum.valueOf((Class) enumClass, object.getString("dataMarker"))));
+    }
+
+    static <T extends IData> T jsonToDataEntity(Class<? extends IDataMarker> enumClass, String jsonString) {
+        return jsonToDataEntity(enumClass, JSONObject.parseObject(jsonString));
     }
 
 }
