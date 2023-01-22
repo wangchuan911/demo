@@ -13,18 +13,19 @@ import java.util.stream.Stream;
 public interface IData<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>> {
     ID getId();
 
-    void setId(ID id);
+    IData setId(ID id);
 
     DATA_MARKER getDataMarker();
 
-    void setDataMarker(DATA_MARKER dataMarker);
+    IData setDataMarker(DATA_MARKER dataMarker);
 
     abstract class DataObject<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>> implements IData<ID, DATA_MARKER> {
         ID id;
         DATA_MARKER dataMarker;
 
-        public void setId(ID id) {
+        public DataObject<ID, DATA_MARKER> setId(ID id) {
             this.id = id;
+            return this;
         }
 
         @Override
@@ -37,8 +38,9 @@ public interface IData<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>
             return dataMarker;
         }
 
-        public void setDataMarker(DATA_MARKER dataMarker) {
+        public DataObject<ID, DATA_MARKER> setDataMarker(DATA_MARKER dataMarker) {
             this.dataMarker = dataMarker;
+            return this;
         }
     }
 
