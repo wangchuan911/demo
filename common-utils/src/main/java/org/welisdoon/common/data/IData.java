@@ -48,7 +48,7 @@ public interface IData<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>
     }
 
 
-    Map<Class<Enum<? extends IDataMarker>>, Map<Enum<? extends IDataMarker>, Class<? extends IData>>> DATA_MAP = new HashMap<>();
+    Map<Class<? extends Enum<? extends IDataMarker>>, Map<Enum<? extends IDataMarker>, Class<? extends IData>>> DATA_MAP = new HashMap<>();
 
 
     static void add(Enum<? extends IDataMarker> marker, Class<? extends IData> dataType) {
@@ -68,11 +68,11 @@ public interface IData<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>
         add(data.getDataMarker(), data.getClass());
     }
 
-    static <T extends IData> T jsonToDataEntity(Class<? extends IDataMarker> enumClass, JSONObject object) {
+    static <T extends IData> T jsonToDataEntity(Class<? extends Enum<? extends IDataMarker>> enumClass, JSONObject object) {
         return (T) TypeUtils.castToJavaBean(object, DATA_MAP.get(enumClass).get(Enum.valueOf((Class) enumClass, object.getString("dataMarker"))));
     }
 
-    static <T extends IData> T jsonToDataEntity(Class<? extends IDataMarker> enumClass, String jsonString) {
+    static <T extends IData> T jsonToDataEntity(Class<? extends Enum<? extends IDataMarker>> enumClass, String jsonString) {
         return jsonToDataEntity(enumClass, JSONObject.parseObject(jsonString));
     }
 
