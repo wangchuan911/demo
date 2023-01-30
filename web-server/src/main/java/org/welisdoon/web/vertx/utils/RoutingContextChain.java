@@ -4,6 +4,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.RoutingContext;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.welisdoon.web.entity.User;
 
 import java.util.function.Function;
 
@@ -14,13 +16,16 @@ import java.util.function.Function;
  * @Date 2021/1/27 18:49
  */
 public class RoutingContextChain {
-
+    static ThreadLocal<User> threadLocal = new InheritableThreadLocal<>();
     Route route;
 
-    public RoutingContextChain(Route route) {
-        this.route = route;
+    public RoutingContextChain() {
+
     }
 
+    public void setRoute(Route route) {
+        this.route = route;
+    }
 
     public <T> RoutingContextChain respond(Function<RoutingContext, Future<T>> function) {
         route.respond(function);

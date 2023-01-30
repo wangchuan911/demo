@@ -22,7 +22,7 @@ public class DefaultTextHandler implements MesseageHandler<TextMesseage, NoReply
     }
 
     @Override
-    public boolean matched(TextMesseage textMesseage) {
-        return true;
+    public Future<Boolean> matched(TextMesseage textMesseage) {
+        return Future.succeededFuture(true);
     }
 }

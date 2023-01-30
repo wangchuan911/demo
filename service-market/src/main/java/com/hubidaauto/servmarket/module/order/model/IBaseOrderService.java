@@ -7,6 +7,8 @@ import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO;
 import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
+import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
+import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderCondition;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import io.vertx.core.Future;
@@ -43,5 +45,7 @@ public interface IBaseOrderService {
     Future<Void> dismiss(Long orderId);
 
     Future<Void> modifyOrder(String jsonText);
+
+    Future<List<AppUserVO>> getWorkingUser(Long orderId);
 
 }

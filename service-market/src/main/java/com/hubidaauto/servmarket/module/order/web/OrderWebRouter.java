@@ -6,6 +6,8 @@ import com.hubidaauto.servmarket.module.log.dao.OrderPayDaoLog;
 import com.hubidaauto.servmarket.module.log.entity.OrderPayLogVO;
 import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.model.IBaseOrderService;
+import com.hubidaauto.servmarket.module.staff.dao.StaffJobDao;
+import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
 import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.user.entity.AppUserVO;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatPayOrder;
@@ -28,6 +31,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @Classname OrderWebRouter
@@ -43,8 +47,14 @@ public class OrderWebRouter {
     Logger logger = LoggerFactory.getLogger(this.getClass());
     AbstractWechatMiniProgramsConfiguration customWeChatAppConfiguration;
     AppUserDao appUserDao;
+    StaffJobDao staffJobDao;
     IBaseOrderService orderService;
     OrderPayDaoLog orderPrePayDaoLog;
+
+    @Autowired
+    public void setStaffJobDao(StaffJobDao staffJobDao) {
+        this.staffJobDao = staffJobDao;
+    }
 
     @Autowired
     public void setOrderPrePayDaoLog(OrderPayDaoLog orderPrePayDaoLog) {
@@ -401,5 +411,30 @@ public class OrderWebRouter {
             mode = VertxRouteType.PathRegex)
     public void refundCallBack(RoutingContextChain chain) {
         chain.handler(this.customWeChatAppConfiguration::weChatRefundCallBack);
+    }
+
+    @VertxRouter(path = "/getWorkingUser", method = "POST")
+    public void getWorkingUser(RoutingContextChain context) {
+        context.handler(routingContext -> {
+            try {
+                JSONArray objects = JSONArray.parseArray(routingContext.getBodyAsString());
+                if (CollectionUtils.isEmpty(staffJobDao.list(new StaffCondition().setStaffId(objects.getLong(1)).setRoleId(7L)))) {
+                    routingContext.response().setStatusCode(404).end();
+                    return;
+                }
+                orderService
+                        .getWorkingUser(objects.getLong(0))
+                        .onComplete(stringAsyncResult -> {
+                            if (stringAsyncResult.succeeded()) {
+                                routingContext.end(JSONArray.toJSONString(stringAsyncResult.result()));
+                            } else {
+                                routingContext.response().setStatusCode(500).end(stringAsyncResult.cause().getMessage());
+                            }
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+                routingContext.response().setStatusCode(500).end(e.getMessage());
+            }
+        });
     }
 }

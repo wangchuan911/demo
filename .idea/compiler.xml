@@ -24,7 +24,6 @@
       <module name="carservice" target="11" />
       <module name="info-map" target="11.0.2" />
       <module name="micro-center" target="11" />
-      <module name="micro-server-demo" target="11" />
       <module name="web-interface" target="11" />
       <module name="webserver" target="11" />
     </bytecodeTargetLevel>

@@ -1,9 +1,8 @@
 package org.welisdoon.common;
 
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
@@ -238,4 +237,37 @@ public class ObjectUtils {
         }
 
     }
+
+    public static <T extends Annotation> T[] getAnnotations(Class<?> aClass, Class<T> annotationClass) {
+        T[] ts = aClass.getAnnotationsByType(annotationClass);
+
+        if (ts == null) {
+            try {
+                Annotation annotation = aClass.getAnnotation(annotationClass.getAnnotation(Repeatable.class).value());
+                ts = (T[]) annotation.getClass().getMethod("value").invoke(annotation);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+                ts = (T[]) Array.newInstance(annotationClass, 0);
+            }
+        }
+        return ts;
+    }
+
+    public static <T extends Annotation, O> T[] getAnnotations(Class<? extends O> targetClass, Class<T> annotationClass, Class<O> originClass) {
+        List<T> list = new LinkedList<>();
+        T[] ts;
+        Class<?> aClass = targetClass;
+        while (originClass.isAssignableFrom(aClass)) {
+            ts = getAnnotations(aClass, annotationClass);
+            if (ts != null && ts.length > 0) {
+                for (T t : ts) {
+                    list.add(t);
+                }
+                break;
+            }
+            aClass = aClass.getSuperclass();
+        }
+        return list.toArray((T[]) Array.newInstance(annotationClass, 0));
+    }
+
 }

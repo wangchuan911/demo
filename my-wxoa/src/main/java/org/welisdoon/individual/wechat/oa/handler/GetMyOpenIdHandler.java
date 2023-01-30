@@ -25,7 +25,7 @@ public class GetMyOpenIdHandler implements MesseageHandler<org.welisdoon.web.ent
     }
 
     @Override
-    public boolean matched(org.welisdoon.web.entity.wechat.messeage.request.TextMesseage textMesseage) {
-        return StringUtils.hasText(textMesseage.getContent()) && textMesseage.getContent().equals("我是谁");
+    public Future<Boolean> matched(org.welisdoon.web.entity.wechat.messeage.request.TextMesseage textMesseage) {
+        return Future.succeededFuture(StringUtils.hasText(textMesseage.getContent()) && textMesseage.getContent().equals("我是谁"));
     }
 }

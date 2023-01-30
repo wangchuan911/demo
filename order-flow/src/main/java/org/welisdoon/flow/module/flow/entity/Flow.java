@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @Date 2021/8/16 23:35
  */
 public class Flow {
-    Long id, templateId, statusId, functionId;
+    Long id, templateId, statusId, functionId, transactionId;
     Stream start;
 
     public Long getId() {
@@ -55,9 +55,18 @@ public class Flow {
         this.functionId = functionId;
     }
 
-    public void sync(Flow flow){
+    public Long getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(Long transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public void sync(Flow flow) {
         this.setTemplateId(flow.getTemplateId());
         this.setStatusId(flow.getStatusId());
         this.setFunctionId(flow.getFunctionId());
     }
+
 }

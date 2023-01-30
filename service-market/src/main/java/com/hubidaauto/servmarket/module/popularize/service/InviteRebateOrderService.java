@@ -121,7 +121,7 @@ public class InviteRebateOrderService implements IWechatPayHandler {
     }
 
     @Override
-    public Future<PayBillResponseMesseage> payCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
+    public Future<PayBillResponseMesseage> payOnCallBack(PayBillRequsetMesseage payBillRequsetMesseage) {
         return null;
     }
 
@@ -141,7 +141,7 @@ public class InviteRebateOrderService implements IWechatPayHandler {
     }*/
 
     @Override
-    public Future<MarketTransferRequsetMesseage> marketTransferRequset(WeChatMarketTransferOrder weChatPayOrder) {
+    public Future<MarketTransferRequsetMesseage> marketTransferOnRequset(WeChatMarketTransferOrder weChatPayOrder) {
         Long userid = Long.valueOf(weChatPayOrder.getUserId());
         InviteRebateCountVO countVO = inviteRebateCountDao.get(userid);
         AppUserVO userVO = appUserDao.get(userid);
