@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.order.dao.ServiceClassOrderDao">
+    <sql id="columns">
+        <include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.columns"></include>
+    </sql>
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
+            resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
+
+        SELECT <include refid="columns"></include>,B.*
+        from (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.list"></include>) A
+        JOIN SERVICE_CLASS_ORDER B
+        ON A.ID=B.ID
+    </select>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
+            resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
+
+        SELECT <include refid="columns"></include>,B.*
+        from SERVICE_CLASS_ORDER B
+        JOIN BASE_ORDER A
+        ON A.ID=B.ID
+        <where>
+            <choose>
+                <when test="query=='timeout_pay'">
+                    AND A.STATUS_ID=10003
+                    /*AND EXISTS (SELECT 1
+                    FROM LOG_WX_PAY AA
+                    WHERE AA.ORDER_ID=B.ID
+                    AND AA.TRANSACTION_ID IS NULL
+                    AND CURRENT_TIMESTAMP>(AA.CREATE_DATE + INTERVAL 2 HOUR))*/
+                    AND (CASE
+                    WHEN EXISTS(SELECT 1
+                    FROM LOG_WX_PAY AA
+                    WHERE AA.ORDER_ID = B.ID
+                    AND AA.TRANSACTION_ID IS NULL
+                    AND CURRENT_TIMESTAMP > (AA.CREATE_DATE + INTERVAL 2 HOUR)) THEN 1
+                    WHEN EXISTS(
+                    SELECT 1
+                    FROM DUAL
+                    WHERE NOT EXISTS(SELECT 1
+                    FROM LOG_WX_PAY AA
+                    WHERE AA.ORDER_ID = B.ID)
+                    AND CURRENT_TIMESTAMP > (A.CREATE_TIME + INTERVAL 2 HOUR)) THEN 1
+                    ELSE 0 END) = 1
+                </when>
+                <when test="query=='timeout_user_finish'">
+                    A.STATUS_ID = 10000
+                    and exists(
+                    SELECT 1
+                    FROM WORK_ORDER A1
+                    WHERE A1.OPERATION = 'CUST_COMFIRM'
+                    AND A1.STATUS_ID = 11001
+                    AND A1.ORDER_ID = A.ID
+                    AND CURRENT_TIMESTAMP > (A1.CREATE_TIME + INTERVAL 7 DAY)
+                    )
+                </when>
+                <otherwise>
+                   AND 1=2
+                </otherwise>
+            </choose>
+        </where>
+        <if test="page!=null">
+        limit ${page.start},${page.size}
+        </if>
+    </select>
+    <sql id="condition">
+        and a.id=#{data.id}
+    </sql>
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
+        SELECT <include refid="columns"></include>,B.*
+        FROM (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.get"></include>) A
+        JOIN SERVICE_CLASS_ORDER B
+        ON A.ID=B.ID
+
+
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO" >
+        INSERT INTO SERVICE_CLASS_ORDER (ID, ITEM_TYPE_ID, REMARK,  FINISH_TIME, BOOK_TIME, TYPE_ID, ADDRESS_ID, PAY_TYPE_ID, WORKER_NUM, WORK_LOAD, WORK_LOAD_UNIT, ADDED_VALUE,TOTAL_WORK_LOAD)
+        VALUES (#{id},#{itemTypeId},#{remark},#{finishTime},#{bookTime},#{typeId},#{addressId},#{payTypeId},#{workerNum},#{workLoad},#{workLoadUnit},#{addedValue},#{totalWorkLoad})
+
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderVO">
+        UPDATE SERVICE_CLASS_ORDER t
+        SET t.ITEM_TYPE_ID = #{itemTypeId}, t.REMARK = #{remark}, t.FINISH_TIME = #{finishTime}, t.BOOK_TIME = #{bookTime}, t.TYPE_ID = #{typeId},
+            t.ADDRESS_ID = #{addressId}, t.PAY_TYPE_ID = #{payTypeId}, t.WORKER_NUM = #{workerNum}, t.WORK_LOAD = #{workLoad},t.ADDED_VALUE=#{addedValue}
+            t.WORK_LOAD_UNIT= #{workLoadUnit},t.TOTAL_WORK_LOAD=#{totalWorkLoad}
+            WHERE t.ID = #{id}
+
+    </update>
+
+    <delete id="delete" parameterType="long">
+        delete from SERVICE_CLASS_ORDER where ID=#{value}
+    </delete>
+
+    <update id="update" parameterType="com.hubidaauto.servmarket.module.order.entity.ServiceClassOrderCondition">
+        UPDATE SERVICE_CLASS_ORDER t
+        <set>
+            <if test="modify=='dispatching'">
+                <if test="data.bookTime!=null">
+                    t.BOOK_TIME = #{data.bookTime},
+                </if>
+                <if test="data.workerNum!=null">
+                    t.WORKER_NUM = #{data.workerNum},
+                </if>
+            </if>
+        </set>
+
+        WHERE t.ID = #{id}
+
+    </update>
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.flow.module.template.dao.LinkDao">
+
+    <resultMap id="rm_Link" type="org.welisdoon.flow.module.template.entity.Link">
+        <id column="ID" property="id"></id>
+        <result column="SUPER_ID" property="superId"></result>
+        <result column="NODE_ID" property="nodeId"></result>
+        <result column="SEQ" property="seq"></result>
+        <result column="TEMPLATE_ID" property="templateId"></result>
+        <result column="FUNCTION_ID" property="functionId"></result>
+        <result column="NAME" property="name"></result>
+        <result column="VALUE_ID" property="valueId" ></result>
+        <result column="SHOW_ID" property="showId" ></result>
+        <collection property="subTree" ofType="org.welisdoon.flow.module.template.entity.Link"
+                    select="list" column="{superLinkId=SUB_SELECT_ID,templateId=TEMPLATE_ID}"></collection>
+    </resultMap>
+   <sql id="selectByCondition">
+       select A.*
+            ,A.id SUB_SELECT_ID
+       from F_LINK A
+       <where>
+           <choose>
+               <when test="superLinkId!=null">
+                   and SUPER_ID=#{superLinkId}
+               </when>
+               <otherwise>
+                   and SUPER_ID is null
+               </otherwise>
+           </choose>
+           and TEMPLATE_ID=#{templateId}
+       </where>
+   </sql>
+    <select id="find" parameterType="org.welisdoon.flow.module.template.entity.TemplateCondition" resultMap="rm_Link">
+        <include refid="selectByCondition"></include>
+    </select>
+    <select id="list" parameterType="org.welisdoon.flow.module.template.entity.TemplateCondition" resultMap="rm_Link">
+        <include refid="selectByCondition"></include>
+        order by SEQ
+    </select>
+
+    <select id="get" parameterType="long" resultMap="rm_Link">
+        SELECT A.* ,-1 SUB_SELECT_ID FROM F_LINK A
+        WHERE ID=#{linkId}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.workorder.dao.ServiceClassWorkOrderDao">
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
+        SELECT * FROM WORK_ORDER A WHERE A.ID=#{value}
+    </select>
+    <sql id="condition">
+        <choose>
+            <when test="query=='all'">
+                and #{orderId}=ORDER_ID
+            </when>
+            <when test="query=='doing'">
+                and #{orderId}=ORDER_ID
+                and #{staffId}=STAFF_ID
+                and 11001= STATUS_ID
+            </when>
+            <when test="query=='timeout_user_finish'">
+                AND A.OPERATION = 'CUST_COMFIRM'
+                AND A.STATUS_ID = 11001
+                AND A.ORDER_ID = #{orderId}
+                AND CURRENT_TIMESTAMP > (A.CREATE_TIME + INTERVAL 7 DAY)
+            </when>
+            <when test="streamId!=null">
+                and #{streamId}=STREAM_ID
+            </when>
+            <otherwise>
+                and 1=2
+            </otherwise>
+        </choose>
+    </sql>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition"
+            resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
+        SELECT * FROM WORK_ORDER A
+        <where>
+            <include refid="condition"></include>
+        </where>
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO"
+            useGeneratedKeys="true" keyProperty="id">
+
+        INSERT INTO WORK_ORDER (ORDER_ID, STREAM_ID, STAFF_ID,  STATUS_ID, OPERATION, DEAD_LINE_TIME)
+        VALUES ( #{orderId},  #{streamId},  #{staffId},  #{statusId}, #{operation}, #{deadLineTime,jdbcType=TIMESTAMP})
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
+        update WORK_ORDER
+        set STAFF_ID=#{staffId},
+        STATUS_ID=#{statusId}, CREATE_TIME=#{createTime}, FINISH_TIME=#{finishTime}, DEAD_LINE_TIME=#{deadLineTime,jdbcType=TIMESTAMP}
+        where ID=#{id}
+    </update>
+
+    <update id="update"
+            parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition">
+        update WORK_ORDER
+        <set>
+            <if test="update=='finish'">
+                FINISH_TIME=CURRENT_TIMESTAMP,
+                STATUS_ID=11002,
+            </if>
+            <if test="update=='skip'">
+                FINISH_TIME=CURRENT_TIMESTAMP,
+                STATUS_ID=11003,
+            </if>
+        </set>
+        where ID=#{id}
+    </update>
+
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition"
+            resultType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderVO">
+        SELECT * FROM WORK_ORDER A
+        <where>
+            <include refid="condition"></include>
+        </where>
+    </select>
+
+    <delete id="clear" parameterType="com.hubidaauto.servmarket.module.workorder.entity.ServiceClassWorkOrderCondition">
+        DELETE FROM WORK_ORDER  WHERE ORDER_ID=#{orderId}
+    </delete>
+</mapper>

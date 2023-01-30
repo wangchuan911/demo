@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.flow.module.flow.dao.StreamDao">
+
+    <resultMap id="rm_Stream" type="org.welisdoon.flow.module.flow.entity.Stream">
+        <id column="ID" property="id"></id>
+        <result column="SUPER_ID" property="superId"></result>
+        <result column="NODE_ID" property="nodeId"></result>
+        <result column="SEQ" property="seq"></result>
+        <result column="FLOW_ID" property="flowId"></result>
+        <result column="FUNCTION_ID" property="functionId"></result>
+        <result column="VALUE_ID" property="valueId"></result>
+        <result column="NAME" property="name"></result>
+        <result column="SHOW_ID" property="showId" ></result>
+        <association property="show" javaType="org.welisdoon.flow.module.template.entity.LinkShow"
+                     select="org.welisdoon.flow.module.template.dao.LinkShowDao.get" column="SHOW_ID"></association>
+        <association property="value" javaType="org.welisdoon.flow.module.flow.entity.FlowValue"
+                     select="org.welisdoon.flow.module.flow.dao.FlowValueDao.get" column="VALUE_ID"></association>
+        <collection property="subTree" ofType="org.welisdoon.flow.module.flow.entity.Stream"
+                    select="list" column="{superStreamId=SUB_SELECT_ID,flowId=FLOW_ID,showTree=SHOW_TREE}"></collection>
+    </resultMap>
+    <sql id="SHOW_TREE">
+        <choose>
+            <when test="showTree==false">,NULL SUB_SELECT_ID,false SHOW_TREE</when>
+            <otherwise>,A.id SUB_SELECT_ID,true SHOW_TREE</otherwise>
+        </choose>
+    </sql>
+    <sql id="selectList">
+        select A.* <include refid="SHOW_TREE"></include>
+        from F_STREAM A
+        <where>
+            <choose>
+                <when test="superStreamId!=null">
+                    and SUPER_ID=#{superStreamId}
+                </when>
+                <otherwise>
+                    and SUPER_ID is null
+                </otherwise>
+            </choose>
+            and FLOW_ID=#{flowId}
+        </where>
+    </sql>
+    <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
+        <choose>
+            <when test="superStreamId==null">
+                select 1 from dual where 1=2
+            </when>
+            <otherwise>
+                <include refid="selectList"></include>
+                order by SEQ
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="find" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" resultMap="rm_Stream">
+        <include refid="selectList"></include>
+    </select>
+
+    <select id="get" parameterType="long" resultMap="rm_Stream">
+        select A.*
+            ,NULL SUB_SELECT_ID,false SHOW_TREE
+        from F_STREAM A
+        WHERE ID=#{streamId}
+    </select>
+
+    <update id="update" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition">
+        update F_STREAM a
+        <set>
+            <choose>
+                <when test="update=='STREAM_STATUS'">
+                    STATUS_ID=#{statusId},
+                </when>
+            </choose>
+        </set>
+        where a.ID=#{streamId}
+    </update>
+
+    <insert id="add" parameterType="org.welisdoon.flow.module.flow.entity.Stream" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO F_STREAM (STATUS_ID, FLOW_ID, NODE_ID, SUPER_ID, SEQ, FUNCTION_ID,NAME,VALUE_ID,SHOW_ID)
+        VALUES (#{statusId}, #{flowId}, #{nodeId}, #{superId}, #{seq}, #{functionId},#{name},#{valueId},#{showId})
+    </insert>
+
+    <update id="put" parameterType="org.welisdoon.flow.module.flow.entity.Stream">
+        update F_STREAM set STATUS_ID=#{statusId}, FLOW_ID= #{flowId},NODE_ID= #{nodeId},SUPER_ID= #{superId}, SEQ=#{seq}, FUNCTION_ID=#{functionId},NAME=#{name},VALUE_ID=#{valueId},SHOW_ID=#{showId}
+        where ID=#{id}
+    </update>
+
+    <delete id="clear" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition">
+        delete from F_STREAM where FLOW_ID=#{flowId}
+    </delete>
+
+    <delete id="delete" parameterType="long">
+        delete from F_STREAM where ID=#{value}
+    </delete>
+</mapper>

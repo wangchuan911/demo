@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao">
+    <sql id="columns">
+        A.CODE,A.PRICE,A.FLOW_ID,A.STATUS_ID,A.CUST_ID,A.CLASS_ID,A.REGION_ID,A.`DESC`
+    </sql>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
+        select A.* from (
+        SELECT A.* FROM BASE_ORDER A
+        <where>
+            <choose>
+                <when test="query=='dispatching'">
+                    and A.STATUS_ID=10000
+                    AND NOT EXISTS (SELECT 1 FROM STAFF_TASK A1 WHERE A1.ORDER_ID=A.ID)
+                    AND EXISTS (
+                    SELECT 1 FROM DUAL WHERE A.CUST_ID=#{custId}
+                    UNION ALL
+                    SELECT 1 FROM WORK_ORDER A1 WHERE A1.ORDER_ID=A.ID AND A1.STAFF_ID=#{custId} AND A1.STATUS_ID=11001
+                    )
+                </when>
+                <when test="query=='dispatched'">
+                    and A.STATUS_ID=10000
+                    AND EXISTS (SELECT 1 FROM STAFF_TASK A1 WHERE A1.ORDER_ID=A.ID)
+                    AND EXISTS (
+                    SELECT 1 FROM DUAL WHERE A.CUST_ID=#{custId}
+                    UNION ALL
+                    SELECT 1 FROM WORK_ORDER A1 WHERE A1.ORDER_ID=A.ID AND A1.STAFF_ID=#{custId} AND A1.STATUS_ID=11001
+                    )
+                </when>
+                <when test="query=='pay'">
+                    and A.CUST_ID=#{custId}
+                    and A.STATUS_ID=10003
+                </when>
+                <when test="query=='running'">
+                    and A.STATUS_ID=10000
+                    and exists (
+                    SELECT 1 FROM DUAL WHERE A.CUST_ID=#{custId}
+                    UNION ALL
+                    SELECT 1 FROM WORK_ORDER A1 WHERE A1.ORDER_ID=A.ID AND A1.STAFF_ID=#{custId} AND A1.STATUS_ID=11001
+                    )
+                </when>
+                <when test="query=='comment'">
+                    and A.CUST_ID=#{custId}
+                    and A.STATUS_ID=10001
+                    AND NOT EXISTS (
+                    SELECT 1 FROM ORDER_COMMENT A1 WHERE A1.ORDER_ID=A.ID
+                    )
+                </when>
+                <when test="query=='finish'">
+                    and A.CUST_ID=#{custId}
+                    and A.STATUS_ID=10001
+                </when>
+                <otherwise>
+                    and 1=2
+                </otherwise>
+            </choose>
+        </where>
+        order by A.ID DESC
+        ) A
+        LIMIT ${page.start},${page.size}
+    </select>
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderCondition"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
+        <include refid="list"></include>
+    </select>
+    <sql id="list">
+        SELECT A.* FROM BASE_ORDER A
+        <where>
+            <if test="query!=null and query!=''.toString()"></if>
+            <if test="custId!=null">
+                and A.CUST_ID=#{custId}
+            </if>
+            <if test="statusId!=null">
+                and A.STATUS_ID=#{statusId}
+            </if>
+            <if test="flowId!=null">
+                and A.FLOW_ID=#{flowId}
+            </if>
+            <if test="code!=null">
+                and A.CODE=#{code}
+            </if>
+            and 1=1
+        </where>
+    </sql>
+    <select id="get" parameterType="long" resultType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
+        <include refid="get"></include>
+    </select>
+    <sql id="get">
+        SELECT A.* FROM BASE_ORDER A WHERE A.ID=#{value}
+    </sql>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderVO" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO BASE_ORDER (CODE, PRICE,TOTAL_PRICE, FLOW_ID, STATUS_ID, CUST_ID, CLASS_ID,REGION_ID,`DESC`)
+        VALUES (#{code},#{price},#{totalPrice},#{flowId},#{statusId},#{custId},#{classId},#{regionId},#{desc})
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.order.entity.OrderVO">
+        UPDATE BASE_ORDER t SET  t.CODE = #{code}, t.PRICE = #{price},t.TOTAL_PRICE=#{totalPrice},t.FLOW_ID=#{flowId},
+         t.FLOW_ID = #{flowId}, t.STATUS_ID =  #{statusId}, t.CUST_ID =  #{custId}, t.CLASS_ID =  #{classId},t.REGION_ID=#{regionId},t.`DESC`=#{desc}
+        WHERE t.ID = #{id}
+    </update>
+
+    <delete id="delete" parameterType="long">
+        delete from BASE_ORDER where ID=#{value}
+    </delete>
+</mapper>

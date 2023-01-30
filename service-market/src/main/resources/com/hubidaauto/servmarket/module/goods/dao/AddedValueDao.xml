@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.goods.dao.AddedValueDao">
+
+    <select id="get"
+            parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.goods.entity.AddedValueVO">
+        SELECT * FROM MALL_ITEM_ADDED_VALUE A WHERE A.ID=#{value}
+    </select>
+
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.AddedValueVO"
+            resultType="com.hubidaauto.servmarket.module.goods.entity.AddedValueVO">
+        SELECT * FROM MALL_ITEM_ADDED_VALUE A
+        <where>
+            and TYPE=#{type}
+            <if test="itemId!=null or itemTypeId=null">
+            AND EXISTS (
+                SELECT 1 FROM DUAL WHERE A.ITEM_ID IS NULL OR A.ITEM_ID=#{itemId}
+                UNION ALL
+                SELECT 1 FROM DUAL WHERE A.ITEM_TYPE_ID IS NULL OR A.ITEM_ID=#{itemTypeId}
+            )
+            </if>
+            <if test="group!=null and group!=''.toString()">
+                AND A.GROUP=#{group}
+            </if>
+        </where>
+        ORDER BY  IFNULL(NULLIF(0,ISNULL(A.ITEM_TYPE_ID)),1)*100+IFNULL(NULLIF(0,ISNULL(A.ITEM_ID)),1) DESC
+    </select>
+
+</mapper>

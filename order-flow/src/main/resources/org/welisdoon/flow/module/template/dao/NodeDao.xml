@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.flow.module.template.dao.NodeDao">
+
+
+    <select id="get" parameterType="long"
+            resultType="org.welisdoon.flow.module.template.entity.Node">
+        select * from F_NODE
+        WHERE id=#{nodeId}
+    </select>
+
+
+</mapper>

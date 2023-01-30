@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.common.dao.TextContentDao">
+
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.common.entity.TextContentVO">
+        select * from TEXT_CONTENT a where a.id=#{value}
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.common.entity.TextContentVO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO TEXT_CONTENT(ID,TYPE,CONTENT)
+        VALUES (#{id},#{type},#{content})
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.common.entity.TextContentVO">
+        update TEXT_CONTENT
+        SET CONTENT=#{content}
+        WHERE ID=#{id}
+    </update>
+</mapper>

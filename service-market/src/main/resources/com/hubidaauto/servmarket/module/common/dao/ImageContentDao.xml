@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.common.dao.ImageContentDao">
+
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO">
+        SELECT * FROM IMAGE_CONTENT A WHERE A.ID=#{value}
+    </select>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO" resultType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO">
+        SELECT ID,TYPE,REF_ID FROM IMAGE_CONTENT A WHERE A.REF_ID=#{refId} AND A.TYPE=#{type}
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO IMAGE_CONTENT(ID,TYPE,CONTENT,REF_ID)
+        VALUES (#{id},#{type},#{content},#{refId})
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.common.entity.ImageContentVO">
+        update IMAGE_CONTENT
+        SET REF_ID = #{refId},TYPE=#{type}
+        WHERE ID=#{id}
+    </update>
+</mapper>

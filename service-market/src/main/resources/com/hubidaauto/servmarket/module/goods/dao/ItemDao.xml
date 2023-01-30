@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.goods.dao.ItemDao">
+
+    <select id="get"
+            parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.goods.entity.ItemVO">
+        select * from MALL_ITEM a where a.ID=#{value}
+    </select>
+
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.goods.entity.ItemCondition"
+            resultType="com.hubidaauto.servmarket.module.goods.entity.ItemVO">
+        select ID, TYPE, PRICE, `NAME`, CONTENT_ID, IMGS, `DESC`, KEY_WORD from MALL_ITEM a
+        <where>
+            <if test="datas!=null and datas.size()>0">
+                and exists (
+                <foreach collection="datas" item="data" separator="union all">
+                    select 1 from dual
+                    <where>
+                        <include refid="condition"></include>
+                    </where>
+                </foreach>
+                )
+            </if>
+            <if test="data!=null">
+                <include refid="condition"></include>
+            </if>
+            <if test="keyWord!=null">
+                and LOCATE(#{keyWord}, a.KEY_WORD)>0
+            </if>
+        </where>
+        limit ${page.start},${page.size}
+    </select>
+    <sql id="condition">
+        <if test="data.type!=null">
+            and a.TYPE=#{data.type}
+        </if>
+        <if test="data.id!=null">
+            and a.id=#{data.id}
+        </if>
+    </sql>
+
+</mapper>

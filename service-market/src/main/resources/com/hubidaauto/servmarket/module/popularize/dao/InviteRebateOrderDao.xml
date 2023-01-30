@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.popularize.dao.InviteRebateOrderDao">
+    <sql id="columns">
+        <include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.columns"></include>
+    </sql>
+
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition"
+            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
+
+        SELECT <include refid="columns"></include>,B.*
+        from INVITE_REBATE_ORDER B
+        JOIN BASE_ORDER A
+        ON A.ID=B.ID
+        WHERE B.INVITE_MAN=#{inviteMan}
+        <if test="payState!=null">
+            and PAY_STATE=#{payState}
+        </if>
+        limit ${page.start},${page.size}
+    </select>
+
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
+        SELECT <include refid="columns"></include>,B.*
+        FROM (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.get"></include>) A
+        JOIN INVITE_REBATE_ORDER B
+        ON A.ID=B.ID
+
+
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO INVITE_REBATE_ORDER (ID, PAY_STATE, INVITE_MAN, REBATE)
+        VALUES (#{id},10050,#{inviteMan},#{rebate})
+
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderVO">
+        UPDATE INVITE_REBATE_ORDER t
+        SET t.PAY_STATE = #{payState}, t.INVITE_MAN = #{inviteMan}, t.REBATE = #{rebate}
+            WHERE t.ID = #{id}
+
+    </update>
+
+    <delete id="delete" parameterType="long">
+        delete from INVITE_REBATE_ORDER where ID=#{value}
+    </delete>
+
+    <update id="update" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateOrderCondition">
+        UPDATE INVITE_REBATE_ORDER t
+        <set>
+            t.PAY_STATE = #{payState},
+        </set>
+
+        <where>
+            and t.INVITE_MAN = #{inviteMan}
+        </where>
+
+    </update>
+</mapper>

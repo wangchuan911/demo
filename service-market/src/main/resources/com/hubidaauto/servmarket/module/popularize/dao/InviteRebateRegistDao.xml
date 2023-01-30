@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.popularize.dao.InviteRebateRegistDao">
+
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateRegistVO">
+       SELECT  * FROM INVITE_REBATE_REGIST WHERE id=#{value}
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateRegistVO">
+        INSERT INTO INVITE_REBATE_REGIST (ID, STUDY_LEVEL, WORK_YEAR,PROFESSION,ADDRESS,CHANNEL) VALUES (#{id},#{studyLevel},#{workYear},#{profession},#{address},#{channel})
+    </insert>
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.popularize.entity.InviteRebateRegistVO">
+        UPDATE INVITE_REBATE_REGIST t SET t.STUDY_LEVEL = #{studyLevel}, t.WORK_YEAR = #{workYear}, t.PROFESSION = #{profession}, t.ADDRESS = #{address}, t.CHANNEL = #{channel}
+        WHERE t.ID = #{id}
+    </update>
+
+</mapper>

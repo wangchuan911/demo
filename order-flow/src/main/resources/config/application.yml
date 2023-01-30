@@ -1,0 +1,36 @@
+################### HTTP Configuration   ##########################
+server:
+  web:
+    port: 443
+    sslEnable: true
+    sslKeyType: pfx
+    sslKeyStore: /opt/wechat/thekeystore
+    sslPassword: e75M8y7K
+    sslKeyPath:
+    staticPath: /opt/wechat/tempPic
+spring:
+  profiles:
+    active: [database,order-flow]
+  main:
+    web-application-type: none
+################### Vert.x Configuration ##########################
+
+vertx:
+  worker:
+    pool:
+      size: 4
+  workerVerticle:
+    instances: 2
+  clusterMode: hazelcast1
+  dns:
+    enable: false
+    ip: 134.192.232.18,134.192.232.17
+    maxQueries: 10
+
+
+#logging:
+#  level:
+#    root: "debug"
+#    appdao: "error"
+#  group:
+#    appdao: "com.hubidaauto.carservice.wxapp.core.dao,com.hubidaauto.carservice.officalaccount.dao,com.hubidaauto.carservice.wxapp.increment.dao,com.hubidaauto.carservice.wxapp.mall.dao,org.springframework.jdbc,org.mybatis"

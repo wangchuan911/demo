@@ -1,0 +1,15 @@
+wechat-oa-myhome:
+  appID: wx675824e3f240da6d
+  appsecret: b2f4490e7f14bf60edc3bbe854ce70c1
+  token: 9dvL9Kze96Oc76XhMUeI03LTZ29
+  key: AC32OLzYAjjkPqzxilsPiMPbqYCHESnOuPzyYpjFyVw
+  afterUpdateTokenTime: 6000
+  path:
+    app: /wx
+  urls:
+    getAccessToken: https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat-oa-myhome.appID}&secret=${wechat-oa-myhome.appsecret}
+    code2Session: https://api.weixin.qq.com/sns/jscode2session?appid=${wechat-oa-myhome.appID}&secret=${wechat-oa-myhome.appsecret}&grant_type=authorization_code&js_code=
+    unifiedorder: https://api.mch.weixin.qq.com/pay/unifiedorder
+    subscribeSend:  https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={{ACCESS_TOKEN}}
+    userInfo:  https://api.weixin.qq.com/cgi-bin/user/info?access_token={{ACCESS_TOKEN}}&openid={{OPEN_ID}}&lang=zh_CN
+    customSend: https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token={{ACCESS_TOKEN}}

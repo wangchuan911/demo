@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.order.dao.OverTimeOrderDao">
+    <sql id="columns">
+        <include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.columns"></include>
+    </sql>
+    <select id="find" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderCondtion"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
+
+        SELECT <include refid="columns"></include>,B.*
+        from OVER_TIME_ORDER B
+        JOIN BASE_ORDER A
+        ON A.ID=B.ID
+        WHERE #{relaOrderId}=B.RELA_ORDER_ID
+
+    </select>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderCondtion"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
+
+        SELECT <include refid="columns"></include>,B.*
+        from OVER_TIME_ORDER B
+        JOIN BASE_ORDER A
+        ON A.ID=B.ID
+        WHERE #{relaOrderId}=B.RELA_ORDER_ID
+        <if test="page!=null">
+        limit ${page.start},${page.size}
+        </if>
+    </select>
+    <sql id="condition">
+        and a.id=#{data.ID}
+    </sql>
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
+        SELECT <include refid="columns"></include>,B.*
+        FROM (<include refid="com.hubidaauto.servmarket.module.order.dao.BaseOrderDao.get"></include>) A
+        JOIN OVER_TIME_ORDER B
+        ON A.ID=B.ID
+
+
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO" >
+        INSERT INTO OVER_TIME_ORDER (ID, ITEM_TYPE_ID, RELA_ORDER_ID, WORK_LOAD)
+        VALUES (#{id},#{itemTypeId},#{relaOrderId},#{workLoad})
+
+    </insert>
+
+    <update id="put" parameterType="com.hubidaauto.servmarket.module.order.entity.OverTimeOrderVO">
+        UPDATE OVER_TIME_ORDER t
+        SET t.ITEM_TYPE_ID = #{itemTypeId}, t.RELA_ORDER_ID = #{relaOrderId}, t.WORK_LOAD = #{workLoad}
+            WHERE t.ID = #{id}
+
+    </update>
+
+    <delete id="delete" parameterType="long">
+        delete from OVER_TIME_ORDER where ID=#{value}
+    </delete>
+</mapper>

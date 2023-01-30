@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.flow.module.flow.dao.FlowDao">
+    <sql id="select">
+        select * from F_FLOW a
+    </sql>
+
+    <select id="list" parameterType="org.welisdoon.flow.module.flow.entity.Flow" resultType="org.welisdoon.flow.module.flow.entity.Flow">
+        <include refid="select"></include>
+
+    </select>
+
+    <select id="get" parameterType="long" resultType="org.welisdoon.flow.module.flow.entity.Flow">
+        <include refid="select"></include>
+        where a.ID=#{id}
+    </select>
+
+    <insert id="add" parameterType="org.welisdoon.flow.module.flow.entity.Flow" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO F_FLOW (TEMPLATE_ID, STATUS_ID,FUNCTION_ID) VALUES (#{templateId}, #{statusId},#{functionId})
+    </insert>
+
+    <update id="update" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition" >
+        update F_FLOW a
+        <set>
+            <choose>
+                <when test="update=='STREAM_STATUS'">
+                    STATUS_ID=#{statusId},
+                </when>
+            </choose>
+        </set>
+        where a.ID=#{flowId}
+    </update>
+
+    <delete id="clear" parameterType="org.welisdoon.flow.module.flow.entity.FlowCondition">
+        delete from F_FLOW where ID=#{flowId}
+    </delete>
+</mapper>

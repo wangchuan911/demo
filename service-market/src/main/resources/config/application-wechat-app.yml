@@ -1,0 +1,68 @@
+wechat-app-hubida:
+  appID: wx366b88b818ee0b33
+  appsecret: db69bf9effa3fbb0b53483565a7e1baa
+  token: 9dvL9Kze96Oc76XhMUeI03LTZ29
+  key: AC32OLzYAjjkPqzxilsPiMPbqYCHESnOuPzyYpjFyVw
+  afterUpdateTokenTime: -6000
+  orderCycleTime: 0
+  accessToken: xxx
+  merchant:
+    mchId: xxxx
+    mchKey: xxx
+  appName: 爱车智联AUTOCAR
+  address: https://www.welisdoon.xyz
+  path:
+    payment:
+      "[com.hubidaauto.carservice.wxapp.core.service.OrderService]":
+        paying: /wxAppPay
+        paid: /wxAppPay
+        refunding: /wxAppRefund
+      "[com.hubidaauto.servmarket.module.order.service.ServiceClassOrderService]":
+        refunding: ${wechat-app-hubida.path.app}/order/refund/sco
+        refunded: ${wechat-app-hubida.path.app}/order/refund/sco
+        paying: ${wechat-app-hubida.path.app}/order/pay/sco
+        paid: ${wechat-app-hubida.path.app}/order/pay/sco
+      "[com.hubidaauto.servmarket.module.order.service.OverTimeOrderService]":
+        paying: ${wechat-app-hubida.path.app}/order/pay/oto
+        paid: ${wechat-app-hubida.path.app}/order/pay/oto
+    app: /wxApp
+    push: /wxPush
+    appIndex: /pages/index/index
+    other:
+      invite: /pages/home/mime/mine
+      mallPay: /wxMallPay
+  urls:
+    getAccessToken: https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat-app-hubida.appID}&secret=${wechat-app-hubida.appsecret}
+    code2Session: https://api.weixin.qq.com/sns/jscode2session?appid=${wechat-app-hubida.appID}&secret=${wechat-app-hubida.appsecret}&grant_type=authorization_code&js_code=
+    unifiedorder: https://api.mch.weixin.qq.com/pay/unifiedorder
+    subscribeSend: https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token={{ACCESS_TOKEN}}
+    refund: https://api.mch.weixin.qq.com/secapi/pay/refund
+    getwxacodeunlimit: https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token={{ACCESS_TOKEN}}
+    mmpaymkttransfers: https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers
+  classPath: com.hubidaauto.carservice.wxapp
+temp:
+  filePath: D:\Documents\Pictures
+
+wechat-public-hubida:
+  appID: wx3393ff37b51c329d
+  appsecret: 54fd8dfe57c9369966cb5da7afa2936f
+  token: 20191230dashanhuaquanfuhubida888
+  key: VgkCcmCwMec0jKqoJBGe6nG9PW0ecauq5ZogVzEsDbU
+  afterUpdateTokenTime: -6000
+  orderCycleTime: 0
+  mchId: xxxx
+  mchKey: xxx
+  appName: 爱车智联AUTOCAR
+  address: https://www.welisdoon.xyz
+  path:
+    pay:
+    app:
+    push: /aczl
+    index:
+  urls:
+    getAccessToken: https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${wechat-public-hubida.appID}&secret=${wechat-public-hubida.appsecret}
+    code2Session: https://api.weixin.qq.com/sns/jscode2session?appid=${wechat-public-hubida.appID}&secret=${wechat-public-hubida.appsecret}&grant_type=authorization_code&js_code=
+    unifiedorder: https://api.mch.weixin.qq.com/pay/unifiedorder
+    subscribeSend:  https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={{ACCESS_TOKEN}}
+    userInfo:  https://api.weixin.qq.com/cgi-bin/user/info?access_token={{ACCESS_TOKEN}}&openid={{OPEN_ID}}&lang=zh_CN
+    customSend: https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token={{ACCESS_TOKEN}}

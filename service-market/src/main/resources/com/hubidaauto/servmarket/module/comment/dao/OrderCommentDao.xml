@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.comment.dao.OrderCommentDao">
+
+    <select id="get" parameterType="long"
+            resultType="com.hubidaauto.servmarket.module.comment.entity.OrderCommentVO">
+        select * from ORDER_COMMENT a where a.id=#{value}
+    </select>
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.comment.entity.OrderCommentCondition"
+            resultType="com.hubidaauto.servmarket.module.comment.entity.OrderCommentVO">
+        SELECT * FROM (
+        SELECT * FROM ORDER_COMMENT A
+        <where>
+            and A.ITEM_ID = #{itemId}
+            <if test="itemTypeId!=null">
+                AND A.ITEM_TYPE_ID=#{itemTypeId}
+            </if>
+            <choose>
+                <when test="'LASTEST'==query">
+                    and A.ID = (
+                    SELECT MAX(A1.ID) FROM ORDER_COMMENT A1 WHERE A1.ITEM_ID=#{itemId}
+                    <if test="itemTypeId!=null">
+                        AND A1.ITEM_TYPE_ID=#{itemTypeId}
+                    </if>
+                    )
+                </when>
+            </choose>
+        </where>
+        ORDER BY A.ID DESC
+        ) A
+        limit ${page.start},${page.size}
+
+    </select>
+
+    <insert id="add" parameterType="com.hubidaauto.servmarket.module.comment.entity.OrderCommentVO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ORDER_COMMENT(ORDER_ID,COMMENT,LEVEL,ITEM_TYPE_ID,ITEM_ID)
+        VALUES (#{orderId},#{comment},#{level},#{itemTypeId},#{itemId})
+    </insert>
+
+    <insert id="update" parameterType="com.hubidaauto.servmarket.module.comment.entity.OrderCommentVO"
+            useGeneratedKeys="true" keyProperty="id">
+        UPDATE  ORDER_COMMENT SET COMMENT=#{comment}
+        WHERE ID=#{id}
+    </insert>
+
+</mapper>

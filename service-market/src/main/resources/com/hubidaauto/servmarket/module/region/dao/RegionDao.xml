@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hubidaauto.servmarket.module.region.dao.RegionDao">
+    <resultMap id="rm_RegionVO" type="com.hubidaauto.servmarket.module.region.entity.RegionVO">
+        <result column="ID" property="id"></result>
+        <result column="NAME" property="name"></result>
+        <collection property="childs" ofType="com.hubidaauto.servmarket.module.region.entity.RegionVO" select="list"
+                    column="{superId=ID}"></collection>
+    </resultMap>
+
+
+    <select id="list" parameterType="com.hubidaauto.servmarket.module.region.entity.RegionCondition"
+            resultMap="rm_RegionVO">
+        select * from PUB_REGION A
+        <where>
+            <choose>
+                <when test="id!=null">
+                    and ID=#{id}
+                </when>
+                <when test="superId!=null">
+                    and SUPER_ID=#{superId}
+                </when>
+                <otherwise>
+                    and SUPER_ID IS NULL
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+</mapper>
