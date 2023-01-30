@@ -256,6 +256,9 @@ public class OperationService extends AbstractBaseService<OperationVO> {
 					}
 				}
 			}
+			if (infoJson.containsKey("changeCost")){
+				orderDao.set(new OrderVO().setOrderId(orderId).setCost(infoJson.getInteger("changeCost")));
+			}
 
 			OperationVO operationVO = operationDao.get(new OperationVO()
 					.setOrderId(orderId)

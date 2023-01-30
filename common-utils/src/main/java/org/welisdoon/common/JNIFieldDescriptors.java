@@ -1,4 +1,4 @@
-package org.welisdoon.webserver.common;
+package org.welisdoon.common;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

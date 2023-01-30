@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.welisdoon.webserver.common.ApplicationContextProvider;
 import org.welisdoon.webserver.common.CommonConst;
-import org.welisdoon.webserver.common.JAXBUtils;
+import org.welisdoon.common.JAXBUtils;
 import org.welisdoon.webserver.common.WechatAsyncMeassger;
 import org.welisdoon.webserver.common.encrypt.AesException;
 import org.welisdoon.webserver.common.encrypt.WXBizMsgCrypt;

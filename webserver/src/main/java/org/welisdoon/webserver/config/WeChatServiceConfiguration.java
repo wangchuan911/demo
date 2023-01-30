@@ -2,13 +2,15 @@ package org.welisdoon.webserver.config;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.welisdoon.webserver.common.web.AsyncProxyUtils;
 import org.welisdoon.webserver.common.web.Requset;
 import org.welisdoon.webserver.entity.wechat.messeage.MesseageTypeValue;
+import org.welisdoon.webserver.vertx.annotation.VertxRouter;
+import org.welisdoon.webserver.vertx.utils.RoutingContextChain;
 import org.welisdoon.webserver.vertx.verticle.StandaredVerticle;
 import org.welisdoon.webserver.common.config.AbstractWechatConfiguration;
 import org.welisdoon.webserver.common.web.intf.ICommonAsynService;
@@ -109,7 +111,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
         return vertxConsumer;
     }
 
-    @VertxRegister(StandaredVerticle.class)
+    /*@VertxRegister(StandaredVerticle.class)
     public Consumer<Router> routeMapping(Vertx vertx) {
         commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAddress(), ICommonAsynService.class);
         setWechatAsyncMeassger(WebClient.create(vertx));
@@ -129,7 +131,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
 
             router.post("/wx").handler(this::wechatDecryptMsg).handler(routingContext -> {
                 Buffer requestbuffer = routingContext.getBody();
-                /*try {
+                *//*try {
                     //报文转对象
                     RequestMesseageBody requestMesseageBody = JAXBUtils.fromXML(requestbuffer.toString(), RequestMesseageBody.class);
                     //处理数据
@@ -142,7 +144,7 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
                     e.printStackTrace();
                     routingContext.response().end(MesseageTypeValue.MSG_REPLY);
                     return;
-                }*/
+                }*//*
 
                 commonAsynService.callService(new Requset()
                         .setService("weChatService")
@@ -164,7 +166,51 @@ public class WeChatServiceConfiguration extends AbstractWechatConfiguration {
             logger.info("inital request mapping: /wx");
         };
         return routerConsumer;
-    }
+    }*/
 
+    @VertxRouter(path = "/wx", method = HttpMethod.GET)
+    RoutingContextChain wxGet = new RoutingContextChain()
+            .add(this::wechatMsgCheck);
+    @VertxRouter(path = "/wx", method = HttpMethod.POST)
+    RoutingContextChain wxPost = new RoutingContextChain()
+            .add(this::wechatDecryptMsg)
+            .add(routingContext -> {
+                Buffer requestbuffer = routingContext.getBody();
+                commonAsynService.callService(new Requset()
+                        .setService("weChatService")
+                        .setBody(requestbuffer.toString())
+                        .setMode(Requset.WECHAT), responseAsyncResult -> {
+                    if (responseAsyncResult.succeeded()) {
+                        Buffer buffer = Buffer.buffer(responseAsyncResult.result().getResult().toString());
+                        routingContext.setBody(buffer);
+                        routingContext.next();
+                    } else {
+                        logger.error(responseAsyncResult.cause().getMessage(), responseAsyncResult.cause());
+                        routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+                    }
+                });
+
+            }).add(this::wechatEncryptMsg).fail(routingContext -> {
+                routingContext.response().end(MesseageTypeValue.MSG_REPLY);
+            });
+
+    @VertxRegister(StandaredVerticle.class)
+    public Consumer<Vertx> initStandaredVerticle() {
+        Consumer<Vertx> vertxConsumer = vertx -> {
+            commonAsynService = AsyncProxyUtils.createServiceProxyBuilder(vertx, this.getAddress(), ICommonAsynService.class);
+            setWechatAsyncMeassger(WebClient.create(vertx));
+
+            this.initAccessTokenSyncTimer(vertx, objectMessage -> {
+                JsonObject tokenJson = (JsonObject) objectMessage.body();
+                if (tokenJson.getInteger("errcode") != null) {
+                    logger.info("errcode:" + tokenJson.getInteger("errcode"));
+                    logger.info("errmsg:" + tokenJson.getString("errmsg"));
+                } else {
+                    logger.info("Token:" + tokenJson.getString("access_token") + "[" + tokenJson.getLong("expires_in") + "]");
+                }
+            });
+        };
+        return vertxConsumer;
+    }
 }
 
