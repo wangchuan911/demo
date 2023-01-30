@@ -7,6 +7,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.concurrent.Callable;
 
@@ -17,36 +18,27 @@ import java.util.concurrent.Callable;
  * @author Thomas Segismont
  */
 @Component("verticleFactory")
-public class SpringVerticleFactory implements VerticleFactory, ApplicationContextAware {
+public class SpringVerticleFactory implements VerticleFactory {
 
-    private ApplicationContext applicationContext;
-
-    /*@Override
-    public boolean blockingCreate() {
-        // Usually verticle instantiation is fast but since our verticles are Spring Beans,
-        // they might depend on other beans/resources which are slow to build/lookup.
-        return true;
-    }
-*/
     @Override
     public String prefix() {
         // Just an arbitrary string which must uniquely identify the verticle factory
         return "myapp";
     }
 
-    public String naming(String name) {
-        return String.format("%s:%s", prefix(), name);
-    }
-
     @Override
     public void createVerticle(String verticleName, ClassLoader classLoader, Promise<Callable<Verticle>> var3) {
         // Our convention in this example is to give the class name as verticle name
         String clazz = VerticleFactory.removePrefix(verticleName);
-        var3.complete(() -> (Verticle) applicationContext.getBean(Class.forName(clazz)));
+        try {
+            Verticle verticle;
+            verticle = (Verticle) ApplicationContextProvider.getBean(Class.forName(clazz));
+            verticle.hashCode();
+            var3.complete(() -> verticle);
+        } catch (Throwable e) {
+            var3.fail(e);
+        }
+
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
 }

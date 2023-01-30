@@ -1,21 +1,16 @@
 package org.welisdoon.web.vertx.proxy;
 
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.util.TypeUtils;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cglib.reflect.FastClass;
 import org.springframework.cglib.reflect.FastMethod;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
@@ -150,10 +145,10 @@ public class VertxInvoker implements IVertxInvoker {
     }*/
 
     @Override
-    public void check(String clzName, String methodName, String paramTypesJson, String returnType, Handler<AsyncResult<Void>> handler) {
-        Future<Void> f = Future.future(promise -> {
+    public Future<Void> check(String clzName, String methodName, String paramTypesJson, String returnType) {
+        return Future.future(promise -> {
             try {
-                ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
+                ClassInfo.MethodInfo methodInfo = ClassInfo.getMethodInfo(clzName, methodName, paramTypesJson);
                 if (!methodInfo.method.getReturnType().isAssignableFrom(Class.forName(returnType)) || Class.forName(returnType).isAssignableFrom(methodInfo.method.getReturnType())) {
                     throw new NoSuchMethodException(String.format("Method [ %s ] return type is not matched! expect:[ %s ]; actual:[ %s ];", methodName, methodInfo.method.getReturnType().getName(), returnType));
                 }
@@ -162,7 +157,6 @@ public class VertxInvoker implements IVertxInvoker {
                 promise.fail(e);
             }
         });
-        f.onComplete(handler);
     }
 
     /*final static Map<Class, ParamHandler> BASE_CLASS_MAP = new HashMap<>();
@@ -196,21 +190,25 @@ public class VertxInvoker implements IVertxInvoker {
         ADD((o) -> new StringBuffer(TypeUtils.castToString(o)), StringBuffer.class);
     }
 */
-    class ClassInfo {
+
+    static class ClassInfo {
         final Class clz;
         final Object target;
         final FastClass fastClass;
-        final Map<String, MethodInfo> methodInfos;
+        final static Map<String, ClassInfo.MethodInfo> METHOD_INFO_MAP = new HashMap<>();
+        final static Map<String, ClassInfo> CLASS_INFO_MAP = new HashMap<>();
 
-        public ClassInfo(String className) throws ClassNotFoundException {
+        ClassInfo(String className) throws ClassNotFoundException {
             this.clz = Class.forName(className);
             this.target = ApplicationContextProvider.getBean(this.clz);
             this.fastClass = FastClass.create(clz);
-            this.methodInfos = new HashMap<>();
         }
 
         MethodInfo getMethod(String methodName, String paramTypesJson) throws Throwable {
-            return ObjectUtils.getMapValueOrNewSafe(methodInfos, methodName + paramTypesJson, () -> new MethodInfo(methodName, paramTypesJson));
+            return ObjectUtils.getMapValueOrNewSafe(
+                    METHOD_INFO_MAP,
+                    String.format("%s %s %s", this.clz.getName(), methodName, paramTypesJson),
+                    () -> new MethodInfo(methodName, paramTypesJson));
         }
 
         class MethodInfo {
@@ -241,25 +239,20 @@ public class VertxInvoker implements IVertxInvoker {
                 }
                 return this.fastMethod.invoke(target, values);
             }
+        }
 
-
+        static ClassInfo.MethodInfo getMethodInfo(String clzName, String methodName, String paramTypesJson) throws Throwable {
+            ClassInfo classInfo = ObjectUtils.getMapValueOrNewSafe(CLASS_INFO_MAP, clzName, () -> new ClassInfo(clzName));
+            return classInfo.getMethod(methodName, paramTypesJson);
         }
     }
 
-    final static Map<String, ClassInfo> METHDO_INFO_MAP = new HashMap<>();
-
-    ClassInfo.MethodInfo getMethodInfo(String clzName, String methodName, String paramTypesJson) throws Throwable {
-        ClassInfo classInfo = ObjectUtils.getMapValueOrNewSafe(METHDO_INFO_MAP, clzName, () -> new ClassInfo(clzName));
-        return classInfo.getMethod(methodName, paramTypesJson);
-    }
-
     @Override
-    public void invoke(String clzName, String methodName, String paramTypesJson, String paramsJson, String threadParamsJson, Handler<AsyncResult<String>> handler) {
+    public Future<String> invoke(String clzName, String methodName, String paramTypesJson, String paramsJson, String threadParamsJson) {
 
-        Future<String> f = Future.future(promise -> {
+        return Future.future(promise -> {
             try {
-
-                ClassInfo.MethodInfo methodInfo = getMethodInfo(clzName, methodName, paramTypesJson);
+                ClassInfo.MethodInfo methodInfo = ClassInfo.getMethodInfo(clzName, methodName, paramTypesJson);
                 Object result = methodInfo.invoke(paramsJson);
                 if (result == null) {
                     promise.complete(null);
@@ -288,6 +281,5 @@ public class VertxInvoker implements IVertxInvoker {
 
             }
         });
-        f.onComplete(handler);
     }
 }

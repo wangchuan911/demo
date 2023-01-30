@@ -18,8 +18,8 @@ import com.hubidaauto.servmarket.module.user.service.AppUserService;
 import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.FileSystemAccess;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
@@ -37,10 +36,8 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -49,7 +46,7 @@ import java.util.stream.Collectors;
 @Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-@VertxRoutePath("{wechat-app-hubida.path.app}/user")
+@VertxRoutePath(prefix = "{wechat-app-hubida.path.app}/user")
 public class AppUserWebRouter {
     AppUserDao appUserDao;
     AddressDao addressDao;
@@ -262,9 +259,7 @@ public class AppUserWebRouter {
 
 
         Environment environment = ApplicationContextProvider.getBean(Environment.class);
-        StaticHandler staticHandler = StaticHandler.create()
-                .setAllowRootFileSystemAccess(true)
-                .setWebRoot(environment.getProperty("temp.filePath"));
+        StaticHandler staticHandler = StaticHandler.create(FileSystemAccess.ROOT, environment.getProperty("temp.filePath"));
         staticHandler.setAlwaysAsyncFS(true);
         staticHandler.setCachingEnabled(false);
 
@@ -278,8 +273,6 @@ public class AppUserWebRouter {
             List<ImageContentVO> images = imageContentDao.list(contentVO);
             if (!CollectionUtils.isEmpty(images)) {
                 htmlTemplateWebRouter.cacheImage(routingContext, Utils.pathOffset(routingContext.request().path(), routingContext), () -> imageContentDao.get(images.get(0).getId()));
-                routingContext.response().setChunked(true);
-                routingContext.next();
                 return;
             }
             abstractWechatConfiguration.getWechatAsyncMeassger()

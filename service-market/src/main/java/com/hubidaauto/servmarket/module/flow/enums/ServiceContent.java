@@ -44,7 +44,7 @@ public final class ServiceContent {
 
     public final static ServiceContent getInstance(Long id) {
         Optional<ServiceContent> optional = UNIQUE.stream().filter(serviceContent -> serviceContent.id.equals(id)).findFirst();
-        return optional.isPresent() ? optional.get() : null;
+        return optional.orElse(null);
     }
 
     public Long getId() {
@@ -62,7 +62,5 @@ public final class ServiceContent {
     public final static ServiceContent
             INNER_CAR_WASH = new ServiceContent(-100L, "INNER_CAR_WASH", "车内清洗"),
             OUT_CAR_WASH = new ServiceContent(-101L, "OUT_CAR_WASH", "车外清洗"),
-            HOME_CLEAN = new ServiceContent(-110L, "HOME_CLEAN", "房屋清洁"),
-            HOME_EQP_CLEAN = new ServiceContent(-111L, "HOME_EQP_CLEAN", "电器清洁"),
-            SIMPLE_CLEAM = new ServiceContent(-111L, "SIMPLE_CLEAM", "清洁");
+            SIMPLE_CLEAM = new ServiceContent(-111L, "SIMPLE_CLEAM", "作业施工");
 }

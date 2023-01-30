@@ -132,17 +132,17 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
 
     final public static class VertxRouterEntry extends Entry implements Register {
         Set<Method> routeMethod;
-        Set<Class<?>> configBeans;
         private static String REGEX_PATH = "\\{([\\w\\-]+)\\.path\\.(\\w+)\\}(.*)";
 
         @Override
         public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
-            ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
-                    .stream()
+            /*ReflectionUtils.getMethods(aClass, ReflectionUtils.withAnnotation(VertxRouter.class))
+                    .stream()*/
+            Arrays.stream(this.getMethod(aClass, ReflectionUtils.withAnnotation(VertxRouter.class)))
                     .filter(method -> Arrays.stream(method.getParameterTypes())
                             .filter(bClass -> bClass == RoutingContextChain.class).findFirst().isPresent())
                     .forEach(method -> {
-                        String key = Entry.key(this.getClass(), aClass);
+                        String key = this.key(aClass);
                         VertxRouterEntry routerEntry;
                         if (map.containsKey(key)) {
                             routerEntry = (VertxRouterEntry) map.get(key);
@@ -162,6 +162,14 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
         synchronized void inject(Vertx vertx, AbstractMyVerticle verticle) {
             final Object serviceBean = ApplicationContextProvider.getBean(this.ServiceClass);
             if (verticle instanceof AbstractWebVerticle) {
+
+                VertxRoutePath routePath = this.ServiceClass.getAnnotation(VertxRoutePath.class);
+                if ((routePath != null ?
+                        !routePath.verticle().isAssignableFrom(ApplicationContextProvider.getRealClass(verticle.getClass()))
+                        : MainWebVerticle.class != ApplicationContextProvider.getRealClass(verticle.getClass())))
+                    return;
+
+                final String prefix = (routePath != null && !StringUtils.isEmpty(routePath.prefix())) ? getRegexPath(routePath.prefix()) : "";
                 this.routeMethod.stream().filter(Objects::nonNull).sorted((o1, o2) ->
                         o1.getAnnotation(VertxRouter.class).order() > o2.getAnnotation(VertxRouter.class).order() ? 1 : -1
                 ).forEach(routeMethod -> {
@@ -190,12 +198,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                         });
 
                     }
-                    VertxRoutePath routePath = routeMethod.getDeclaringClass().getAnnotation(VertxRoutePath.class);
-                    String suffix = getRegexPath(vertxRouter.path()),
-                            prefix = (routePath != null && !StringUtils.isEmpty(routePath.value()))
-                                    ? getRegexPath(routePath.value())
-                                    : "",
-                            pathString = prefix + suffix;
+                    String pathString;
 
                     /*String pathString = vertxRouter.path(), part0, part1, part2;
                     final String replaceFormat = "%s$3";
@@ -219,13 +222,13 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                     }*/
                     switch (vertxRouter.mode()) {
                         case Path:
-                            route.path(pathString);
+                            route.path(pathString = prefix + getRegexPath(vertxRouter.path()));
                             break;
                         case PathRegex:
-                            route.pathRegex(pathString = prefix.replaceAll("\\/", "\\\\/") + suffix);
+                            route.pathRegex(pathString = prefix.replaceAll("\\/", "\\\\/") + getRegexPath(vertxRouter.path()));
                             break;
                         case VirtualHost:
-                            route.virtualHost(pathString);
+                            route.virtualHost(pathString = prefix + getRegexPath(vertxRouter.path()));
                             break;
                         default:
                             throw new RuntimeException(String.format("no support mode[%s]", vertxRouter.mode().toString()));
@@ -254,7 +257,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                         }
 
 
-                        LoggerFactory.getLogger(routeMethod.getDeclaringClass()).info(String.format("%s[%s]", route.methods() == null ? "ALL" : route.methods(), pathString));
+                        LoggerFactory.getLogger(routeMethod.getDeclaringClass()).info("[:{}]{}[{}]", ((AbstractWebVerticle) verticle).port, route.methods() == null ? "[ALL]" : route.methods(), pathString);
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
                         return;

@@ -1,14 +1,15 @@
 package org.welisdoon.web.vertx.verticle;
 
+import com.google.common.base.Predicate;
 import io.vertx.core.*;
 
 import io.vertx.ext.web.Router;
 
 
-import org.springframework.boot.util.LambdaSafe;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.config.VertxInSpringConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 
@@ -25,6 +26,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     private static final Logger logger = LoggerFactory.getLogger(AbstractMyVerticle.class);
 
     private static Entry[] ENTRYS;
+    private static volatile boolean prepare = false;
 
     @Override
     public void start() {
@@ -62,18 +64,18 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     }*/
 
 
-    final public synchronized static void initVertxInSpring(Options options) {
-        if (ENTRYS != null) return;
+    final public synchronized static Future<CompositeFuture> prepare(Vertx vertx, VertxInSpringConfiguration options) {
+        if (prepare) return Future.failedFuture(new StackOverflowError("verticle is running!"));
+        prepare = true;
         Map<String, Entry> map = new HashMap<>();
-        Register[] initEntry = Arrays.stream(options.getRegister()).map(aClass -> {
+        Register[] initEntry = options.getRegister(true).stream().map(aClass -> {
             try {
                 return aClass.getConstructor().newInstance();
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                 return ApplicationContextProvider.getBean(aClass);
             }
         }).filter(Objects::nonNull).toArray(Register[]::new);
-        /*ApplicationContextProvider.getBean(Reflections.class).getTypesAnnotatedWith(VertxConfiguration.class)
-                .stream()*/
+
         ApplicationContextProvider
                 .getApplicationContext()
                 .getBeansWithAnnotation(VertxConfiguration.class)
@@ -86,8 +88,47 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                         entry.scan(aClass, map);
                     });
                 });
-        ENTRYS = map.entrySet().stream().map(handlerEntryListEntry -> handlerEntryListEntry.getValue()).toArray(Entry[]::new);
-        ENTRYS = Arrays.stream(initEntry).flatMap(register -> Arrays.stream(ENTRYS).filter(entry -> register.getClass().isAssignableFrom(entry.getClass()))).toArray(Entry[]::new);
+
+        ENTRYS = Arrays
+                .stream(initEntry)
+                .flatMap(register -> map.entrySet()
+                        .stream().map(handlerEntryListEntry -> handlerEntryListEntry.getValue())
+                        .filter(entry -> register.getClass().isAssignableFrom(entry.getClass())))
+                .toArray(Entry[]::new);
+
+        vertx.registerVerticleFactory(options.getFactory());
+        return CompositeFuture
+                .all(options.getDeployOptions(true).entrySet()
+                        .stream()
+                        .map(entry -> {
+                            org.welisdoon.web.vertx.annotation.Verticle verticle = entry.getKey().getAnnotation(org.welisdoon.web.vertx.annotation.Verticle.class);
+                            DeploymentOptions deploymentOptions = entry.getValue();
+                            if (deploymentOptions == null) {
+                                deploymentOptions = new DeploymentOptions();
+                                deploymentOptions.setWorkerPoolSize(options.getVertxOptions().getWorkerPoolSize());
+                                deploymentOptions.setMaxWorkerExecuteTime(options.getVertxOptions().getMaxWorkerExecuteTime());
+                            }
+                            String verticleName = String.format("%s:%s", options.getFactory().prefix(), entry.getKey().getName());
+                            deploymentOptions.setWorker(verticle.worker());
+                            // As worker verticles are never executed concurrently by Vert.x by more than one thread,
+                            // deploy multiple instances to avoid serializing requests.
+
+                            Promise<Void> promise = Promise.promise();
+                            vertx.deployVerticle(verticleName, deploymentOptions, event -> {
+                                promise.complete();
+                                if (event.succeeded())
+                                    logger.info("deploy success!{}", verticleName);
+                                else {
+                                    logger.error("Failed to deploy verticle");
+                                    logger.error(event.cause().getMessage(), event.cause());
+                                }
+                            });
+                            return promise.future();
+                        })
+                        .collect(Collectors.toList()))
+                .onComplete(event -> {
+                    ENTRYS = GCUtils.release(ENTRYS);
+                });
     }
 
 
@@ -121,6 +162,16 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
     public static interface Register {
         void scan(Class<?> aClass, Map<String, Entry> map);
+
+        default Method[] getMethod(Class<?> aClass, Predicate<? super Method>... predicates) {
+            return ReflectionUtils
+                    .getAllMethods(aClass, predicates)
+                    .stream()
+                    .collect(Collectors.toMap(method -> String.format("%s-%s", method.getName(), Arrays.toString(method.getGenericExceptionTypes())), method -> method, (o, o2) -> o2.getDeclaringClass() == aClass ? o2 : o))
+                    .entrySet()
+                    .stream()
+                    .map(Map.Entry::getValue).toArray(Method[]::new);
+        }
     }
 
     public abstract static class Entry {
@@ -140,8 +191,8 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
             return false;
         }
 
-        static String key(Object... objects) {
-            return Arrays.stream(objects).map(Object::toString).collect(Collectors.joining("-"));
+        String key(Object... objects) {
+            return this.getClass().getName() + (objects.length > 0 ? "-" : "") + Arrays.stream(objects).map(Object::toString).collect(Collectors.joining("-"));
         }
 
         abstract void inject(Vertx vertx, AbstractMyVerticle verticle);
@@ -170,22 +221,14 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
         @Override
         public synchronized void scan(Class<?> aClass, Map<String, Entry> map) {
-            Set<String> distinct = new HashSet<>();
-            ReflectionUtils
-                    .getAllMethods(aClass, method -> {
-                        Type[] type = method.getGenericParameterTypes();
-                        String key = String.format("%s-%s", method.getName(), Arrays.toString(type));
-                        if (method.getDeclaredAnnotation(VertxRegister.class) != null) {
-                            if (method.getDeclaringClass() == aClass) {
-                                distinct.add(key);
-                                return true;
-                            } else {
-                                return !distinct.contains(key) && type.length == 0 ? true : Arrays.stream(type).filter(type1 -> type1 instanceof TypeVariable).count() == 0;
-                            }
-                        }
-                        return false;
-                    })
+            /*ReflectionUtils
+                    .getAllMethods(aClass, ReflectionUtils.withAnnotation(VertxRegister.class))
                     .stream()
+                    .collect(Collectors.toMap(method -> String.format("%s-%s", method.getName(), Arrays.toString(method.getGenericExceptionTypes())), method -> method, (o, o2) -> o2.getDeclaringClass() == aClass ? o2 : o))
+                    .entrySet()
+                    .stream()
+                    .map(Map.Entry::getValue)*/
+            Arrays.stream(this.getMethod(aClass, ReflectionUtils.withAnnotation(VertxRegister.class)))
                     .forEach(method -> {
                         VertxRegister annotation = method.getDeclaredAnnotation(VertxRegister.class);
                         try {
@@ -196,7 +239,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
 
                             if (vertCls == Verticle.class) return;
                             VertxRegisterEntry vertxRegisterEntry;
-                            String key = Entry.key(this.getClass(), vertCls, innertype, aClass);
+                            String key = this.key(vertCls, innertype, aClass);
                             if (map.containsKey(key)) {
                                 vertxRegisterEntry = (VertxRegisterEntry) map.get(key);
                                 vertxRegisterEntry.methods.add(method);
@@ -213,7 +256,6 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                             logger.error(e.getMessage(), e);
                         }
                     });
-            GCUtils.release(distinct);
         }
 
         @Override
@@ -269,20 +311,6 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
     }
 
 
-    public static class Options {
-        Class<? extends Register>[] register;
-
-
-        public void setRegister(Class<? extends Register>... register) {
-            this.register = register;
-        }
-
-        public Class<? extends Register>[] getRegister() {
-            if (register == null)
-                return new Class[]{VertxRegisterEntry.class, AbstractWebVerticle.VertxRouterEntry.class};
-            return register;
-        }
-    }
 }
 
 

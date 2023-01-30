@@ -1,7 +1,6 @@
 package com.hubidaauto.servmarket.module.common.web;
 
 import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
@@ -9,21 +8,19 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.common.template.TemplateEngine;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.TemplateHandler;
 import io.vertx.ext.web.templ.thymeleaf.ThymeleafTemplateEngine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
-import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +35,7 @@ import java.util.function.Supplier;
  */
 @VertxConfiguration
 @Component
-@VertxRoutePath("/template")
+@VertxRoutePath(prefix = "/template")
 public class HtmlTemplateWebRouter {
 
     TemplateEngine engine;
@@ -47,7 +44,7 @@ public class HtmlTemplateWebRouter {
     @Value("${temp.filePath}")
     String tempFilePath;
 
-    @VertxRegister(StandaredVerticle.class)
+    @VertxRegister(MainWebVerticle.class)
     public Consumer<Vertx> html() {
         Consumer<Vertx> consumer = vertx -> {
             setTemplateEngine(vertx);

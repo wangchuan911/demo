@@ -135,7 +135,7 @@ public interface EntityObjectUtils {
         return value;
     }
 }
-
+@Deprecated
 class EntityObjectDeclare {
     AccessibleObject[] annotatoionAccessibleObjects;
     Method[] getMethod;

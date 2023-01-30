@@ -45,6 +45,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -297,7 +299,7 @@ public abstract class AbstractWechatConfiguration {
     }
 
 
-    protected  <T> void initAccessTokenSyncTimer(Vertx vertx1, Handler<Message<T>> var1) {
+    protected <T> void initAccessTokenSyncTimer(Vertx vertx1, Handler<Message<T>> var1) {
         final String key = "WX.TOKEN";
         final String URL_TOCKEN_LOCK = String.format("%s.%s.LOCK", key, this.getAppID());
         final String URL_TOCKEN_UPDATE = String.format("%s.%s.UPDATE", key, this.getAppID());
@@ -306,33 +308,15 @@ public abstract class AbstractWechatConfiguration {
         SharedData sharedData = vertx1.sharedData();
         WebClient webClient = WebClient.create(vertx1);
         Handler<Long> longHandler = avoid -> {
-            sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
-                if (lockAsyncResult.succeeded()) {
-//                    logger.info(URL_REQUSET);
-                    webClient.getAbs(URL_REQUSET)
-                            /*.addQueryParam("grant_type", "client_credential")
-                            .addQueryParam("appid", this.getAppID())
-                            .addQueryParam("secret", this.getAppsecret())*/
-                            .timeout(20000)
-                            .send(httpResponseAsyncResult -> {
-                                try {
-                                    if (httpResponseAsyncResult.succeeded()) {
-                                        HttpResponse<Buffer> httpResponse = httpResponseAsyncResult.result();
-                                        eventBus.publish(URL_TOCKEN_UPDATE, httpResponse.body().toJsonObject());
-                                    } else {
-                                        httpResponseAsyncResult.cause().printStackTrace();
-                                    }
-                                } finally {
-                                    Lock lock = lockAsyncResult.result();
-                                    vertx1.setTimer(30 * 1000, aLong1 -> {
-                                        lock.release();
-                                    });
-                                }
-                            });
-                } else {
-                    logger.info(lockAsyncResult.cause().getMessage());
-                }
-            });
+            sharedData.getLock(URL_TOCKEN_LOCK)
+                    .compose(lock -> webClient.getAbs(URL_REQUSET).timeout(20000)
+                            .send()
+                            .onSuccess(result -> {
+                                HttpResponse<Buffer> httpResponse = result;
+                                eventBus.publish(URL_TOCKEN_UPDATE, httpResponse.body().toJsonObject());
+                            })
+                            .onComplete(event -> vertx1.timerStream(3000).handler(event1 -> lock.release())))
+                    .onFailure(throwable -> logger.error(throwable.getMessage(), throwable));
         };
 
         MessageConsumer<T> messageConsumer = eventBus.consumer(URL_TOCKEN_UPDATE);
@@ -349,18 +333,17 @@ public abstract class AbstractWechatConfiguration {
     public <T> String getTokenFromMessage(Message<T> var1) {
         JsonObject tokenJson = (JsonObject) var1.body();
         if (tokenJson.getInteger("errcode") != null) {
-            String error;
-            logger.info(String.format("[%s]errcode:%s", this.getAppID(), tokenJson.getInteger("errcode")));
-            logger.info(String.format("[%s]errmsg:%s", this.getAppID(), error = tokenJson.getString("errmsg")));
-            throw new RuntimeException(error);
+            logger.error("[{}] ERR_CODE: {}", this.getAppID(), tokenJson.getInteger("errcode"));
+            logger.error("[{}] ERR_MSG:  {}", this.getAppID(), tokenJson.getString("errmsg"));
+            return null;
         } else {
             String accessToken = tokenJson.getString("access_token");
-            logger.info(String.format("[%s]Token:%s[%s]", this.getAppID(), accessToken, tokenJson.getLong("expires_in")));
+            logger.info("[{}] Token: {} [{}]", this.getAppID(), accessToken, LocalDateTime.now().plusSeconds(tokenJson.getLong("expires_in")).format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH-mm-ss")));
             return accessToken;
         }
     }
 
-    public void vertxConfiguration(Vertx vertx){
+    public void vertxConfiguration(Vertx vertx) {
         WebClient webClient = WebClient.create(vertx);
         setWechatAsyncMeassger(webClient);
 
@@ -368,6 +351,7 @@ public abstract class AbstractWechatConfiguration {
             this.setAccessToken(this.getTokenFromMessage(objectMessage));
         });
     }
+
     public synchronized void setWechatAsyncMeassger(WebClient webClient) {
         if (this.wechatAsyncMeassger != null)
             return;

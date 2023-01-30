@@ -5,9 +5,9 @@ import org.springframework.stereotype.Component;
 import org.welisdoon.web.vertx.annotation.Verticle;
 
 @Component("standaredVerticle")
-@ConfigurationProperties(prefix = "server.web")
+@ConfigurationProperties(prefix = "vertx.webs.main")
 @Verticle
-public class StandaredVerticle extends AbstractWebVerticle {
+public class MainWebVerticle extends AbstractWebVerticle {
 
 }
 

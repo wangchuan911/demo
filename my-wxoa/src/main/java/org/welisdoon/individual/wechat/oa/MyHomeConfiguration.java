@@ -1,12 +1,10 @@
 package org.welisdoon.individual.wechat.oa;
 
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.common.config.AbstractWechatOfficialAccountConfiguration;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.web.service.wechat.service.AbstractWeChatOfficialAccountService;
@@ -16,9 +14,7 @@ import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
-
-import java.util.function.Consumer;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 
 /**
  * @Classname MyHomeConfiguration
@@ -30,7 +26,7 @@ import java.util.function.Consumer;
 @ConfigurationProperties("wechat-oa-myhome")
 @Configuration
 @ConditionalOnProperty(prefix = "wechat-oa-myhome", name = "appID")
-@VertxRoutePath("{wechat-oa-myhome.path.app}")
+@VertxRoutePath(prefix = "{wechat-oa-myhome.path.app}")
 public class MyHomeConfiguration extends AbstractWechatOfficialAccountConfiguration {
 
     @VertxRouter(path = "", order = Integer.MIN_VALUE)
@@ -68,7 +64,7 @@ public class MyHomeConfiguration extends AbstractWechatOfficialAccountConfigurat
             });
         };
     }*/
-    @VertxRegister(StandaredVerticle.class)
+    @VertxRegister(MainWebVerticle.class)
     @Override
     public void vertxConfiguration(Vertx vertx) {
         System.out.println("hehe");

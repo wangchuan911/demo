@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.encrypt.AesException;
 import org.welisdoon.web.entity.wechat.messeage.MesseageTypeValue;
 import org.welisdoon.web.vertx.annotation.VertxRegister;
-import org.welisdoon.web.vertx.verticle.StandaredVerticle;
+import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 
 /**
  * @Classname AbstractWechatOfficialAccountConfiguration
@@ -66,7 +66,7 @@ public abstract class AbstractWechatOfficialAccountConfiguration extends Abstrac
     }
 
     @Override
-    @VertxRegister(StandaredVerticle.class)
+    @VertxRegister(MainWebVerticle.class)
     public synchronized void vertxConfiguration(Vertx vertx) {
         super.vertxConfiguration(vertx);
     }

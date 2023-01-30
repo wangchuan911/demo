@@ -1,27 +1,37 @@
 ################### HTTP Configuration   ##########################
-server:
-  web:
-    port: 443
-    sslEnable: true
-    sslKeyType: pfx
-    sslKeyStore: /opt/wechat/thekeystore
-    sslPassword: e75M8y7K
-    sslKeyPath:
-    staticPath: /opt/wechat/tempPic
 spring:
   profiles:
     active: [wechat,atomSrv,database,wechat-app]
 
 ################### Vert.x Configuration ##########################
 vertx:
-  worker:
-    pool:
-      size: 4
-  workerVerticle:
-    instances: 2
-  clusterMode: hazelcast1
+  webs:
+    main:
+      port: 443
+      sslEnable: true
+      sslKeyType: pfx
+      sslKeyStore: /opt/wechat/thekeystore
+      sslPassword: e75M8y7K
+      sslKeyPath:
+      staticPath: /opt/wechat/tempPic
+  options:
+    vertxOptions:
+      workerPoolSize: 4
+      maxEventLoopExecuteTime: 5000000000
+      addressResolverOptions:
+        servers:
+          - '134.192.232.18'
+          - '134.192.232.17'
+        maxQueries: 10
+    deployOptions:
+      "[org.welisdoon.web.vertx.verticle.WorkerVerticle]":
+        maxEventLoopExecuteTime: ${vertx.options.vertxOptions.maxEventLoopExecuteTime}
+      "[org.welisdoon.web.vertx.verticle.MainWebVerticle]":
+        maxEventLoopExecuteTime: ${vertx.options.vertxOptions.maxEventLoopExecuteTime}
+      "[org.welisdoon.web.vertx.verticle.SchedulerVerticle]":
+        maxEventLoopExecuteTime: ${vertx.options.vertxOptions.maxEventLoopExecuteTime}
+
+
+  clusterMode: hazelcast
   scanPath: org.welisdoon.web
-  dns:
-    enable: false
-    ip: 134.192.232.18,134.192.232.17
-    maxQueries: 10
+

@@ -2,24 +2,18 @@ package com.hubidaauto.servmarket.module.common.web;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.hubidaauto.servmarket.module.comment.dao.OrderCommentDao;
-import com.hubidaauto.servmarket.module.comment.entity.CommentVO;
-import com.hubidaauto.servmarket.module.common.annotation.ContentType;
 import com.hubidaauto.servmarket.module.common.dao.AppConfigDao;
 import com.hubidaauto.servmarket.module.common.dao.ImageContentDao;
 import com.hubidaauto.servmarket.module.common.dao.TextContentDao;
 import com.hubidaauto.servmarket.module.common.entity.AppConfig;
 import com.hubidaauto.servmarket.module.common.entity.ImageContentVO;
 import com.hubidaauto.servmarket.module.common.entity.TextContentVO;
-import com.hubidaauto.servmarket.module.goods.entity.ItemVO;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.FileSystemAccess;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
 import org.slf4j.Logger;
@@ -35,7 +29,6 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,7 +39,7 @@ import java.util.stream.Collectors;
 @Component
 @VertxConfiguration
 @ConditionalOnProperty(prefix = "wechat-app-hubida", name = "appID")
-@VertxRoutePath("{wechat-app-hubida.path.app}/common")
+@VertxRoutePath(prefix = "{wechat-app-hubida.path.app}/common")
 public class CommonWebRouter {
     Logger logger = LoggerFactory.getLogger(CommonWebRouter.class);
 
@@ -134,9 +127,7 @@ public class CommonWebRouter {
             method = "GET")
     public void getImg(RoutingContextChain chain) {
         Environment environment = ApplicationContextProvider.getBean(Environment.class);
-        StaticHandler staticHandler = StaticHandler.create()
-                .setAllowRootFileSystemAccess(true)
-                .setWebRoot(environment.getProperty("temp.filePath"));
+        StaticHandler staticHandler = StaticHandler.create(FileSystemAccess.ROOT, environment.getProperty("temp.filePath"));
         staticHandler.setAlwaysAsyncFS(true);
         staticHandler.setCachingEnabled(false);
 

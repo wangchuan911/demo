@@ -167,7 +167,9 @@ public class Line {
                     s.put(key, new Line.Section().setHead(point));
                 }
             });
-            return s.entrySet().stream().map(stringSectionEntry -> stringSectionEntry.getValue()).toArray(Line.Section[]::new);
+            return s.entrySet().stream().map(stringSectionEntry -> stringSectionEntry.getValue())
+                    .filter(section -> section.foot != null && section.head != null)
+                    .toArray(Line.Section[]::new);
         }
     }
 
@@ -196,7 +198,7 @@ public class Line {
             List<Line.Section.Point> list = new LinkedList<>();
             Line.Section.Point point = point1;
             list.add(point);
-            while ((point = lines.get(point)) != END_POINT && point != null) {
+            while ((point = lines.remove(point)) != END_POINT && point != null) {
                 list.add(point);
             }
             return new Line().setPoints(list.toArray(Line.Section.Point[]::new)).setLineId(point1.lineId);
@@ -257,9 +259,26 @@ public class Line {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) /*throws IOException*/ {
+        /*FileInputStream stream = new FileInputStream(new File("D:\\Downloads\\FeHelper-20220316114712.json"));
+        ByteArrayOutputStream stream1 = new ByteArrayOutputStream();
+        StreamUtils.write(stream, stream1);
+        JSONArray array = JSONObject.parseObject(new String(stream1.toByteArray())).getJSONObject("body").getJSONArray("list");
+
         List<Line.Section.Point> points = new LinkedList<>();
-        String id = "233333";
+        for (int i = 0; i < array.size(); i++) {
+            JSONArray array1 = array.getJSONObject(i).getJSONArray("subList");
+            if (array1 == null) continue;
+            for (int j = 0; j < array1.size(); j++) {
+                JSONObject jsonObject = array1.getJSONObject(j);
+                Line.Section.Point point = new Line.Section.Point()
+                        .setLineId(jsonObject.getString("LINE_ID"))
+                        .setSectionId(jsonObject.getString("SECT_ID"))
+                        .setPointId(jsonObject.getString("RES_ID"));
+                points.add(point);
+            }
+        }*/
+        /*String id = "233333";
         for (int i = 0, j = 0; i < 10; i++) {
             Line.Section.Point point = new Line.Section.Point().setLineId("1");
             point.setPointId((j = (i % 2 == 0 ? j : (int) (Math.random() * 1000))) + "");
@@ -281,7 +300,7 @@ public class Line {
             }
             point.setSectionId(Math.floor(i / 2) + "");
             points.add(point);
-        }
-        System.out.println(Arrays.toString(Line.toLine(points.stream().toArray(Line.Section.Point[]::new))));
+        }*/
+        /*System.out.println(Arrays.toString(Line.toLine(points.stream().toArray(Line.Section.Point[]::new))));*/
     }
 }
