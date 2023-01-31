@@ -25,6 +25,7 @@ import com.hubidaauto.servmarket.module.order.model.IOverTimeOperationable;
 import com.hubidaauto.servmarket.module.popularize.model.IRebate;
 import com.hubidaauto.servmarket.module.popularize.model.RebateConfig;
 import com.hubidaauto.servmarket.module.staff.entity.StaffVO;
+import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.web.vertx.verticle.SchedulerVerticle;
 import com.hubidaauto.servmarket.module.staff.dao.StaffTaskDao;
 import com.hubidaauto.servmarket.module.staff.entity.StaffCondition;
@@ -327,7 +328,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
                 workOrderVO = new ServiceClassWorkOrderVO();
                 ServiceClassOrderVO orderVO = orderDao.find((ServiceClassOrderCondition) new ServiceClassOrderCondition().setFlowId(flow.getId()));
                 workOrderVO.setOrderId(orderVO.getId());
-                JSONObject valueJson = stream.getValue() != null ? stream.getValue().jsonValue() : stream.getValueId() != null ? flowService.getValue(stream.getValueId()).jsonValue() : new JSONObject();
+                FlowValue.FlowJSONValue valueJson = stream.getValue() != null ? stream.getValue().jsonValue() : stream.getValueId() != null ? flowService.getValue(stream.getValueId()).jsonValue() : FlowValue.emptyFlowJSONValue();
                 if (stream.getNodeId() == SIMPLE_NODE_ID)
                     workOrderVO.setStaffId(valueJson.getLong("staffId"));
                 workOrderVO.setStatusId(WorkOrderStatus.READY.statusId());

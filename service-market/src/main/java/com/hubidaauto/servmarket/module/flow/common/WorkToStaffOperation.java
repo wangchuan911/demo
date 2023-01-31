@@ -69,9 +69,8 @@ public class WorkToStaffOperation implements VirtualNode.OnInstantiated{
 
             stream.setValue(flowValue);
 
-            JSONObject valueJson = flowValue.jsonValue();
+            FlowValue.FlowJSONValue valueJson = flowValue.jsonValue();
             valueJson.put("staffId", staffVO.getId());
-            flowValue.saveJsonValue();
 
 
             /*stream.setValueId(flowValue.getId());*/

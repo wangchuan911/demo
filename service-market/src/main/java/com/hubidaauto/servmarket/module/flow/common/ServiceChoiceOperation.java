@@ -27,7 +27,7 @@ import java.util.List;
  */
 @Component
 @Transactional(rollbackFor = Throwable.class)
-public class ServiceChoiceOperation implements VirtualNode.OnInstantiated{
+public class ServiceChoiceOperation implements VirtualNode.OnInstantiated {
 
     FlowService flowService;
 
@@ -57,7 +57,7 @@ public class ServiceChoiceOperation implements VirtualNode.OnInstantiated{
         List<Stream> list = new LinkedList();
         OrderVO orderVO = baseOrderDao.find(new OrderCondition<>().setFlowId(templateStream.getFlowId()));
         List<ServiceContent> services = baseOrderService.getServices(orderVO);
-        JSONObject valueJson;
+        FlowValue.FlowJSONValue valueJson;
         for (int i = 0, len = services.size(); i < len; i++) {
             Stream stream = new Stream();
             stream.setFlow(templateStream.getFlow());
@@ -71,7 +71,7 @@ public class ServiceChoiceOperation implements VirtualNode.OnInstantiated{
             FlowValue flowValue = new FlowValue().setFlowId(templateStream.getFlowId());
             valueJson = flowValue.jsonValue();
             valueJson.put("function", services.get(i).getId());
-            stream.setValue((FlowValue) flowValue.saveJsonValue());
+            stream.setValue(flowValue);
             list.add(stream);
         }
         return list;

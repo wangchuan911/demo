@@ -48,9 +48,8 @@ public class ToCustOperation implements VirtualNode.OnInstantiated{
 
         stream.setValue(flowValue);
 
-        JSONObject valueJson = flowValue.jsonValue();
+        FlowValue.FlowJSONValue valueJson = flowValue.jsonValue();
         valueJson.put("staffId", orderVO.getCustId());
-        flowValue.saveJsonValue();
 
 
         /*stream.setValueId(flowValue.getId());*/

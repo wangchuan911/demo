@@ -73,9 +73,8 @@ public class DispatchOperation implements VirtualNode.OnInstantiated{
 
             stream.setValue(flowValue);
 
-            JSONObject valueJson = flowValue.jsonValue();
+            FlowValue.FlowJSONValue valueJson = flowValue.jsonValue();
             valueJson.put("staffId", staffVO.getId());
-            flowValue.saveJsonValue();
 
             stream.setNodeId(6L);
             stream.setName(templateStream.getName());

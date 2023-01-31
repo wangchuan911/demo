@@ -36,11 +36,11 @@ public class VirtualNode extends SimpleNode {
         if (nodeService instanceof VirtualNode) {
             throw new RuntimeException("stream not allow link VirtualNode!");
         }
-        FlowValue value = stream.getValue() == null ? new FlowValue() : stream.getValue();
-        JSONObject jsonValue = value.jsonValue();
+        FlowValue value = stream.getValue() == null ? new FlowValue(stream.getFlowId()) : stream.getValue();
+        FlowValue.FlowJSONValue jsonValue = value.jsonValue();
         jsonValue.put("virtual", true);
         jsonValue.put("virtualFunctionId", function.getId());
-        stream.setValue((FlowValue) value.saveJsonValue());
+        stream.setValue(value);
         if (value.getId() == null) {
             this.getFlowValueDao().add(value);
             stream.setValueId(value.getId());

@@ -12,7 +12,6 @@ import com.alibaba.fastjson.JSONObject;
 public class LinkValue {
     Long id;
     String value;
-    JSONObject jsonValue;
 
     public Long getId() {
         return id;
@@ -30,13 +29,4 @@ public class LinkValue {
         this.value = value;
     }
 
-    public JSONObject jsonValue() {
-        return this.value == null ? (this.jsonValue = new JSONObject()) : (this.jsonValue = JSONObject.parseObject(this.value));
-    }
-
-    public LinkValue saveJsonValue() {
-        if (jsonValue != null)
-            this.value = jsonValue.toJSONString();
-        return this;
-    }
 }

@@ -28,6 +28,7 @@ import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
@@ -156,7 +157,6 @@ public class InviteRebateOrderRouter {
                 if (stream == null || stream.getValueId() == null || stream.getValue() == null)
                     throw new RuntimeException();
                 ;
-                JSONObject valueJson = stream.getValue().jsonValue();
                 OrderVO orderVO = ApplicationContextProvider.getBean(BaseOrderService.class).get(workOrderVO.getOrderId());
 
                 WorkerVerticle.pool().getOne().eventBus()

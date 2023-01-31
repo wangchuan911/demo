@@ -9,6 +9,7 @@ import com.hubidaauto.servmarket.module.user.dao.AppUserDao;
 import com.hubidaauto.servmarket.module.workorder.entity.WorkOrderVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.welisdoon.flow.module.flow.entity.FlowValue;
 import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import com.hubidaauto.servmarket.module.message.dao.MesseageTemplateDao;
@@ -39,7 +40,7 @@ public class WorkOrderReadyEvent implements MessageEvent<MessagePushVO> {
         this.workOrderVO = workOrderVO;
         if (this.workOrderVO.getStream() != null
                 && this.workOrderVO.getStream().getValue() != null && this.workOrderVO.getStream().getValue().getValue() != null) {
-            JSONObject valueJson = this.workOrderVO.getStream().getValue().jsonValue();
+            FlowValue.FlowJSONValue valueJson = this.workOrderVO.getStream().getValue().jsonValue();
             JSONArray array = valueJson.getJSONArray("tpltIds");
 
             if (array != null && array.size() > 0) {
