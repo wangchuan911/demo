@@ -12,17 +12,16 @@
     </select>
 
     <select id="list" parameterType="org.welisdoon.model.data.condition.ColumnCondition"
-            resultMap="ColumnEntity">
+            resultType="org.welisdoon.model.data.entity.database.ColumnEntity">
         SELECT * FROM DM_COLUMN A
         <where>
-            TABLE_ID=#{tableId} and
             <if test="code!=null ">and CODE=#{code}</if>
             <if test="id!=null ">and ID=#{id}</if>
             <if test="type!=null ">and JDBC_TYPE=#{type.name()}</if>
             <if test="length!=null ">and LENGTH=#{length}</if>
             <if test="level!=null ">and LEVEL=#{level}</if>
             <if test="name!=null ">and NAME=#{name}</if>
-            <if test="table!=null and table_id!=null ">and TABLE_ID=#{table.id}</if>
+            <if test="table!=null and table.id!=null ">and TABLE_ID=#{table.id}</if>
         </where>
         ORDER BY A.ID DESC
 

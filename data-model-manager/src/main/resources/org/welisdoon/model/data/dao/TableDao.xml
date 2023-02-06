@@ -36,7 +36,7 @@
         VALUES (#{CODE},
                 #{ID},
                 #{NAME},
-                #{TABLE_ID},)
+                #{TABLE_ID})
     </insert>
 
     <insert id="update" parameterType="org.welisdoon.model.data.entity.database.TableEntity"

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.model.data.dao.FieldLinkDao">
+
+    <select id="get" parameterType="long"
+            resultType="org.welisdoon.model.data.entity.link.FieldLinkEntity">
+        select *
+        from DM_INPUT_LINK a
+        where a.id = #{value}
+    </select>
+
+    <select id="list" parameterType="org.welisdoon.model.data.condition.FieldCondition"
+            resultType="org.welisdoon.model.data.entity.link.FieldLinkEntity">
+        SELECT * FROM DM_INPUT_LINK A
+        <where>
+            <if test="field_id!=null">and FIELD_ID=#{data.linkEntity.id}</if>
+            <if test="id!=null">and ID=#{data.id}</if>
+            <if test="superId!=null">and SUPER_ID=#{data.superId}</if>
+        </where>
+        ORDER BY A.ORDER DESC
+
+    </select>
+
+    <insert id="add" parameterType="org.welisdoon.model.data.entity.link.FieldLinkEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO DM_INPUT_LINK(EXPRESS,
+                                  FIELD_ID,
+                                  ID,
+                                  ORDER,
+                                  SUPER_ID)
+        VALUES (#{express},
+                #{linkEntity.id},
+                #{id},
+                #{order},
+                #{super.id})
+    </insert>
+
+    <insert id="update" parameterType="org.welisdoon.model.data.entity.link.FieldLinkEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        UPDATE DM_INPUT_LINK
+        <set>
+            EXPRESS=#{express},
+            FIELD_ID=#{linkEntity.id},
+            ID=#{id},
+            ORDER=#{order},
+            SUPER_ID=#{superId},
+        </set>
+        WHERE ID = #{id}
+    </insert>
+
+
+</mapper>

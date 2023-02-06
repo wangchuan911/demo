@@ -12,7 +12,7 @@
     </select>
 
     <select id="list" parameterType="org.welisdoon.model.data.condition.FieldCondition"
-            resultMap="ColumnEntity">
+            resultType="org.welisdoon.model.data.entity.database.FieldEntity">
         SELECT * FROM DM_FIELD A
         <where>
             TABLE_ID=#{tableId} and
@@ -36,7 +36,7 @@
                              INPUT_ID,
                              LEVEL,
                              LOCK,
-                             NAME,)
+                             NAME)
         VALUES (#{column.id},
                 #{defaultValue},
                 #{id},

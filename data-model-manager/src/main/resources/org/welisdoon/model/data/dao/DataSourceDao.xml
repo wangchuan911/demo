@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.model.data.dao.DataSourceDao">
+
+    <select id="get" parameterType="long"
+            resultType="org.welisdoon.model.data.entity.database.DataSourceEntity">
+        select *
+        from DM_DATABASE a
+        where a.id = #{value}
+    </select>
+
+    <select id="list" parameterType="org.welisdoon.model.data.condition.DataSourceCondition"
+            resultType="org.welisdoon.model.data.entity.database.DataSourceEntity">
+        SELECT * FROM DM_DATABASE A
+        <where>
+            TABLE_ID=#{tableId} and
+            <if test="code!=null ">and CODE=#{code}</if>
+            <if test="id!=null ">and ID=#{id}</if>
+            <if test="url!=null ">and URL=#{url}</if>
+            <if test="name!=null ">and NAME=#{name}</if>
+        </where>
+        ORDER BY A.ID DESC
+
+    </select>
+
+    <insert id="add" parameterType="org.welisdoon.model.data.entity.database.DataSourceEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO DM_DATABASE(CODE,
+                              ID,
+                              NAME,
+                              URL)
+        VALUES (#{code},
+                #{id},
+                #{name},
+                #{url})
+    </insert>
+
+    <insert id="update" parameterType="org.welisdoon.model.data.entity.database.DataSourceEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        UPDATE DM_DATABASE
+        <set>
+            CODE=#{code},
+            URL=#{url},
+            NAME=#{name},
+        </set>
+        WHERE ID = #{id}
+    </insert>
+
+
+</mapper>

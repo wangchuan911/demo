@@ -12,13 +12,13 @@
     </select>
 
     <select id="list" parameterType="org.welisdoon.model.data.condition.DataObjectCondition"
-            resultMap="ColumnEntity">
+            resultType="org.welisdoon.model.data.entity.database.DataObjectEntity">
         SELECT * FROM DM_DATA_OBJECT A
         <where>
-            <if test="code!=null">CODE=#{code},</if>
-            <if test="id!=null">ID=#{id},</if>
-            <if test="name!=null">NAME=#{name},</if>
-            <if test="table.id!=null">TABLE_ID=#{table.id},</if>
+            <if test="code!=null">and CODE=#{code}</if>
+            <if test="id!=null">and ID=#{id}</if>
+            <if test="name!=null">and NAME=#{name}</if>
+            <if test="table.id!=null">and TABLE_ID=#{table.id}</if>
         </where>
         ORDER BY A.ID DESC
 
@@ -29,7 +29,7 @@
         INSERT INTO DM_DATA_OBJECT(CODE,
                               ID,
                               NAME,
-                              TABLE_ID,)
+                              TABLE_ID)
         VALUES (#{code},
                 #{id},
                 #{name},
@@ -40,10 +40,10 @@
             useGeneratedKeys="true" keyProperty="id">
         UPDATE DM_DATA_OBJECT
         <set>
-            CODE=#{code},
-            ID=#{id},
-            NAME=#{name},
-            TABLE_ID=#{table.id},
+            <if test="code!=null">CODE=#{code},</if>
+            <if test="id!=null">ID=#{id},</if>
+            <if test="name!=null">NAME=#{name},</if>
+            <if test="table.id!=null">TABLE_ID=#{table.id},</if>
         </set>
         WHERE ID = #{id}
     </insert>
