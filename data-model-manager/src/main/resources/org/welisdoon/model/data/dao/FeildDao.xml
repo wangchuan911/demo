@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.model.data.dao.FieldDao">
+
+    <select id="get" parameterType="long"
+            resultType="org.welisdoon.model.data.entity.database.FieldEntity">
+        select *
+        from DM_FIELD a
+        where a.id = #{value}
+    </select>
+
+    <select id="list" parameterType="org.welisdoon.model.data.condition.FieldCondition"
+            resultMap="ColumnEntity">
+        SELECT * FROM DM_FIELD A
+        <where>
+            TABLE_ID=#{tableId} and
+            <if test="code!=null ">and CODE=#{code}</if>
+            <if test="id!=null ">and ID=#{id}</if>
+            <if test="type!=null ">and JDBC_TYPE=#{type.name()}</if>
+            <if test="length!=null ">and LENGTH=#{length}</if>
+            <if test="level!=null ">and LEVEL=#{level}</if>
+            <if test="name!=null ">and NAME=#{name}</if>
+            <if test="table!=null and table_id!=null ">and TABLE_ID=#{table.id}</if>
+        </where>
+        ORDER BY A.ID DESC
+
+    </select>
+
+    <insert id="add" parameterType="org.welisdoon.model.data.entity.database.FieldEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO DM_FIELD(COLUMN_ID,
+                             DEFAULT_VALUE,
+                             ID,
+                             INPUT_ID,
+                             LEVEL,
+                             LOCK,
+                             NAME,)
+        VALUES (#{column.id},
+                #{defaultValue},
+                #{id},
+                #{input,id},
+                #{level},
+                #{lock},
+                #{name})
+    </insert>
+
+    <insert id="update" parameterType="org.welisdoon.model.data.entity.database.FieldEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        UPDATE DM_FIELD
+        <set>
+            CODE=#{code},
+            JDBC_TYPE=#{type.name},
+            LENGTH=#{length},
+            LEVEL=#{level},
+            NAME=#{name},
+        </set>
+        WHERE ID = #{id}
+    </insert>
+
+
+</mapper>

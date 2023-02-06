@@ -20,8 +20,8 @@ public interface IData<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>
     IData setDataMarker(DATA_MARKER dataMarker);
 
     abstract class DataObject<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>> implements IData<ID, DATA_MARKER> {
-        ID id;
-        DATA_MARKER dataMarker;
+        protected ID id;
+        protected DATA_MARKER dataMarker;
 
         public DataObject<ID, DATA_MARKER> setId(ID id) {
             this.id = id;

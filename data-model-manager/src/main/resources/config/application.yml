@@ -1,0 +1,47 @@
+################### HTTP Configuration   ##########################
+
+spring:
+  profiles:
+    active: [database]
+  main:
+    web-application-type: none
+################### Vert.x Configuration ##########################
+
+vertx:
+  webs:
+    main:
+      port: 443
+      sslEnable: true
+      sslKeyType: pfx
+      sslKeyStore: /opt/wechat/thekeystore
+      sslPassword: e75M8y7K
+      sslKeyPath:
+  options:
+    vertxOptions:
+      workerPoolSize: 4
+      eventLoopPoolSize: 4
+      maxEventLoopExecuteTime: 5000000000
+#      addressResolverOptions:
+#        servers:
+#          - '134.192.232.18'
+#          - '134.192.232.17'
+#        maxQueries: 10
+    deployOptions:
+      "[org.welisdoon.web.vertx.verticle.WorkerVerticle]":
+      "[org.welisdoon.web.vertx.verticle.MainWebVerticle]":
+      "[org.welisdoon.web.vertx.verticle.SchedulerVerticle]":
+        maxEventLoopExecuteTime: ${vertx.options.vertxOptions.maxEventLoopExecuteTime}
+  clusterMode: hazelcast1
+  dns:
+    enable: false
+    ip: 134.192.232.18,134.192.232.17
+    maxQueries: 10
+  scheduler: true
+
+
+#logging:
+#  level:
+#    root: "trace"
+#    appdao: "trace"
+#  group:
+#    appdao: ",org.springframework.jdbc,org.mybatis"

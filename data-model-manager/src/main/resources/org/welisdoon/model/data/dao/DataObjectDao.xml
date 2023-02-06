@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.model.data.dao.DataObjectDao">
+
+    <select id="get" parameterType="long"
+            resultType="org.welisdoon.model.data.entity.database.DataObjectEntity">
+        select *
+        from DM_DATA_OBJECT a
+        where a.id = #{value}
+    </select>
+
+    <select id="list" parameterType="org.welisdoon.model.data.condition.DataObjectCondition"
+            resultMap="ColumnEntity">
+        SELECT * FROM DM_DATA_OBJECT A
+        <where>
+            <if test="code!=null">CODE=#{code},</if>
+            <if test="id!=null">ID=#{id},</if>
+            <if test="name!=null">NAME=#{name},</if>
+            <if test="table.id!=null">TABLE_ID=#{table.id},</if>
+        </where>
+        ORDER BY A.ID DESC
+
+    </select>
+
+    <insert id="add" parameterType="org.welisdoon.model.data.entity.database.DataObjectEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO DM_DATA_OBJECT(CODE,
+                              ID,
+                              NAME,
+                              TABLE_ID,)
+        VALUES (#{code},
+                #{id},
+                #{name},
+                #{table.id},)
+    </insert>
+
+    <insert id="update" parameterType="org.welisdoon.model.data.entity.database.DataObjectEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        UPDATE DM_DATA_OBJECT
+        <set>
+            CODE=#{code},
+            ID=#{id},
+            NAME=#{name},
+            TABLE_ID=#{table.id},
+        </set>
+        WHERE ID = #{id}
+    </insert>
+
+
+</mapper>
