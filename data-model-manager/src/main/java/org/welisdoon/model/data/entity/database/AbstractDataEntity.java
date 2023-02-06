@@ -4,7 +4,7 @@ import org.welisdoon.common.data.IData;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
 
-abstract class AbstractDataEntity extends IData.DataObject<Long, DataModelType> {
+public abstract class AbstractDataEntity extends IData.DataObject<Long, DataModelType> {
     String code, name;
 
     public String getCode() {

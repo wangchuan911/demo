@@ -6,7 +6,7 @@ import org.springframework.util.Assert;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FeildLevelDefine {
+public class FieldLevelDefine {
 
     final static Map<String, FieldLevel> map = new HashMap<>();
 
