@@ -19,7 +19,7 @@
             <if test="id!=null">and ID=#{data.id}</if>
             <if test="superId!=null">and SUPER_ID=#{data.superId}</if>
         </where>
-        ORDER BY A.ORDER DESC
+        ORDER BY A.ORDER
 
     </select>
 
