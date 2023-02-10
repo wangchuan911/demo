@@ -9,7 +9,7 @@
             type="border-card"
             @tab-remove="removeTab"
         >
-          <el-tab-pane label="index" nane="/index">
+          <el-tab-pane nane="index" label="index">
             <el-button size="small" @click="addTab((++tempTabIndex) % 2 == 0 ? '/about' : '/detail')">
               add tab
             </el-button>
@@ -49,7 +49,7 @@ export default defineComponent({
   data() {
     return {
       tempTabIndex: 2,
-      editableTabsValue: '/index',
+      editableTabsValue: '0',
       editableTabs: Array<TabInfo>(),
       tabComponents: Array<TabInfo>()
     }
@@ -91,6 +91,7 @@ export default defineComponent({
             })
       }
       this.$data.editableTabsValue = targetName
+      console.log(targetName)
       console.log(this.$data.editableTabs[this.$data.editableTabs.length - 1].component, HomeView)
     }
     , removeTab: function (targetName: string) {

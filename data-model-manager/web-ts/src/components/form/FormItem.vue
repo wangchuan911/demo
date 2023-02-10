@@ -1,18 +1,18 @@
 <template>
   <template v-if="item.mode=='input'">
     <el-input
-        v-if="['color','email','datetime-local','number','password','search','tel','text','url'].indexOf(item.type)>=0"
-        :type="item.type" v-model="form[item.id]"
-        :placeholder="item.placeholder"/>
-    <el-date-picker v-else-if="['date','datetime','week','month','year'].indexOf(item.type)>=0"
-                    v-model="form[item.id]"
-                    :type="item.type"
-                    :placeholder="item.placeholder"
-                    size="default"
+        v-if="['color','email','datetime-local','number','password','search','tel','text','url'].indexOf(item.config.type)>=0"
+        :type="item.config.type" v-model="form[item.id]" v-bind="item.config"
     />
-    <el-time-picker v-else-if="item.type=='time'" v-model="form[item.id]" :placeholder="item.placeholder"/>
-    <template v-else-if="item.type=='checkbox'">
-      <el-checkbox-group v-if="item.init.length<=5" v-model="form[item.id]">
+    <el-date-picker v-else-if="['date','datetime','week','month','year'].indexOf(item.config.type)>=0"
+                    v-model="form[item.id]"
+                    :type="item.config.type"
+                    size="default"
+                    v-bind="item.config"
+    />
+    <el-time-picker v-else-if="item.config.type=='time'" v-model="form[item.id]" v-bind="item.config"/>
+    <template v-else-if="item.config.type=='checkbox'">
+      <el-checkbox-group v-if="item.init.length<=5" v-model="form[item.id]" v-bind="item.config">
         <el-checkbox
             :label="init.value" :name="item.id"
             v-for=" init in item.init||[]" :key="init.value">{{ init.name }}
@@ -21,23 +21,24 @@
       <el-select v-else
                  v-model="form[item.id]"
                  multiple
-                 placeholder="Select"
                  style="width: 100%"
+                 v-bind="item.config"
       >
         <el-option
             v-for=" init in item.init||[]" :key="init.value"
             :label="init.name"
             :value="init.value"
+            v-bind="item.config"
         />
       </el-select>
     </template>
-    <template v-else-if="item.type=='radio'">
-      <el-radio-group v-if="item.init.length<=5" v-model="form[item.id]">
+    <template v-else-if="item.config.type=='radio'">
+      <el-radio-group v-if="item.init.length<=5" v-model="form[item.id]" v-bind="item.config">
         <el-radio :label="init.value" size="large"
                   v-for=" init in item.init||[]" :key="init.value">{{ init.name }}
         </el-radio>
       </el-radio-group>
-      <el-select v-else v-model="form[item.id]">
+      <el-select v-else v-model="form[item.id]" v-bind="item.config">
         <el-option
             v-for=" init in item.init||[]" :key="init.value"
             :label="init.name"
@@ -46,18 +47,18 @@
         />
       </el-select>
     </template>
-    <el-slider v-else-if="item.type=='range'" v-model="form[item.id]" :step="1"/>
+    <el-slider v-else-if="item.config.type=='range'" v-model="form[item.id]" v-bind="item.config"/>
   </template>
   <el-input v-else-if="item.mode==='custom'"
             v-model="form[item.id]"
-            :placeholder="item.placeholder"
+            v-bind="item.config"
             class="input-with-select" readonly
   >
     <template #append>
       <el-button :icon="Search"/>
     </template>
   </el-input>
-  <el-switch v-else-if="item.mode==='switch'" v-model="form[item.id]"/>
+  <el-switch v-else-if="item.mode==='switch'" v-model="form[item.id]" v-bind="item.config"/>
   <slot v-else ref="other"></slot>
 </template>
 

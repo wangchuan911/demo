@@ -1,11 +1,15 @@
+export interface FormItemConfig {
+    type: string
+    placeholder: string
+}
+
 export class FormItemDefine {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     name: string | undefined
-    type: string | undefined
     id: string | undefined
     mode: string | undefined
     init: object | undefined
-    placeholder: string | undefined
+    config: FormItemConfig | undefined
 }
 
 /*export class FormDataItem {
