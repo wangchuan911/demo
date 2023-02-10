@@ -1,8 +1,6 @@
 import axios from "axios"
 
-const Api = axios.create({
-    baseURL: process.env.VUE_APP_URL,
-    timeout: 30000,
-})
+axios.defaults.baseURL = "/api"
+axios.defaults.timeout = 30000
 
-export default Api
+export default axios

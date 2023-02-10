@@ -3,6 +3,7 @@
 import {createRouter, createWebHashHistory, RouteRecordRaw} from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 
+
 const routes: Array<RouteRecordRaw> = [
     {
         path: '/',
@@ -15,7 +16,12 @@ const routes: Array<RouteRecordRaw> = [
         // route level code-splitting
         // this generates a separate chunk (about.[hash].js) for this route
         // which is lazy-loaded when the route is visited.
-        component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
+        component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
+        meta: {
+            tab: {
+                title: '首页'
+            }
+        }
     },
     {
         path: '/detail',
@@ -23,7 +29,12 @@ const routes: Array<RouteRecordRaw> = [
         // route level code-splitting
         // this generates a separate chunk (about.[hash].js) for this route
         // which is lazy-loaded when the route is visited.
-        component: () => import(/* webpackChunkName: "about" */ '../views/detail/DetailView.vue')
+        component: () => import(/* webpackChunkName: "about" */ '../views/detail/DetailView.vue'),
+        meta: {
+            tab: {
+                title: '详情'
+            }
+        }
     },
     {
         path: '/index',
@@ -31,7 +42,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import(/* webpackChunkName: "about" */ '../views/MainIndex.vue')
     }
 ]
-
+console.log(routes)
 const router = createRouter({
     history: createWebHashHistory(),
     routes

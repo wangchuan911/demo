@@ -18,7 +18,7 @@ export default {
     HelloWorld
   },
   mounted() {
-    this.$http.get("ads")
+    this.$http.get("asd")
   }
 }
 </script>
