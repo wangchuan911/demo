@@ -33,17 +33,10 @@
 <script lang="ts">
 // eslint-disable-next-line vue/no-export-in-script-setup
 import {defineComponent} from 'vue'
-import {useRoute, useRouter, RouteComponent} from 'vue-router'
+import {TabInfo} from '@/config/TabView'
 import HelloWorld from "@/components/HelloWorld.vue";
 import HomeView from "@/views/HomeView.vue";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface TabInfo {
-  title: string
-  name: string
-  path?: string
-  component?: RouteComponent
-}
 
 export default defineComponent({
   data() {
@@ -51,7 +44,6 @@ export default defineComponent({
       tempTabIndex: 2,
       editableTabsValue: '0',
       editableTabs: Array<TabInfo>(),
-      tabComponents: Array<TabInfo>()
     }
   },
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -60,30 +52,14 @@ export default defineComponent({
   },
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   mounted() {
-    this.$router.getRoutes()
-        .filter(value => value?.meta?.tab != null)
-        .forEach(async value => {
-          async function _get(value: any) {
-            if (typeof (value) == "function")
-              return value()
-            return value
-          }
 
-          const tab: any = value?.meta?.tab || {};
-          this.tabComponents.push({
-            name: value.path,
-            component: (await _get(value.components?.default)).default,
-            ...tab
-          })
-        })
   },
   methods: {
     addTab: function (targetName: string) {
       if (this.$data.editableTabs.filter(value => value.name == targetName).length == 0) {
-        console.log(this.$data.tabComponents)
         console.log(HelloWorld)
         this.$data.editableTabs
-            .push(this.$data.tabComponents
+            .push(this.$tab.getTabs()
                 .find(value => value.name == targetName) || {
               title: '错误',
               name: '/error',
