@@ -81,8 +81,7 @@ onMounted(() => {
   console.log("onMounted")
 })
 // do not use same name with ref
-const defines = reactive(new Array<FormItemDefine>());
-defines.push(
+const defines = reactive(new Array<FormItemDefine>(
     //{name: "Activity button", type: "button", key: "name4", mode: "input"},
     //{name: "Activity checkbox", type: "checkbox", key: "name4", mode: "input"},
     {name: "Activity color", config: {type: "color"}, id: "1", mode: "input"},
@@ -125,7 +124,8 @@ defines.push(
         {name: "Simple brand exposure", value: 4},
         {name: "Simple brand exposure1", value: 5},
         {name: "Simple brand exposure2", value: 6}]
-    })
+    }));
+
 const form = reactive({
   name: 'qwe',
   region: '',
