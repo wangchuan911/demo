@@ -19,9 +19,9 @@
             <el-tab-pane class="tab-container"
                          closable
                          v-for="item in editableTabs"
-                         :key="item.path"
+                         :key="item.id"
                          :label="item.title"
-                         :name="item.path"
+                         :name="item.id"
             >
             </el-tab-pane>
 
@@ -48,20 +48,26 @@ const router = useRouter();
 const currentPagePath = "/index";
 
 export declare interface TabInfo {
+  id: string
   title: string
-  path: string
+  path: string[]
 }
 
 const tempTabIndex = ref(2),
     editableTabsValue = ref('0'),
     editableTabs = reactive(new Array<TabInfo>())
 
+const containTab = (targetName: string): boolean => {
+  return editableTabs.filter(value => value.id == targetName).length != 0;
+}
+
 const addTab = (targetName: string) => {
-  if (editableTabs.filter(value => value.path == targetName).length == 0) {
+  if (!containTab(targetName)) {
     editableTabs
         .push({
+          id: targetName,
           title: 'page' + Math.random(),
-          path: targetName
+          path: [targetName]
         })
   }
   editableTabsValue.value = targetName
@@ -73,10 +79,10 @@ const removeTab = (targetName: string) => {
   let activeName = editableTabsValue.value
   if (activeName === targetName) {
     tabs.forEach((tab, index) => {
-      if (tab.path === targetName) {
+      if (tab.id === targetName) {
         const nextTab = tabs[index + 1] || tabs[index - 1]
         if (nextTab) {
-          activeName = nextTab.path
+          activeName = nextTab.id
         }
       }
     })
@@ -85,7 +91,7 @@ const removeTab = (targetName: string) => {
   editableTabsValue.value = activeName
 
   for (let i = 0; i < tabs.length; i++) {
-    if (tabs[i].path == targetName) {
+    if (tabs[i].id == targetName) {
       tabs.splice(i, 1)
       return;
     }
@@ -93,10 +99,10 @@ const removeTab = (targetName: string) => {
 }
 watch([editableTabsValue], ([editableTabsValue], [oldEditableTabsValue]) => {
   console.log(editableTabsValue, oldEditableTabsValue)
-  if (editableTabs.find(value => value.path == editableTabsValue) == null) {
-    router.push(currentPagePath)
-  } else
+  if (containTab(editableTabsValue))
     router.push(editableTabsValue)
+  else
+    router.push(currentPagePath)
 })
 onMounted(() => {
   console.log("onMounted", router.currentRoute, router.currentRoute.value.fullPath, currentPagePath, router.currentRoute.value.fullPath.substring(currentPagePath.length));
