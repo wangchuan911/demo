@@ -9,15 +9,14 @@
               v-model="editableTabsValue"
               type="border-card"
               @tab-remove="removeTab"
-              @tab-change="changeTab"
           >
-            <el-tab-pane nane="index" label="index">
+            <el-tab-pane nane="index" label="index" class="tab-container">
               <el-button size="small" @click="addTab((++tempTabIndex) % 2 == 0 ? '/about' : '/detail')">
                 add tab
               </el-button>
               Index
             </el-tab-pane>
-            <el-tab-pane style="height: calc(100vh - 185px);"
+            <el-tab-pane class="tab-container"
                          closable
                          v-for="item in editableTabs"
                          :key="item.path"
@@ -26,8 +25,7 @@
             >
             </el-tab-pane>
 
-            <router-view v-slot="{ Component }" :max="10"
-                         style="position: absolute;width: calc(100% - 30px);height:  calc(100vh - 185px);top: 35px;overflow-y: scroll;overflow-x: hidden">
+            <router-view  v-slot="{ Component }" :max="10" class="router-container">
               <keep-alive>
                 <component :is="Component"/>
               </keep-alive>
@@ -41,7 +39,7 @@
 
 <script lang="ts" setup>
 // eslint-disable-next-line vue/no-export-in-script-setup
-import {ref} from 'vue'
+import {ref, watch, watchPostEffect} from 'vue'
 import HomeView from "@/views/HomeView.vue";
 import {useRouter} from "vue-router";
 import type{TabsPaneContext} from 'element-plus'
@@ -86,18 +84,31 @@ const removeTab = (targetName: string) => {
   editableTabsValue.value = activeName
   editableTabs.value = tabs.filter((tab) => tab.path !== targetName)
 }
-const changeTab = (tabName: string) => {
-  //if (tabName == editableTabsValue.value) return;
-  console.log(tabName, editableTabs)
-  if (editableTabs.value.find(value => value.path == tabName) != null)
-    router.push(`/index${tabName}`)
-
-}
+watch([editableTabsValue], ([editableTabsValue], [oldEditableTabsValue]) => {
+  console.log(editableTabsValue, oldEditableTabsValue)
+  if (editableTabs.value.find(value => value.path == editableTabsValue) == null) {
+    router.push(`/index`)
+  } else
+    router.push(`/index${editableTabsValue}`)
+})
 </script>
 
 <style scoped>
 .container {
   width: calc(100vw);
   height: calc(100vh);
+}
+
+.tab-container {
+  height: calc(100vh - 185px);
+}
+
+.router-container {
+  position: absolute;
+  width: calc(100% - 30px);
+  height: calc(100vh - 185px);
+  top: 35px;
+  overflow-y: scroll;
+  overflow-x: hidden
 }
 </style>
