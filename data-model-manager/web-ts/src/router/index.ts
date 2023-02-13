@@ -18,9 +18,6 @@ const routes: Array<RouteRecordRaw> = [
         // which is lazy-loaded when the route is visited.
         component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
         meta: {
-            tab: {
-                title: '首页'
-            }
         }
     },
     {
@@ -31,15 +28,22 @@ const routes: Array<RouteRecordRaw> = [
         // which is lazy-loaded when the route is visited.
         component: () => import(/* webpackChunkName: "about" */ '../views/detail/DetailView.vue'),
         meta: {
-            tab: {
-                title: '详情'
-            }
         }
     },
     {
         path: '/index',
         name: 'index',
-        component: () => import(/* webpackChunkName: "about" */ '../views/MainIndex.vue')
+        component: () => import(/* webpackChunkName: "about" */ '../views/MainIndex.vue'),
+        children: [
+            {
+                path: 'about',
+                component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
+            },
+            {
+                path: 'detail',
+                component: () => import(/* webpackChunkName: "about" */ '../views/detail/DetailView.vue')
+            },
+        ]
     }
 ]
 console.log(routes)

@@ -66,9 +66,19 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive} from 'vue'
+import {ref, reactive, onActivated, onMounted} from 'vue'
+import {useRouter, useRoute} from "vue-router";
 import FormItem from "@/components/form/FormItem.vue";
 
+const router = useRouter(), route = useRoute();
+
+onActivated(() => {
+  console.log("onActivated")
+})
+onMounted(() => {
+  console.log(router.currentRoute, route)
+  console.log("onMounted")
+})
 // do not use same name with ref
 const defines = reactive([
   //{name: "Activity button", type: "button", key: "name4", mode: "input"},
