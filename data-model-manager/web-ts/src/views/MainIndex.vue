@@ -11,7 +11,7 @@
               @tab-remove="removeTab"
           >
             <el-tab-pane nane="index" label="index" class="tab-container">
-              <el-button size="small" @click="addTab((++tempTabIndex) % 2 == 0 ? '/about' : '/detail')">
+              <el-button size="small" @click="addTab((++tempTabIndex) % 2 == 0 ? '/index/about' : '/index/detail')">
                 add tab
               </el-button>
               Index
@@ -39,7 +39,7 @@
 
 <script lang="ts" setup>
 // eslint-disable-next-line vue/no-export-in-script-setup
-import {ref, watch, watchPostEffect, onActivated, onMounted} from 'vue'
+import {ref, watch, watchPostEffect, onActivated, onMounted, reactive} from 'vue'
 import HomeView from "@/views/HomeView.vue";
 import {useRouter, onBeforeRouteUpdate} from "vue-router";
 import type{TabsPaneContext} from 'element-plus'
@@ -54,11 +54,11 @@ export declare interface TabInfo {
 
 const tempTabIndex = ref(2),
     editableTabsValue = ref('0'),
-    editableTabs = ref(new Array<TabInfo>())
+    editableTabs = reactive(new Array<TabInfo>())
 
 const addTab = (targetName: string) => {
-  if (editableTabs.value.filter(value => value.path == targetName).length == 0) {
-    editableTabs.value
+  if (editableTabs.filter(value => value.path == targetName).length == 0) {
+    editableTabs
         .push({
           title: 'page' + Math.random(),
           path: targetName
@@ -66,10 +66,10 @@ const addTab = (targetName: string) => {
   }
   editableTabsValue.value = targetName
   console.log(targetName)
-  console.log(editableTabs.value[editableTabs.value.length - 1])
+  console.log(editableTabs[editableTabs.length - 1])
 }
 const removeTab = (targetName: string) => {
-  const tabs = editableTabs.value
+  const tabs = editableTabs
   let activeName = editableTabsValue.value
   if (activeName === targetName) {
     tabs.forEach((tab, index) => {
@@ -83,17 +83,23 @@ const removeTab = (targetName: string) => {
   }
 
   editableTabsValue.value = activeName
-  editableTabs.value = tabs.filter((tab) => tab.path !== targetName)
+
+  for (let i = 0; i < tabs.length; i++) {
+    if (tabs[i].path == targetName) {
+      tabs.splice(i, 1)
+      return;
+    }
+  }
 }
 watch([editableTabsValue], ([editableTabsValue], [oldEditableTabsValue]) => {
   console.log(editableTabsValue, oldEditableTabsValue)
-  if (editableTabs.value.find(value => value.path == editableTabsValue) == null) {
+  if (editableTabs.find(value => value.path == editableTabsValue) == null) {
     router.push(currentPagePath)
   } else
-    router.push(`${currentPagePath}${editableTabsValue}`)
+    router.push(editableTabsValue)
 })
 onMounted(() => {
-  console.log("onMounted", router.currentRoute, router.currentRoute.value.fullPath, currentPagePath,router.currentRoute.value.fullPath.substring(currentPagePath.length));
+  console.log("onMounted", router.currentRoute, router.currentRoute.value.fullPath, currentPagePath, router.currentRoute.value.fullPath.substring(currentPagePath.length));
   if (router.currentRoute.value.fullPath != currentPagePath) {
     addTab(router.currentRoute.value.fullPath.substring(currentPagePath.length))
   }

@@ -69,7 +69,7 @@ import {FormItemDefine} from '@/components/form/config'
 
 @Options({
   props: {
-    item: FormItemDefine,
+    item: Object as unknown as FormItemDefine,
     form: Object
   }
 })
