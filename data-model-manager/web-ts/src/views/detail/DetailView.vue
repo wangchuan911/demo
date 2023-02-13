@@ -69,6 +69,7 @@
 import {ref, reactive, onActivated, onMounted} from 'vue'
 import {useRouter, useRoute} from "vue-router";
 import FormItem from "@/components/form/FormItem.vue";
+import {FormItemDefine} from "@/components/form/config";
 
 const router = useRouter(), route = useRoute();
 
@@ -80,53 +81,51 @@ onMounted(() => {
   console.log("onMounted")
 })
 // do not use same name with ref
-const defines = reactive([
-  //{name: "Activity button", type: "button", key: "name4", mode: "input"},
-  //{name: "Activity checkbox", type: "checkbox", key: "name4", mode: "input"},
-  {name: "Activity color", config: {type: "color"}, id: "1", mode: "input"},
-  {name: "Activity date", config: {type: "date"}, id: "2", mode: "input"},
-  {name: "Activity datetime-local", config: {type: "datetime-local"}, id: "3", mode: "input"},
-  {name: "Activity datetime", config: {type: "datetime"}, id: "4", mode: "input"},
-  {name: "Activity email", config: {type: "email"}, id: "5", mode: "input"},
-  //{name: "Activity file",config:{ type: "file"}, id: "name4", mode: "input"},
-  // {name: "Activity hidden",config:{ type: "hidden"}, id: "name4", mode: "input"},
-  //{name: "Activity image",config:{ type: "image"}, id: "name4", mode: "input"},
-  {name: "Activity month", config: {type: "month"}, id: "6", mode: "input"},
-  {name: "Activity number", config: {type: "number"}, id: "7", mode: "input"},
-  {name: "Activity password", config: {type: "password"}, id: "8", mode: "input"},
-  //{name: "Activity radio",config:{ type: "radio"}, id: "name4", mode: "input"},
-  {name: "Activity range", config: {type: "range", step: 11}, id: "9", mode: "input"},
-  //{name: "Activity reset",config:{ type: "reset"}, id: "name4", mode: "input"},
-  {name: "Activity search", config: {type: "search"}, id: "10", mode: "input"},
-  //{name: "Activity submit",config:{ type: "submit"}, id: "name4", mode: "input"},
-  {name: "Activity tel", config: {type: "tel"}, id: "11", mode: "input"},
-  {name: "Activity text", config: {type: "text"}, id: "12", mode: "input"},
-  {name: "Activity time", config: {type: "time"}, id: "13", mode: "input"},
-  {name: "Activity url", config: {type: "url"}, id: "14", mode: "input"},
-  {name: "Activity week", config: {type: "week"}, id: "15", mode: "input"},
-  {
-    name: "Activity checkbox", config: {type: "checkbox"}, id: "16", mode: "input",
-    init: [
-      {name: "Online activities", value: 1},
-      {name: "Online activities2", value: 2},
-      {name: "Offline activities", value: 3},
-      {name: "Simple brand exposure", value: 4},
-      {name: "Simple brand exposure1", value: 5},
-      {name: "Simple brand exposure2", value: 6}]
-  },
-  {
-    name: "Activity radio", config: {type: "radio"}, id: "17", mode: "input",
-    init: [
-      {name: "Online activities", value: 1},
-      {name: "Online activities2", value: 2},
-      {name: "Offline activities", value: 3},
-      {name: "Simple brand exposure", value: 4},
-      {name: "Simple brand exposure1", value: 5},
-      {name: "Simple brand exposure2", value: 6}]
-  },
-
-  // {name: "Activity datetime",config:{ type: "datetime"}, id: "name4", mode: "input"}
-])
+const defines = reactive(new Array<FormItemDefine>());
+defines.push(
+    //{name: "Activity button", type: "button", key: "name4", mode: "input"},
+    //{name: "Activity checkbox", type: "checkbox", key: "name4", mode: "input"},
+    {name: "Activity color", config: {type: "color"}, id: "1", mode: "input"},
+    {name: "Activity date", config: {type: "date"}, id: "2", mode: "input"},
+    {name: "Activity datetime-local", config: {type: "datetime-local"}, id: "3", mode: "input"},
+    {name: "Activity datetime", config: {type: "datetime"}, id: "4", mode: "input"},
+    {name: "Activity email", config: {type: "email"}, id: "5", mode: "input"},
+    //{name: "Activity file",config:{ type: "file"}, id: "name4", mode: "input"},
+    // {name: "Activity hidden",config:{ type: "hidden"}, id: "name4", mode: "input"},
+    //{name: "Activity image",config:{ type: "image"}, id: "name4", mode: "input"},
+    {name: "Activity month", config: {type: "month"}, id: "6", mode: "input"},
+    {name: "Activity number", config: {type: "number"}, id: "7", mode: "input"},
+    {name: "Activity password", config: {type: "password"}, id: "8", mode: "input"},
+    //{name: "Activity radio",config:{ type: "radio"}, id: "name4", mode: "input"},
+    {name: "Activity range", config: {type: "range", step: 11}, id: "9", mode: "input"},
+    //{name: "Activity reset",config:{ type: "reset"}, id: "name4", mode: "input"},
+    {name: "Activity search", config: {type: "search"}, id: "10", mode: "input"},
+    //{name: "Activity submit",config:{ type: "submit"}, id: "name4", mode: "input"},
+    {name: "Activity tel", config: {type: "tel"}, id: "11", mode: "input"},
+    {name: "Activity text", config: {type: "text"}, id: "12", mode: "input"},
+    {name: "Activity time", config: {type: "time"}, id: "13", mode: "input"},
+    {name: "Activity url", config: {type: "url"}, id: "14", mode: "input"},
+    {name: "Activity week", config: {type: "week"}, id: "15", mode: "input"},
+    {
+      name: "Activity checkbox", config: {type: "checkbox"}, id: "16", mode: "input",
+      init: [
+        {name: "Online activities", value: 1},
+        {name: "Online activities2", value: 2},
+        {name: "Offline activities", value: 3},
+        {name: "Simple brand exposure", value: 4},
+        {name: "Simple brand exposure1", value: 5},
+        {name: "Simple brand exposure2", value: 6}]
+    },
+    {
+      name: "Activity radio", config: {type: "radio"}, id: "17", mode: "input",
+      init: [
+        {name: "Online activities", value: 1},
+        {name: "Online activities2", value: 2},
+        {name: "Offline activities", value: 3},
+        {name: "Simple brand exposure", value: 4},
+        {name: "Simple brand exposure1", value: 5},
+        {name: "Simple brand exposure2", value: 6}]
+    })
 const form = reactive({
   name: 'qwe',
   region: '',
