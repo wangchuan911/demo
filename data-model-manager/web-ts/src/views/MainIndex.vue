@@ -57,12 +57,16 @@ const tempTabIndex = ref(2),
     editableTabsValue = ref('0'),
     editableTabs = reactive(new Array<TabInfo>())
 
-const containTab = (targetName: string): boolean => {
-  return editableTabs.filter(value => value.id == targetName).length != 0;
+
+const containTab = (targetName: string): TabInfo | undefined => {
+  return editableTabs.find(value => value.id == targetName);
+}
+const isContainTab = (targetName: string): boolean => {
+  return containTab(targetName) != null;
 }
 
 const addTab = (targetName: string) => {
-  if (!containTab(targetName)) {
+  if (!isContainTab(targetName)) {
     editableTabs
         .push({
           id: targetName,
@@ -99,15 +103,15 @@ const removeTab = (targetName: string) => {
 }
 watch([editableTabsValue], ([editableTabsValue], [oldEditableTabsValue]) => {
   console.log(editableTabsValue, oldEditableTabsValue)
-  if (containTab(editableTabsValue))
-    router.push(editableTabsValue)
+  const tab = containTab(editableTabsValue);
+  if (tab != null)
+    router.push(tab.path[tab.path.length - 1])
   else
     router.push(currentPagePath)
 })
 onMounted(() => {
-  console.log("onMounted", router.currentRoute, router.currentRoute.value.fullPath, currentPagePath, router.currentRoute.value.fullPath.substring(currentPagePath.length));
   if (router.currentRoute.value.fullPath != currentPagePath) {
-    addTab(router.currentRoute.value.fullPath.substring(currentPagePath.length))
+    addTab(router.currentRoute.value.fullPath)
   }
 })
 </script>
