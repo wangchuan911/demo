@@ -25,7 +25,7 @@
             >
             </el-tab-pane>
 
-            <router-view  v-slot="{ Component }" :max="10" class="router-container">
+            <router-view v-slot="{ Component }" :max="10" class="router-container">
               <keep-alive>
                 <component :is="Component"/>
               </keep-alive>
@@ -39,12 +39,13 @@
 
 <script lang="ts" setup>
 // eslint-disable-next-line vue/no-export-in-script-setup
-import {ref, watch, watchPostEffect} from 'vue'
+import {ref, watch, watchPostEffect, onActivated, onMounted} from 'vue'
 import HomeView from "@/views/HomeView.vue";
-import {useRouter} from "vue-router";
+import {useRouter, onBeforeRouteUpdate} from "vue-router";
 import type{TabsPaneContext} from 'element-plus'
 
 const router = useRouter();
+const currentPagePath = "/index";
 
 export declare interface TabInfo {
   title: string
@@ -87,9 +88,15 @@ const removeTab = (targetName: string) => {
 watch([editableTabsValue], ([editableTabsValue], [oldEditableTabsValue]) => {
   console.log(editableTabsValue, oldEditableTabsValue)
   if (editableTabs.value.find(value => value.path == editableTabsValue) == null) {
-    router.push(`/index`)
+    router.push(currentPagePath)
   } else
-    router.push(`/index${editableTabsValue}`)
+    router.push(`${currentPagePath}${editableTabsValue}`)
+})
+onMounted(() => {
+  console.log("onMounted", router.currentRoute, router.currentRoute.value.fullPath, currentPagePath,router.currentRoute.value.fullPath.substring(currentPagePath.length));
+  if (router.currentRoute.value.fullPath != currentPagePath) {
+    addTab(router.currentRoute.value.fullPath.substring(currentPagePath.length))
+  }
 })
 </script>
 
@@ -107,7 +114,7 @@ watch([editableTabsValue], ([editableTabsValue], [oldEditableTabsValue]) => {
   position: absolute;
   width: calc(100% - 30px);
   height: calc(100vh - 185px);
-  top: 35px;
+  top: 15px;
   overflow-y: scroll;
   overflow-x: hidden
 }
