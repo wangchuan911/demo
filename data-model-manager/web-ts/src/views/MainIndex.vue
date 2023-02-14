@@ -41,22 +41,27 @@
 // eslint-disable-next-line vue/no-export-in-script-setup
 import {ref, watch, watchPostEffect, onActivated, onMounted, reactive} from 'vue'
 import HomeView from "@/views/HomeView.vue";
-import {useRouter, onBeforeRouteUpdate} from "vue-router";
+import {useRouter, onBeforeRouteUpdate, useRoute, RouteLocationNormalizedLoaded} from "vue-router";
 import type{TabsPaneContext} from 'element-plus'
 
-const router = useRouter();
+const router = useRouter(),
+    route = useRoute();
 const currentPagePath = "/index";
 
 export declare interface TabInfo {
   id: string
   title: string
-  path: string[]
+  path: TabPathInfo[]
+}
+
+export declare interface TabPathInfo {
+  name: string
+  path: string
 }
 
 const tempTabIndex = ref(2),
     editableTabsValue = ref('0'),
     editableTabs = reactive(new Array<TabInfo>())
-
 
 const containTab = (targetName: string): TabInfo | undefined => {
   return editableTabs.find(value => value.id == targetName);
@@ -66,17 +71,8 @@ const isContainTab = (targetName: string): boolean => {
 }
 
 const addTab = (targetName: string) => {
-  if (!isContainTab(targetName)) {
-    editableTabs
-        .push({
-          id: targetName,
-          title: 'page' + Math.random(),
-          path: [targetName]
-        })
-  }
-  editableTabsValue.value = targetName
   console.log(targetName)
-  console.log(editableTabs[editableTabs.length - 1])
+  router.push(targetName)
 }
 const removeTab = (targetName: string) => {
   const tabs = editableTabs
@@ -101,17 +97,42 @@ const removeTab = (targetName: string) => {
     }
   }
 }
-watch([editableTabsValue], ([editableTabsValue], [oldEditableTabsValue]) => {
-  console.log(editableTabsValue, oldEditableTabsValue)
-  const tab = containTab(editableTabsValue);
-  if (tab != null)
-    router.push(tab.path[tab.path.length - 1])
-  else
-    router.push(currentPagePath)
+watch(editableTabsValue,
+    (editableTabsValue, oldEditableTabsValue) => {
+      console.log("editableTabsValue", editableTabsValue, oldEditableTabsValue)
+      if (editableTabsValue != oldEditableTabsValue) {
+        const tab = containTab(editableTabsValue);
+        if (tab != null)
+          router.push(tab.path[tab.path.length - 1].path)
+        else
+          router.push(currentPagePath)
+      }
+    })
+const tabInstance = (value: RouteLocationNormalizedLoaded) => {
+  const obj: any = value.matched[value.matched.length - 1].components?.default,
+      name = obj['__name'];
+  editableTabs
+      .push({
+        id: value.path,
+        title: 'page' + Math.random(),
+        path: [{name, path: value.path}]
+      })
+  editableTabsValue.value = value.path;
+}
+
+watch(route, (value, oldValue) => {
+  console.log("route", value, oldValue)
+  if (value.path == currentPagePath) return
+  if (isContainTab(value.path)) return;
+  tabInstance(value)
+
+
 })
 onMounted(() => {
+  console.log(router.currentRoute.value.fullPath, currentPagePath)
   if (router.currentRoute.value.fullPath != currentPagePath) {
     addTab(router.currentRoute.value.fullPath)
+    tabInstance(route)
   }
 })
 </script>
