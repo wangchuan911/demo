@@ -117,12 +117,12 @@ const tabInstance = (value: RouteLocationNormalizedLoaded) => {
         title: 'page' + Math.random(),
         path: [{name, path: value.path}]
       })
-  editableTabsValue.value = value.path;
 }
 
 watch(route, (value, oldValue) => {
   console.log("route", value, oldValue)
   if (value.path == currentPagePath) return
+  editableTabsValue.value = value.path;
   if (isContainTab(value.path)) return;
   tabInstance(value)
 
@@ -133,6 +133,7 @@ onMounted(() => {
   if (router.currentRoute.value.fullPath != currentPagePath) {
     addTab(router.currentRoute.value.fullPath)
     tabInstance(route)
+    editableTabsValue.value = route.path;
   }
 })
 </script>
