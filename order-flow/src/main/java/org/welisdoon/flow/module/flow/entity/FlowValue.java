@@ -44,7 +44,7 @@ public class FlowValue extends LinkValue {
     @Override
     public String getValue() {
         if (jsonValue != null && jsonValue.change) {
-            setValue(jsonValue.current.toJSONString());
+            super.setValue(jsonValue.current.toJSONString());
             jsonValue.change = false;
         }
         return super.getValue();
@@ -52,7 +52,7 @@ public class FlowValue extends LinkValue {
 
     @Override
     public void setValue(String value) {
-        if (Objects.equals(getValue(), value)) {
+        if ((jsonValue != null && jsonValue.change)? (Objects.equals(jsonValue.current.toJSONString(), value)) : Objects.equals(super.getValue(), value)) {
             return;
         }
         super.setValue(value);
