@@ -26,7 +26,7 @@
             </el-tab-pane>
 
             <router-view v-slot="{ Component }" :max="10" class="router-container">
-              <keep-alive>
+              <keep-alive :exclude="excludes">
                 <component :is="Component"/>
               </keep-alive>
             </router-view>
@@ -61,7 +61,8 @@ export declare interface TabPathInfo {
 
 const tempTabIndex = ref(2),
     editableTabsValue = ref('0'),
-    editableTabs = reactive(new Array<TabInfo>())
+    editableTabs = reactive(new Array<TabInfo>()),
+    excludes = reactive(new Array<string>())
 
 const containTab = (targetName: string): TabInfo | undefined => {
   return editableTabs.find(value => value.id == targetName);
@@ -87,11 +88,10 @@ const removeTab = (targetName: string) => {
       }
     })
   }
-
   editableTabsValue.value = activeName
-
   for (let i = 0; i < tabs.length; i++) {
     if (tabs[i].id == targetName) {
+      excludes.push(...tabs[i].path.map(value => value.name))
       tabs.splice(i, 1)
       return;
     }
@@ -125,8 +125,7 @@ watch(route, (value, oldValue) => {
   editableTabsValue.value = value.path;
   if (isContainTab(value.path)) return;
   tabInstance(value)
-
-
+  excludes.length = 0
 })
 onMounted(() => {
   console.log(router.currentRoute.value.fullPath, currentPagePath)
