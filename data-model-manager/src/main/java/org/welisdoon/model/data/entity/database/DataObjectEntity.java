@@ -6,13 +6,14 @@ import org.welisdoon.model.data.consts.DataModelType;
 
 @Model(DataModelType.Object)
 public class DataObjectEntity extends AbstractDataEntity {
-    TableEntity table;
 
-    public TableEntity getTable() {
-        return table;
+    FieldEntity[] fields;
+
+    public void setFields(FieldEntity[] fields) {
+        this.fields = fields;
     }
 
-    public void setTable(TableEntity table) {
-        this.table = table;
+    public FieldEntity[] getFields() {
+        return fields;
     }
 }

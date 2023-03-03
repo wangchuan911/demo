@@ -1,31 +1,22 @@
 package org.welisdoon.model.data.entity.database;
 
 import org.welisdoon.model.data.annotations.Model;
-import org.welisdoon.model.data.consts.FieldLevel;
 import org.welisdoon.model.data.consts.DataModelType;
 import org.welisdoon.model.data.consts.TableType;
 
 @Model(DataModelType.Table)
 public class TableEntity extends AbstractDataEntity {
     DataSourceEntity dataSource;
-    FieldEntity[] columns;
+    ColumnEntity[] columns;
     TableEntity[] extendTable;
     TableType tableType;
-    FieldLevel level;
+    Long[] keys;
 
-    public void setLevel(FieldLevel level) {
-        this.level = level;
-    }
-
-    public FieldLevel getLevel() {
-        return level;
-    }
-
-    public void setColumns(FieldEntity[] columns) {
+    public void setColumns(ColumnEntity[] columns) {
         this.columns = columns;
     }
 
-    public FieldEntity[] getColumns() {
+    public ColumnEntity[] getColumns() {
         return columns;
     }
 
@@ -51,5 +42,13 @@ public class TableEntity extends AbstractDataEntity {
 
     public void setDataSource(DataSourceEntity dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public Long[] getKeys() {
+        return keys;
+    }
+
+    public void setKeys(Long[] keys) {
+        this.keys = keys;
     }
 }

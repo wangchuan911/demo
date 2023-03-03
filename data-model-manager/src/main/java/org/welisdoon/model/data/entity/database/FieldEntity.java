@@ -1,29 +1,16 @@
 package org.welisdoon.model.data.entity.database;
 
-import org.welisdoon.model.data.annotations.Input;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
-import org.welisdoon.model.data.consts.InputTypes;
-import org.welisdoon.model.data.entity.input.AbstractInputEntity;
+
+import java.util.Map;
 
 @Model(DataModelType.Field)
 public class FieldEntity extends AbstractDataEntity {
     ColumnEntity column;
-    AbstractInputEntity input = AbstractInputEntity.EMPTY;
-    String defaultValue;
+    ColumnEntity[] columns;
     boolean lock = false;
-
-    public InputTypes getInputType() {
-        return input == null ? InputTypes.Undefine : input.getClass().getAnnotation(Input.class).value();
-    }
-
-    public String getDefaultValue() {
-        return defaultValue;
-    }
-
-    public void setDefaultValue(String defaultValue) {
-        this.defaultValue = defaultValue;
-    }
+    Map<String, Object> inputStyle;
 
     public boolean isLock() {
         return lock;
@@ -41,12 +28,20 @@ public class FieldEntity extends AbstractDataEntity {
         this.column = column;
     }
 
-    public AbstractInputEntity getInput() {
-        return input;
+    public ColumnEntity[] getColumns() {
+        return columns;
     }
 
-    public void setInput(AbstractInputEntity input) {
-        this.input = input;
+    public void setColumns(ColumnEntity[] columns) {
+        this.columns = columns;
+    }
+
+    public Map<String, Object> getInputStyle() {
+        return inputStyle;
+    }
+
+    public void setInputStyle(Map<String, Object> inputStyle) {
+        this.inputStyle = inputStyle;
     }
 }
 

@@ -2,16 +2,31 @@ package org.welisdoon.model.data.entity.database;
 
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoon.model.data.annotations.Model;
-import org.welisdoon.model.data.consts.ColumnLevel;
 import org.welisdoon.model.data.consts.DataModelType;
-import org.welisdoon.model.data.entity.input.AbstractInputEntity;
 
 @Model(DataModelType.Column)
 public class ColumnEntity extends AbstractDataEntity {
-    Integer[] length;
+    String length;
     TableEntity table;
     JdbcType type = JdbcType.UNDEFINED;
-    ColumnLevel level;
+    String defaultValue;
+    String currentValue;
+
+    public void setCurrentValue(String currentValue) {
+        this.currentValue = currentValue;
+    }
+
+    public String getCurrentValue() {
+        return currentValue;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
 
 
     public TableEntity getTable() {
@@ -33,22 +48,13 @@ public class ColumnEntity extends AbstractDataEntity {
     }
 
 
-    public void setLength(Integer[] length) {
+    public void setLength(String length) {
         this.length = length;
     }
 
-    public Integer[] getLength() {
-        return length == null ? new Integer[]{0} : this.length;
+    public String getLength() {
+        return length;
     }
 
 
-
-
-    public ColumnLevel getLevel() {
-        return level;
-    }
-
-    public void setLevel(ColumnLevel level) {
-        this.level = level;
-    }
 }

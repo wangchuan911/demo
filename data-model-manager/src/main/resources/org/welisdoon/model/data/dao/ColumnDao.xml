@@ -4,22 +4,31 @@
 
 <mapper namespace="org.welisdoon.model.data.dao.ColumnDao">
 
+    <resultMap id="ColumnEntity" type="org.welisdoon.model.data.entity.database.ColumnEntity">
+        <id column="ID" property="id"></id>
+        <result column="CODE" property="code"></result>
+        <result column="NAME" property="name"></result>
+        <result column="DEFAULT_VALUE" property="defaultValue"></result>
+        <result column="jdbc_type" property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler"></result>
+        <result column="LENGTH" property="length"></result>
+        <association column="TABLE_ID" property="table"
+                     select="org.welisdoon.model.data.dao.TableDao.get"></association>
+    </resultMap>
     <select id="get" parameterType="long"
-            resultType="org.welisdoon.model.data.entity.database.ColumnEntity">
+            resultMap="ColumnEntity">
         select *
         from DM_COLUMN a
         where a.id = #{value}
     </select>
 
     <select id="list" parameterType="org.welisdoon.model.data.condition.ColumnCondition"
-            resultType="org.welisdoon.model.data.entity.database.ColumnEntity">
+            resultMap="ColumnEntity">
         SELECT * FROM DM_COLUMN A
         <where>
             <if test="code!=null ">and CODE=#{code}</if>
             <if test="id!=null ">and ID=#{id}</if>
             <if test="type!=null ">and JDBC_TYPE=#{type.name()}</if>
             <if test="length!=null ">and LENGTH=#{length}</if>
-            <if test="level!=null ">and LEVEL=#{level}</if>
             <if test="name!=null ">and NAME=#{name}</if>
             <if test="table!=null and table.id!=null ">and TABLE_ID=#{table.id}</if>
         </where>
@@ -33,14 +42,12 @@
                               ID,
                               JDBC_TYPE,
                               LENGTH,
-                              LEVEL,
                               NAME,
                               TABLE_ID)
         VALUES (#{code},
                 #{id},
                 #{jdbc_type},
                 #{length},
-                #{level},
                 #{name},
                 #{table.id})
     </insert>
@@ -52,7 +59,6 @@
             CODE=#{code},
             JDBC_TYPE=#{type.name},
             LENGTH=#{length},
-            LEVEL=#{level},
             NAME=#{name},
         </set>
         WHERE ID = #{id}
