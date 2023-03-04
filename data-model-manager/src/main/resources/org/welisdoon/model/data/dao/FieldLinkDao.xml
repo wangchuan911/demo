@@ -5,14 +5,14 @@
 <mapper namespace="org.welisdoon.model.data.dao.FieldLinkDao">
 
     <select id="get" parameterType="long"
-            resultType="org.welisdoon.model.data.entity.link.FieldLinkEntity">
+            resultType="org.welisdoon.model.data.entity.object.FieldLinkEntity">
         select *
         from DM_INPUT_LINK a
         where a.id = #{value}
     </select>
 
     <select id="list" parameterType="org.welisdoon.model.data.condition.FieldCondition"
-            resultType="org.welisdoon.model.data.entity.link.FieldLinkEntity">
+            resultType="org.welisdoon.model.data.entity.object.FieldLinkEntity">
         SELECT * FROM DM_INPUT_LINK A
         <where>
             <if test="field_id!=null">and FIELD_ID=#{data.linkEntity.id}</if>
@@ -23,7 +23,7 @@
 
     </select>
 
-    <insert id="add" parameterType="org.welisdoon.model.data.entity.link.FieldLinkEntity"
+    <insert id="add" parameterType="org.welisdoon.model.data.entity.object.FieldLinkEntity"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO DM_INPUT_LINK(EXPRESS,
                                   FIELD_ID,
@@ -37,7 +37,7 @@
                 #{super.id})
     </insert>
 
-    <insert id="update" parameterType="org.welisdoon.model.data.entity.link.FieldLinkEntity"
+    <insert id="update" parameterType="org.welisdoon.model.data.entity.object.FieldLinkEntity"
             useGeneratedKeys="true" keyProperty="id">
         UPDATE DM_INPUT_LINK
         <set>

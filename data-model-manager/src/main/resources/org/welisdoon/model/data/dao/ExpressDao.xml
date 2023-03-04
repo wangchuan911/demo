@@ -2,31 +2,26 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="org.welisdoon.model.data.dao.TableDao">
-
-    <resultMap id="rm_TableEntity" type="org.welisdoon.model.data.entity.database.TableEntity">
+<mapper namespace="org.welisdoon.model.data.dao.ExpressDao">
+    <resultMap id="rm_ExpressEntity" type="org.welisdoon.model.data.entity.express.ExpressEntity">
         <id property="id" column="ID"></id>
         <result property="name" column="NAME"></result>
         <result property="code" column="CODE"></result>
-        <association property="columns" column="{entity.table.id=ID}"
-                     select="org.welisdoon.model.data.dao.ColumnDao.list"></association>
+        <result property="express" column="EXPRESS"></result>
 
     </resultMap>
     <select id="get" parameterType="long"
-            resultMap="rm_TableEntity">
+            resultMap="rm_ExpressEntity">
         select *
-        from DM_TABLE a
+        from DM_EXPRESS a
         where a.id = #{value}
     </select>
     <select id="list" parameterType="org.welisdoon.model.data.condition.TableCondition"
-            resultMap="rm_TableEntity">
-        select * from DM_TABLE a
+            resultMap="rm_ExpressEntity">
+        select * from DM_EXPRESS a
         <where>
             <if test="id!=null">
                 and a.id=#{value}
-            </if>
-            <if test="code!=null">
-                and a.code=#{value}
             </if>
             <if test="name!=null">
                 and a.name=#{value}
@@ -37,25 +32,22 @@
 
     <insert id="add" parameterType="org.welisdoon.model.data.entity.database.TableEntity"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO DM_TABLE(CODE,
+        INSERT INTO DM_EXPRESS(
                              ID,
                              NAME,
-                             TABLE_ID,)
-        VALUES (#{CODE},
-                #{ID},
-                #{NAME},
-                #{TABLE_ID})
+                             EXPRESS,)
+        VALUES (
+                #{id},
+                #{name},
+                #{express})
     </insert>
 
     <insert id="update" parameterType="org.welisdoon.model.data.entity.database.TableEntity"
             useGeneratedKeys="true" keyProperty="id">
-        UPDATE DM_TABLE
+        UPDATE DM_EXPRESS
         <set>
-            <if test="code!=null">
-                CODE=#{code},
-            </if>
-            <if test="name!=null">
-                NAME=#{name},
+            <if test="express!=null">
+                EXPRESS=#{express},
             </if>
         </set>
         WHERE ID = #{id}

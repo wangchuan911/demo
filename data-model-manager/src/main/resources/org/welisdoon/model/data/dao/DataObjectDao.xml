@@ -3,16 +3,20 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.welisdoon.model.data.dao.DataObjectDao">
-
+    <resultMap id="rm_DataObjectEntity" type="org.welisdoon.model.data.entity.object.DataObjectEntity">
+        <id property="id" column="ID"></id>
+        <result property="name" column="NAME"></result>
+        <result property="code" column="CODE"></result>
+    </resultMap>
     <select id="get" parameterType="long"
-            resultType="org.welisdoon.model.data.entity.database.DataObjectEntity">
+            resultMap="rm_DataObjectEntity">
         select *
         from DM_DATA_OBJECT a
         where a.id = #{value}
     </select>
 
     <select id="list" parameterType="org.welisdoon.model.data.condition.DataObjectCondition"
-            resultType="org.welisdoon.model.data.entity.database.DataObjectEntity">
+            resultMap="rm_DataObjectEntity">
         SELECT * FROM DM_DATA_OBJECT A
         <where>
             <if test="code!=null">and CODE=#{code}</if>
@@ -24,19 +28,19 @@
 
     </select>
 
-    <insert id="add" parameterType="org.welisdoon.model.data.entity.database.DataObjectEntity"
+    <insert id="add" parameterType="org.welisdoon.model.data.entity.object.DataObjectEntity"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO DM_DATA_OBJECT(CODE,
-                              ID,
-                              NAME,
-                              TABLE_ID)
+                                   ID,
+                                   NAME,
+                                   TABLE_ID)
         VALUES (#{code},
                 #{id},
                 #{name},
                 #{table.id},)
     </insert>
 
-    <insert id="update" parameterType="org.welisdoon.model.data.entity.database.DataObjectEntity"
+    <insert id="update" parameterType="org.welisdoon.model.data.entity.object.DataObjectEntity"
             useGeneratedKeys="true" keyProperty="id">
         UPDATE DM_DATA_OBJECT
         <set>

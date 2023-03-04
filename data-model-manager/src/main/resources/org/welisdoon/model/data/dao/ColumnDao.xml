@@ -4,7 +4,7 @@
 
 <mapper namespace="org.welisdoon.model.data.dao.ColumnDao">
 
-    <resultMap id="ColumnEntity" type="org.welisdoon.model.data.entity.database.ColumnEntity">
+    <resultMap id="rm_ColumnEntity" type="org.welisdoon.model.data.entity.database.ColumnEntity">
         <id column="ID" property="id"></id>
         <result column="CODE" property="code"></result>
         <result column="NAME" property="name"></result>
@@ -15,22 +15,22 @@
                      select="org.welisdoon.model.data.dao.TableDao.get"></association>
     </resultMap>
     <select id="get" parameterType="long"
-            resultMap="ColumnEntity">
+            resultMap="rm_ColumnEntity">
         select *
         from DM_COLUMN a
         where a.id = #{value}
     </select>
 
     <select id="list" parameterType="org.welisdoon.model.data.condition.ColumnCondition"
-            resultMap="ColumnEntity">
-        SELECT * FROM DM_COLUMN A
+            resultMap="rm_ColumnEntity">
+        SELECT * FROM DM_TABLE_COLUMN A
         <where>
-            <if test="code!=null ">and CODE=#{code}</if>
-            <if test="id!=null ">and ID=#{id}</if>
-            <if test="type!=null ">and JDBC_TYPE=#{type.name()}</if>
-            <if test="length!=null ">and LENGTH=#{length}</if>
-            <if test="name!=null ">and NAME=#{name}</if>
-            <if test="table!=null and table.id!=null ">and TABLE_ID=#{table.id}</if>
+            <if test="entity.code!=null ">and CODE=#{entity.code}</if>
+            <if test="entity.id!=null ">and ID=#{entity.id}</if>
+            <if test="entity.type!=null and entity.type.name()!='UNDEFINED'">and JDBC_TYPE=#{entity.type}</if>
+            <if test="entity.length!=null ">and LENGTH=#{entity.length}</if>
+            <if test="entity.name!=null ">and NAME=#{entity.name}</if>
+            <if test="entity.table!=null">and TABLE_ID=#{entity.table.id}</if>
         </where>
         ORDER BY A.ID DESC
 
@@ -38,12 +38,12 @@
 
     <insert id="add" parameterType="org.welisdoon.model.data.entity.database.ColumnEntity"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO DM_COLUMN(CODE,
-                              ID,
-                              JDBC_TYPE,
-                              LENGTH,
-                              NAME,
-                              TABLE_ID)
+        INSERT INTO DM_TABLE_COLUMN(CODE,
+                                    ID,
+                                    JDBC_TYPE,
+                                    LENGTH,
+                                    NAME,
+                                    TABLE_ID)
         VALUES (#{code},
                 #{id},
                 #{jdbc_type},
@@ -54,7 +54,7 @@
 
     <insert id="update" parameterType="org.welisdoon.model.data.entity.database.ColumnEntity"
             useGeneratedKeys="true" keyProperty="id">
-        UPDATE DM_COLUMN
+        UPDATE DM_TABLE_COLUMN
         <set>
             CODE=#{code},
             JDBC_TYPE=#{type.name},
