@@ -21,5 +21,7 @@ public @interface VertxRoutePath {
     String prefix();
 
     Class<? extends AbstractWebVerticle> verticle() default MainWebVerticle.class;
+
+    boolean requestBodyEnable() default false;
 }
 

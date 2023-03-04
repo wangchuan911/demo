@@ -16,6 +16,7 @@ import io.vertx.core.net.SelfSignedCertificate;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 
+import io.vertx.ext.web.handler.BodyHandler;
 import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,6 +133,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
 
     final public static class VertxRouterEntry extends Entry implements Register {
         Set<Method> routeMethod;
+        static BodyHandler bodyHandler;
         private static String REGEX_PATH = "\\{([\\w\\-]+)\\.path\\.(\\w+)\\}(.*)";
 
         @Override
@@ -171,6 +173,15 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
 
                 final String prefix = (routePath != null && !StringUtils.isEmpty(routePath.prefix())) ? getRegexPath(routePath.prefix()) : "";
 
+                if (routePath.requestBodyEnable()) {
+                    if (bodyHandler == null) {
+                        synchronized (this) {
+                            if (bodyHandler == null)
+                                bodyHandler = BodyHandler.create();
+                        }
+                    }
+                    ((AbstractWebVerticle) verticle).router.route(prefix + "/*").handler(bodyHandler);
+                }
                 RoutingContextChain chain = new RoutingContextChain();
                 this.routeMethod.stream().filter(Objects::nonNull).sorted((o1, o2) ->
                         o1.getAnnotation(VertxRouter.class).order() > o2.getAnnotation(VertxRouter.class).order() ? 1 : -1
