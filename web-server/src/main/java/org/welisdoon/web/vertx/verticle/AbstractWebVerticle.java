@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -177,7 +178,16 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                     if (bodyHandler == null) {
                         synchronized (this) {
                             if (bodyHandler == null)
-                                bodyHandler = BodyHandler.create();
+                                if (routePath.bodyHandlerType() == BodyHandler.class) {
+                                    bodyHandler = BodyHandler.create();
+                                } else {
+                                    try {
+                                        bodyHandler = routePath.bodyHandlerType().getConstructor().newInstance();
+                                    } catch (Throwable e) {
+                                        logger.error(e.getMessage(), e);
+                                        bodyHandler = BodyHandler.create();
+                                    }
+                                }
                         }
                     }
                     ((AbstractWebVerticle) verticle).router.route(prefix + "/*").handler(bodyHandler);

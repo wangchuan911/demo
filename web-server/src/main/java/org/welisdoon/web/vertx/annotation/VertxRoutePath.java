@@ -1,5 +1,6 @@
 package org.welisdoon.web.vertx.annotation;
 
+import io.vertx.ext.web.handler.BodyHandler;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.verticle.AbstractWebVerticle;
 import org.welisdoon.web.vertx.verticle.MainWebVerticle;
@@ -23,5 +24,7 @@ public @interface VertxRoutePath {
     Class<? extends AbstractWebVerticle> verticle() default MainWebVerticle.class;
 
     boolean requestBodyEnable() default false;
+
+    Class<? extends BodyHandler> bodyHandlerType() default BodyHandler.class;
 }
 
