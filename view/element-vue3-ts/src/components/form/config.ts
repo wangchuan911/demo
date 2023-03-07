@@ -1,6 +1,8 @@
 export interface FormItemConfig {
     type: string
     placeholder?: string
+
+    [key: string]: any
 }
 
 export class FormItemDefine {
