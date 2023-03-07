@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.model.data.dao.FieldDao">
+    <resultMap id="rm_FieldEntity" type="org.welisdoon.model.data.entity.object.FieldEntity">
+        <id property="id" column="ID"></id>
+        <result property="name" column="NAME"></result>
+        <result property="code" column="CODE"></result>
+        <result property="style" column="STYLE"></result>
+        <association property="object" select="org.welisdoon.model.data.dao.DataObjectDao.get"
+                     column="OBJECT_ID"></association>
+        <association property="columns" column="ID" select="getColumns"></association>
+    </resultMap>
+
+    <select id="getColumns" parameterType="long" resultMap="org.welisdoon.model.data.dao.ColumnDao.rm_ColumnEntity">
+        select B.*
+        from DM_OBJECT_FIELD_TO_TABLE_COLUMN A
+                 join DM_TABLE_COLUMN B
+                      ON A.COLUMN_ID = B.ID
+        where A.FIELD_ID = #{value}
+    </select>
+    <select id="get" parameterType="long"
+            resultMap="rm_FieldEntity">
+        select *
+        from DM_OBJECT_FIELD a
+        where a.id = #{value}
+    </select>
+
+    <select id="list" parameterType="org.welisdoon.model.data.condition.FieldCondition"
+            resultMap="rm_FieldEntity">
+        SELECT * FROM DM_OBJECT_FIELD A
+        <where>
+            <if test="entity!=null and entity.id!=null ">and ID=#{entity.id}</if>
+            <if test="entity!=null and entity.name!=null ">and NAME=#{entity.name}</if>
+            <if test="entity!=null and entity.object!=null and entity.object.id!=null">and OBJECT_ID=#{entity.object.id}</if>
+        </where>
+        ORDER BY A.ID DESC
+
+    </select>
+
+    <insert id="add" parameterType="org.welisdoon.model.data.entity.object.FieldEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO DM_OBJECT_FIELD(STYLE,
+                                    DEFAULT_VALUE,
+                                    ID,
+                                    LOCK,
+                                    NAME,
+                                    OBJECT_ID)
+        VALUES (#{style},
+                #{defaultValue},
+                #{id},
+                #{lock},
+                #{name},
+                #{objectId})
+    </insert>
+
+    <insert id="update" parameterType="org.welisdoon.model.data.entity.object.FieldEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        UPDATE DM_OBJECT_FIELD
+        <set>
+            CODE=#{code},
+            NAME=#{name},
+            STYLE=#{style},
+            DEFAULT_VALUE=#{defaultValue},
+        </set>
+        WHERE ID = #{id}
+    </insert>
+
+
+</mapper>
