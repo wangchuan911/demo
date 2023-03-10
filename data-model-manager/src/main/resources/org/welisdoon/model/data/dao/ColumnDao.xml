@@ -11,13 +11,47 @@
         <result column="DEFAULT_VALUE" property="defaultValue"></result>
         <result column="jdbc_type" property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler"></result>
         <result column="LENGTH" property="length"></result>
+        <association property="foreign" select="getForeign" column="ID" javaType="org.welisdoon.model.data.entity.database.IForeignAssign"></association>
         <association column="TABLE_ID" property="table"
                      select="org.welisdoon.model.data.dao.TableDao.get"></association>
     </resultMap>
+    <resultMap id="rm_ForeignEntity" type="org.welisdoon.model.data.entity.database.ForeignEntity">
+        <id column="ID" property="id"></id>
+        <discriminator javaType="int" column="ASSIGN_TYPE_ID">
+            <case value="1100">
+                <association property="assign" column="ASSIGN_ID"
+                             select="org.welisdoon.model.data.dao.TableDao.get"></association>
+            </case>
+            <case value="1101">
+                <association property="assign" column="ASSIGN_ID"
+                             select="org.welisdoon.model.data.dao.DataObjectDao.get"></association>
+            </case>
+            <case value="1102">
+                <association property="assign" column="ASSIGN_ID"
+                             select="org.welisdoon.model.data.dao.ColumnDao.getValue"></association>
+            </case>
+            <case value="1103">
+                <association property="assign" column="ASSIGN_ID"
+                             select="org.welisdoon.model.data.dao.ColumnDao.get"></association>
+            </case>
+        </discriminator>
+    </resultMap>
+    <resultMap id="rm_ValueEntity" type="org.welisdoon.model.data.entity.database.ForeignEntity$ValueEntity">
+        <result column="VALUE" property="value"></result>
+    </resultMap>
+    <select id="getValue" parameterType="string" resultMap="rm_ValueEntity">
+        select #{value} VALUE
+        FROM DUAL
+    </select>
+    <select id="getForeign" resultMap="rm_ForeignEntity" parameterType="long">
+        select *
+        from DM_TABLE_COLUMN_FOREIGN A
+        WHERE A.COLUMN_ID = #{value}
+    </select>
     <select id="get" parameterType="long"
             resultMap="rm_ColumnEntity">
         select *
-        from DM_COLUMN a
+        from DM_TABLE_COLUMN a
         where a.id = #{value}
     </select>
 

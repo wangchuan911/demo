@@ -7,12 +7,13 @@ import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
 
 @Model(DataModelType.Column)
-public class ColumnEntity extends AbstractDataEntity {
+public class ColumnEntity extends AbstractDataEntity implements IForeignAssign {
     String length;
     @JsonIgnore
     @JSONField(serialize = false)
     TableEntity table;
     JdbcType type = JdbcType.UNDEFINED;
+    ForeignEntity foreign;
 
 
     public TableEntity getTable() {
@@ -43,4 +44,15 @@ public class ColumnEntity extends AbstractDataEntity {
     }
 
 
+    public ForeignEntity getForeign() {
+        return foreign;
+    }
+
+    public void setForeign(ForeignEntity foreign) {
+        this.foreign = foreign;
+    }
+
+    public boolean isForeign() {
+        return this.foreign != null;
+    }
 }
