@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
+import org.welisdoon.model.data.utils.SqlExecuteUtils;
 
 @Model(DataModelType.Column)
 public class ColumnEntity extends AbstractDataEntity implements IForeignAssign {
@@ -14,7 +15,6 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign {
     TableEntity table;
     JdbcType type = JdbcType.UNDEFINED;
     ForeignEntity foreign;
-
 
     public TableEntity getTable() {
         return table;
@@ -54,5 +54,11 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign {
 
     public boolean isForeign() {
         return this.foreign != null;
+    }
+
+    @Override
+    public TableEntity getForeignTable(String id) {
+        String assignId = SqlExecuteUtils.queryForObject(id, String.class, this);
+        return getForeign().getForeignColumn().getForeignTable(assignId);
     }
 }

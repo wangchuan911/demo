@@ -10,6 +10,8 @@
         <result property="code" column="CODE"></result>
         <association property="columns" column="{entity.table.id=ID}"
                      select="org.welisdoon.model.data.dao.ColumnDao.list"></association>
+        <association property="primary" column="PRIMARY_COLUMN_ID"
+                     select="org.welisdoon.model.data.dao.ColumnDao.get"></association>
 
     </resultMap>
     <select id="get" parameterType="long"

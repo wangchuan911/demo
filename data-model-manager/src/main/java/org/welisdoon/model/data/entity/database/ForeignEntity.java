@@ -14,18 +14,6 @@ public class ForeignEntity extends AbstractDataEntity {
     ColumnEntity foreignColumn;
     IForeignAssign assign;
 
-    public class ValueEntity implements IForeignAssign {
-        String value;
-
-        public void setValue(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
     public ColumnEntity getForeignColumn() {
         return foreignColumn;
     }

@@ -6,12 +6,12 @@ import org.welisdoon.model.data.consts.TableType;
 import org.welisdoon.model.query.entity.IQueryTarget;
 
 @Model(DataModelType.Table)
-public class TableEntity extends AbstractDataEntity implements IQueryTarget {
+public class TableEntity extends AbstractDataEntity implements IQueryTarget, IForeignAssign {
     DataSourceEntity dataSource;
     ColumnEntity[] columns;
-    TableEntity[] extendTable;
     TableType tableType;
     Long[] keys;
+    ColumnEntity primary;
 
     public void setColumns(ColumnEntity[] columns) {
         this.columns = columns;
@@ -19,14 +19,6 @@ public class TableEntity extends AbstractDataEntity implements IQueryTarget {
 
     public ColumnEntity[] getColumns() {
         return columns;
-    }
-
-    public void setExtendTable(TableEntity[] extendTable) {
-        this.extendTable = extendTable;
-    }
-
-    public TableEntity[] getExtendTable() {
-        return extendTable;
     }
 
     public TableType getTableType() {
@@ -51,5 +43,18 @@ public class TableEntity extends AbstractDataEntity implements IQueryTarget {
 
     public void setKeys(Long[] keys) {
         this.keys = keys;
+    }
+
+    @Override
+    public TableEntity getForeignTable(String value) {
+        return this;
+    }
+
+    public ColumnEntity getPrimary() {
+        return primary;
+    }
+
+    public void setPrimary(ColumnEntity primary) {
+        this.primary = primary;
     }
 }
