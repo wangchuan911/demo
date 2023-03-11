@@ -7,12 +7,19 @@ import org.welisdoon.model.data.dao.ColumnDao;
 import org.welisdoon.model.data.dao.DataObjectDao;
 import org.welisdoon.model.data.dao.FieldDao;
 import org.welisdoon.model.data.dao.TableDao;
+import org.welisdoon.model.data.entity.database.AbstractDataEntity;
+import org.welisdoon.model.data.entity.database.ColumnEntity;
+import org.welisdoon.model.data.entity.database.TableEntity;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
+import org.welisdoon.model.data.utils.SqlExecuteUtils;
+import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
+
+import java.util.Map;
 
 /**
  * @Classname TableManagerRouter
@@ -51,6 +58,34 @@ public class DataManagerRouter {
     public void object(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             routingContext.end(JSONObject.toJSONString(objectDao.get(Long.valueOf(routingContext.pathParam("id")))));
+        });
+    }
+
+    @VertxRouter(path = "\\/value\\/(?<type>\\w+)\\/(?<id>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void value(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            AbstractDataEntity entity;
+            long id = Long.valueOf(routingContext.pathParam("id"));
+            Map<String, Object> result;
+            switch (routingContext.pathParam("type")) {
+                case "object":
+                    entity = ApplicationContextProvider.getApplicationContext().getBean(DataObjectDao.class).get(id);
+                    result = SqlExecuteUtils.queryForMap(id, ((DataObjectEntity) entity).getTable().getColumns());
+                    break;
+                case "column":
+                    entity = ApplicationContextProvider.getApplicationContext().getBean(ColumnDao.class).get(id);
+                    result = SqlExecuteUtils.queryForMap(id, ((ColumnEntity) entity).getTable().getColumns());
+                    break;
+                case "table":
+                    entity = ApplicationContextProvider.getApplicationContext().getBean(TableDao.class).get(id);
+                    result = SqlExecuteUtils.queryForMap(id, ((TableEntity) entity).getColumns());
+                    break;
+                default:
+                    result = Map.of();
+            }
+            routingContext.end(JSONObject.toJSONString(result));
         });
     }
 }
