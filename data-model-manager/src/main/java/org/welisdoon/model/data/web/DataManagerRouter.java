@@ -23,8 +23,8 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 @Component
 @VertxConfiguration
-@VertxRoutePath(prefix = "/database", requestBodyEnable = true)
-public class TableManagerRouter {
+@VertxRoutePath(prefix = "/dm/database", requestBodyEnable = true)
+public class DataManagerRouter {
     TableDao tableDao;
     DataObjectDao objectDao;
     FieldDao fieldDao;
