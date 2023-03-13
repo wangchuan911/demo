@@ -1,5 +1,6 @@
 package org.welisdoon.model.data.web;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import org.welisdoon.model.data.dao.FieldDao;
 import org.welisdoon.model.data.dao.TableDao;
 import org.welisdoon.model.data.entity.database.AbstractDataEntity;
 import org.welisdoon.model.data.entity.database.ColumnEntity;
+import org.welisdoon.model.data.entity.database.IColumnDataFormat;
 import org.welisdoon.model.data.entity.database.TableEntity;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
 import org.welisdoon.model.data.utils.SqlExecuteUtils;
@@ -85,6 +87,49 @@ public class DataManagerRouter {
                 default:
                     result = Map.of();
             }
+            routingContext.end(JSONObject.toJSONString(result));
+        });
+    }
+
+    @VertxRouter(path = "\\/value\\/(?<type>\\w+)\\/(?<id>\\d+)",
+            method = "PUT",
+            mode = VertxRouteType.PathRegex)
+    public void addValue(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long id = Long.valueOf(routingContext.pathParam("id"));
+            JSONObject result = JSON.parseObject(routingContext.getBodyAsString());
+            switch (routingContext.pathParam("type")) {
+                case "object":
+                    break;
+                case "table":
+                    TableEntity entity = ApplicationContextProvider.getApplicationContext().getBean(TableDao.class).get(id);
+                    IColumnDataFormat.setValue(result, entity.getColumns());
+                    break;
+                default:
+            }
+            System.out.println(result.toJSONString());
+            System.out.println(result.getDate("F13"));
+            routingContext.end(JSONObject.toJSONString(result));
+        });
+    }
+
+    @VertxRouter(path = "\\/value\\/(?<type>\\w+)\\/(?<id>\\d+)",
+            method = "POST",
+            mode = VertxRouteType.PathRegex)
+    public void setValue(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            AbstractDataEntity entity;
+            JSONObject result = JSON.parseObject(routingContext.getBodyAsString());
+            switch (routingContext.pathParam("type")) {
+                case "object":
+                    break;
+                case "column":
+                    break;
+                case "table":
+                    break;
+                default:
+            }
+            System.out.println(result.toJSONString());
             routingContext.end(JSONObject.toJSONString(result));
         });
     }

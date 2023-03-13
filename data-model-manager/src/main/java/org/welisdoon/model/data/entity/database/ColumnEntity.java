@@ -8,13 +8,14 @@ import org.welisdoon.model.data.consts.DataModelType;
 import org.welisdoon.model.data.utils.SqlExecuteUtils;
 
 @Model(DataModelType.Column)
-public class ColumnEntity extends AbstractDataEntity implements IForeignAssign {
+public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, IColumnValue {
     String length;
     @JsonIgnore
     @JSONField(serialize = false)
     TableEntity table;
     JdbcType type = JdbcType.UNDEFINED;
     ForeignEntity foreign;
+    Object value, formatValue;
 
     public TableEntity getTable() {
         return table;
@@ -60,5 +61,21 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign {
     public TableEntity getForeignTable(String id) {
         String assignId = SqlExecuteUtils.queryForObject(id, String.class, this);
         return getForeign().getForeignColumn().getForeignTable(assignId);
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+    public Object getFormatValue() {
+        return formatValue;
+    }
+
+    public void setFormatValue(Object formatValue) {
+        this.formatValue = formatValue;
     }
 }
