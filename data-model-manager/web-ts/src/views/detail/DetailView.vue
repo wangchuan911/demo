@@ -61,6 +61,10 @@
         <form-item :item="define" :form="form"></form-item>
       </el-form-item>
     </template>
+    <el-form-item>
+      <el-button type="primary" @click="onSubmit">Create</el-button>
+      <el-button>Cancel</el-button>
+    </el-form-item>
   </el-form>
 
 </template>
@@ -74,7 +78,7 @@ import {drawerEmits} from "element-plus";
 
 const router = useRouter(), route = useRoute();
 const {proxy} = getCurrentInstance() as ComponentInternalInstance
-
+const objectTypeId = "1", objectId = "1";
 
 onActivated(() => {
   console.log("onActivated")
@@ -82,18 +86,31 @@ onActivated(() => {
 onMounted(() => {
   console.log(router.currentRoute, route)
   console.log("onMounted")
-  const objectId = "1";
+
   Promise.all(
-      [proxy?.$http.get(`database/object/${objectId}`), getInitValue(objectId)])
+      [proxy?.$http.get(`database/object/${objectTypeId}/${objectId}`), getInitValue(objectTypeId)])
       .then(value => {
         const columns = value[0]?.data, initValue = value[1].data;
         defines.length = 0;
         columns.fields.forEach((value: any) => {
           const config = JSON.parse(value.style || "{}")
+          if ((value.columns || []).length > 0) {
+            value.columns.forEach((value1: any) => {
+              switch (config.type) {
+                case "checkbox":
+                  form[`F${value.id}`] = [value1.formatValue]
+                  break
+                default:
+                  form[`F${value.id}`] = value1.formatValue
+
+              }
+
+            })
+          }
           const field = {
             name: value.name,
             config,
-            id: value.id,
+            id: `F${value.id}`,
             mode: value.inputType.value || 'input',
             init: initValue[config.type]
           } as FormItemDefine;
@@ -126,7 +143,7 @@ onMounted(() => {
 const defines = reactive(new Array<FormItemDefine>(
     //{name: "Activity button", type: "button", key: "name4", mode: "input"},
     //{name: "Activity checkbox", type: "checkbox", key: "name4", mode: "input"},
-    {name: "Activity color", config: {type: "color"}, id: "1", mode: "input"},
+    /*{name: "Activity color", config: {type: "color"}, id: "1", mode: "input"},
     {name: "Activity date", config: {type: "date"}, id: "2", mode: "input"},
     {name: "Activity datetime-local", config: {type: "datetime-local"}, id: "3", mode: "input"},
     {name: "Activity datetime", config: {type: "datetime"}, id: "4", mode: "input"},
@@ -166,19 +183,20 @@ const defines = reactive(new Array<FormItemDefine>(
         {name: "Simple brand exposure", value: 4},
         {name: "Simple brand exposure1", value: 5},
         {name: "Simple brand exposure2", value: 6}]
-    }));
+    }*/));
 
 const form = reactive({
-  name: 'qwe',
+  /*name: 'qwe',
   region: '',
   date1: '',
   date2: '',
   delivery: false,
   type: [],
   resource: '',
-  desc: '',
-})
-const form1 = reactive({
+  desc: '',*/
+  F13: '2012-11-12 12:12:12'
+} as Record<any, any>)
+/*const form1 = reactive({
   name: '',
   region: '',
   date1: '',
@@ -187,13 +205,14 @@ const form1 = reactive({
   type: [],
   resource: '',
   desc: '',
-})
+})*/
 
 const onSubmit = () => {
   console.log('submit!')
   console.log(form)
+  proxy?.$http.put(`database/value/table/${objectTypeId}`, form)
 }
-
+console.log(new Date().valueOf())
 </script>
 
 <style scoped>
