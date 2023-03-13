@@ -4,6 +4,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
+import org.welisdoon.model.data.entity.common.DictEntity;
 import org.welisdoon.model.data.entity.database.AbstractDataEntity;
 import org.welisdoon.model.data.entity.database.ColumnEntity;
 
@@ -16,6 +17,7 @@ public class FieldEntity extends AbstractDataEntity {
     @JsonIgnore
     DataObjectEntity object;
     ColumnEntity[] columns;
+    DictEntity inputType;
     boolean lock = false;
     String style;
     String defaultValue;
@@ -58,6 +60,14 @@ public class FieldEntity extends AbstractDataEntity {
 
     public DataObjectEntity getObject() {
         return object;
+    }
+
+    public DictEntity getInputType() {
+        return inputType;
+    }
+
+    public void setInputType(DictEntity inputType) {
+        this.inputType = inputType;
     }
 }
 

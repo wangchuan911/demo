@@ -11,6 +11,7 @@
         <association property="object" select="org.welisdoon.model.data.dao.DataObjectDao.get"
                      column="OBJECT_ID"></association>
         <association property="columns" column="ID" select="getColumns"></association>
+        <association property="inputType" column="TYPE" select="org.welisdoon.model.data.dao.DictDao.get"></association>
     </resultMap>
 
     <select id="getColumns" parameterType="long" resultMap="org.welisdoon.model.data.dao.ColumnDao.rm_ColumnEntity">
@@ -33,9 +34,11 @@
         <where>
             <if test="entity!=null and entity.id!=null ">and ID=#{entity.id}</if>
             <if test="entity!=null and entity.name!=null ">and NAME=#{entity.name}</if>
-            <if test="entity!=null and entity.object!=null and entity.object.id!=null">and OBJECT_ID=#{entity.object.id}</if>
+            <if test="entity!=null and entity.object!=null and entity.object.id!=null">and
+                OBJECT_ID=#{entity.object.id}
+            </if>
         </where>
-        ORDER BY A.ID DESC
+        ORDER BY A.ORDER
 
     </select>
 

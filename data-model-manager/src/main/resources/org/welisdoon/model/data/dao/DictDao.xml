@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.model.data.dao.DictDao">
+
+    <resultMap id="rm_DictEntity" type="org.welisdoon.model.data.entity.common.DictEntity">
+        <id column="ID" property="id"></id>
+        <result column="CODE" property="code"></result>
+        <result column="GROUP" property="group"></result>
+        <result column="VALUE" property="value"></result>
+    </resultMap>
+
+    <select id="get" parameterType="long"
+            resultMap="rm_DictEntity">
+        select *
+        from DM_DICT a
+        where a.id = #{value}
+    </select>
+
+    <select id="list" parameterType="org.welisdoon.model.data.entity.common.DictEntity"
+            resultMap="rm_DictEntity">
+        SELECT * FROM DM_DICT A
+        <where>
+            <if test="code!=null ">and CODE=#{code}</if>
+            <if test="id!=null ">and ID=#{id}</if>
+            <if test="group!=null ">and ID=#{group}</if>
+        </where>
+        ORDER BY A.ID DESC
+
+    </select>
+
+    <select id="find" parameterType="org.welisdoon.model.data.entity.common.DictEntity"
+            resultMap="rm_DictEntity">
+        SELECT *
+        FROM DM_DICT A
+        where A.GROUP = #{group}
+          and A.CODE = #{code}
+    </select>
+
+
+</mapper>
