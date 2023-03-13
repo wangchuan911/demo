@@ -35,6 +35,7 @@ public class DateColumnDataFormat implements IColumnDataFormat {
 
     @Override
     public void serialize(IColumnValue column) {
+        if (column.getValue() == null) return;
         column.setFormatValue(new SimpleDateFormat(JSON.DEFFAULT_DATE_FORMAT).format(column.getValue()));
     }
 }

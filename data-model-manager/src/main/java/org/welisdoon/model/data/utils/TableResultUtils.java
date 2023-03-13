@@ -5,12 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.welisdoon.model.data.entity.common.AbstractCommonEntity;
 import org.welisdoon.model.data.entity.database.AbstractDataEntity;
 import org.welisdoon.model.data.entity.database.ColumnEntity;
 import org.welisdoon.model.data.entity.database.TableEntity;
-import org.welisdoon.web.vertx.verticle.AbstractMyVerticle;
 
-import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -23,14 +22,14 @@ import java.util.stream.Collectors;
  * @Date 17:45
  */
 @Component
-public class SqlExecuteUtils {
-    private static final Logger logger = LoggerFactory.getLogger(SqlExecuteUtils.class);
+public class TableResultUtils {
+    private static final Logger logger = LoggerFactory.getLogger(TableResultUtils.class);
     static JdbcTemplate jdbcTemplate;
     final static String SQL = "select %s from %s where %s";
 
     @Autowired
-    SqlExecuteUtils(JdbcTemplate jdbcTemplate) {
-        SqlExecuteUtils.jdbcTemplate = jdbcTemplate;
+    TableResultUtils(JdbcTemplate jdbcTemplate) {
+        TableResultUtils.jdbcTemplate = jdbcTemplate;
     }
 
 
@@ -39,7 +38,7 @@ public class SqlExecuteUtils {
     }
 
     protected static String generateSql(TableEntity table, ColumnEntity... columns) {
-        String sql = String.format(SQL, Arrays.stream(columns).map(AbstractDataEntity::getCode).collect(Collectors.joining(",")), table.getCode(), String.format("%s = ?", table.getPrimary().getCode()));
+        String sql = String.format(SQL, Arrays.stream(columns).map(AbstractCommonEntity::getCode).collect(Collectors.joining(",")), table.getCode(), String.format("%s = ?", table.getPrimary().getCode()));
         logger.info(sql);
         return sql;
     }

@@ -9,6 +9,8 @@
         <result property="code" column="CODE"></result>
         <association property="fields" column="{entity.object.id=ID}"
                      select="org.welisdoon.model.data.dao.FieldDao.list"></association>
+        <association property="table" column="TABLE_ID"
+                     select="org.welisdoon.model.data.dao.TableDao.get"></association>
     </resultMap>
     <select id="get" parameterType="long"
             resultMap="rm_DataObjectEntity">

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
-import org.welisdoon.model.data.utils.SqlExecuteUtils;
+import org.welisdoon.model.data.utils.TableResultUtils;
 
 @Model(DataModelType.Column)
 public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, IColumnValue {
@@ -59,7 +59,7 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, 
 
     @Override
     public TableEntity getForeignTable(String id) {
-        String assignId = SqlExecuteUtils.queryForObject(id, String.class, this);
+        String assignId = TableResultUtils.queryForObject(id, String.class, this);
         return getForeign().getForeignColumn().getForeignTable(assignId);
     }
 
@@ -78,4 +78,6 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, 
     public void setFormatValue(Object formatValue) {
         this.formatValue = formatValue;
     }
+
+
 }

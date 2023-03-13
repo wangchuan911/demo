@@ -1,8 +1,7 @@
 package org.welisdoon.model.data.entity.database;
 
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.annotation.JSONField;
 import org.apache.ibatis.type.JdbcType;
+import org.welisdoon.model.data.utils.TableResultUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.lang.annotation.ElementType;
@@ -11,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @Classname IColumnDataFormater
@@ -34,15 +34,52 @@ public interface IColumnDataFormat {
 
     Map<JdbcType, Class<? extends IColumnDataFormat>> iColumnDataFormatMap = new HashMap<>();
 
-    static void setValue(JSONObject object, ColumnEntity... entities) {
+    static void setValue(Map<String, Object> object, TableEntity table) {
+        setValue(object, table.getColumns());
+    }
+
+    static void setValue(Map<String, Object> object, ColumnEntity... entities) {
         IColumnDataFormat iColumnDataFormat;
         String fName;
-        for (ColumnEntity entity : entities) {
-            iColumnDataFormat = ApplicationContextProvider.getApplicationContext().getBean(iColumnDataFormatMap.get(entity.getType()));
-            fName = String.format("F%d", entity.getId());
-            if (!object.containsKey(fName)) continue;
-            entity.setFormatValue(object.get(fName));
-            iColumnDataFormat.deserialize(entity);
+        Map<JdbcType, IColumnDataFormat> formatMap = new HashMap<>();
+        try {
+            for (ColumnEntity entity : entities) {
+                iColumnDataFormat = Optional.ofNullable(formatMap.get(entity.getType())).orElseGet(() -> {
+                    IColumnDataFormat format = ApplicationContextProvider.getApplicationContext().getBean(iColumnDataFormatMap.get(entity.getType()));
+                    formatMap.put(entity.getType(), format);
+                    return format;
+                });
+                fName = String.format("F%d", entity.getId());
+                if (!object.containsKey(fName)) continue;
+                entity.setFormatValue(object.get(fName));
+                iColumnDataFormat.deserialize(entity);
+            }
+        } finally {
+            formatMap.clear();
+        }
+    }
+
+    static void setFormatValue(long id, TableEntity table) {
+        Map<String, Object> result = TableResultUtils.queryForMap(id, table.getColumns());
+        setFormatValue(result, table.getColumns());
+    }
+
+    static void setFormatValue(Map<String, Object> object, ColumnEntity... entities) {
+        IColumnDataFormat iColumnDataFormat;
+        Map<JdbcType, IColumnDataFormat> formatMap = new HashMap<>();
+        try {
+            for (ColumnEntity entity : entities) {
+                iColumnDataFormat = Optional.ofNullable(formatMap.get(entity.getType())).orElseGet(() -> {
+                    IColumnDataFormat format = ApplicationContextProvider.getApplicationContext().getBean(iColumnDataFormatMap.get(entity.getType()));
+                    formatMap.put(entity.getType(), format);
+                    return format;
+                });
+                if (!object.containsKey(entity.getCode())) continue;
+                entity.setValue(object.get(entity.getCode()));
+                iColumnDataFormat.serialize(entity);
+            }
+        } finally {
+            formatMap.clear();
         }
     }
 }
