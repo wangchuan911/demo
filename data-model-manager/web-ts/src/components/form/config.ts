@@ -10,7 +10,7 @@ export class FormItemDefine {
     name!: string
     id!: string
     mode!: string
-    init?: object
+    init?: any
     config!: FormItemConfig
 }
 

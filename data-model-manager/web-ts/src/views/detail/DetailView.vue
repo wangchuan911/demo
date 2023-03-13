@@ -66,12 +66,15 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, onActivated, onMounted} from 'vue'
+import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInternalInstance} from 'vue'
 import {useRouter, useRoute} from "vue-router";
 import FormItem from "@/components/form/FormItem.vue";
 import {FormItemDefine} from "@/components/form/config";
+import {drawerEmits} from "element-plus";
 
 const router = useRouter(), route = useRoute();
+const {proxy} = getCurrentInstance() as ComponentInternalInstance
+
 
 onActivated(() => {
   console.log("onActivated")
@@ -79,7 +82,46 @@ onActivated(() => {
 onMounted(() => {
   console.log(router.currentRoute, route)
   console.log("onMounted")
+  const objectId = "1";
+  Promise.all(
+      [proxy?.$http.get(`database/object/${objectId}`), getInitValue(objectId)])
+      .then(value => {
+        const columns = value[0]?.data, initValue = value[1].data;
+        defines.length = 0;
+        columns.fields.forEach((value: any) => {
+          const config = JSON.parse(value.style || "{}")
+          const field = {
+            name: value.name,
+            config,
+            id: value.id,
+            mode: value.inputType.value || 'input',
+            init: initValue[config.type]
+          } as FormItemDefine;
+
+          defines.push(field)
+        })
+        console.log(defines)
+
+      })
+
+  async function getInitValue(objectId: string) {
+    const arr = [
+      {name: "Online activities", value: 1},
+      {name: "Online activities2", value: 2},
+      {name: "Offline activities", value: 3},
+      {name: "Simple brand exposure", value: 4},
+      {name: "Simple brand exposure1", value: 5},
+      {name: "Simple brand exposure2", value: 6}];
+    return {
+      data: {
+        checkbox: arr,
+        radio: arr
+      }
+    } as Record<any, any>
+  }
 })
+
+
 // do not use same name with ref
 const defines = reactive(new Array<FormItemDefine>(
     //{name: "Activity button", type: "button", key: "name4", mode: "input"},
@@ -151,6 +193,7 @@ const onSubmit = () => {
   console.log('submit!')
   console.log(form)
 }
+
 </script>
 
 <style scoped>
