@@ -49,16 +49,18 @@
     </template>
     <el-slider v-else-if="item.config.type=='range'" v-model="form[item.id]" v-bind="item.config"/>
   </template>
-  <el-input v-else-if="item.mode==='custom'"
-            v-model="form[item.id]"
-            v-bind="item.config"
-            class="input-with-select" readonly
-  >
-    <template #append>
-      <el-button :icon="Search"/>
-    </template>
-  </el-input>
+  <!--  <el-input v-else-if="item.mode==='custom'"
+              v-model="form[item.id]"
+              v-bind="item.config"
+              class="input-with-select" readonly
+    >
+      <template #append>
+        <el-button :icon="Search"/>
+      </template>
+    </el-input>-->
+  <component v-else-if="item.mode==='custom'" :is="item.config.type" v-bind:item="item" v-bind:form="form"></component>
   <el-switch v-else-if="item.mode==='switch'" v-model="form[item.id]" v-bind="item.config"/>
+
   <slot v-else ref="other"></slot>
 </template>
 
@@ -66,16 +68,19 @@
 import {Options, Vue} from 'vue-class-component';
 import {Search} from '@element-plus/icons-vue'
 import {FormItemDefine} from '@/components/form/config'
+import {InputModule} from '@/components/form/config'
 
+console.log(InputModule)
 @Options({
   props: {
     item: Object as unknown as FormItemDefine,
-    form: Object
-  }
+    form: Object as Record<string, any>
+  },
+  components: InputModule
 })
 export default class FormItem extends Vue {
   item!: FormItemDefine
-  form!: object
+  form!: Record<string, any>
 }
 
 
