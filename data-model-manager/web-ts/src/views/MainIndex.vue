@@ -2,7 +2,9 @@
   <el-container class="container">
     <el-header class="header">Header</el-header>
     <el-container style="width: 100%;height: 100%">
-      <el-aside width="200px">Aside</el-aside>
+      <el-aside width="200px">
+        <side-barView></side-barView>
+      </el-aside>
       <el-main>
         <div style="position: relative">
           <el-tabs
@@ -11,9 +13,9 @@
               @tab-remove="removeTab"
           >
             <el-tab-pane nane="index" label="index" class="tab-container">
-              <el-button size="small" @click="addTab((++tempTabIndex) % 2 == 0 ? '/index/about' : '/index/detail')">
+<!--              <el-button size="small" @click="addTab((++tempTabIndex) % 2 == 0 ? '/index/about' : '/index/detail')">
                 add tab
-              </el-button>
+              </el-button>-->
               Index
             </el-tab-pane>
             <el-tab-pane class="tab-container"
@@ -43,6 +45,7 @@ import {ref, watch, watchPostEffect, onActivated, onMounted, reactive} from 'vue
 import HomeView from "@/views/HomeView.vue";
 import {useRouter, onBeforeRouteUpdate, useRoute, RouteLocationNormalizedLoaded} from "vue-router";
 import type{TabsPaneContext} from 'element-plus'
+import SideBarView from './SideBarView'
 
 const router = useRouter(),
     route = useRoute();
@@ -59,7 +62,7 @@ export declare interface TabPathInfo {
   path: string
 }
 
-const tempTabIndex = ref(2),
+const /*tempTabIndex = ref(2),*/
     editableTabsValue = ref('0'),
     editableTabs = reactive(new Array<TabInfo>()),
     excludes = reactive(new Array<string>())
