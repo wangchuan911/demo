@@ -87,7 +87,7 @@ onMounted(() => {
   console.log(router.currentRoute, route)
   console.log("onMounted")
 
-  Promise.all(
+  /*Promise.all(
       [proxy?.$http.get(`database/object/${objectTypeId}/${objectId}`), getInitValue(objectTypeId)])
       .then(value => {
         const columns = value[0]?.data, initValue = value[1].data;
@@ -95,17 +95,28 @@ onMounted(() => {
         columns.fields.forEach((value: any) => {
           const config = JSON.parse(value.style || "{}")
           if ((value.columns || []).length > 0) {
-            value.columns.forEach((value1: any) => {
+            // eslint-disable-next-line no-inner-declarations
+            function format(value1: any): any {
               switch (config.type) {
                 case "checkbox":
-                  form[`F${value.id}`] = [value1.formatValue]
-                  break
+                  return [value1.formatValue];
                 default:
-                  form[`F${value.id}`] = value1.formatValue
-
+                  return value1.formatValue
               }
+            }
 
-            })
+            switch (value.columns.length) {
+              case 0:
+                return;
+              case 1:
+                form[`F${value.id}`] = format(value.columns[0]);
+                break;
+              default:
+                value.columns.forEach((value1: any) => {
+                  form[`F${value.id}_C${value1.id}`] = format(value1);
+                })
+                break
+            }
           }
           const field = {
             name: value.name,
@@ -119,6 +130,55 @@ onMounted(() => {
         })
         console.log(defines)
 
+      })*/
+  const pInit = getInitValue(objectTypeId);
+  proxy?.$http.get(`database/object/${objectTypeId}/${objectId}`)
+      .then(({data}) => {
+        defines.length = 0;
+        data.fields.forEach((value: any) => {
+          const config = JSON.parse(value.style || "{}")
+          if ((value.columns || []).length > 0) {
+            const format = (value1: any): any => {
+              switch (config.type) {
+                case "checkbox":
+                  return [value1.formatValue];
+                default:
+                  return value1.formatValue
+              }
+            }
+
+            switch (value.columns.length) {
+              case 0:
+                break;
+              case 1:
+                form[`F${value.id}`] = format(value.columns[0]);
+                break;
+              default:
+                value.columns.forEach((value1: any) => {
+                  form[`F${value.id}_C${value1.id}`] = format(value1);
+                })
+                break
+            }
+          }
+          const field = {
+            name: value.name,
+            config,
+            id: `F${value.id}`,
+            mode: value.inputType.value || 'input',
+            init: []
+          } as FormItemDefine;
+
+          defines.push(field)
+        })
+        console.log(defines)
+        return pInit;
+      })
+      .then(({data}) => {
+        defines.forEach(value => {
+          if (typeof (data[value.config.type]) != 'undefined') {
+            value.init.push(...data[value.config.type])
+          }
+        })
       })
 
   async function getInitValue(objectId: string) {
@@ -210,7 +270,7 @@ const form = reactive({
 const onSubmit = () => {
   console.log('submit!')
   console.log(form)
-  proxy?.$http.put(`database/value/table/${objectTypeId}`, form)
+  proxy?.$http.put(`database/object/${objectTypeId}/${objectId}`, form)
 }
 console.log(new Date().valueOf())
 </script>

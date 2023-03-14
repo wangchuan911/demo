@@ -14,10 +14,10 @@ export class FormItemDefine {
     config!: FormItemConfig
 }
 
-import QueryInput from "@/components/form/input/QueryInput.vue"
+import ObjectQueryInput from "@/components/form/input/ObjectQueryInput.vue"
 
 export const InputModule = {
-    QueryInput
+    ObjectQueryInput
 }
 
 /*export class FormDataItem {

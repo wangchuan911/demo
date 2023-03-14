@@ -12,7 +12,7 @@
     />
     <el-time-picker v-else-if="item.config.type=='time'" v-model="form[item.id]" v-bind="item.config"/>
     <template v-else-if="item.config.type=='checkbox'">
-      <el-checkbox-group v-if="item.init.length<=5" v-model="form[item.id]" v-bind="item.config">
+      <el-checkbox-group v-if="(item.init||[]).length<=5" v-model="form[item.id]" v-bind="item.config">
         <el-checkbox
             :label="init.value" :name="item.id"
             v-for=" init in item.init||[]" :key="init.value">{{ init.name }}
@@ -33,7 +33,7 @@
       </el-select>
     </template>
     <template v-else-if="item.config.type=='radio'">
-      <el-radio-group v-if="item.init.length<=5" v-model="form[item.id]" v-bind="item.config">
+      <el-radio-group v-if="(item.init||[]).length<=5" v-model="form[item.id]" v-bind="item.config">
         <el-radio :label="init.value" size="large"
                   v-for=" init in item.init||[]" :key="init.value">{{ init.name }}
         </el-radio>

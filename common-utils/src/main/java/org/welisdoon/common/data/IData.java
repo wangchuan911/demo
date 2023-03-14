@@ -8,6 +8,7 @@ import org.welisdoon.common.ObjectUtils;
 import java.lang.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public interface IData<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>> {
@@ -41,6 +42,19 @@ public interface IData<ID, DATA_MARKER extends Enum<? extends IData.IDataMarker>
         public DataObject<ID, DATA_MARKER> setDataMarker(DATA_MARKER dataMarker) {
             this.dataMarker = dataMarker;
             return this;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DataObject<?, ?> that = (DataObject<?, ?>) o;
+            return Objects.equals(getId(), that.getId()) && Objects.equals(getDataMarker(), that.getDataMarker());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getId(), getDataMarker());
         }
     }
 
