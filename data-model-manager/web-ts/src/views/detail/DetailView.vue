@@ -1,5 +1,5 @@
 <template>
-  <el-form :model="form" label-width="120px">
+  <el-form :model="form" label-width="120px" v-loading="loading">
     <!--    <el-form-item label="Activity name">
           <el-input v-model="form.name"/>
         </el-form-item>
@@ -79,7 +79,7 @@ import {drawerEmits} from "element-plus";
 const router = useRouter(), route = useRoute();
 const {proxy} = getCurrentInstance() as ComponentInternalInstance
 const objectTypeId = "1", objectId = "1";
-
+const loading = ref(true)
 onActivated(() => {
   console.log("onActivated")
 })
@@ -180,6 +180,11 @@ onMounted(() => {
           }
         })
       })
+      .then(() => {
+        loading.value = false
+      }, () => {
+        loading.value = false
+      })
 
   async function getInitValue(objectId: string) {
     const arr = [
@@ -268,9 +273,12 @@ const form = reactive({
 })*/
 
 const onSubmit = () => {
+  loading.value = true;
   console.log('submit!')
   console.log(form)
-  proxy?.$http.put(`database/object/${objectTypeId}/${objectId}`, form)
+  proxy?.$http.put(`database/object/${objectTypeId}/${objectId}`, form).then(value => {
+    loading.value = false
+  })
 }
 console.log(new Date().valueOf())
 </script>
