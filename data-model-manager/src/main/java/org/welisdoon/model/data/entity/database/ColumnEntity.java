@@ -1,11 +1,16 @@
 package org.welisdoon.model.data.entity.database;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.util.TypeUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
+import org.welisdoon.model.data.dao.DataObjectDao;
+import org.welisdoon.model.data.dao.TableDao;
+import org.welisdoon.model.data.entity.object.DataObjectEntity;
 import org.welisdoon.model.data.utils.TableResultUtils;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 @Model(DataModelType.Column)
 public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, IColumnValue {
@@ -58,25 +63,44 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, 
     }
 
     @Override
-    public TableEntity getForeignTable(String id) {
-        String assignId = TableResultUtils.queryForObject(id, String.class, this);
-        return getForeign().getForeignColumn().getForeignTable(assignId);
+    public TableEntity foreignTable() {
+        IForeignAssign iForeignAssign = getForeign().getAssign();
+        if (iForeignAssign instanceof ColumnEntity) {
+            Object typeId;
+            if (((ColumnEntity) iForeignAssign).getValue() == null) {
+                ((ColumnEntity) iForeignAssign).setValue(TableResultUtils.queryForObject(this.getTable().getPrimary().getValue(), Object.class, (ColumnEntity) iForeignAssign));
+            }
+
+            Object id = (typeId = ((ColumnEntity) iForeignAssign).getValue());
+            while ((iForeignAssign = ((ColumnEntity) iForeignAssign).getForeign().getAssign()) instanceof ColumnEntity) {
+                ((ColumnEntity) iForeignAssign).setValue(id = TableResultUtils.queryForObject(id, Object.class, (ColumnEntity) iForeignAssign));
+            }
+            if (iForeignAssign instanceof DataObjectEntity) {
+                iForeignAssign = ApplicationContextProvider.getBean(DataObjectDao.class).get(TypeUtils.castToLong(typeId)).getTable();
+            }
+            if (iForeignAssign instanceof TableEntity) {
+                return (TableEntity) iForeignAssign;
+            }
+        }
+        return iForeignAssign.foreignTable();
     }
 
     public Object getValue() {
         return value;
     }
 
-    public void setValue(Object value) {
+    public ColumnEntity setValue(Object value) {
         this.value = value;
+        return this;
     }
 
     public Object getFormatValue() {
         return formatValue;
     }
 
-    public void setFormatValue(Object formatValue) {
+    public ColumnEntity setFormatValue(Object formatValue) {
         this.formatValue = formatValue;
+        return this;
     }
 
 

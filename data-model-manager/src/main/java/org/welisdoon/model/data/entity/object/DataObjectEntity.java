@@ -1,15 +1,25 @@
 package org.welisdoon.model.data.entity.object;
 
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.util.TypeUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
+import org.welisdoon.model.data.dao.DataObjectDao;
+import org.welisdoon.model.data.dao.TableDao;
 import org.welisdoon.model.data.entity.database.AbstractDataEntity;
 import org.welisdoon.model.data.entity.database.IForeignAssign;
 import org.welisdoon.model.data.entity.database.TableEntity;
 import org.welisdoon.model.query.entity.IQueryTarget;
+import org.welisdoon.web.common.ApplicationContextProvider;
+
+import java.util.Objects;
 
 @Model(DataModelType.Object)
 public class DataObjectEntity extends AbstractDataEntity implements IQueryTarget, IForeignAssign {
+    @JSONField(deserialize = false, serialize = false)
+    @JsonIgnore
     TableEntity table;
     TableEntity[] extendTable;
     FieldEntity[] fields;
@@ -23,7 +33,7 @@ public class DataObjectEntity extends AbstractDataEntity implements IQueryTarget
     }
 
     @Override
-    public TableEntity getForeignTable(String value) {
+    public TableEntity foreignTable() {
         return table;
     }
 

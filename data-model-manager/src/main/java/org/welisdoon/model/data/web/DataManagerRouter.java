@@ -71,7 +71,7 @@ public class DataManagerRouter {
             if (StringUtils.isNotEmpty(routingContext.pathParam("oid"))) {
                 List<ColumnEntity> entities = new LinkedList<>();
                 try {
-                    Map<String, Object> result = TableResultUtils.queryForMap(Long.valueOf(routingContext.pathParam("oid")), entity.getTable().getColumns());
+                    /*Map<String, Object> result = TableResultUtils.queryForMap(Long.valueOf(routingContext.pathParam("oid")), entity.getTable().getColumns());
                     for (FieldEntity field : entity.getFields()) {
                         for (ColumnEntity column : field.getColumns()) {
                             if (column.getTable().equals(entity.getTable())) {
@@ -79,7 +79,8 @@ public class DataManagerRouter {
                             }
                         }
                     }
-                    IColumnDataFormat.setFormatValue(result, entities.toArray(new ColumnEntity[0]));
+                    IColumnDataFormat.setFormatValue(result, entities.toArray(new ColumnEntity[0]));*/
+                    TableResultUtils.query(Long.valueOf(routingContext.pathParam("oid")), entity);
                 } finally {
                     entities.clear();
                 }

@@ -9,9 +9,9 @@ package org.welisdoon.model.data.entity.database;
 public interface IColumnValue {
     Object getValue();
 
-    void setValue(Object value);
+    <T extends IColumnValue> T setValue(Object value);
 
     Object getFormatValue();
 
-    void setFormatValue(Object formatValue);
+    <T extends IColumnValue> T setFormatValue(Object formatValue);
 }
