@@ -46,8 +46,19 @@ import {useRouter} from "vue-router";
 
 console.log(icons)
 const router = useRouter()
-const menus = reactive([])
-menus.push(...[{
+const menus = reactive(new Array<Menu>())
+
+export declare interface Menu {
+  id: number;
+  name: string;
+  icon?: any;
+  sub?: Array<Menu>;
+  group?: Array<Menu>;
+
+  click?: any
+}
+
+const _menus = new Array<Menu>({
   id: 1,
   name: "Navigator One",
   icon: 'Location',
@@ -92,8 +103,12 @@ menus.push(...[{
 }, {
   id: 4,
   name: "Navigator Four",
-  icon: 'Setting'
-}])
+  icon: 'Setting',
+  click() {
+    router.push('/index/object-query')
+  }
+})
+menus.push(..._menus)
 
 
 const handleOpen = (key: string, keyPath: string[]) => {

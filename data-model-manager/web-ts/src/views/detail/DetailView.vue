@@ -71,12 +71,9 @@
 
 <script lang="ts" setup>
 import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInternalInstance} from 'vue'
-import {useRouter, useRoute} from "vue-router";
 import FormItem from "@/components/form/FormItem.vue";
 import {FormItemDefine} from "@/components/form/config";
-import {drawerEmits} from "element-plus";
 
-const router = useRouter(), route = useRoute();
 const {proxy} = getCurrentInstance() as ComponentInternalInstance
 const objectTypeId = "1", objectId = "1";
 const loading = ref(true)
@@ -84,7 +81,6 @@ onActivated(() => {
   console.log("onActivated")
 })
 onMounted(() => {
-  console.log(router.currentRoute, route)
   console.log("onMounted")
 
   /*Promise.all(

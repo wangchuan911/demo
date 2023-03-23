@@ -45,6 +45,13 @@ const routes: Array<RouteRecordRaw> = [
                     standalone: true
                 }
             },
+            {
+                path: 'object-query',
+                component: () => import(/* webpackChunkName: "about" */ '../views/query/ObjectQueryView.vue'),
+                meta: {
+                    standalone: true
+                }
+            },
         ]
     }
 ]
