@@ -66,14 +66,13 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, 
     public TableEntity foreignTable() {
         IForeignAssign iForeignAssign = getForeign().getAssign();
         if (iForeignAssign instanceof ColumnEntity) {
-            Object typeId;
             if (((ColumnEntity) iForeignAssign).getValue() == null) {
                 ((ColumnEntity) iForeignAssign).setValue(TableResultUtils.queryForObject(this.getTable().getPrimary().getValue(), Object.class, (ColumnEntity) iForeignAssign));
             }
+            Object typeId = ((ColumnEntity) iForeignAssign).getValue();
 
-            Object id = (typeId = ((ColumnEntity) iForeignAssign).getValue());
-            while ((iForeignAssign = ((ColumnEntity) iForeignAssign).getForeign().getAssign()) instanceof ColumnEntity) {
-                ((ColumnEntity) iForeignAssign).setValue(id = TableResultUtils.queryForObject(id, Object.class, (ColumnEntity) iForeignAssign));
+            if ((iForeignAssign = ((ColumnEntity) iForeignAssign).getForeign().getAssign()) instanceof ColumnEntity) {
+                return ((ColumnEntity) iForeignAssign).setValue(TableResultUtils.queryForObject(typeId, Object.class, (ColumnEntity) iForeignAssign)).foreignTable();
             }
             if (iForeignAssign instanceof DataObjectEntity) {
                 iForeignAssign = ApplicationContextProvider.getBean(DataObjectDao.class).get(TypeUtils.castToLong(typeId)).getTable();
