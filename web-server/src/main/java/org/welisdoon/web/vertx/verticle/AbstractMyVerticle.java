@@ -1,5 +1,7 @@
 package org.welisdoon.web.vertx.verticle;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Predicate;
 import io.vertx.core.*;
 
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public abstract class AbstractMyVerticle extends AbstractVerticle {
@@ -102,12 +105,11 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                         .stream()
                         .map(entry -> {
                             org.welisdoon.web.vertx.annotation.Verticle verticle = entry.getKey().getAnnotation(org.welisdoon.web.vertx.annotation.Verticle.class);
-                            DeploymentOptions deploymentOptions = entry.getValue();
-                            if (deploymentOptions == null) {
-                                deploymentOptions = new DeploymentOptions();
-                                deploymentOptions.setWorkerPoolSize(options.getVertxOptions().getWorkerPoolSize());
-                                deploymentOptions.setMaxWorkerExecuteTime(options.getVertxOptions().getMaxWorkerExecuteTime());
-                            }
+                            DeploymentOptions deploymentOptions =
+                                    entry.getValue() != null ?
+                                            entry.getValue() :
+                                            JSON.toJavaObject((JSONObject) JSON.toJSON(options.getVertxOptions()), DeploymentOptions.class);
+
                             String verticleName = String.format("%s:%s", options.getFactory().prefix(), entry.getKey().getName());
                             deploymentOptions.setWorker(verticle.worker());
                             // As worker verticles are never executed concurrently by Vert.x by more than one thread,
