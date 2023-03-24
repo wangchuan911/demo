@@ -49,14 +49,14 @@ public class DataBaseService {
         this.tableDao = tableDao;
     }
 
-    @PostConstruct
+    /*@PostConstruct
     void init() {
         Object o;
         o = getTable(1L);
         o = getColumn(1L);
         o = getField(1L);
         o = getDataObject(1L);
-    }
+    }*/
 
     public TableEntity getTable(Long id) {
         TableEntity entity = tableDao.get(id);

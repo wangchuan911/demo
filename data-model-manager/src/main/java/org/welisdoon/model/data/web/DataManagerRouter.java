@@ -15,6 +15,7 @@ import org.welisdoon.model.data.entity.database.IColumnDataFormat;
 import org.welisdoon.model.data.entity.database.TableEntity;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
 import org.welisdoon.model.data.entity.object.FieldEntity;
+import org.welisdoon.model.data.service.DataBaseService;
 import org.welisdoon.model.data.utils.TableResultUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -38,15 +39,11 @@ import java.util.Map;
 @VertxConfiguration
 @VertxRoutePath(prefix = "/dm/database", requestBodyEnable = true)
 public class DataManagerRouter {
-    TableDao tableDao;
-    DataObjectDao objectDao;
-    FieldDao fieldDao;
-    ColumnDao columnDao;
+    DataBaseService baseService;
 
     @Autowired
-    void setValue(TableDao tableDao, DataObjectDao objectDao, FieldDao fieldDao, ColumnDao columnDao) {
-        this.objectDao = objectDao;
-        this.tableDao = tableDao;
+    void setValue(DataBaseService baseService) {
+        this.baseService = baseService;
     }
 
     @VertxRouter(path = "\\/table\\/(?<id>\\d+)(\\/(?<tid>\\d+))?",
@@ -54,7 +51,7 @@ public class DataManagerRouter {
             mode = VertxRouteType.PathRegex)
     public void table(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            TableEntity entity = tableDao.get(Long.valueOf(routingContext.pathParam("id")));
+            TableEntity entity = this.baseService.getTable(Long.valueOf(routingContext.pathParam("id")));
             if (StringUtils.isNotEmpty(routingContext.pathParam("tid"))) {
                 IColumnDataFormat.setFormatValue(Long.valueOf(routingContext.pathParam("tid")), entity);
             }
@@ -67,7 +64,7 @@ public class DataManagerRouter {
             mode = VertxRouteType.PathRegex)
     public void object(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            DataObjectEntity entity = objectDao.get(Long.valueOf(routingContext.pathParam("id")));
+            DataObjectEntity entity = this.baseService.getDataObject(Long.valueOf(routingContext.pathParam("id")));
             if (StringUtils.isNotEmpty(routingContext.pathParam("oid"))) {
                 List<ColumnEntity> entities = new LinkedList<>();
                 try {
@@ -130,7 +127,7 @@ public class DataManagerRouter {
             JSONObject result = JSON.parseObject(routingContext.getBodyAsString());
             switch (routingContext.pathParam("type")) {
                 case "object": {
-                    DataObjectEntity entity = objectDao.get(Long.valueOf(routingContext.pathParam("id")));
+                    DataObjectEntity entity = this.baseService.getDataObject(Long.valueOf(routingContext.pathParam("id")));
                     if (StringUtils.isNotEmpty(routingContext.pathParam("tid"))) {
                         IColumnDataFormat.setValue(Long.valueOf(routingContext.pathParam("tid")), result, entity);
                     } else {
