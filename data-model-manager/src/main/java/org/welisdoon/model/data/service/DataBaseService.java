@@ -1,15 +1,21 @@
 package org.welisdoon.model.data.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
+import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.model.data.components.foreign.IForeignKeyOperator;
 import org.welisdoon.model.data.dao.ColumnDao;
 import org.welisdoon.model.data.dao.DataObjectDao;
 import org.welisdoon.model.data.dao.FieldDao;
 import org.welisdoon.model.data.dao.TableDao;
 import org.welisdoon.model.data.entity.database.ColumnEntity;
+import org.welisdoon.model.data.entity.database.ForeignEntity;
+import org.welisdoon.model.data.entity.database.IForeignTarget;
 import org.welisdoon.model.data.entity.database.TableEntity;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
 import org.welisdoon.model.data.entity.object.FieldEntity;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -49,14 +55,22 @@ public class DataBaseService {
         this.tableDao = tableDao;
     }
 
-    /*@PostConstruct
+    Map<Long, IForeignKeyOperator> longIForeignKeyOperatorMap = new HashMap<>();
+    ;
+
+    @PostConstruct
     void init() {
-        Object o;
+        /*Object o;
         o = getTable(1L);
         o = getColumn(1L);
         o = getField(1L);
-        o = getDataObject(1L);
-    }*/
+        o = getDataObject(1L);*/
+        ApplicationContextProvider
+                .getApplicationContext()
+                .getBeansWithAnnotation(IForeignKeyOperator.ForeignKey.class).entrySet().stream().map(Map.Entry::getValue).forEach(o -> {
+            longIForeignKeyOperatorMap.put(AnnotationUtils.findAnnotation(o.getClass(), IForeignKeyOperator.ForeignKey.class).value(), (IForeignKeyOperator) o);
+        });
+    }
 
     public TableEntity getTable(Long id) {
         TableEntity entity = tableDao.get(id);
@@ -65,8 +79,21 @@ public class DataBaseService {
             if (Objects.equals(column.getId(), entity.getPrimaryId())) {
                 entity.setPrimary(column);
             }
+            if (column.isForeign()) {
+                column.getForeign().setColumn(column);
+                setForeign(column.getForeign());
+            }
         }
         return entity;
+    }
+
+    public IForeignKeyOperator getForeignKeyOperator(long targetTypeId) {
+        return longIForeignKeyOperatorMap.get(targetTypeId);
+    }
+
+
+    protected void setForeign(ForeignEntity foreign) {
+        foreign.setTarget(longIForeignKeyOperatorMap.get(foreign.getTargetTypeId()).getTarget(foreign));
     }
 
     public ColumnEntity getColumn(Long id) {

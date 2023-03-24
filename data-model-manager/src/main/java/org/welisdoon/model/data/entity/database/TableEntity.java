@@ -1,19 +1,12 @@
 package org.welisdoon.model.data.entity.database;
 
-import com.alibaba.fastjson.annotation.JSONField;
-import com.alibaba.fastjson.util.TypeUtils;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
 import org.welisdoon.model.data.consts.TableType;
-import org.welisdoon.model.data.dao.TableDao;
 import org.welisdoon.model.query.entity.IQueryTarget;
-import org.welisdoon.web.common.ApplicationContextProvider;
-
-import java.util.Objects;
 
 @Model(DataModelType.Table)
-public class TableEntity extends AbstractDataEntity implements IQueryTarget, IForeignAssign {
+public class TableEntity extends AbstractDataEntity implements IQueryTarget, IForeignTarget {
     DataSourceEntity dataSource;
     ColumnEntity[] columns;
     TableType tableType;

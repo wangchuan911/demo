@@ -15,14 +15,17 @@ import org.welisdoon.model.data.consts.DataModelType;
 public class ForeignEntity extends AbstractDataEntity {
     long targetId;
     long targetTypeId;
-    IForeignAssign assign;
+    @JsonIgnore
+    @JSONField(deserialize = false, serialize = false)
+    ColumnEntity column;
+    IForeignTarget target;
 
-    public IForeignAssign getAssign() {
-        return assign;
+    public IForeignTarget getTarget() {
+        return target;
     }
 
-    public void setAssign(IForeignAssign assign) {
-        this.assign = assign;
+    public void setTarget(IForeignTarget target) {
+        this.target = target;
     }
 
     public void setTargetId(long targetId) {
@@ -39,5 +42,13 @@ public class ForeignEntity extends AbstractDataEntity {
 
     public void setTargetTypeId(long targetTypeId) {
         this.targetTypeId = targetTypeId;
+    }
+
+    public void setColumn(ColumnEntity column) {
+        this.column = column;
+    }
+
+    public ColumnEntity getColumn() {
+        return column;
     }
 }

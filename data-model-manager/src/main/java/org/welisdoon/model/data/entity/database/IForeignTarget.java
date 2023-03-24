@@ -6,6 +6,6 @@ package org.welisdoon.model.data.entity.database;
  * @Author Septem
  * @Date 16:33
  */
-public interface IForeignAssign {
+public interface IForeignTarget {
     TableEntity foreignTable();
 }

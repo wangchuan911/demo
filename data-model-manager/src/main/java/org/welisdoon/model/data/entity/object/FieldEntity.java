@@ -18,6 +18,8 @@ public class FieldEntity extends AbstractDataEntity {
     DataObjectEntity object;
     Long objectId;
     ColumnEntity[] columns;
+    @JsonIgnore
+    @JSONField(deserialize = false, serialize = false)
     Long[] columnIds;
     DictEntity inputType;
     boolean lock = false;

@@ -94,7 +94,7 @@ public class TableResultUtils {
             }
         }
         for (Map.Entry<ColumnEntity, TableEntity> entry : map.entrySet()) {
-            entry.getKey().getForeign().setAssign(entry.getValue());
+            entry.getKey().getForeign().setTarget(entry.getValue());
             entry.getKey().setFormatValue(Arrays.stream(entry.getValue().getColumns())
                     .filter(columnEntity -> Objects.nonNull(columnEntity.getFormatValue()))
                     .collect(Collectors.toMap(ColumnEntity::getCode, ColumnEntity::getFormatValue, (o, o2) -> o)));
@@ -133,7 +133,7 @@ public class TableResultUtils {
             }
         }
         for (Map.Entry<ColumnEntity, TableEntity> entry : map.entrySet()) {
-            entry.getKey().getForeign().setAssign(entry.getValue());
+            entry.getKey().getForeign().setTarget(entry.getValue());
             entry.getKey().setFormatValue(
                     JSON.toJSONString(Arrays.stream(entry.getValue().getColumns())
                             .filter(columnEntity -> Objects.nonNull(columnEntity.getFormatValue()))

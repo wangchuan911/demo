@@ -7,13 +7,13 @@ import org.apache.ibatis.type.JdbcType;
 import org.welisdoon.model.data.annotations.Model;
 import org.welisdoon.model.data.consts.DataModelType;
 import org.welisdoon.model.data.dao.DataObjectDao;
-import org.welisdoon.model.data.dao.TableDao;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
+import org.welisdoon.model.data.service.DataBaseService;
 import org.welisdoon.model.data.utils.TableResultUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 @Model(DataModelType.Column)
-public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, IColumnValue {
+public class ColumnEntity extends AbstractDataEntity implements IForeignTarget, IColumnValue {
     String length;
     @JsonIgnore
     @JSONField(serialize = false)
@@ -65,24 +65,26 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, 
 
     @Override
     public TableEntity foreignTable() {
-        IForeignAssign iForeignAssign = getForeign().getAssign();
-        if (iForeignAssign instanceof ColumnEntity) {
-            if (((ColumnEntity) iForeignAssign).getValue() == null) {
-                ((ColumnEntity) iForeignAssign).setValue(TableResultUtils.queryForObject(this.getTable().getPrimary().getValue(), Object.class, (ColumnEntity) iForeignAssign));
+        IForeignTarget iForeignTarget = getForeign().getTarget();
+        if (iForeignTarget instanceof ColumnEntity) {
+            if (((ColumnEntity) iForeignTarget).getValue() == null) {
+                ((ColumnEntity) iForeignTarget).setValue(TableResultUtils.queryForObject(this.getTable().getPrimary().getValue(), Object.class, (ColumnEntity) iForeignTarget));
             }
-            Object typeId = ((ColumnEntity) iForeignAssign).getValue();
+            Object typeId = ((ColumnEntity) iForeignTarget).getValue();
 
-            if ((iForeignAssign = ((ColumnEntity) iForeignAssign).getForeign().getAssign()) instanceof ColumnEntity) {
-                return ((ColumnEntity) iForeignAssign).setValue(TableResultUtils.queryForObject(typeId, Object.class, (ColumnEntity) iForeignAssign)).foreignTable();
+            if ((iForeignTarget = ((ColumnEntity) iForeignTarget).getForeign().getTarget()) instanceof ColumnEntity) {
+                return ((ColumnEntity) iForeignTarget).setValue(TableResultUtils.queryForObject(typeId, Object.class, (ColumnEntity) iForeignTarget)).foreignTable();
             }
-            if (iForeignAssign instanceof DataObjectEntity) {
-                iForeignAssign = ApplicationContextProvider.getBean(DataObjectDao.class).get(TypeUtils.castToLong(typeId)).getTable();
+            if (iForeignTarget instanceof DataObjectEntity) {
+                iForeignTarget = ApplicationContextProvider.getBean(DataBaseService.class).getDataObject(TypeUtils.castToLong(typeId)).getTable();
             }
-            if (iForeignAssign instanceof TableEntity) {
-                return (TableEntity) iForeignAssign;
+            if (iForeignTarget instanceof TableEntity) {
+                return (TableEntity) iForeignTarget;
             }
         }
-        return iForeignAssign.foreignTable();
+        if (iForeignTarget == null)
+            return null;
+        return iForeignTarget.foreignTable();
     }
 
     public Object getValue() {
