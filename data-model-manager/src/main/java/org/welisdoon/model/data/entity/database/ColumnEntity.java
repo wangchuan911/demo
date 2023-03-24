@@ -18,6 +18,7 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, 
     @JsonIgnore
     @JSONField(serialize = false)
     TableEntity table;
+    Long tableId;
     JdbcType type = JdbcType.UNDEFINED;
     ForeignEntity foreign;
     Object value, formatValue;
@@ -102,5 +103,11 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignAssign, 
         return this;
     }
 
+    public Long getTableId() {
+        return tableId;
+    }
 
+    public void setTableId(Long tableId) {
+        this.tableId = tableId;
+    }
 }

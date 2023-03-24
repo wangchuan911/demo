@@ -13,6 +13,8 @@ import org.welisdoon.model.data.consts.DataModelType;
  */
 @Model(DataModelType.Foreign)
 public class ForeignEntity extends AbstractDataEntity {
+    long targetId;
+    long targetTypeId;
     IForeignAssign assign;
 
     public IForeignAssign getAssign() {
@@ -21,5 +23,21 @@ public class ForeignEntity extends AbstractDataEntity {
 
     public void setAssign(IForeignAssign assign) {
         this.assign = assign;
+    }
+
+    public void setTargetId(long targetId) {
+        this.targetId = targetId;
+    }
+
+    public long getTargetId() {
+        return targetId;
+    }
+
+    public long getTargetTypeId() {
+        return targetTypeId;
+    }
+
+    public void setTargetTypeId(long targetTypeId) {
+        this.targetTypeId = targetTypeId;
     }
 }

@@ -8,10 +8,11 @@
         <id property="id" column="ID"></id>
         <result property="name" column="NAME"></result>
         <result property="code" column="CODE"></result>
+        <!--<association property="primary" column="PRIMARY_COLUMN_ID"
+                     select="org.welisdoon.model.data.dao.ColumnDao.get"></association>-->
+        <result property="primaryId" column="PRIMARY_COLUMN_ID"></result>
         <association property="columns" column="{entity.table.id=ID}"
                      select="org.welisdoon.model.data.dao.ColumnDao.list"></association>
-        <association property="primary" column="PRIMARY_COLUMN_ID"
-                     select="org.welisdoon.model.data.dao.ColumnDao.get"></association>
 
     </resultMap>
     <select id="get" parameterType="long"

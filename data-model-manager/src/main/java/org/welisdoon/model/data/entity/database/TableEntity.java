@@ -19,6 +19,7 @@ public class TableEntity extends AbstractDataEntity implements IQueryTarget, IFo
     TableType tableType;
     Long[] keys;
     ColumnEntity primary;
+    Long primaryId;
 
     public void setColumns(ColumnEntity[] columns) {
         this.columns = columns;
@@ -63,5 +64,13 @@ public class TableEntity extends AbstractDataEntity implements IQueryTarget, IFo
 
     public void setPrimary(ColumnEntity primary) {
         this.primary = primary;
+    }
+
+    public Long getPrimaryId() {
+        return primaryId;
+    }
+
+    public void setPrimaryId(Long primaryId) {
+        this.primaryId = primaryId;
     }
 }

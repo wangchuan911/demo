@@ -8,17 +8,18 @@
         <result property="name" column="NAME"></result>
         <result property="code" column="CODE"></result>
         <result property="style" column="STYLE"></result>
-        <association property="object" select="org.welisdoon.model.data.dao.DataObjectDao.get"
-                     column="OBJECT_ID"></association>
-        <association property="columns" column="ID" select="getColumns"></association>
-        <association property="inputType" column="TYPE" select="org.welisdoon.model.data.dao.DictDao.get"></association>
+        <!--<association property="object" select="org.welisdoon.model.data.dao.DataObjectDao.get"
+                     column="OBJECT_ID"></association>-->
+        <!--<association property="columns" column="ID" select="getColumns"></association>-->
+        <result property="objectId" column="OBJECT_ID"></result>
+        <association property="columnIds" column="ID" select="getFieldColumnIds"/>
+
+        <association property="inputType" column="TYPE" select="org.welisdoon.model.data.dao.DictDao.get"/>
     </resultMap>
 
-    <select id="getColumns" parameterType="long" resultMap="org.welisdoon.model.data.dao.ColumnDao.rm_ColumnEntity">
-        select B.*
+    <select id="getFieldColumnIds" parameterType="long" resultType="long">
+        select A.COLUMN_ID
         from DM_OBJECT_FIELD_TO_TABLE_COLUMN A
-                 join DM_TABLE_COLUMN B
-                      ON A.COLUMN_ID = B.ID
         where A.FIELD_ID = #{value}
     </select>
     <select id="get" parameterType="long"

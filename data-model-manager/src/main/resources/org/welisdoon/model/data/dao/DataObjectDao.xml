@@ -7,10 +7,11 @@
         <id property="id" column="ID"></id>
         <result property="name" column="NAME"></result>
         <result property="code" column="CODE"></result>
+        <!--<association property="table" column="TABLE_ID"
+                     select="org.welisdoon.model.data.dao.TableDao.get"></association>-->
+        <result property="tableId" column="TABLE_ID"></result>
         <association property="fields" column="{entity.object.id=ID}"
                      select="org.welisdoon.model.data.dao.FieldDao.list"></association>
-        <association property="table" column="TABLE_ID"
-                     select="org.welisdoon.model.data.dao.TableDao.get"></association>
     </resultMap>
     <select id="get" parameterType="long"
             resultMap="rm_DataObjectEntity">
@@ -34,9 +35,9 @@
     <insert id="add" parameterType="org.welisdoon.model.data.entity.object.DataObjectEntity"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO DM_OBJECT(CODE,
-                                   ID,
-                                   NAME,
-                                   TABLE_ID)
+                              ID,
+                              NAME,
+                              TABLE_ID)
         VALUES (#{code},
                 #{id},
                 #{name},

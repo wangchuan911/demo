@@ -11,13 +11,17 @@
         <result column="DEFAULT_VALUE" property="defaultValue"></result>
         <result column="jdbc_type" property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler"></result>
         <result column="LENGTH" property="length"></result>
-        <association property="foreign" select="getForeign" column="ID" javaType="org.welisdoon.model.data.entity.database.IForeignAssign"></association>
+        <!--<association property="foreign" select="getForeign" column="ID" javaType="org.welisdoon.model.data.entity.database.IForeignAssign"></association>
         <association column="TABLE_ID" property="table"
-                     select="org.welisdoon.model.data.dao.TableDao.get"></association>
+                     select="org.welisdoon.model.data.dao.TableDao.get"></association>-->
+        <result column="TABLE_ID" property="tableId"></result>
+        <association property="foreign" select="getForeign" column="ID"
+                     javaType="org.welisdoon.model.data.entity.database.ForeignEntity"></association>
+
     </resultMap>
     <resultMap id="rm_ForeignEntity" type="org.welisdoon.model.data.entity.database.ForeignEntity">
         <id column="ID" property="id"></id>
-        <discriminator javaType="int" column="ASSIGN_TYPE_ID">
+        <!--<discriminator javaType="int" column="ASSIGN_TYPE_ID">
             <case value="1100">
                 <association property="assign" column="ASSIGN_ID"
                              select="org.welisdoon.model.data.dao.TableDao.get"></association>
@@ -30,7 +34,9 @@
                 <association property="assign" column="ASSIGN_ID"
                              select="org.welisdoon.model.data.dao.ColumnDao.get"></association>
             </case>
-        </discriminator>
+        </discriminator>-->
+        <result column="TARGET_ID" property="targetId"></result>
+        <result column="TARGET_TYPE_ID" property="targetTypeId"></result>
     </resultMap>
 
     <select id="getForeign" resultMap="rm_ForeignEntity" parameterType="long">

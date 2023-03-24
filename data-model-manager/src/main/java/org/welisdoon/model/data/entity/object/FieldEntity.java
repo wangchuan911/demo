@@ -16,7 +16,9 @@ public class FieldEntity extends AbstractDataEntity {
     @JSONField(serialize = false)
     @JsonIgnore
     DataObjectEntity object;
+    Long objectId;
     ColumnEntity[] columns;
+    Long[] columnIds;
     DictEntity inputType;
     boolean lock = false;
     String style;
@@ -68,6 +70,22 @@ public class FieldEntity extends AbstractDataEntity {
 
     public void setInputType(DictEntity inputType) {
         this.inputType = inputType;
+    }
+
+    public Long getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(Long objectId) {
+        this.objectId = objectId;
+    }
+
+    public Long[] getColumnIds() {
+        return columnIds;
+    }
+
+    public void setColumnIds(Long[] columnIds) {
+        this.columnIds = columnIds;
     }
 }
 

@@ -75,6 +75,13 @@ public class TableResultUtils {
     }
 
     public static Map<String, Object> query(Object id, TableEntity table) {
+        return query(id, table, (columnEntity, tableEntity) -> {
+            query(columnEntity.getValue(), tableEntity, (columnEntity1, tableEntity1) -> {
+            });
+        });
+    }
+
+    public static Map<String, Object> query(Object id, TableEntity table, QueryColumnInnerCallBack callBack) {
         Map<String, Object> result = TableResultUtils.queryForMap(id, table);
         IColumnDataFormat.setFormatValue(result, table.getColumns());
         IColumnDataFormat.setFormatValue(result, table.getPrimary());
@@ -82,7 +89,8 @@ public class TableResultUtils {
         for (ColumnEntity column : table.getColumns()) {
             if (column.getForeign() != null && column.getValue() != null) {
                 map.put(column, column.foreignTable());
-                query(column.getValue(), map.get(column));
+//                query(column.getValue(), map.get(column));
+                callBack.callback(column, map.get(column));
             }
         }
         for (Map.Entry<ColumnEntity, TableEntity> entry : map.entrySet()) {
@@ -94,7 +102,19 @@ public class TableResultUtils {
         return result;
     }
 
+    @FunctionalInterface
+    interface QueryColumnInnerCallBack {
+        void callback(ColumnEntity columnEntity, TableEntity tableEntity);
+    }
+
     public static Map<String, Object> query(Object id, DataObjectEntity objectEntity) {
+        return query(id, objectEntity, (columnEntity, tableEntity) -> {
+            query(columnEntity.getValue(), tableEntity, (columnEntity1, tableEntity1) -> {
+            });
+        });
+    }
+
+    public static Map<String, Object> query(Object id, DataObjectEntity objectEntity, QueryColumnInnerCallBack callBack) {
         ColumnEntity[] columns;
         {
             Set<ColumnEntity> columnSet = Arrays.stream(objectEntity.getFields()).flatMap(fieldEntity -> Arrays.stream(fieldEntity.getColumns())).distinct().collect(Collectors.toSet());
@@ -108,7 +128,8 @@ public class TableResultUtils {
         for (ColumnEntity column : columns) {
             if (column.getForeign() != null && column.getValue() != null) {
                 map.put(column, column.foreignTable());
-                query(column.getValue(), map.get(column));
+//                query(column.getValue(), map.get(column));
+                callBack.callback(column, map.get(column));
             }
         }
         for (Map.Entry<ColumnEntity, TableEntity> entry : map.entrySet()) {

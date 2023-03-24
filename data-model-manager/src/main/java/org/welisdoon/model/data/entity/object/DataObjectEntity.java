@@ -21,6 +21,7 @@ public class DataObjectEntity extends AbstractDataEntity implements IQueryTarget
     @JSONField(deserialize = false, serialize = false)
     @JsonIgnore
     TableEntity table;
+    Long tableId;
     TableEntity[] extendTable;
     FieldEntity[] fields;
 
@@ -51,5 +52,13 @@ public class DataObjectEntity extends AbstractDataEntity implements IQueryTarget
 
     public void setExtendTable(TableEntity[] extendTable) {
         this.extendTable = extendTable;
+    }
+
+    public Long getTableId() {
+        return tableId;
+    }
+
+    public void setTableId(Long tableId) {
+        this.tableId = tableId;
     }
 }
