@@ -49,10 +49,10 @@ public class TableEntity extends AbstractDataEntity implements IQueryTarget, IFo
         this.keys = keys;
     }
 
-    @Override
+    /*@Override
     public TableEntity foreignTable() {
         return this;
-    }
+    }*/
 
     public ColumnEntity getPrimary() {
         return primary;

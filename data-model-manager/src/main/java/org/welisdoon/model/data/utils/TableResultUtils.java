@@ -7,12 +7,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.model.data.components.foreign.IForeignKeyOperator;
 import org.welisdoon.model.data.entity.common.AbstractCommonEntity;
 import org.welisdoon.model.data.entity.database.ColumnEntity;
 import org.welisdoon.model.data.entity.database.IColumnDataFormat;
 import org.welisdoon.model.data.entity.database.TableEntity;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
 import org.welisdoon.model.data.entity.object.FieldEntity;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,6 +31,7 @@ public class TableResultUtils {
     private static final Logger logger = LoggerFactory.getLogger(TableResultUtils.class);
     static JdbcTemplate jdbcTemplate;
     final static String SQL = "select %s from %s where %s";
+    static Map<Class<? extends ColumnEntity>, IForeignKeyOperator<ColumnEntity>> operator = new HashMap<>();
 
     @Autowired
     TableResultUtils(JdbcTemplate jdbcTemplate) {
@@ -88,7 +92,7 @@ public class TableResultUtils {
         Map<ColumnEntity, TableEntity> map = new LinkedHashMap<>();
         for (ColumnEntity column : table.getColumns()) {
             if (column.getForeign() != null && column.getValue() != null) {
-                map.put(column, column.foreignTable());
+                map.put(column, getTable(column));
 //                query(column.getValue(), map.get(column));
                 callBack.callback(column, map.get(column));
             }
@@ -100,6 +104,17 @@ public class TableResultUtils {
                     .collect(Collectors.toMap(ColumnEntity::getCode, ColumnEntity::getFormatValue, (o, o2) -> o)));
         }
         return result;
+    }
+
+    protected static TableEntity getTable(ColumnEntity column) {
+        try {
+            return ObjectUtils.getMapValueOrNewSafe(operator, column.getClass(), () ->
+                    ApplicationContextProvider.getBean(column.getClass().getAnnotation(IForeignKeyOperator.ForeignKey.class).operator())
+            ).getTable(column);
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+            throw new RuntimeException(throwable.getMessage(), throwable);
+        }
     }
 
     @FunctionalInterface
@@ -127,7 +142,7 @@ public class TableResultUtils {
         Map<ColumnEntity, TableEntity> map = new LinkedHashMap<>();
         for (ColumnEntity column : columns) {
             if (column.getForeign() != null && column.getValue() != null) {
-                map.put(column, column.foreignTable());
+                map.put(column, getTable(column));
 //                query(column.getValue(), map.get(column));
                 callBack.callback(column, map.get(column));
             }

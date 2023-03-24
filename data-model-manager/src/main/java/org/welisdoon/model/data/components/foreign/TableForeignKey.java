@@ -16,7 +16,7 @@ import org.welisdoon.model.data.service.DataBaseService;
  */
 
 @Component
-public class TableForeignKey implements IForeignKeyOperator {
+public class TableForeignKey implements IForeignKeyOperator<TableEntity> {
     DataBaseService baseService;
     ;
 
@@ -28,6 +28,11 @@ public class TableForeignKey implements IForeignKeyOperator {
     @Override
     public IForeignTarget getTarget(ForeignEntity entity) {
         return baseService.getTable(entity.getTargetId());
+    }
+
+    @Override
+    public TableEntity getTable(TableEntity tableEntity) {
+        return tableEntity;
     }
 
 }

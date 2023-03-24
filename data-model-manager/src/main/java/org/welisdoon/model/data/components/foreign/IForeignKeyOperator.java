@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * @Author Septem
  * @Date 16:06
  */
-public interface IForeignKeyOperator {
+public interface IForeignKeyOperator<T extends IForeignTarget> {
 
     @Target({ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -26,4 +26,6 @@ public interface IForeignKeyOperator {
     }
 
     IForeignTarget getTarget(ForeignEntity entity);
+
+    TableEntity getTable(T t);
 }

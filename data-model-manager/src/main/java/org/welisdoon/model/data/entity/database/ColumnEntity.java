@@ -66,7 +66,7 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignTarget, 
         return this.foreign != null;
     }
 
-    @Override
+    /*@Override
     public TableEntity foreignTable() {
         IForeignTarget iForeignTarget = getForeign().getTarget();
         if (iForeignTarget instanceof ColumnEntity) {
@@ -88,7 +88,7 @@ public class ColumnEntity extends AbstractDataEntity implements IForeignTarget, 
         if (iForeignTarget == null)
             return null;
         return iForeignTarget.foreignTable();
-    }
+    }*/
 
     public Object getValue() {
         return value;

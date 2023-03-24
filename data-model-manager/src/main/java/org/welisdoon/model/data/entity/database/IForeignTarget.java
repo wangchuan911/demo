@@ -7,5 +7,5 @@ package org.welisdoon.model.data.entity.database;
  * @Date 16:33
  */
 public interface IForeignTarget {
-    TableEntity foreignTable();
+//    TableEntity foreignTable();
 }

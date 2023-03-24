@@ -30,10 +30,10 @@ public class DataObjectEntity extends AbstractDataEntity implements IQueryTarget
         return fields;
     }
 
-    @Override
+    /*@Override
     public TableEntity foreignTable() {
         return table;
-    }
+    }*/
 
     public TableEntity getTable() {
         return table;
