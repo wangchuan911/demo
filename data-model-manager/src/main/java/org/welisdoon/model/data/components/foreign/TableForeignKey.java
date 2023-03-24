@@ -15,7 +15,6 @@ import org.welisdoon.model.data.service.DataBaseService;
  * @Date 16:06
  */
 
-@IForeignKeyOperator.ForeignKey(1100L)
 @Component
 public class TableForeignKey implements IForeignKeyOperator {
     DataBaseService baseService;

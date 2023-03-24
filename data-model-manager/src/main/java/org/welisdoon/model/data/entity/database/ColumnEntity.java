@@ -5,6 +5,8 @@ import com.alibaba.fastjson.util.TypeUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoon.model.data.annotations.Model;
+import org.welisdoon.model.data.components.foreign.ColumnForeignKey;
+import org.welisdoon.model.data.components.foreign.IForeignKeyOperator;
 import org.welisdoon.model.data.consts.DataModelType;
 import org.welisdoon.model.data.dao.DataObjectDao;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
@@ -13,6 +15,7 @@ import org.welisdoon.model.data.utils.TableResultUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 @Model(DataModelType.Column)
+@IForeignKeyOperator.ForeignKey(typeId = 1102L, operator = ColumnForeignKey.class)
 public class ColumnEntity extends AbstractDataEntity implements IForeignTarget, IColumnValue {
     String length;
     @JsonIgnore

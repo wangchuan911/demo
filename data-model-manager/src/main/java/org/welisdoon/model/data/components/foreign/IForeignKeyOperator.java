@@ -20,7 +20,9 @@ public interface IForeignKeyOperator {
     @Target({ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     @interface ForeignKey {
-        long value();
+        long typeId();
+
+        Class<? extends IForeignKeyOperator> operator();
     }
 
     IForeignTarget getTarget(ForeignEntity entity);

@@ -23,7 +23,6 @@ import java.util.Arrays;
  * @Date 16:05
  */
 
-@IForeignKeyOperator.ForeignKey(1102L)
 @Component
 public class ColumnForeignKey implements IForeignKeyOperator {
 

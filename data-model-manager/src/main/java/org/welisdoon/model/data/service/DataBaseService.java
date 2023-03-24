@@ -1,5 +1,7 @@
 package org.welisdoon.model.data.service;
 
+import org.reflections.ReflectionUtils;
+import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class DataBaseService {
     ColumnDao columnDao;
     FieldDao fieldDao;
     DataObjectDao dataObjectDao;
+    Reflections reflections;
 
     @Autowired
     public void setColumnDao(ColumnDao columnDao) {
@@ -55,6 +58,12 @@ public class DataBaseService {
         this.tableDao = tableDao;
     }
 
+    @Autowired
+    public void setReflections(Reflections reflections) {
+        this.reflections = reflections;
+    }
+
+
     Map<Long, IForeignKeyOperator> longIForeignKeyOperatorMap = new HashMap<>();
     ;
 
@@ -65,10 +74,11 @@ public class DataBaseService {
         o = getColumn(1L);
         o = getField(1L);
         o = getDataObject(1L);*/
-        ApplicationContextProvider
-                .getApplicationContext()
-                .getBeansWithAnnotation(IForeignKeyOperator.ForeignKey.class).entrySet().stream().map(Map.Entry::getValue).forEach(o -> {
-            longIForeignKeyOperatorMap.put(AnnotationUtils.findAnnotation(o.getClass(), IForeignKeyOperator.ForeignKey.class).value(), (IForeignKeyOperator) o);
+
+        reflections.getTypesAnnotatedWith(IForeignKeyOperator.ForeignKey.class)
+                .stream()
+                .map(aClass -> aClass.getAnnotation(IForeignKeyOperator.ForeignKey.class)).forEach(foreignKey -> {
+            longIForeignKeyOperatorMap.put(foreignKey.typeId(), ApplicationContextProvider.getBean(foreignKey.operator()));
         });
     }
 
