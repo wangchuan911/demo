@@ -11,7 +11,7 @@
         <result column="DEFAULT_VALUE" property="defaultValue"></result>
         <result column="jdbc_type" property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler"></result>
         <result column="LENGTH" property="length"></result>
-        <!--<association property="foreign" select="getForeign" column="ID" javaType="org.welisdoon.model.data.entity.database.IForeignAssign"></association>
+        <!--<association property="foreign" select="getForeign" column="ID" javaType="org.welisdoon.model.data.entity.database.IForeignTarget"></association>
         <association column="TABLE_ID" property="table"
                      select="org.welisdoon.model.data.dao.TableDao.get"></association>-->
         <result column="TABLE_ID" property="tableId"></result>
