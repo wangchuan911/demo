@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task>
+    <init>
+        <instances>
+            <ftp name="ftp1"></ftp>
+            <csv name="csv"></csv>
+            <http name="http1"></http>
+        </instances>
+        <values>
+            <value></value>
+            <value></value>
+        </values>
+    </init>
+    <start>
+        <transactional name="tracns1" batch="50">
+            <select>
+                <sql>
+                    select 1 from dual union select 2 from dual
+                    <if>
+                        asd
+                    </if>
+                </sql>
+                <foreach item="item">
+                    <if test="">
+                        <insert>
+                            insert ta(col1,col2) values(#{col1,jdbcType=VARCHAR},#{col2,jdbcType=VARCHAR})
+                        </insert>
+                        <ftp ref="ftp1"></ftp>
+                    </if>
+                </foreach>
+            </select>
+        </transactional>
+
+    </start>
+</task>

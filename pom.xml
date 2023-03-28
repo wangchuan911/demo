@@ -18,6 +18,7 @@
         <module>order-flow</module>
         <module>my-wxoa</module>
         <module>data-model-manager</module>
+        <module>xml-task</module>
     </modules>
 
     <properties>
