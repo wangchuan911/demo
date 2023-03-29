@@ -51,12 +51,16 @@ public class Unit {
                 '}';
     }
 
-    public Unit nodeEnd() {
-        return this;
-    }
 
     public void destroy() {
-
+        for (Unit child : children) {
+            child.destroy();
+        }
+        this.parent = null;
+        this.children.clear();
+        this.children = null;
+        this.attributes.clear();
+        this.attributes = null;
     }
 
     public void setContent(String content) {

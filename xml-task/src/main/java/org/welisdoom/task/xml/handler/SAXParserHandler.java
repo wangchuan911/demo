@@ -8,6 +8,12 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -18,8 +24,8 @@ import java.util.*;
  */
 public class SAXParserHandler extends DefaultHandler {
     Deque<Unit> units = new LinkedList<>();
-    List<Unit> all = new LinkedList<>();
     Unit current;
+    Unit root;
     int level = 0;
 
     public static Class<? extends Unit> getTag(Unit parent, String name) {
@@ -58,9 +64,6 @@ public class SAXParserHandler extends DefaultHandler {
         super.endDocument();
         System.out.println("SAX解析结束");
         System.out.println(units);
-        for (Unit unit : all) {
-            unit.destroy();
-        }
     }
 
     @Override
@@ -92,6 +95,7 @@ public class SAXParserHandler extends DefaultHandler {
         } catch (Exception e) {
             throw new SAXException(e.getMessage(), e);
         }
+        root = root != null ? root : current;
         print(current);
     }
 
@@ -99,7 +103,6 @@ public class SAXParserHandler extends DefaultHandler {
     public void endElement(String s, String s1, String s2) throws SAXException {
         super.endElement(s, s1, s2);
         level--;
-        all.add(units.pollLast().nodeEnd());
         current = units.peekLast();
     }
 
@@ -121,6 +124,33 @@ public class SAXParserHandler extends DefaultHandler {
         }
         System.out.print(">       ");
         System.out.println(o);
-
     }
+
+    public static Unit loadTask(String uri) throws ParserConfigurationException, SAXException, IOException {
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        SAXParserHandler handler;
+        SAXParser sp = spf.newSAXParser();
+        handler = new SAXParserHandler();
+        sp.parse(uri, handler);
+        return handler.root;
+    }
+
+    public static Unit loadTask(File file) throws ParserConfigurationException, SAXException, IOException {
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        SAXParserHandler handler;
+        SAXParser sp = spf.newSAXParser();
+        handler = new SAXParserHandler();
+        sp.parse(file, handler);
+        return handler.root;
+    }
+
+    public static Unit loadTask(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        SAXParserHandler handler;
+        SAXParser sp = spf.newSAXParser();
+        handler = new SAXParserHandler();
+        sp.parse(inputStream, handler);
+        return handler.root;
+    }
+
 }

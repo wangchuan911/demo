@@ -43,11 +43,8 @@ public class XmlTaskApplication {
 
     @PostConstruct
     public void run() {
-        SAXParserFactory spf = SAXParserFactory.newInstance();
         try {
-            SAXParser sp = spf.newSAXParser();
-            SAXParserHandler handler = new SAXParserHandler();
-            sp.parse("src\\main\\resources\\xml\\demo.xml", handler);
+            SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml");
         } catch (Exception e) {
             e.printStackTrace();
         }
