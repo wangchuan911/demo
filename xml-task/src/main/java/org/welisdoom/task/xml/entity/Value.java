@@ -3,6 +3,8 @@ package org.welisdoom.task.xml.entity;
 import org.apache.commons.collections4.MapUtils;
 import org.xml.sax.Attributes;
 
+import java.util.Objects;
+
 /**
  * @Classname Values
  * @Description TODO
@@ -19,5 +21,14 @@ public class Value extends Unit {
 
     public String getValue() {
         return MapUtils.getString(attributes, "value", this.content);
+    }
+
+    public static String getValue(Task task, String name) {
+        return Initialization.getInstance(task)
+                .getChildren(Value.class)
+                .stream()
+                .filter(value -> Objects.equals(name, value.getName()))
+                .findFirst().orElse(new Value()).getValue();
+
     }
 }

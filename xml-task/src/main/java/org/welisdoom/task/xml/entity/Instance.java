@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * @Classname Instance
@@ -22,5 +23,14 @@ public class Instance extends Unit {
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    public static Unit getInstance(Task task, String name) {
+        return Initialization.getInstance(task)
+                .getChildren(Instance.class)
+                .stream()
+                .filter(instance -> Objects.equals(name, instance.getName()))
+                .findFirst().orElse(null).getInstance();
+
     }
 }

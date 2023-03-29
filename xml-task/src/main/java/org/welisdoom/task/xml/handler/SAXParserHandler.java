@@ -81,8 +81,7 @@ public class SAXParserHandler extends DefaultHandler {
         try {
             String ref = attributes.getValue("ref");
             if (ref != null) {
-                current = ((Task) units.getFirst())
-                        .getInstances(ref)
+                current = Instance.getInstance((Task) units.getFirst(), ref)
                         .setParent(units.peekLast());
             } else
                 current = (getTag(units.peekLast(), s2)

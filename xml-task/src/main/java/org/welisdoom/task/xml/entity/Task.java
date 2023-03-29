@@ -14,14 +14,4 @@ import java.util.Objects;
 @Tag("task")
 public class Task extends Unit {
 
-
-    public Unit getInstances(String name) {
-        return getChild(Initialization.class).get(0)
-                .getChildren(Instance.class)
-                .stream()
-                .filter(instance -> Objects.equals(name, instance.getName()))
-                .findFirst().orElse(null).getInstance();
-    }
-
-
 }

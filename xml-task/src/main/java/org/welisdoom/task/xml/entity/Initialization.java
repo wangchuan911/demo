@@ -12,4 +12,7 @@ import java.util.stream.Collectors;
 @Tag(value = "initialization", parentTag = Task.class)
 public class Initialization extends Unit {
 
+    public static Initialization getInstance(Task task) {
+        return task.getChild(Initialization.class).get(0);
+    }
 }
