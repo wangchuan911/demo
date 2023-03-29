@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.handler;
 
+import org.welisdoom.task.xml.entity.Instance;
 import org.welisdoom.task.xml.entity.Tag;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.Unit;
@@ -21,13 +22,26 @@ public class SAXParserHandler extends DefaultHandler {
     Unit current;
     int level = 0;
 
-    protected Class<? extends Unit> getTag(Unit parent, String name) {
+    public static Class<? extends Unit> getTag(Unit parent, String name) {
         return (Class<? extends Unit>) Reflections.getInstance().getTypesAnnotatedWith(Tag.class)
-                .stream().filter(aClass -> matched(aClass.getAnnotation(Tag.class), parent, name)).findFirst().orElseGet(() -> Unit.class);
+                .stream()
+                .filter(aClass ->
+                        matched(aClass.getAnnotation(Tag.class), parent, name))
+                .findFirst()
+                .orElseGet(() -> Unit.class);
     }
 
-    protected boolean matched(Tag tag, Unit parent, String name) {
-        if (parent == null || parent instanceof Unit || (!tag.parentTag().equals("all") && parent.getClass().getAnnotation(Tag.class).value().equals(tag.parentTag()))) {
+    public static boolean matched(Tag tag, Unit parent, String name) {
+        if (parent == null
+                || parent instanceof Unit
+                || (Arrays.stream(tag.parentTag())
+                .filter(aClass -> aClass == Unit.class)
+                .findFirst()
+                .isEmpty()
+                && Arrays.stream(tag.parentTag())
+                .filter(aClass -> parent.getClass() == aClass)
+                .findFirst()
+                .isPresent())) {
             return name.equals(tag.value());
         }
         return false;
@@ -64,9 +78,13 @@ public class SAXParserHandler extends DefaultHandler {
         try {
             String ref = attributes.getValue("ref");
             if (ref != null) {
-                current = ((Task) units.getFirst()).getInstances(ref).setParent(units.peekLast());
+                current = ((Task) units.getFirst())
+                        .getInstances(ref)
+                        .setParent(units.peekLast());
             } else
-                current = (getTag(units.peekLast(), s2).getConstructor().newInstance())
+                current = (getTag(units.peekLast(), s2)
+                        .getConstructor()
+                        .newInstance())
                         .attr(attributes)
                         .setParent(units.peekLast())
                         .setName(attributes.getValue("name"));
@@ -93,7 +111,7 @@ public class SAXParserHandler extends DefaultHandler {
             return;
         }
         print(value);
-        current.setConntent(value);
+        current.setContent(value);
     }
 
     protected void print(Object o) {

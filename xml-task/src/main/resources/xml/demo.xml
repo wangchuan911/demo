@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <task>
-    <init>
-        <instances>
-            <ftp name="ftp1"></ftp>
-            <csv name="csv"></csv>
-            <http name="http1"></http>
-        </instances>
-        <values>
-            <value></value>
-            <value></value>
-        </values>
-    </init>
+    <initialization>
+        <instance name="ftp1" tag="ftp"/>
+        <instance name="csv1" tag="csv"/>
+        <instance name="http1" tag="http"/>
+        <value name="val1"></value>
+        <value name="val2"></value>
+    </initialization>
     <start>
         <transactional name="tracns1" batch="50">
             <select>
@@ -20,16 +16,15 @@
                         asd
                     </if>
                 </sql>
-                <foreach item="item">
+                <iterate item="item">
                     <if test="">
                         <insert>
                             insert ta(col1,col2) values(#{col1,jdbcType=VARCHAR},#{col2,jdbcType=VARCHAR})
                         </insert>
                         <ftp ref="ftp1"></ftp>
                     </if>
-                </foreach>
+                </iterate>
             </select>
         </transactional>
-
     </start>
 </task>

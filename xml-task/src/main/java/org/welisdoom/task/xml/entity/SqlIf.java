@@ -1,7 +1,5 @@
 package org.welisdoom.task.xml.entity;
 
-import org.welisdoom.task.xml.intf.ConditionHandler;
-import org.welisdoom.task.xml.intf.DataHandler;
 
 import java.util.Map;
 
@@ -11,16 +9,7 @@ import java.util.Map;
  * @Author Septem
  * @Date 17:57
  */
-@Tag(value = "if", parentTag = "sql")
-public class SqlIf extends Unit implements ConditionHandler {
-    @Override
-    public void onCondition(Map<String, Object> map) {
-        for (Unit child : children) {
-            if (child instanceof ConditionHandler) {
+@Tag(value = "if", parentTag = {Sql.class})
+public class SqlIf extends Unit {
 
-            } else if (child instanceof DataHandler) {
-                ((DataHandler) child).onData(map);
-            }
-        }
-    }
 }

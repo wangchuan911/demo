@@ -6,6 +6,6 @@ package org.welisdoom.task.xml.entity;
  * @Author Septem
  * @Date 18:01
  */
-@Tag(value = "insert", parentTag = "transactional")
-public class Insert extends Unit{
+@Tag(value = "insert", parentTag = {Transactional.class, If.class, Iterate.class})
+public class Insert extends Unit {
 }

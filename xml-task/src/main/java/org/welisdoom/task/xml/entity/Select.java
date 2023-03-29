@@ -12,16 +12,15 @@ import java.util.Map;
  * @Author Septem
  * @Date 18:00
  */
-@Tag(value = "select", parentTag = "transactional")
+@Tag(value = "select", parentTag = {Transactional.class})
 public class Select extends Unit implements SqlHandler {
 
     public void execute(Map<String, Object> data) {
-        String sql = getChild(Sql.class).toSql();
-        ForEach forEach = getChild(ForEach.class);
+        String sql = getChild(Sql.class).get(0).toSql();
+        Iterate iterate = getChild(Iterate.class).get(0);
         List<Map<String, Object>> list = new LinkedList<>();
         for (Map<String, Object> item : list) {
-            data.put("item", item);
-            forEach.onData(data);
+            iterate.execute(data, item);
         }
     }
 }

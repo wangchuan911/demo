@@ -17,5 +17,5 @@ import java.lang.annotation.Target;
 public @interface Tag {
     String value();
 
-    String[] parentTag() default "all";
+    Class[] parentTag() default Unit.class;
 }

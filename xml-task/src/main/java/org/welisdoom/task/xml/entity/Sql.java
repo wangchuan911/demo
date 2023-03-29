@@ -6,9 +6,9 @@ package org.welisdoom.task.xml.entity;
  * @Author Septem
  * @Date 19:33
  */
-@Tag(value = "sql", parentTag = "select")
+@Tag(value = "sql", parentTag = Select.class)
 public class Sql extends Unit {
     String toSql() {
-        return conntent;
+        return content;
     }
 }

@@ -1,13 +1,9 @@
 package org.welisdoom.task.xml.entity;
 
-import org.welisdoom.task.xml.intf.ConditionHandler;
-import org.welisdoom.task.xml.intf.DataHandler;
 import org.xml.sax.Attributes;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Classname Unit
@@ -19,7 +15,8 @@ public class Unit {
     String name;
     Unit parent;
     List<Unit> children = new LinkedList<>();
-    String conntent;
+    String content;
+    Map<String, String> attributes = new HashMap<>();
 
     public Unit setParent(Unit parent) {
         this.parent = parent;
@@ -42,6 +39,7 @@ public class Unit {
             String name = attributes.getQName(i);
             String value = attributes.getValue(name);
             System.out.println("属性值：" + name + "=" + value);
+            this.attributes.put(name, value);
         }
         return this;
     }
@@ -61,12 +59,21 @@ public class Unit {
 
     }
 
-    public void setConntent(String conntent) {
-        this.conntent = conntent;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    protected <T extends Unit> T getChild(Class<T> tClass) {
-        return (T) children.stream().filter(unit -> unit.getClass() == tClass).findFirst().orElse(null);
+    protected <T extends Unit> List<T> getChild(Class<T> tClass) {
+        return (List) children.stream().filter(unit -> unit.getClass() == tClass).collect(Collectors.toList());
+    }
+
+    protected <T extends Unit> List<T> getChildren(Class<T> tClass) {
+        List<Unit> units = new LinkedList<>();
+        units.addAll(getChild(tClass));
+        for (Unit child : children) {
+            units.addAll(child.getChildren(tClass));
+        }
+        return (List) units;
     }
 
     protected <T extends Unit> T getParent(Class<T> tClass) {
@@ -79,15 +86,9 @@ public class Unit {
         return (T) target;
     }
 
-    protected void handler(Unit unit, Map<String, Object> data) {
-        if (unit instanceof ConditionHandler) {
-            ((ConditionHandler) unit).onCondition(data);
-        } else if (unit instanceof DataHandler) {
-            ((DataHandler) unit).onData(data);
-        } else {
-            for (Unit child : unit.children) {
-                child.handler(child, data);
-            }
+    protected void execute(Map<String, Object> data) {
+        for (Unit child : children) {
+            child.execute(data);
         }
     }
 }

@@ -1,7 +1,9 @@
 package org.welisdoom.task.xml.entity;
 
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @Classname Task
@@ -11,29 +13,15 @@ import java.util.Map;
  */
 @Tag("task")
 public class Task extends Unit {
-    Map<String, Object> values = new HashMap<>();
-    Map<String, Unit> instances = new HashMap<>();
 
-    public Object getValues(String name) {
-        return values.get(name);
-    }
 
     public Unit getInstances(String name) {
-        return instances.get(name);
+        return getChild(Initialization.class).get(0)
+                .getChildren(Instance.class)
+                .stream()
+                .filter(instance -> Objects.equals(name, instance.getName()))
+                .findFirst().orElse(null).getInstance();
     }
 
-    public void setInstance(String name, Unit unit) {
-        this.instances.put(name, unit);
-    }
 
-    public void setValue(String name, Object value) {
-        this.values.put(name, value);
-    }
-
-    @Override
-    public Task nodeEnd() {
-        System.out.println(values);
-        System.out.println(instances);
-        return this;
-    }
 }
