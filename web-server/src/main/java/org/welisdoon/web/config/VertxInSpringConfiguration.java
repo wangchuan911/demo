@@ -8,6 +8,8 @@ import io.vertx.core.spi.VerticleFactory;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -159,6 +161,7 @@ public class VertxInSpringConfiguration {
      * Verticles deploy after  springboot ready
      */
     @EventListener
+    @ConditionalOnProperty(prefix = "vertx.options")
     void deployVerticles(ApplicationReadyEvent event) {
         Promise<Vertx> promise = Promise.promise();
         promise.future().onSuccess(this::deployVerticles);

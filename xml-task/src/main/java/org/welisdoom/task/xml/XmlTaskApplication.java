@@ -32,8 +32,8 @@ import java.util.HashSet;
  */
 
 @SpringBootApplication
-@EnableTransactionManagement(proxyTargetClass = true)
-@MapperScan(basePackageClasses = XmlTaskApplication.class, annotationClass = Repository.class)
+//@EnableTransactionManagement(proxyTargetClass = true)
+//@MapperScan(basePackageClasses = XmlTaskApplication.class, annotationClass = Repository.class)
 @ComponentScan(basePackageClasses = {WebserverApplication.class, XmlTaskApplication.class})
 public class XmlTaskApplication {
 
