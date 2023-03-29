@@ -53,11 +53,11 @@ public class Unit {
                 '}';
     }
 
-    public void nodeEnd() {
-
+    public Unit nodeEnd() {
+        return this;
     }
 
-    public void distory() {
+    public void destroy() {
 
     }
 

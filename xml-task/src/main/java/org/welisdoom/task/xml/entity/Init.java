@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class Init extends Unit {
 
     @Override
-    public void nodeEnd() {
+    public Init nodeEnd() {
         Task task = getParent(Task.class);
         for (Unit unit : children) {
             if (unit instanceof Instances) {
@@ -26,5 +26,6 @@ public class Init extends Unit {
                         .collect(Collectors.toMap(Value::getName, Value::getValue)));
             }
         }
+        return this;
     }
 }

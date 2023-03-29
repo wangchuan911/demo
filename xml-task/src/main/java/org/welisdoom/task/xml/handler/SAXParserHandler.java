@@ -1,9 +1,5 @@
 package org.welisdoom.task.xml.handler;
 
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.Utils;
-import org.welisdoom.task.xml.XmlTaskApplication;
 import org.welisdoom.task.xml.entity.Tag;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.Unit;
@@ -11,10 +7,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @Classname SAXParserHandler
@@ -24,6 +17,7 @@ import java.util.stream.Collectors;
  */
 public class SAXParserHandler extends DefaultHandler {
     Deque<Unit> units = new LinkedList<>();
+    List<Unit> all = new LinkedList<>();
     Unit current;
     int level = 0;
 
@@ -50,6 +44,9 @@ public class SAXParserHandler extends DefaultHandler {
         super.endDocument();
         System.out.println("SAX解析结束");
         System.out.println(units);
+        for (Unit unit : all) {
+            unit.destroy();
+        }
     }
 
     @Override
@@ -84,7 +81,7 @@ public class SAXParserHandler extends DefaultHandler {
     public void endElement(String s, String s1, String s2) throws SAXException {
         super.endElement(s, s1, s2);
         level--;
-        units.pollLast().nodeEnd();
+        all.add(units.pollLast().nodeEnd());
         current = units.peekLast();
     }
 

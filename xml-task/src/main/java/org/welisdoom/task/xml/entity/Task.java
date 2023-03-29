@@ -31,8 +31,9 @@ public class Task extends Unit {
     }
 
     @Override
-    public void nodeEnd() {
+    public Task nodeEnd() {
         System.out.println(values);
         System.out.println(instances);
+        return this;
     }
 }
