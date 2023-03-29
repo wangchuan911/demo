@@ -11,11 +11,5 @@ import java.util.List;
  */
 @Tag(value = "values", parentTag = "init")
 public class Values extends Unit {
-    List<Value> values = new LinkedList<>();
 
-    @Override
-    public void nodeEndOnChild(Unit unit) {
-        super.nodeEndOnChild(unit);
-        values.add((Value) unit);
-    }
 }

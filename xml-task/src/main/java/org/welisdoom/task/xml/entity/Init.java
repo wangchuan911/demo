@@ -11,18 +11,20 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "init", parentTag = "task")
 public class Init extends Unit {
-    @Override
-    public void nodeEndOnChild(Unit unit) {
-        Task task = (Task) this.parent;
-        if (unit instanceof Instances) {
-            task.instances.putAll(((Instances) unit).units.stream().collect(Collectors.toMap(Unit::getName, unit1 -> unit1)));
-        } else if (unit instanceof Values) {
-            task.values.putAll(((Values) unit).values.stream().filter(value -> Objects.nonNull(value.name) && Objects.nonNull(value.value)).collect(Collectors.toMap(Value::getName, Value::getValue)));
-        }
-    }
 
     @Override
     public void nodeEnd() {
-        this.parent = null;
+        Task task = getParent(Task.class);
+        for (Unit unit : children) {
+            if (unit instanceof Instances) {
+                task.instances.putAll(((Instances) unit).children.stream().collect(Collectors.toMap(Unit::getName, unit1 -> unit1)));
+            } else if (unit instanceof Values) {
+                task.values.putAll(((Values) unit)
+                        .children.stream()
+                        .filter(unit1 -> unit1 instanceof Value && Objects.nonNull(unit1.name) && Objects.nonNull(((Value) unit1).value))
+                        .map(unit1 -> (Value) unit1)
+                        .collect(Collectors.toMap(Value::getName, Value::getValue)));
+            }
+        }
     }
 }

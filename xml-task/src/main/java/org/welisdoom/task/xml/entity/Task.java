@@ -29,4 +29,10 @@ public class Task extends Unit {
     public void setValue(String name, Object value) {
         this.values.put(name, value);
     }
+
+    @Override
+    public void nodeEnd() {
+        System.out.println(values);
+        System.out.println(instances);
+    }
 }

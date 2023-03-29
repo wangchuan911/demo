@@ -11,12 +11,5 @@ import java.util.List;
  */
 @Tag(value = "instances", parentTag = "int")
 public class Instances extends Unit {
-    List<Unit> units = new LinkedList<>();
-
-    @Override
-    public void nodeEndOnChild(Unit unit) {
-        super.nodeEndOnChild(unit);
-        units.add(unit);
-    }
 
 }

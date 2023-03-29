@@ -7,6 +7,7 @@ import org.xml.sax.Attributes;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @Classname Unit
@@ -45,21 +46,19 @@ public class Unit {
         return this;
     }
 
-    public void nodeEnd() {
-        if (parent != null)
-            parent.nodeEndOnChild(this);
-
-    }
-
-    public void nodeEndOnChild(Unit unit) {
-
-    }
-
     @Override
     public String toString() {
         return this.getClass().getCanonicalName() + "{" +
                 "name='" + name + '\'' +
                 '}';
+    }
+
+    public void nodeEnd() {
+
+    }
+
+    public void distory() {
+
     }
 
     public void setConntent(String conntent) {
@@ -68,6 +67,16 @@ public class Unit {
 
     protected <T extends Unit> T getChild(Class<T> tClass) {
         return (T) children.stream().filter(unit -> unit.getClass() == tClass).findFirst().orElse(null);
+    }
+
+    protected <T extends Unit> T getParent(Class<T> tClass) {
+        Class<? extends Unit> pClass = null;
+        Unit target = this;
+        do {
+            target = target.parent;
+            pClass = target.getClass();
+        } while (pClass != tClass);
+        return (T) target;
     }
 
     protected void handler(Unit unit, Map<String, Object> data) {
