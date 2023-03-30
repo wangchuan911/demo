@@ -22,6 +22,7 @@ import javax.xml.parsers.SAXParserFactory;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -44,7 +45,7 @@ public class XmlTaskApplication {
     @PostConstruct
     public void run() {
         try {
-            SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml");
+            SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml").run(new HashMap<>());
         } catch (Exception e) {
             e.printStackTrace();
         }

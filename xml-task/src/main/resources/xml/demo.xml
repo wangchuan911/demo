@@ -12,12 +12,12 @@
             <select>
                 <sql>
                     select 1 from dual union select 2 from dual
-                    <if>
+                    <if test="1=1 and 2=2">
                         asd
                     </if>
                 </sql>
                 <iterate item="item">
-                    <if test="">
+                    <if test="item.test1=='test1'.toString() and item.test2=='test2'.toString()">
                         <insert>
                             insert ta(col1,col2) values(#{col1,jdbcType=VARCHAR},#{col2,jdbcType=VARCHAR})
                         </insert>

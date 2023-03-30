@@ -17,13 +17,6 @@ import java.util.Map;
 public class Iterate extends Unit implements Executable {
     String itemName = "item";
 
-    @Override
-    public void execute(Map<String, Object> data) {
-        for (Unit child : children) {
-            child.execute(data);
-        }
-    }
-
     protected void execute(Map<String, Object> data, Map<String, Object> item) {
         try {
             data.put(itemName, item);
