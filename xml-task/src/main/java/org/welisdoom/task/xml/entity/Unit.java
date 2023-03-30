@@ -96,8 +96,16 @@ public class Unit {
     }
 
     protected void execute(Map<String, Object> data) {
+        execute(data, Object.class);
+    }
+
+    protected final void execute(Map<String, Object> data, Class<?>... aClass) {
         for (Unit child : children) {
-            child.execute(data);
+            for (Class<?> aClass1 : aClass) {
+                if (aClass1.isAssignableFrom(data.getClass()))
+                    child.execute(data);
+                break;
+            }
         }
     }
 }
