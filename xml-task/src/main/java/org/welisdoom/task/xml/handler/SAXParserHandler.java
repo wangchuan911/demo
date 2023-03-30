@@ -4,6 +4,7 @@ import org.welisdoom.task.xml.entity.Instance;
 import org.welisdoom.task.xml.entity.Tag;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.Unit;
+import org.welisdoom.task.xml.intf.type.Root;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -29,26 +30,27 @@ public class SAXParserHandler extends DefaultHandler {
     int level = 0;
 
     public static Class<? extends Unit> getTag(Unit parent, String name) {
+
+        System.out.println(parent);
+        System.out.println(name);
         return (Class<? extends Unit>) Reflections.getInstance().getTypesAnnotatedWith(Tag.class)
                 .stream()
+                .filter(aClass -> Objects.equals(aClass.getAnnotation(Tag.class).value(), name))
                 .filter(aClass ->
-                        matched(aClass.getAnnotation(Tag.class), parent, name))
+                        matched(aClass.getAnnotation(Tag.class), parent))
                 .findFirst()
-                .orElseGet(() -> Unit.class);
+                .get();
     }
 
-    public static boolean matched(Tag tag, Unit parent, String name) {
+    public static boolean matched(Tag tag, Unit parent) {
         if (parent == null
-                || parent instanceof Unit
-                || (Arrays.stream(tag.parentTag())
-                .filter(aClass -> aClass == Unit.class)
-                .findFirst()
-                .isEmpty()
-                && Arrays.stream(tag.parentTag())
-                .filter(aClass -> parent.getClass() == aClass)
+                || (Arrays.stream(tag.parentTagTypes())
+                .filter(
+                        aClass -> aClass.isAssignableFrom(parent.getClass())
+                )
                 .findFirst()
                 .isPresent())) {
-            return name.equals(tag.value());
+            return true;
         }
         return false;
     }
@@ -81,8 +83,7 @@ public class SAXParserHandler extends DefaultHandler {
         try {
             String ref = attributes.getValue("ref");
             if (ref != null) {
-                current = Instance.getInstance((Task) units.getFirst(), ref)
-                        .setParent(units.peekLast());
+                current = Instance.getInstance((Root) units.getFirst(), units.peekLast(), ref);
             } else
                 current = (getTag(units.peekLast(), s2)
                         .getConstructor()
@@ -102,6 +103,7 @@ public class SAXParserHandler extends DefaultHandler {
     public void endElement(String s, String s1, String s2) throws SAXException {
         super.endElement(s, s1, s2);
         level--;
+        units.pollLast();
         current = units.peekLast();
     }
 
@@ -125,31 +127,30 @@ public class SAXParserHandler extends DefaultHandler {
         System.out.println(o);
     }
 
-    public static Unit loadTask(String uri) throws ParserConfigurationException, SAXException, IOException {
-        SAXParserFactory spf = SAXParserFactory.newInstance();
-        SAXParserHandler handler;
-        SAXParser sp = spf.newSAXParser();
-        handler = new SAXParserHandler();
-        sp.parse(uri, handler);
-        return handler.root;
+    public static Task loadTask(String uri) throws ParserConfigurationException, SAXException, IOException {
+
+        SAXParserHandler handler = new SAXParserHandler();
+        getSaxParser().parse(uri, handler);
+        return (Task) handler.root;
     }
 
-    public static Unit loadTask(File file) throws ParserConfigurationException, SAXException, IOException {
-        SAXParserFactory spf = SAXParserFactory.newInstance();
-        SAXParserHandler handler;
-        SAXParser sp = spf.newSAXParser();
-        handler = new SAXParserHandler();
-        sp.parse(file, handler);
-        return handler.root;
+    public static Task loadTask(File file) throws ParserConfigurationException, SAXException, IOException {
+
+        SAXParserHandler handler = new SAXParserHandler();
+        getSaxParser().parse(file, handler);
+        return (Task) handler.root;
     }
 
-    public static Unit loadTask(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {
+    public static Task loadTask(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {
+
+        SAXParserHandler handler = new SAXParserHandler();
+        getSaxParser().parse(inputStream, handler);
+        return (Task) handler.root;
+    }
+
+    protected static SAXParser getSaxParser() throws ParserConfigurationException, SAXException {
         SAXParserFactory spf = SAXParserFactory.newInstance();
-        SAXParserHandler handler;
-        SAXParser sp = spf.newSAXParser();
-        handler = new SAXParserHandler();
-        sp.parse(inputStream, handler);
-        return handler.root;
+        return spf.newSAXParser();
     }
 
 }

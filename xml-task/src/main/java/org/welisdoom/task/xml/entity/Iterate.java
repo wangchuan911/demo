@@ -1,7 +1,10 @@
 package org.welisdoom.task.xml.entity;
 
 
-import java.util.Iterator;
+import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.Script;
+import org.welisdoom.task.xml.intf.type.Stream;
+
 import java.util.Map;
 
 /**
@@ -10,8 +13,8 @@ import java.util.Map;
  * @Author Septem
  * @Date 19:33
  */
-@Tag(value = "iterate", parentTag = {Select.class})
-public class Iterate extends Unit {
+@Tag(value = "iterate", parentTagTypes = {Script.class, Stream.class})
+public class Iterate extends Unit implements Executable {
     String itemName = "item";
 
     @Override

@@ -1,11 +1,9 @@
 package org.welisdoom.task.xml.entity;
 
 import org.welisdoom.task.xml.handler.SAXParserHandler;
+import org.welisdoom.task.xml.intf.type.Initialize;
+import org.welisdoom.task.xml.intf.type.Root;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /**
@@ -14,23 +12,23 @@ import java.util.Objects;
  * @Author Septem
  * @Date 19:13
  */
-@Tag(value = "instance", parentTag = Initialization.class)
-public class Instance extends Unit {
+@Tag(value = "instance", parentTagTypes = Initialize.class)
+public class Instance extends Unit implements Initialize {
 
-    public Unit getInstance() {
+    public Unit getInstance(Unit parent) {
         try {
-            return SAXParserHandler.getTag(this.parent, attributes.get("tag")).getConstructor().newInstance().setName(this.getName());
+            return SAXParserHandler.getTag(parent, attributes.get("tag")).getConstructor().newInstance().setName(this.getName());
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    public static Unit getInstance(Task task, String name) {
-        return Initialization.getInstance(task)
+    public static Unit getInstance(Root task, Unit parent, String name) {
+        return Initialization.getInstance((Task) task)
                 .getChildren(Instance.class)
                 .stream()
                 .filter(instance -> Objects.equals(name, instance.getName()))
-                .findFirst().orElse(null).getInstance();
+                .findFirst().orElse(null).getInstance(parent).setParent(parent);
 
     }
 }

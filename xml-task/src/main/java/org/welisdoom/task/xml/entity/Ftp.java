@@ -1,6 +1,8 @@
 package org.welisdoom.task.xml.entity;
 
 import org.w3c.dom.Element;
+import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.Stream;
 
 /**
  * @Classname Ftp
@@ -8,6 +10,6 @@ import org.w3c.dom.Element;
  * @Author Septem
  * @Date 17:23
  */
-@Tag("ftp")
-public class Ftp extends Unit {
+@Tag(value = "ftp", parentTagTypes = Executable.class)
+public class Ftp extends Unit implements Stream {
 }

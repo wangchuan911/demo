@@ -52,7 +52,8 @@ public class Unit {
     }
 
 
-    public void destroy() {
+    public final void destroy() {
+        this.destroyBefore();
         for (Unit child : children) {
             child.destroy();
         }
@@ -61,6 +62,10 @@ public class Unit {
         this.children = null;
         this.attributes.clear();
         this.attributes = null;
+    }
+
+    protected void destroyBefore() {
+
     }
 
     public void setContent(String content) {

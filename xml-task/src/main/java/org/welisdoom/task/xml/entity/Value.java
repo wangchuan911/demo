@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import org.apache.commons.collections4.MapUtils;
+import org.welisdoom.task.xml.intf.type.Initialize;
 import org.xml.sax.Attributes;
 
 import java.util.Objects;
@@ -11,8 +12,8 @@ import java.util.Objects;
  * @Author Septem
  * @Date 19:24
  */
-@Tag(value = "value", parentTag = Initialization.class)
-public class Value extends Unit {
+@Tag(value = "value", parentTagTypes = Initialize.class)
+public class Value extends Unit implements Initialize {
 
     @Override
     public Unit attr(Attributes attributes) {

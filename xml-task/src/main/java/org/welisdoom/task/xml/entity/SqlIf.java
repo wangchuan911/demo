@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 
-import java.util.Map;
+import org.welisdoom.task.xml.intf.type.Script;
 
 /**
  * @Classname SqlIf
@@ -9,7 +9,7 @@ import java.util.Map;
  * @Author Septem
  * @Date 17:57
  */
-@Tag(value = "if", parentTag = {Sql.class})
-public class SqlIf extends Unit {
+@Tag(value = "if", parentTagTypes = Script.class)
+public class SqlIf extends Unit implements Script {
 
 }
