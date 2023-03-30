@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.http.HttpConnection;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.Script;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -21,6 +22,10 @@ import java.util.Map;
 public class Http extends Unit implements Executable {
     @Override
     protected void execute(Map<String, Object> data) {
+        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data);
+        System.out.println(body);
+        if (true)
+            return;
         HttpURLConnection httpConnection = null;
         try {
             httpConnection = (HttpURLConnection) new URL(attributes.get("url")).openConnection();
@@ -50,6 +55,16 @@ public class Http extends Unit implements Executable {
             } catch (Throwable e1) {
                 e1.printStackTrace();
             }
+        }
+    }
+
+    @Tag(value = "body", parentTagTypes = Http.class)
+    public static class Body extends Unit implements Script {
+        @Override
+        public String getScript(Map<String, Object> data) {
+            return content + Script.getScript(data, children.stream()
+                    .filter(unit -> unit instanceof Script)
+                    .map(unit -> (Script) unit));
         }
     }
 }

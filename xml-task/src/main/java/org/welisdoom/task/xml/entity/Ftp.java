@@ -24,6 +24,8 @@ public class Ftp extends Unit implements Stream {
     @Override
     protected void execute(Map<String, Object> data) {
         try {
+            if (true)
+                return;
             if (client == null || !client.isConnected()) {
                 client = new FTPClient();
                 client.connect(attributes.get("host"),
