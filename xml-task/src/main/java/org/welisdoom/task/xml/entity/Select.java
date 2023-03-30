@@ -1,12 +1,12 @@
 package org.welisdoom.task.xml.entity;
 
-import org.welisdoom.task.xml.intf.SqlHandler;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Classname Select
@@ -15,10 +15,10 @@ import java.util.Map;
  * @Date 18:00
  */
 @Tag(value = "select", parentTagTypes = {Executable.class})
-public class Select extends Unit implements SqlHandler, Script {
+public class Select extends Unit implements Script {
 
     public void execute(Map<String, Object> data) {
-        String sql = getChild(Sql.class).get(0).toSql();
+        String sql = getScript(data);
         Iterate iterate = getChild(Iterate.class).get(0);
         List<Map<String, Object>> list = List.of(Map.of("test1", "test1", "test2", "test2", "test3", "test3", "test4", "test4"));
         for (Map<String, Object> item : list) {
@@ -27,7 +27,7 @@ public class Select extends Unit implements SqlHandler, Script {
     }
 
     @Override
-    public String getScript(Object data) {
-        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data)).collect(Collectors.joining(" "));
+    public String getScript(Map<String, Object> data) {
+        return getChild(Sql.class).get(0).getScript(data);
     }
 }

@@ -13,15 +13,15 @@ import java.util.stream.Stream;
  * @Date 9:34
  */
 public interface Script extends UnitType {
-    default String getScript(Object data) {
+    default String getScript(Map<String, Object> data) {
         return " ";
     }
 
-    static String getScript(Object data, Script... scripts) {
+    static String getScript(Map<String, Object> data, Script... scripts) {
         return Arrays.stream(scripts).map(script -> script.getScript(data)).collect(Collectors.joining(" "));
     }
 
-    static String getScript(Object data, Stream<Script> stream) {
+    static String getScript(Map<String, Object> data, Stream<Script> stream) {
         return stream.map(script -> script.getScript(data)).collect(Collectors.joining(" "));
     }
 }
