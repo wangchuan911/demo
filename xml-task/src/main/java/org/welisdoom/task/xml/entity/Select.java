@@ -25,4 +25,9 @@ public class Select extends Unit implements SqlHandler, Script {
             iterate.execute(data, item);
         }
     }
+
+    @Override
+    public String getScript(Object data) {
+        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data)).collect(Collectors.joining(" "));
+    }
 }

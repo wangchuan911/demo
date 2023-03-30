@@ -20,10 +20,7 @@ import javax.annotation.PostConstruct;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * @Classname XmlTaslApplication
@@ -45,7 +42,7 @@ public class XmlTaskApplication {
     @PostConstruct
     public void run() {
         try {
-            SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml").run(new HashMap<>());
+            SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml").run(new HashMap<>(Map.of("input1", 1)));
         } catch (Exception e) {
             e.printStackTrace();
         }

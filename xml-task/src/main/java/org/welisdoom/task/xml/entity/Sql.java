@@ -10,7 +10,7 @@ import org.welisdoom.task.xml.intf.type.Script;
  */
 @Tag(value = "sql", parentTagTypes = Script.class)
 public class Sql extends Unit implements Script {
-    String toSql() {
-        return content;
+    public String getScript(Map<String, Object> map) {
+        return String.format("%s %s", content.trim(), children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(map)).collect(Collectors.joining(" ")));
     }
 }
