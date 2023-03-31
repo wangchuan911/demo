@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 @Tag(value = "task", parentTagTypes = Root.class)
 public class Task extends Unit implements Root {
-    public void run(Map<String, Object> data) {
+    public void run(TaskRequest data) {
         execute(data);
     }
 }

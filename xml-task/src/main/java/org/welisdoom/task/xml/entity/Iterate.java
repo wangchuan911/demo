@@ -17,12 +17,13 @@ import java.util.Map;
 public class Iterate extends Unit implements Executable {
     String itemName = "item";
 
-    protected void execute(Map<String, Object> data, Map<String, Object> item) {
+    protected void execute(TaskRequest data, Map<String, Object> item) {
+        Map map = data.getBus(parent.id);
         try {
-            data.put(itemName, item);
+            map.put(itemName, item);
             execute(data);
         } finally {
-            data.remove(itemName);
+            map.remove(itemName);
         }
     }
 }

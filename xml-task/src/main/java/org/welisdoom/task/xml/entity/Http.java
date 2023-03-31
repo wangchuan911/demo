@@ -1,13 +1,11 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.http.HttpConnection;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -23,8 +21,8 @@ import java.util.stream.Collectors;
 @Tag(value = "http", parentTagTypes = Executable.class)
 public class Http extends Unit implements Executable {
     @Override
-    protected void execute(Map<String, Object> data) {
-        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
+    protected void execute(TaskRequest data) {
+        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data.getBus(), "").trim();
         System.out.println(body);
         if (true)
             return;
@@ -34,19 +32,19 @@ public class Http extends Unit implements Executable {
             httpConnection.setDoInput(true);
             httpConnection.setDoOutput(true);
             for (Header header : getChild(Header.class)) {
-                httpConnection.setRequestProperty(header.getName(), header.getContent());
+                httpConnection.setRequestProperty(header.getId(), header.getContent());
             }
             httpConnection.connect();
             switch (attributes.get("output")) {
                 case "stream":
                     Closeable closeable = httpConnection.getOutputStream();
                     try (closeable) {
-                        data.put("parent.stream", closeable);
+                        data.setBus(this, "@stream", closeable);
                         children.stream().filter(unit -> unit instanceof Executable).findFirst().orElse(new Unit()).execute(data);
                     }
                     break;
                 default:
-                    data.put("output", StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8")));
+                    data.setBus(this, "@stream", StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8")));
                     execute(data, Executable.class);
             }
 

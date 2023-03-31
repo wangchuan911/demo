@@ -28,7 +28,7 @@ public class Value extends Unit implements Initialize {
         return Initialization.getInstance(task)
                 .getChildren(Value.class)
                 .stream()
-                .filter(value -> Objects.equals(name, value.getName()))
+                .filter(value -> Objects.equals(name, value.getId()))
                 .findFirst().orElse(new Value()).getValue();
 
     }

@@ -17,7 +17,7 @@ public class Instance extends Unit implements Initialize {
 
     public Unit getInstance(Unit parent) {
         try {
-            return SAXParserHandler.getTag(parent, attributes.get("tag")).getConstructor().newInstance().setName(this.getName());
+            return SAXParserHandler.getTag(parent, attributes.get("tag")).getConstructor().newInstance().setId(this.getId());
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -27,7 +27,7 @@ public class Instance extends Unit implements Initialize {
         return Initialization.getInstance((Task) task)
                 .getChildren(Instance.class)
                 .stream()
-                .filter(instance -> Objects.equals(name, instance.getName()))
+                .filter(instance -> Objects.equals(name, instance.getId()))
                 .findFirst().orElse(null).getInstance(parent).setParent(parent);
 
     }

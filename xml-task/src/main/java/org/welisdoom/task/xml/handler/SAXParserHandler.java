@@ -87,7 +87,7 @@ public class SAXParserHandler extends DefaultHandler {
                         .newInstance())
                         .attr(attributes)
                         .setParent(units.peekLast())
-                        .setName(attributes.getValue("name"));
+                        .setId(attributes.getValue("id"));
             units.addLast(current);
         } catch (Exception e) {
             throw new SAXException(e.getMessage(), e);

@@ -15,7 +15,7 @@ import java.util.Map;
 @Tag(value = "transactional", parentTagTypes = Executable.class)
 public class Transactional extends Unit implements Executable {
     @Override
-    protected void execute(Map<String, Object> data) {
+    protected void execute(TaskRequest data) {
         try {
             super.execute(data);
         } finally {

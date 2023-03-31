@@ -1,15 +1,11 @@
 package org.welisdoom.task.xml.entity;
 
 import org.apache.commons.net.ftp.FTPClient;
-import org.w3c.dom.Element;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
 
 /**
  * @Classname Ftp
@@ -22,7 +18,7 @@ public class Ftp extends Unit implements Stream {
     FTPClient client;
 
     @Override
-    protected void execute(Map<String, Object> data) {
+    protected void execute(TaskRequest data) {
         try {
             if (true)
                 return;
@@ -37,7 +33,7 @@ public class Ftp extends Unit implements Stream {
                 if (attributes.containsKey("get")) {
                     closeable = client.retrieveFileStream(attributes.get("get"));
                     try (closeable) {
-                        data.put(String.format("parent.stream", getName()), closeable);
+                        data.setBus(this, String.format("@stream", getId()), closeable);
                         children.stream().filter(unit -> unit instanceof Stream).findFirst().orElse(new Unit()).execute(data);
                     }
                 } else if (attributes.containsKey("put")) {

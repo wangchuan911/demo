@@ -1,6 +1,5 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Promise;
 import org.xml.sax.Attributes;
 
 import java.util.*;
@@ -13,7 +12,7 @@ import java.util.stream.Collectors;
  * @Date 17:22
  */
 public class Unit {
-    String name;
+    String id;
     Unit parent;
     List<Unit> children = new LinkedList<>();
     Map<String, String> attributes = new HashMap<>();
@@ -25,13 +24,13 @@ public class Unit {
         return this;
     }
 
-    public Unit setName(String name) {
-        this.name = name;
+    public Unit setId(String id) {
+        this.id = id;
         return this;
     }
 
-    public String getName() {
-        return name;
+    public String getId() {
+        return id;
     }
 
     public Unit attr(Attributes attributes) {
@@ -47,7 +46,7 @@ public class Unit {
     @Override
     public String toString() {
         return this.getClass().getCanonicalName() + "{" +
-                "name='" + name + '\'' +
+                "name='" + id + '\'' +
                 '}';
     }
 
@@ -91,11 +90,11 @@ public class Unit {
         return (T) target;
     }
 
-    protected void execute(Map<String, Object> data) {
+    protected void execute(TaskRequest data) {
         execute(data, Object.class);
     }
 
-    protected final void execute(Map<String, Object> data, Class<?>... aClass) {
+    protected final void execute(TaskRequest data, Class<?>... aClass) {
         for (Unit child : children) {
             for (Class<?> aClass1 : aClass) {
                 if (aClass1.isAssignableFrom(data.getClass()))

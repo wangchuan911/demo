@@ -18,7 +18,7 @@ import java.util.Map;
 @Tag(value = "if", parentTagTypes = Executable.class)
 public class If extends Unit implements Executable {
     @Override
-    protected void execute(Map<String, Object> data) {
+    protected void execute(TaskRequest data) {
         try {
             System.out.println(data);
             System.out.println(attributes.get("test"));

@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoom.task.xml.handler.SAXParserHandler;
 import org.welisdoon.web.WebserverApplication;
 import org.xml.sax.Attributes;
@@ -42,7 +43,7 @@ public class XmlTaskApplication {
     @PostConstruct
     public void run() {
         try {
-            SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml").run(new HashMap<>(Map.of("input1", 1)));
+            SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml").run(new TaskRequest(new HashMap<>(Map.of("input1", 1))));
         } catch (Exception e) {
             e.printStackTrace();
         }
