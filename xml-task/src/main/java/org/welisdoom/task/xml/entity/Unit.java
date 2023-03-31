@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.Promise;
 import org.xml.sax.Attributes;
 
 import java.util.*;
@@ -15,7 +16,6 @@ public class Unit {
     String name;
     Unit parent;
     List<Unit> children = new LinkedList<>();
-    String content;
     Map<String, String> attributes = new HashMap<>();
 
     public Unit setParent(Unit parent) {
@@ -66,10 +66,6 @@ public class Unit {
 
     protected void destroyBefore() {
 
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 
     protected <T extends Unit> List<T> getChild(Class<T> tClass) {

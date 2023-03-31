@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "sql", parentTagTypes = Script.class)
 public class Sql extends Unit implements Script {
-    public String getScript(Map<String, Object> map) {
-        return String.format("%s %s", content.trim(), children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(map)).collect(Collectors.joining(" ")));
+    public String getScript(Map<String, Object> map, String s) {
+        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(map, s).trim()).collect(Collectors.joining(s));
     }
 }

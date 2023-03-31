@@ -1,9 +1,6 @@
 package org.welisdoom.task.xml.handler;
 
-import org.welisdoom.task.xml.entity.Instance;
-import org.welisdoom.task.xml.entity.Tag;
-import org.welisdoom.task.xml.entity.Task;
-import org.welisdoom.task.xml.entity.Unit;
+import org.welisdoom.task.xml.entity.*;
 import org.welisdoom.task.xml.intf.type.Root;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -115,7 +112,7 @@ public class SAXParserHandler extends DefaultHandler {
             return;
         }
         print(value);
-        current.setContent(value);
+        new Content().setContent(value).setParent(current);
     }
 
     protected void print(Object o) {

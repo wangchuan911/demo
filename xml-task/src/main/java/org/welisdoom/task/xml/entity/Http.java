@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.http.HttpConnection;
+import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
@@ -11,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Classname Http
@@ -22,7 +24,7 @@ import java.util.Map;
 public class Http extends Unit implements Executable {
     @Override
     protected void execute(Map<String, Object> data) {
-        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data);
+        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
         System.out.println(body);
         if (true)
             return;
@@ -31,6 +33,9 @@ public class Http extends Unit implements Executable {
             httpConnection = (HttpURLConnection) new URL(attributes.get("url")).openConnection();
             httpConnection.setDoInput(true);
             httpConnection.setDoOutput(true);
+            for (Header header : getChild(Header.class)) {
+                httpConnection.setRequestProperty(header.getName(), header.getContent());
+            }
             httpConnection.connect();
             switch (attributes.get("output")) {
                 case "stream":
@@ -60,11 +65,19 @@ public class Http extends Unit implements Executable {
 
     @Tag(value = "body", parentTagTypes = Http.class)
     public static class Body extends Unit implements Script {
-        @Override
-        public String getScript(Map<String, Object> data) {
-            return content + Script.getScript(data, children.stream()
+
+        public String getScript(Map<String, Object> data, String split) {
+            return children.stream()
                     .filter(unit -> unit instanceof Script)
-                    .map(unit -> (Script) unit));
+                    .map(unit -> ((Script) unit).getScript(data, split).trim()).collect(Collectors.joining(split));
+        }
+    }
+
+    @Tag(value = "header", parentTagTypes = Http.class)
+    public static class Header extends Unit {
+
+        public String getContent() {
+            return MapUtils.getString(attributes, "content", "").trim();
         }
     }
 }

@@ -21,7 +21,7 @@ public class Value extends Unit implements Initialize {
     }
 
     public String getValue() {
-        return MapUtils.getString(attributes, "value", this.content);
+        return MapUtils.getString(attributes, "value", getChild(Content.class).stream().findFirst().orElse(new Content().setContent("")).getContent());
     }
 
     public static String getValue(Task task, String name) {

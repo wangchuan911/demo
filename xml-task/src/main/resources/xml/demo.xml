@@ -9,12 +9,17 @@
     </initialization>
     <start>
         <transactional name="tracns1" batch="50">
+            <http>
+                <body>asdasdasdsadasdasdasdasdas</body>
+            </http>
             <select>
                 <sql>
                     select 1 from dual union select 2 from dual
-                    <if test="1=1 and 2=2">
+                    <if test="input1==1">
                         asd
                     </if>
+
+                    asdasdasdasd
                 </sql>
                 <iterate item="item">
                     <if test="item.test1=='test1'.toString() and item.test2=='test2'.toString()">

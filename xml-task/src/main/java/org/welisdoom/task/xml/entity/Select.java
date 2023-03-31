@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class Select extends Unit implements Script {
 
     public void execute(Map<String, Object> data) {
-        String sql = getScript(data);
+        String sql = getScript(data, " ");
         System.out.println(sql);
         Iterate iterate = getChild(Iterate.class).get(0);
         List<Map<String, Object>> list = List.of(Map.of("test1", "test1", "test2", "test2", "test3", "test3", "test4", "test4"));
@@ -28,7 +28,7 @@ public class Select extends Unit implements Script {
     }
 
     @Override
-    public String getScript(Map<String, Object> data) {
-        return getChild(Sql.class).get(0).getScript(data);
+    public String getScript(Map<String, Object> data, String s) {
+        return getChild(Sql.class).get(0).getScript(data, s).trim();
     }
 }

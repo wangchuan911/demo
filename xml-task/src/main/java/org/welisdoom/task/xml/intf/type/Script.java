@@ -13,21 +13,7 @@ import java.util.stream.Stream;
  * @Date 9:34
  */
 public interface Script extends UnitType {
-    default String getScript(Map<String, Object> data) {
+    default String getScript(Map<String, Object> data, String split) {
         return " ";
-    }
-
-    static String getScript(Map<String, Object> data, Script... scripts) {
-        return Arrays.stream(scripts).map(script -> script.getScript(data)).collect(Collectors.joining(" "));
-    }
-
-    static String getScript(Map<String, Object> data, Stream<Script> stream) {
-        return stream.map(script -> script.getScript(data)).collect(Collectors.joining(" "));
-    }
-
-    static String trim(String content) {
-        boolean left = Character.isWhitespace(content.charAt(0));
-        boolean right = Character.isWhitespace(content.charAt(content.length() - 1));
-        return String.format("%s%s%s", left ? " " : "", content.trim(), right ? " " : "");
     }
 }
