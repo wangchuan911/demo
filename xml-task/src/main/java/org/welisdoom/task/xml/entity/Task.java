@@ -23,13 +23,22 @@ public class Task extends Unit implements Root {
         v.executeBlocking(promise -> {
             data.setPromise(promise);
             try {
-                execute(data);
+                execute(data)
+                        .onSuccess(promise::complete)
+                        .onFailure(promise::fail);
             } catch (Throwable e) {
                 e.printStackTrace();
                 promise.fail(e);
             }
-        });
-        v.close();
+        }).onSuccess(o -> {
+            System.out.println("success");
+        }).onFailure(
+                throwable ->
+                        throwable.printStackTrace())
+                .onComplete(objectAsyncResult -> {
+                    v.close();
+                });
+//        v.close();
 
     }
 }

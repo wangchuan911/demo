@@ -6,6 +6,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.common.data.IData;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,8 @@ import java.util.Map;
  * @Author Septem
  * @Date 15:46
  */
-public class TaskRequest {
+public class TaskRequest implements IData<Long, Model> {
+    boolean isDebugger = true;
     Map<String, Object> bus = new HashMap<>();
     Promise<Object> promise;
 
@@ -53,4 +55,28 @@ public class TaskRequest {
     void setPromise(Promise<Object> promise) {
         this.promise = promise;
     }
+
+    Long id;
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public IData setId(Long aLong) {
+        this.id = aLong;
+        return this;
+    }
+
+    @Override
+    public Model getDataMarker() {
+        return Model.Request;
+    }
+
+    @Override
+    public IData setDataMarker(Model model) {
+        return null;
+    }
+
 }

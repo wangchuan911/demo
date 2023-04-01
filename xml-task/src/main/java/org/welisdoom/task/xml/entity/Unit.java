@@ -102,7 +102,7 @@ public class Unit {
         for (Unit child : children) {
             for (Class<?> aClass1 : aClass) {
                 if (aClass1.isAssignableFrom(data.getClass())) {
-                    future.compose(o -> {
+                    future = future.compose(o -> {
                         try {
                             return child.execute(data);
                         } catch (Throwable e) {

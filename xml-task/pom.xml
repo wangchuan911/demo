@@ -38,6 +38,14 @@
             <artifactId>commons-net</artifactId>
             <version>3.8.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-pg-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-oracle-client</artifactId>
+        </dependency>
     </dependencies>
 
     <properties>
