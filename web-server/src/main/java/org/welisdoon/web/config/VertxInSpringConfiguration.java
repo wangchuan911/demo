@@ -161,11 +161,13 @@ public class VertxInSpringConfiguration {
      * Verticles deploy after  springboot ready
      */
     @EventListener
-    @ConditionalOnProperty(prefix = "vertx.options")
     void deployVerticles(ApplicationReadyEvent event) {
         Promise<Vertx> promise = Promise.promise();
         promise.future().onSuccess(this::deployVerticles);
-
+        if (this.vertxOptions == null) {
+            promise.fail("no vertx config! vertx don't boot!");
+            return;
+        }
         ICluster[] clusters = ApplicationContextProvider.getApplicationContext().getBeansOfType(ICluster.class).entrySet().stream().map(Map.Entry::getValue).toArray(ICluster[]::new);
         switch (clusters.length) {
             case 0:
@@ -188,7 +190,6 @@ public class VertxInSpringConfiguration {
                 break;
             default:
                 promise.fail(new NoStackTraceThrowable("too many clusters!"));
-                throw new RuntimeException("too many clusters!");
 
         }
     }
