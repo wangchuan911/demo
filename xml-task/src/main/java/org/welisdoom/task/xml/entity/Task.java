@@ -21,11 +21,9 @@ public class Task extends Unit implements Root {
     public void run(TaskRequest data) {
         Vertx v = Vertx.vertx();
         v.executeBlocking(promise -> {
-            data.setPromise(promise);
             try {
-                execute(data)
-                        .onSuccess(promise::complete)
-                        .onFailure(promise::fail);
+                data.setPromise(promise);
+                execute(data);
             } catch (Throwable e) {
                 e.printStackTrace();
                 promise.fail(e);

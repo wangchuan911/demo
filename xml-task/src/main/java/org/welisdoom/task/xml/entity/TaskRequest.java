@@ -1,9 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
@@ -21,6 +18,7 @@ public class TaskRequest implements IData<Long, Model> {
     boolean isDebugger = true;
     Map<String, Object> bus = new HashMap<>();
     Promise<Object> promise;
+    Object lastUnitResult;
 
     public void setBus(Unit unit, String key, Object value) {
         String name;
@@ -45,6 +43,10 @@ public class TaskRequest implements IData<Long, Model> {
 
     public TaskRequest(Object o) {
         bus.put("__input", o);
+    }
+
+    public void next(Object o) {
+        promise.complete(o);
     }
 
     public void generateData(Unit unit) {
@@ -79,4 +81,7 @@ public class TaskRequest implements IData<Long, Model> {
         return null;
     }
 
+    public Object getLastUnitResult() {
+        return lastUnitResult;
+    }
 }

@@ -19,18 +19,15 @@ import java.util.Map;
 @Tag(value = "if", parentTagTypes = Executable.class)
 public class If extends Unit implements Executable {
     @Override
-    protected Future<Object> execute(TaskRequest data) throws Throwable {
-        try {
-            System.out.println(data.getBus());
-            System.out.println(attributes.get("test"));
-            if (test(attributes.get("test"), data.getBus())) {
-                System.out.println("ture");
-                return super.execute(data);
-            }
-        } catch (OgnlException e) {
-            e.printStackTrace();
+    protected void execute(TaskRequest data) throws Throwable {
+        System.out.println(data.getBus());
+        System.out.println(attributes.get("test"));
+        if (test(attributes.get("test"), data.getBus())) {
+            System.out.println("ture");
+            super.execute(data);
+        } else {
+            data.next(false);
         }
-        return Future.succeededFuture();
     }
 
     /*public static void main(String[] args) throws Throwable {

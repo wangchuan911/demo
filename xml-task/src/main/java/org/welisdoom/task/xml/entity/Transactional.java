@@ -30,25 +30,23 @@ public class Transactional extends Unit implements Executable {
 
     @Override
 
-    protected Future<Object> execute(TaskRequest data) throws Throwable {
+    protected void execute(TaskRequest data) throws Throwable {
         Map<String, SqlConnection>
                 map = ObjectUtils.getMapValueOrNewSafe(MAP, data, () -> new HashMap<>());
         if (!data.isDebugger && !map.containsKey(attributes.get("name"))) {
-            return Future.future(promise -> {
-                ((Future<SqlConnection>) Transactional
-                        .getDataBaseConnectPool(attributes.get("db"))
-                        .getConnect(attributes.get("name")))
-                        .onSuccess(sqlConnection -> {
-                            map.put(attributes.get("name"), sqlConnection);
-                            try {
-                                super.execute(data).onSuccess(promise::complete).onFailure(promise::fail);
-                            } catch (Throwable throwable) {
-                                throwable.printStackTrace();
-                            }
-                        }).onFailure(promise::fail);
-            });
+            ((Future<SqlConnection>) Transactional
+                    .getDataBaseConnectPool(attributes.get("db"))
+                    .getConnect(attributes.get("name")))
+                    .onSuccess(sqlConnection -> {
+                        map.put(attributes.get("name"), sqlConnection);
+                        try {
+                            super.execute(data);
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+                    }).onFailure(data.promise::fail);
         } else {
-            return super.execute(data);
+            super.execute(data);
         }
     }
 

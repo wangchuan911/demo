@@ -18,11 +18,11 @@ import java.util.Map;
 public class Iterate extends Unit implements Executable {
     String itemName = "item";
 
-    protected Future<Object> execute(TaskRequest data, Map<String, Object> item) throws Throwable{
+    protected void execute(TaskRequest data, Map<String, Object> item) throws Throwable {
         Map map = data.getBus(parent.id);
         try {
             map.put(itemName, item);
-            return execute(data);
+            execute(data);
         } finally {
             map.remove(itemName);
         }

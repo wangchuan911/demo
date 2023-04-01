@@ -1,12 +1,10 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
+import io.vertx.core.Promise;
 import org.xml.sax.Attributes;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -93,26 +91,32 @@ public class Unit {
         return (T) target;
     }
 
-    protected Future<Object> execute(TaskRequest data) throws Throwable {
-        return execute(data, Object.class);
+    protected void execute(TaskRequest data) throws Throwable {
+        execute(data, Object.class);
     }
 
-    protected final Future<Object> execute(TaskRequest data, Class<?>... aClass) throws Throwable {
-        Future future = Future.succeededFuture();
+    protected final void execute(TaskRequest data, Future<?> future, Class<?>... aClass) throws Throwable {
+        Promise<Object> superPromise = data.promise;
         for (Unit child : children) {
             for (Class<?> aClass1 : aClass) {
                 if (aClass1.isAssignableFrom(data.getClass())) {
-                    future = future.compose(o -> {
+                    future.compose(o -> Future.future(promise -> {
+                        data.lastUnitResult = o;
+                        data.setPromise(promise);
                         try {
-                            return child.execute(data);
-                        } catch (Throwable e) {
-                            return Future.failedFuture(e);
+                            child.execute(data);
+                        } catch (Throwable throwable) {
+                            promise.fail(throwable);
                         }
-                    });
+                    }));
                 }
 
             }
         }
-        return future;
+        future.onSuccess(superPromise::complete).onFailure(superPromise::fail);
+    }
+
+    protected final void execute(TaskRequest data, Class<?>... aClass) throws Throwable {
+        execute(data, Future.succeededFuture(), aClass);
     }
 }

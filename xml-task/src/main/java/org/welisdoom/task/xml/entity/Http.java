@@ -22,11 +22,13 @@ import java.util.stream.Collectors;
 @Tag(value = "http", parentTagTypes = Executable.class)
 public class Http extends Unit implements Executable {
     @Override
-    protected Future<Object> execute(TaskRequest data) {
+    protected void execute(TaskRequest data) {
         String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data.getBus(), "").trim();
         System.out.println(body);
-        if (true)
-            return Future.succeededFuture();
+        if (true) {
+            data.next(null);
+            return;
+        }
         HttpURLConnection httpConnection = null;
         try {
             httpConnection = (HttpURLConnection) new URL(attributes.get("url")).openConnection();
@@ -48,7 +50,7 @@ public class Http extends Unit implements Executable {
                     data.setBus(this, "@stream", StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8")));
                     execute(data, Executable.class);
             }
-            return Future.succeededFuture();
+            data.next(null);
         } catch (Throwable e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);

@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.sqlclient.*;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -25,24 +26,31 @@ import java.util.stream.Collectors;
 @Tag(value = "select", parentTagTypes = {Executable.class})
 public class Select extends Unit implements Script {
 
-    public Future<Object> execute(TaskRequest data) {
+    public void execute(TaskRequest data) {
         data.generateData(this);
         String sql = getScript(data.getBus(), " ");
         System.out.println(sql);
         Iterate iterate = getChild(Iterate.class).get(0);
-        return Future.future(promise -> {
-            if (data.isDebugger) {
-                List<Map<String, Object>> list = List.of(Map.of("test1", "test1", "test2", "test2", "test3", "test3", "test4", "test4"));
-                for (Map<String, Object> item : list) {
-                    try {
-                        iterate.execute(data, item);
-                    } catch (Throwable e) {
-                        promise.fail(e);
-                        return;
-                    }
-                }
-                return;
+        Promise<Object> parentPromise = data.promise;
+
+        if (data.isDebugger) {
+            List<Map<String, Object>> list = List.of(Map.of("test1", "test1", "test2", "test2", "test3", "test3", "test4", "test4"));
+            Future<Object> listFuture = Future.succeededFuture();
+            for (Map<String, Object> item : list) {
+                listFuture = listFuture.compose(o ->
+                        Future.future(promise -> {
+                            try {
+                                data.setPromise(promise);
+                                iterate.execute(data, item);
+                            } catch (Throwable e) {
+                                promise.fail(e);
+                                return;
+                            }
+                        })
+                );
             }
+            listFuture.onSuccess(parentPromise::complete).onFailure(parentPromise::fail);
+        } else {
             SqlConnection transaction = Transactional.getSqlConnection(data, attributes.get("db-name"));
             BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
             };
@@ -50,22 +58,29 @@ public class Select extends Unit implements Script {
             condition.setCondition(data.getBus());
             ((Future<RowSet<Row>>) Transactional
                     .getDataBaseConnectPool(transaction)
-                    .page(transaction, sql, condition)).onSuccess(o -> {
+                    .page(transaction, sql, condition)).onSuccess(result -> {
                 Map<String, Object> item = new HashMap<>();
-                for (Row row : o) {
+                Future<Object> listFuture = Future.succeededFuture();
+                for (Row row : result) {
                     for (int i = 0; i < row.size(); i++) {
                         item.put(row.getColumnName(i), row.getValue(row.getColumnName(i)));
                     }
-                    try {
-                        iterate.execute(data, item);
-                    } catch (Throwable e) {
-                        promise.fail(e);
-                        return;
-                    }
+                    listFuture = listFuture.compose(o ->
+                            Future.future(promise -> {
+                                try {
+                                    data.setPromise(promise);
+                                    iterate.execute(data, item);
+                                } catch (Throwable e) {
+                                    promise.fail(e);
+                                    return;
+                                }
+                            })
+                    );
                 }
-            }).onFailure(promise::fail);
-            promise.complete();
-        });
+                listFuture.onSuccess(parentPromise::complete).onFailure(parentPromise::fail);
+            });
+        }
+
     }
 
     @Override
