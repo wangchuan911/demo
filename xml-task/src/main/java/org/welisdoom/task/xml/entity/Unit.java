@@ -1,8 +1,12 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import org.xml.sax.Attributes;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +41,7 @@ public class Unit {
         for (int i = 0; i < attributes.getLength(); i++) {
             String name = attributes.getQName(i);
             String value = attributes.getValue(name);
-            System.out.println("属性值：" + name + "=" + value);
+            /*System.out.println("属性值：" + name + "=" + value);*/
             this.attributes.put(name, value);
         }
         return this;
@@ -52,7 +56,6 @@ public class Unit {
 
 
     public final void destroy() {
-        this.destroyBefore();
         for (Unit child : children) {
             child.destroy();
         }
@@ -63,7 +66,7 @@ public class Unit {
         this.attributes = null;
     }
 
-    protected void destroyBefore() {
+    public void destroy(TaskRequest taskRequest) {
 
     }
 
@@ -90,17 +93,26 @@ public class Unit {
         return (T) target;
     }
 
-    protected void execute(TaskRequest data) {
-        execute(data, Object.class);
+    protected Future<Object> execute(TaskRequest data) throws Throwable {
+        return execute(data, Object.class);
     }
 
-    protected final void execute(TaskRequest data, Class<?>... aClass) {
+    protected final Future<Object> execute(TaskRequest data, Class<?>... aClass) throws Throwable {
+        Future future = Future.succeededFuture();
         for (Unit child : children) {
             for (Class<?> aClass1 : aClass) {
-                if (aClass1.isAssignableFrom(data.getClass()))
-                    child.execute(data);
-                break;
+                if (aClass1.isAssignableFrom(data.getClass())) {
+                    future.compose(o -> {
+                        try {
+                            return child.execute(data);
+                        } catch (Throwable e) {
+                            return Future.failedFuture(e);
+                        }
+                    });
+                }
+
             }
         }
+        return future;
     }
 }

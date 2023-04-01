@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.Future;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -21,11 +22,11 @@ import java.util.stream.Collectors;
 @Tag(value = "http", parentTagTypes = Executable.class)
 public class Http extends Unit implements Executable {
     @Override
-    protected void execute(TaskRequest data) {
+    protected Future<Object> execute(TaskRequest data) {
         String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data.getBus(), "").trim();
         System.out.println(body);
         if (true)
-            return;
+            return Future.succeededFuture();
         HttpURLConnection httpConnection = null;
         try {
             httpConnection = (HttpURLConnection) new URL(attributes.get("url")).openConnection();
@@ -47,16 +48,17 @@ public class Http extends Unit implements Executable {
                     data.setBus(this, "@stream", StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8")));
                     execute(data, Executable.class);
             }
-
+            return Future.succeededFuture();
         } catch (Throwable e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
         } finally {
-            if (httpConnection == null) return;
-            try {
-                httpConnection.disconnect();
-            } catch (Throwable e1) {
-                e1.printStackTrace();
+            if (httpConnection != null) {
+                try {
+                    httpConnection.disconnect();
+                } catch (Throwable e1) {
+                    e1.printStackTrace();
+                }
             }
         }
     }

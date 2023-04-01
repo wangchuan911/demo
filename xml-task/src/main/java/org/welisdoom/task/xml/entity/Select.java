@@ -1,11 +1,13 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.Future;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -17,15 +19,23 @@ import java.util.stream.Collectors;
 @Tag(value = "select", parentTagTypes = {Executable.class})
 public class Select extends Unit implements Script {
 
-    public void execute(TaskRequest data) {
+    public Future<Object> execute(TaskRequest data) {
+        Future<Object> future = Future.succeededFuture();
         data.generateData(this);
         String sql = getScript(data.getBus(), " ");
         System.out.println(sql);
         Iterate iterate = getChild(Iterate.class).get(0);
         List<Map<String, Object>> list = List.of(Map.of("test1", "test1", "test2", "test2", "test3", "test3", "test4", "test4"));
         for (Map<String, Object> item : list) {
-            iterate.execute(data, item);
+            future = future.compose(o -> {
+                try {
+                    return iterate.execute(data, item);
+                } catch (Throwable e) {
+                    return Future.failedFuture(e);
+                }
+            });
         }
+        return future;
     }
 
     @Override

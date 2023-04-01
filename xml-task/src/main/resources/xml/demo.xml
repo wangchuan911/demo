@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <task>
     <initialization>
-        <instance name="ftp1" tag="ftp"/>
-        <instance name="csv1" tag="csv"/>
-        <instance name="http1" tag="http"/>
-        <value name="val1"></value>
-        <value name="val2"></value>
+        <instance id="ftp1" tag="ftp"/>
+        <instance id="csv1" tag="csv"/>
+        <instance id="http1" tag="http"/>
+        <value id="val1"></value>
+        <value id="val2"></value>
     </initialization>
     <start>
-        <transactional name="tracns1" batch="50">
+        <transactional id="tracns1" batch="50">
             <http>
                 <body>asdasdasdsadasdasdasdasdas</body>
             </http>
-            <select>
+            <select id="select1">
                 <sql>
                     select 1 from dual union select 2 from dual
-                    <if test="input1==1">
+                    <if test="__input.input1==1">
                         asd
                     </if>
 
                     asdasdasdasd
                 </sql>
-                <iterate item="item">
-                    <if test="item.test1=='test1'.toString() and item.test2=='test2'.toString()">
+                <iterate>
+                    <if test="select1.item.test1=='test1'.toString() and select1.item.test2=='test2'.toString()">
                         <insert>
                             insert ta(col1,col2) values(#{col1,jdbcType=VARCHAR},#{col2,jdbcType=VARCHAR})
                         </insert>

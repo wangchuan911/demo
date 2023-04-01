@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 
+import io.vertx.core.Future;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Initialize;
 
@@ -15,9 +16,9 @@ import java.util.Map;
 @Tag(value = "transactional", parentTagTypes = Executable.class)
 public class Transactional extends Unit implements Executable {
     @Override
-    protected void execute(TaskRequest data) {
+    protected Future<Object> execute(TaskRequest data) throws Throwable {
         try {
-            super.execute(data);
+            return super.execute(data);
         } finally {
         }
     }

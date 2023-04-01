@@ -28,8 +28,8 @@ public class SAXParserHandler extends DefaultHandler {
 
     public static Class<? extends Unit> getTag(Unit parent, String name) {
 
-        System.out.println(parent);
-        System.out.println(name);
+//        System.out.println(parent);
+//        System.out.println(name);
         return (Class<? extends Unit>) Reflections.getInstance().getTypesAnnotatedWith(Tag.class)
                 .stream()
                 .filter(aClass -> Objects.equals(aClass.getAnnotation(Tag.class).value(), name))
@@ -111,16 +111,21 @@ public class SAXParserHandler extends DefaultHandler {
         if (value.trim().equals("")) {
             return;
         }
-        print(value);
+//        print(value);
         new Content().setContent(value).setParent(current);
     }
 
     protected void print(Object o) {
         int space = level;
+        int white = 10 - space;
+        System.out.print(String.format("level:[%02d]", level));
         while (space-- >= 0) {
-            System.out.print("*--");
+            System.out.print("######");
         }
-        System.out.print(">       ");
+        System.out.print(":::::>>>>>>>");
+        while (white-- >= 0) {
+            System.out.print("      ");
+        }
         System.out.println(o);
     }
 

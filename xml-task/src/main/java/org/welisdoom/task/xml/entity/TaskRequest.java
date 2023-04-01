@@ -1,5 +1,9 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.common.ObjectUtils;
 
@@ -14,6 +18,7 @@ import java.util.Map;
  */
 public class TaskRequest {
     Map<String, Object> bus = new HashMap<>();
+    Promise<Object> promise;
 
     public void setBus(Unit unit, String key, Object value) {
         String name;
@@ -43,5 +48,9 @@ public class TaskRequest {
     public void generateData(Unit unit) {
         if (StringUtils.isEmpty(unit.id)) return;
         bus.put(unit.id, new HashMap<>());
+    }
+
+    void setPromise(Promise<Object> promise) {
+        this.promise = promise;
     }
 }

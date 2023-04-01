@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 
+import io.vertx.core.Future;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
@@ -18,18 +19,18 @@ import java.util.Map;
 @Tag(value = "if", parentTagTypes = Executable.class)
 public class If extends Unit implements Executable {
     @Override
-    protected void execute(TaskRequest data) {
+    protected Future<Object> execute(TaskRequest data) throws Throwable {
         try {
-            System.out.println(data);
+            System.out.println(data.getBus());
             System.out.println(attributes.get("test"));
-            if (test(attributes.get("test"), data)) {
+            if (test(attributes.get("test"), data.getBus())) {
                 System.out.println("ture");
-                super.execute(data);
+                return super.execute(data);
             }
         } catch (OgnlException e) {
             e.printStackTrace();
-            return;
         }
+        return Future.succeededFuture();
     }
 
     /*public static void main(String[] args) throws Throwable {
