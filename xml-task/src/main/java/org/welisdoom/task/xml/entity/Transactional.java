@@ -2,6 +2,7 @@ package org.welisdoom.task.xml.entity;
 
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Pool;
@@ -28,8 +29,7 @@ import java.util.Map;
 public class Transactional extends Unit implements Executable {
     static Map<TaskRequest, Map<String, SqlConnection>> MAP = new HashMap<>();
 
-    @Override
-
+    /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         Map<String, SqlConnection>
                 map = ObjectUtils.getMapValueOrNewSafe(MAP, data, () -> new HashMap<>());
@@ -47,6 +47,27 @@ public class Transactional extends Unit implements Executable {
                     }).onFailure(data.promise::fail);
         } else {
             super.execute(data);
+        }
+    }*/
+
+    @Override
+    protected void start(TaskRequest data, Promise<Object> toNext) {
+
+        try {
+            Map<String, SqlConnection> map = ObjectUtils.getMapValueOrNewSafe(MAP, data, () -> new HashMap<>());
+            if (!data.isDebugger && !map.containsKey(attributes.get("name"))) {
+                ((Future<SqlConnection>) Transactional
+                        .getDataBaseConnectPool(attributes.get("db"))
+                        .getConnect(attributes.get("name")))
+                        .onSuccess(sqlConnection -> {
+                            map.put(attributes.get("name"), sqlConnection);
+                            super.start(data, toNext);
+                        }).onFailure(toNext::fail);
+            } else {
+                super.start(data, toNext);
+            }
+        } catch (Throwable throwable) {
+            toNext.fail(throwable);
         }
     }
 

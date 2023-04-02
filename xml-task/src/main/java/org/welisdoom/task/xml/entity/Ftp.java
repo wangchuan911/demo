@@ -5,6 +5,7 @@ import io.vertx.core.Promise;
 import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
+import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.ObjectUtils;
 
 import java.io.Closeable;
@@ -48,6 +49,40 @@ public class Ftp extends Unit implements Stream {
     }
 
     @Override
+    protected void start(TaskRequest data, Promise<Object> toNext) {
+        System.out.println("ftp");
+        if (true) {
+            super.start(data, toNext);
+            return;
+        }
+        try {
+            Cache cache = ObjectUtils.getMapValueOrNewSafe(ftpClientMap, data, () -> new Cache(new FTPClient()));
+            FTPClient client = cache.client;
+            if (!client.isConnected()) {
+                client = new FTPClient();
+                client.connect(attributes.get("host"),
+                        attributes.containsKey("port") ? Integer.valueOf(attributes.get("post")) : 22);
+            }
+            Iterate iterate = getChild(Iterate.class).stream().findFirst().orElse(null);
+            if (iterate == null) {
+                Closeable closeable;
+                if (attributes.containsKey("get")) {
+                    closeable = client.retrieveFileStream(attributes.get("get"));
+                    cache.closeables.add(closeable);
+                    startChildUnit(data, closeable, UnitType.class).onSuccess(toNext::complete).onFailure(toNext::fail);
+                } else if (attributes.containsKey("put")) {
+                    closeable = client.storeFileStream(attributes.get("put"));
+                    cache.closeables.add(closeable);
+                    toNext.complete(closeable);
+                } else
+                    throw new RuntimeException("错误的操作");
+            }
+        } catch (Throwable e) {
+            toNext.fail(e);
+        }
+    }
+
+    /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         System.out.println("ftp");
         if (true) {
@@ -76,7 +111,7 @@ public class Ftp extends Unit implements Stream {
             } else
                 throw new RuntimeException("错误的操作");
         }
-    }
+    }*/
 
     @Override
     public void destroy(TaskRequest request) {

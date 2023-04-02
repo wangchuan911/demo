@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "http", parentTagTypes = Executable.class)
 public class Http extends Unit implements Executable {
-    @Override
+    /*@Override
     protected void execute(TaskRequest data) {
         String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data.getBus(), "").trim();
         System.out.println(body);
@@ -54,6 +55,46 @@ public class Http extends Unit implements Executable {
         } catch (Throwable e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (httpConnection != null) {
+                try {
+                    httpConnection.disconnect();
+                } catch (Throwable e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+    }*/
+
+    @Override
+    protected void start(TaskRequest data, Promise<Object> toNext) {
+        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data.getBus(), "").trim();
+        System.out.println(body);
+        if (true) {
+            toNext.complete();
+            return;
+        }
+        HttpURLConnection httpConnection = null;
+        try {
+            httpConnection = (HttpURLConnection) new URL(attributes.get("url")).openConnection();
+            httpConnection.setDoInput(true);
+            httpConnection.setDoOutput(true);
+            for (Header header : getChild(Header.class)) {
+                httpConnection.setRequestProperty(header.getId(), header.getContent());
+            }
+            httpConnection.connect();
+            Future<Object> future;
+            switch (attributes.get("output")) {
+                case "stream":
+                    future = startChildUnit(data, httpConnection.getOutputStream(), Executable.class);
+                    break;
+                default:
+                    future = startChildUnit(data, StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8")));
+                    break;
+            }
+            future.onSuccess(toNext::complete).onFailure(toNext::fail);
+        } catch (Throwable e) {
+            toNext.fail(e);
         } finally {
             if (httpConnection != null) {
                 try {

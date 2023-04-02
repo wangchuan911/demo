@@ -2,6 +2,7 @@ package org.welisdoom.task.xml.entity;
 
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
@@ -18,7 +19,7 @@ import java.util.Map;
  */
 @Tag(value = "if", parentTagTypes = Executable.class)
 public class If extends Unit implements Executable {
-    @Override
+    /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         System.out.println(data.getBus());
         System.out.println(attributes.get("test"));
@@ -28,8 +29,23 @@ public class If extends Unit implements Executable {
         } else {
             data.next(false);
         }
-    }
+    }*/
 
+    @Override
+    protected void start(TaskRequest data, Promise<Object> toNext) {
+        System.out.println(data.getBus());
+        System.out.println(attributes.get("test"));
+        try {
+            if (test(attributes.get("test"), data.getBus())) {
+                System.out.println("ture");
+                super.start(data, toNext);
+            } else {
+                toNext.complete();
+            }
+        } catch (OgnlException e) {
+            toNext.fail(e);
+        }
+    }
     /*public static void main(String[] args) throws Throwable {
         try {
             Map m = new HashMap(Map.of("test", 1));

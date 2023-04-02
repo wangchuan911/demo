@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
@@ -15,10 +16,16 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "insert", parentTagTypes = Executable.class)
 public class Insert extends Unit implements Script {
-    @Override
+    /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         System.out.println(getScript(data.getBus(), " "));
         data.next(null);
+    }*/
+
+    @Override
+    protected void start(TaskRequest data, Promise<Object> toNext) {
+        System.out.println(getScript(data.getBus(), " "));
+        toNext.complete(null);
     }
 
     @Override

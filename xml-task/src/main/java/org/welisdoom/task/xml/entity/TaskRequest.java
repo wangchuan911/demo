@@ -17,7 +17,7 @@ import java.util.Map;
 public class TaskRequest implements IData<Long, Model> {
     boolean isDebugger = true;
     Map<String, Object> bus = new HashMap<>();
-    Promise<Object> promise;
+
     Object lastUnitResult;
 
     public void setBus(Unit unit, String key, Object value) {
@@ -45,17 +45,10 @@ public class TaskRequest implements IData<Long, Model> {
         bus.put("__input", o);
     }
 
-    public void next(Object o) {
-        promise.complete(o);
-    }
 
     public void generateData(Unit unit) {
         if (StringUtils.isEmpty(unit.id)) return;
         bus.put(unit.id, new HashMap<>());
-    }
-
-    void setPromise(Promise<Object> promise) {
-        this.promise = promise;
     }
 
     Long id;

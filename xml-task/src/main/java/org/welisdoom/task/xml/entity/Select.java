@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Tag(value = "select", parentTagTypes = {Executable.class})
 public class Select extends Unit implements Script {
 
-    public void execute(TaskRequest data) {
+    /*public void execute(TaskRequest data) {
         data.generateData(this);
         String sql = getScript(data.getBus(), " ");
         System.out.println(sql);
@@ -81,6 +81,54 @@ public class Select extends Unit implements Script {
             });
         }
 
+    }*/
+
+    protected void debugStart(TaskRequest data, Promise<Object> toNext) {
+        List<Map<String, Object>> list = List.of(Map.of("test1", "test1", "test2", "test2", "test3", "test3", "test4", "test4"));
+        Future<Object> listFuture = Future.succeededFuture();
+        for (Map<String, Object> item : list) {
+            listFuture = listFuture.compose(o ->
+                    startChildUnit(data, item, Iterate.class)
+            );
+        }
+        listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
+    }
+
+    @Override
+    protected void start(TaskRequest data, Promise<Object> toNext) {
+        data.generateData(this);
+        String sql = getScript(data.getBus(), " ");
+        System.out.println(sql);
+
+        if (data.isDebugger) {
+            debugStart(data, toNext);
+        } else {
+            SqlConnection transaction = Transactional.getSqlConnection(data, attributes.get("db-name"));
+            BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
+            };
+            condition.setPage(new BaseCondition.Page(1, 100));
+            condition.setCondition(data.getBus());
+            ((Future<RowSet<Row>>) Transactional
+                    .getDataBaseConnectPool(transaction)
+                    .page(transaction, sql, condition)).onSuccess(result -> {
+                Future<Object> listFuture = Future.succeededFuture();
+                for (Row row : result) {
+                    listFuture = listFuture.compose(o ->
+                            startChildUnit(data, this.rowToMap(row), Iterate.class)
+                    );
+                }
+                listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
+            });
+
+        }
+    }
+
+    Map<String, Object> rowToMap(Row row) {
+        Map.Entry[] entries = new Map.Entry[row.size()];
+        for (int i = 0; i < row.size(); i++) {
+            entries[i] = Map.entry(row.getColumnName(i), row.getValue(row.getColumnName(i)));
+        }
+        return Map.ofEntries(entries);
     }
 
     @Override

@@ -1,14 +1,14 @@
 package org.welisdoom.task.xml.entity;
 
 
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Root;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @Classname Task
@@ -18,23 +18,26 @@ import java.util.Objects;
  */
 @Tag(value = "task", parentTagTypes = Root.class)
 public class Task extends Unit implements Root {
+    static Vertx vertx = Vertx.vertx();
+    static Set<TaskRequest> tasks = new HashSet<>();
+
+    public static Vertx getVertx() {
+        return vertx;
+    }
+
     public void run(TaskRequest data) {
-        Vertx v = Vertx.vertx();
-        v.executeBlocking(promise -> {
-            try {
-                data.setPromise(promise);
-                execute(data);
-            } catch (Throwable e) {
-                e.printStackTrace();
-                promise.fail(e);
-            }
-        }).onSuccess(o -> {
+        tasks.add(data);
+        Promise<Object> promise = Promise.promise();
+        start(data, promise);
+        promise.future().onSuccess(o -> {
             System.out.println("success");
         }).onFailure(
                 throwable ->
                         throwable.printStackTrace())
                 .onComplete(objectAsyncResult -> {
-                    v.close();
+                    tasks.remove(data);
+                    if (tasks.size() == 0)
+                        vertx.close();
                 });
 //        v.close();
 

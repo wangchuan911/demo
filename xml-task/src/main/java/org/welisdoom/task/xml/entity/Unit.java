@@ -2,6 +2,10 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.apache.poi.ss.formula.functions.T;
+import org.springframework.util.CollectionUtils;
+import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.UnitType;
 import org.xml.sax.Attributes;
 
 import java.util.*;
@@ -91,11 +95,11 @@ public class Unit {
         return (T) target;
     }
 
-    protected void execute(TaskRequest data) throws Throwable {
+    /*protected void execute(TaskRequest data) {
         execute(data, Object.class);
     }
 
-    protected final void execute(TaskRequest data, Future<?> future, Class<?>... aClass) throws Throwable {
+    protected final void execute(TaskRequest data, Future<?> future, Class<?>... aClass) {
         Promise<Object> superPromise = data.promise;
         for (Unit child : children) {
             for (Class<?> aClass1 : aClass) {
@@ -118,5 +122,34 @@ public class Unit {
 
     protected final void execute(TaskRequest data, Class<?>... aClass) throws Throwable {
         execute(data, Future.succeededFuture(), aClass);
+    }*/
+
+    protected void start(TaskRequest data, Promise<Object> toNext) {
+        startChildUnit(data, data.lastUnitResult, UnitType.class).onSuccess(toNext::complete).onFailure(toNext::fail);
     }
+
+
+    protected Future<Object> startChildUnit(TaskRequest data, Object value, Class<?>... classes) {
+        Future<Object> f = Future.succeededFuture(value), f1;
+        for (Unit child : children) {
+            if (Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(child.getClass())).findFirst().isEmpty())
+                continue;
+            f = f.compose(o -> {
+                return Future.future(promise -> {
+                    data.lastUnitResult = o;
+                    child.start(data, promise);
+                });
+            });
+
+        }
+        return f;
+    }
+
+    protected Future<Object> prepareNextUnit(TaskRequest data, Object value, Unit unit) {
+        return Future.future(promise -> {
+            data.lastUnitResult = value;
+            unit.start(data, promise);
+        });
+    }
+
 }
