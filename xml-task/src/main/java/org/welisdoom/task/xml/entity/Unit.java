@@ -135,12 +135,12 @@ public class Unit {
         for (Unit child : children) {
             if (Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(child.getClass())).findFirst().isEmpty())
                 continue;
-            f = f.compose(o -> {
+            f = f.compose(o -> /*{
                 return Future.future(promise -> {
                     data.lastUnitResult = o;
                     child.start(data, promise);
-                });
-            });
+                };
+            }*/prepareNextUnit(data, o, child));
 
         }
         return f;
@@ -149,7 +149,12 @@ public class Unit {
     protected Future<Object> prepareNextUnit(TaskRequest data, Object value, Unit unit) {
         return Future.future(promise -> {
             data.lastUnitResult = value;
+            System.out.println();
+            unit.log(">>>>>>>>>>开始>>>>>>>>>>>");
             unit.start(data, promise);
+        }).onComplete(objectAsyncResult -> {
+            unit.log("<<<<<<<<<<结束<<<<<<<<<<<");
+            System.out.println();
         });
     }
 
