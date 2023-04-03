@@ -98,7 +98,7 @@ public class Select extends Unit implements Script {
     protected void start(TaskRequest data, Promise<Object> toNext) {
         data.generateData(this);
         String sql = getScript(data.getBus(), " ");
-        System.out.println(sql);
+        log(sql);
 
         if (data.isDebugger) {
             debugStart(data, toNext);

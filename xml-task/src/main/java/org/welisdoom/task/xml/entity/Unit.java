@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.UnitType;
 import org.xml.sax.Attributes;
@@ -152,4 +153,21 @@ public class Unit {
         });
     }
 
+    protected void log(Object o) {
+        printTag();
+        System.out.println(o);
+    }
+
+    protected void printTag() {
+        if (this.parent != null) {
+            this.parent.printTag();
+        }
+        System.out.print("<");
+        System.out.print(this.getClass().getSimpleName());
+        if (!StringUtils.isEmpty(this.id)) {
+            System.out.print(" id=");
+            System.out.print(this.id);
+        }
+        System.out.print(">");
+    }
 }

@@ -24,7 +24,7 @@ public class Insert extends Unit implements Script {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        System.out.println(getScript(data.getBus(), " "));
+        log(getScript(data.getBus(), " "));
         toNext.complete(null);
     }
 

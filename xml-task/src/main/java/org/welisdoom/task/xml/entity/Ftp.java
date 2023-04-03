@@ -50,7 +50,7 @@ public class Ftp extends Unit implements Stream {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        System.out.println("ftp");
+        log("ftp");
         if (true) {
             super.start(data, toNext);
             return;

@@ -33,11 +33,11 @@ public class If extends Unit implements Executable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        System.out.println(data.getBus());
-        System.out.println(attributes.get("test"));
+        log(data.getBus());
+        log(attributes.get("test"));
         try {
             if (test(attributes.get("test"), data.getBus())) {
-                System.out.println("ture");
+                log("ture");
                 super.start(data, toNext);
             } else {
                 toNext.complete();

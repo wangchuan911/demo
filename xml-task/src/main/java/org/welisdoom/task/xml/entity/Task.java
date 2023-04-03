@@ -30,7 +30,7 @@ public class Task extends Unit implements Root {
         Promise<Object> promise = Promise.promise();
         start(data, promise);
         promise.future().onSuccess(o -> {
-            System.out.println("success");
+            log("success");
         }).onFailure(
                 throwable ->
                         throwable.printStackTrace())
