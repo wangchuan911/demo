@@ -17,4 +17,6 @@ public @interface Attr {
     String desc() default "";
 
     boolean require() default false;
+
+    String[] options() default {};
 }

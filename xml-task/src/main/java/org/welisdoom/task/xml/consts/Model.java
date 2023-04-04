@@ -1,4 +1,4 @@
-package org.welisdoom.task.xml.entity;
+package org.welisdoom.task.xml.consts;
 
 import org.welisdoon.common.data.IData;
 
