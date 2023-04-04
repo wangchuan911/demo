@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoom.task.xml.intf.type.UnitType;
@@ -23,8 +24,8 @@ import java.util.Set;
  * @Date 17:23
  */
 @Tag(value = "ftp", parentTagTypes = Executable.class)
-public class Ftp extends Unit implements Stream, Executable {
-    static Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
+public class Ftp extends Unit implements Stream, Executable, Copyable {
+    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
     @Override
     public Future<Object> read(TaskRequest data) {
@@ -56,6 +57,15 @@ public class Ftp extends Unit implements Stream, Executable {
             toNext.fail(throwable);
         }
         return toNext.future();
+    }
+
+    @Override
+    public  Copyable copy() {
+        Ftp ftp = new Ftp();
+        ftp.setId(this.id);
+        ftp.attributes = this.attributes;
+        ftp.ftpClientMap = this.ftpClientMap;
+        return ftp;
     }
 
     static class Cache {

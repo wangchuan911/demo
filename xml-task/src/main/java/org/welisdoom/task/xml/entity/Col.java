@@ -12,4 +12,29 @@ import org.welisdoom.task.xml.intf.type.Stream;
 
 @Tag(value = "col", parentTagTypes = Stream.class)
 public class Col extends Unit {
+    String name, value, code;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
 }
