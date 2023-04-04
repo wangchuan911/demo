@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Promise;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
  * @Date 18:01
  */
 @Tag(value = "insert", parentTagTypes = Executable.class)
+@Attr(name = "id", desc = "唯一标识")
 public class Insert extends Unit implements Executable {
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {

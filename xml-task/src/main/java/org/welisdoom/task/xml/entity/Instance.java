@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.handler.SAXParserHandler;
 import org.welisdoom.task.xml.intf.Copyable;
@@ -17,6 +18,7 @@ import java.util.Objects;
  * @Date 19:13
  */
 @Tag(value = "instance", parentTagTypes = Initialize.class)
+@Attr(name = "id", desc = "唯一标识", require = true)
 public class Instance extends Unit implements Initialize {
     static Map<String, Unit> map = new HashMap<>();
 

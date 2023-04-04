@@ -1,25 +1,18 @@
 package org.welisdoom.task.xml.annotations;
 
-import org.welisdoom.task.xml.intf.type.UnitType;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @Classname Tag
+ * @Classname Attrs
  * @Description TODO
  * @Author Septem
- * @Date 17:22
+ * @Date 16:41
  */
-
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Tag {
-    String value();
-
-    Class<? extends UnitType>[] parentTagTypes();
-
-    String desc() default "";
+public @interface Attrs {
+    Attr[] value();
 }

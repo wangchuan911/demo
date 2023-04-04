@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
  * @Date 17:59
  */
 @Tag(value = "http", parentTagTypes = Executable.class)
+@Attr(name = "id", desc = "唯一标识")
 public class Http extends Unit implements Executable {
     /*@Override
     protected void execute(TaskRequest data) {

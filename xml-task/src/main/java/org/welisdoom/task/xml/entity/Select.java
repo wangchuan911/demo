@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.*;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -21,6 +22,7 @@ import java.util.regex.Matcher;
  * @Date 18:00
  */
 @Tag(value = "select", parentTagTypes = {Executable.class})
+@Attr(name = "id", desc = "唯一标识")
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
 
     /*public void execute(TaskRequest data) {

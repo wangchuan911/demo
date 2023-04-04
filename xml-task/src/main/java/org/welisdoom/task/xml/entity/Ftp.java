@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.net.ftp.FTPClient;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -24,6 +25,7 @@ import java.util.Set;
  * @Date 17:23
  */
 @Tag(value = "ftp", parentTagTypes = Executable.class)
+@Attr(name = "id", desc = "唯一标识")
 public class Ftp extends Unit implements Stream, Executable, Copyable {
     Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 

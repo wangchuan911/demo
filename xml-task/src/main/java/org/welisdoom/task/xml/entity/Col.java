@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Stream;
 
@@ -10,7 +11,10 @@ import org.welisdoom.task.xml.intf.type.Stream;
  * @Date 12:17
  */
 
-@Tag(value = "col", parentTagTypes = Stream.class)
+@Tag(value = "col", parentTagTypes = Stream.class, desc = "将数据整合成为一个map,code为键，value为值")
+@Attr(name = "name", desc = "字段信息")
+@Attr(name = "value", desc = "字段的值")
+@Attr(name = "code", require = true, desc = "字段别名")
 public class Col extends Unit {
     String name, value, code;
 

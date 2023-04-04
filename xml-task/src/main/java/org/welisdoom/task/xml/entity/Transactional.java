@@ -4,6 +4,7 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnection;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.connect.Db;
@@ -21,6 +22,7 @@ import java.util.Map;
  * @Date 17:59
  */
 @Tag(value = "transactional", parentTagTypes = Executable.class)
+@Attr(name = "id", desc = "唯一标识", require = true)
 public class Transactional extends Unit implements Executable {
     static Map<TaskRequest, Map<String, SqlConnection>> MAP = new HashMap<>();
 

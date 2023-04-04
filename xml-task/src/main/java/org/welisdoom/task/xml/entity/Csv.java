@@ -8,6 +8,7 @@ import io.vertx.core.Promise;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.commons.lang3.StringUtils;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -25,6 +26,11 @@ import java.util.Iterator;
  * @Date 12:05
  */
 @Tag(value = "csv", parentTagTypes = Executable.class)
+@Attr(name = "id", desc = "唯一标识")
+@Attr(name = "content", desc = "文本内容")
+@Attr(name = "content", desc = "文本内容")
+@Attr(name = "content", desc = "文本内容")
+
 public class Csv extends Unit implements Executable, Stream, Copyable {
     Map<TaskRequest, CSVWriter> map = new HashMap<>();
 
