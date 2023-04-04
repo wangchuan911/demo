@@ -14,8 +14,9 @@ import java.util.Objects;
  * @Author Septem
  * @Date 19:24
  */
-@Tag(value = "value", parentTagTypes = Initialize.class)
+@Tag(value = "value", parentTagTypes = Initialize.class, desc = "初始化值")
 @Attr(name = "id", desc = "唯一标识", require = true)
+@Attr(name = "value", desc = "值", require = true)
 public class Value extends Unit implements Initialize {
 
     @Override

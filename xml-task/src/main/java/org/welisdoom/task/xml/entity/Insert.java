@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 18:01
  */
-@Tag(value = "insert", parentTagTypes = Executable.class)
+@Tag(value = "insert", parentTagTypes = Executable.class, desc = "sql写入")
 @Attr(name = "id", desc = "唯一标识")
 public class Insert extends Unit implements Executable {
     /*@Override

@@ -21,7 +21,7 @@ import java.util.regex.Matcher;
  * @Author Septem
  * @Date 18:00
  */
-@Tag(value = "select", parentTagTypes = {Executable.class})
+@Tag(value = "select", parentTagTypes = {Executable.class}, desc = "sql查询")
 @Attr(name = "id", desc = "唯一标识")
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
 

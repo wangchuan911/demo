@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
@@ -21,8 +22,10 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 17:59
  */
-@Tag(value = "http", parentTagTypes = Executable.class)
+@Tag(value = "http", parentTagTypes = Executable.class, desc = "http请求")
 @Attr(name = "id", desc = "唯一标识")
+@Attr(name = "url", desc = "请求地址")
+@Attr(name = "output", desc = "输出方式:stream流;json;string(默认)")
 public class Http extends Unit implements Executable {
     /*@Override
     protected void execute(TaskRequest data) {
@@ -90,6 +93,9 @@ public class Http extends Unit implements Executable {
                 case "stream":
                     future = startChildUnit(data, httpConnection.getOutputStream(), Executable.class);
                     break;
+                case "json":
+                    future = startChildUnit(data, JSON.parse(StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8"))));
+                    break;
                 default:
                     future = startChildUnit(data, StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8")));
                     break;
@@ -108,7 +114,7 @@ public class Http extends Unit implements Executable {
         }
     }
 
-    @Tag(value = "body", parentTagTypes = Http.class)
+    @Tag(value = "body", parentTagTypes = Http.class, desc = "post请求内容")
     public static class Body extends Unit implements Script {
 
         public String getScript(Map<String, Object> data, String split) {
@@ -118,7 +124,7 @@ public class Http extends Unit implements Executable {
         }
     }
 
-    @Tag(value = "header", parentTagTypes = Http.class)
+    @Tag(value = "header", parentTagTypes = Http.class, desc = "请求头信息")
     public static class Header extends Unit {
 
         public String getContent() {

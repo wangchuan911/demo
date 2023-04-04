@@ -10,7 +10,7 @@ import org.welisdoom.task.xml.intf.type.Root;
  * @Author Septem
  * @Date 18:24
  */
-@Tag(value = "initialization", parentTagTypes = Root.class)
+@Tag(value = "initialization", parentTagTypes = Root.class, desc = "初始化，所有的初始话信息都要写到此标签")
 public class Initialization extends Unit implements Initialize {
 
     public static Initialization getInstance(Task task) {

@@ -15,7 +15,7 @@ import java.util.Map;
  * @Date 15:07
  */
 
-@Tag(value = "content", parentTagTypes = UnitType.class)
+@Tag(value = "content", parentTagTypes = UnitType.class,desc = "单纯的文本内容")
 @Attr(name = "content", desc = "文本内容")
 public class Content extends Unit implements Script {
     String content;

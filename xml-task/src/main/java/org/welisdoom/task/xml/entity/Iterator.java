@@ -17,7 +17,7 @@ import java.util.Map;
  * @Author Septem
  * @Date 19:33
  */
-@Tag(value = "iterator", parentTagTypes = Iterable.class)
+@Tag(value = "iterator", parentTagTypes = Iterable.class, desc = "遍历器，遍历查询结果，文件等")
 public class Iterator extends Unit implements Executable {
     String itemName = "item";
 

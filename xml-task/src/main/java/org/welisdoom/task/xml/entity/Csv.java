@@ -25,11 +25,10 @@ import java.util.Iterator;
  * @Author Septem
  * @Date 12:05
  */
-@Tag(value = "csv", parentTagTypes = Executable.class)
+@Tag(value = "csv", parentTagTypes = Executable.class, desc = "csv文件读写")
 @Attr(name = "id", desc = "唯一标识")
-@Attr(name = "content", desc = "文本内容")
-@Attr(name = "content", desc = "文本内容")
-@Attr(name = "content", desc = "文本内容")
+@Attr(name = "read", desc = "读文件", require = true, options = {"writer", "read"})
+@Attr(name = "writer", desc = "写文件", require = true, options = {"writer", "read"})
 
 public class Csv extends Unit implements Executable, Stream, Copyable {
     Map<TaskRequest, CSVWriter> map = new HashMap<>();

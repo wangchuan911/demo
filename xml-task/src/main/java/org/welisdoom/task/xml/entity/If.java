@@ -5,6 +5,7 @@ import io.vertx.core.Promise;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 
@@ -16,7 +17,8 @@ import java.util.HashMap;
  * @Author Septem
  * @Date 17:58
  */
-@Tag(value = "if", parentTagTypes = Executable.class)
+@Tag(value = "if", parentTagTypes = Executable.class, desc = "条件判断")
+@Attr(name = "test", require = true, desc = "表达式")
 public class If extends Unit implements Executable {
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {

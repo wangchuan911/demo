@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 19:33
  */
-@Tag(value = "sql", parentTagTypes = Select.class)
+@Tag(value = "sql", parentTagTypes = Select.class, desc = "sql脚本内容")
 public class Sql extends Unit implements Script {
     public String getScript(Map<String, Object> map, String s) {
         return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(map, s).trim()).collect(Collectors.joining(s));

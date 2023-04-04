@@ -2,6 +2,7 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -24,8 +25,11 @@ import java.util.Set;
  * @Author Septem
  * @Date 17:23
  */
-@Tag(value = "ftp", parentTagTypes = Executable.class)
+@Tag(value = "ftp", parentTagTypes = Executable.class, desc = "ftp读写")
 @Attr(name = "id", desc = "唯一标识")
+@Attr(name = "get", desc = "获取流", require = true, options = {"get", "put"})
+@Attr(name = "put", desc = "写入文件", require = true, options = {"get", "put"})
+
 public class Ftp extends Unit implements Stream, Executable, Copyable {
     Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
@@ -62,7 +66,7 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     }
 
     @Override
-    public  Copyable copy() {
+    public Copyable copy() {
         Ftp ftp = new Ftp();
         ftp.setId(this.id);
         ftp.attributes = this.attributes;
@@ -103,6 +107,10 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
             client = new FTPClient();
             client.connect(attributes.get("host"),
                     attributes.containsKey("port") ? Integer.valueOf(attributes.get("post")) : 22);
+            client.user("");
+            client.pass("");
+            client.pasv();
+            client.mode(FTP.BINARY_FILE_TYPE);
         }
         return client;
     }

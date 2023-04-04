@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Promise;
 import org.apache.commons.lang3.StringUtils;
+import org.welisdoom.task.xml.consts.Model;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
 

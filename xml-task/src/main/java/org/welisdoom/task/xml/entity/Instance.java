@@ -17,7 +17,7 @@ import java.util.Objects;
  * @Author Septem
  * @Date 19:13
  */
-@Tag(value = "instance", parentTagTypes = Initialize.class)
+@Tag(value = "instance", parentTagTypes = Initialize.class, desc = "实例化标签,此标签实例化，基本信息，其他标签通过ref引用,")
 @Attr(name = "id", desc = "唯一标识", require = true)
 public class Instance extends Unit implements Initialize {
     static Map<String, Unit> map = new HashMap<>();

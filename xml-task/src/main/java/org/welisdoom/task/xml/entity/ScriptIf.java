@@ -2,6 +2,7 @@ package org.welisdoom.task.xml.entity;
 
 
 import ognl.OgnlException;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Script;
 
@@ -14,7 +15,8 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 17:57
  */
-@Tag(value = "if", parentTagTypes = Script.class)
+@Tag(value = "if", parentTagTypes = Script.class, desc = "条件判断,返回脚本内容")
+@Attr(name = "test", require = true, desc = "表达式")
 public class ScriptIf extends Unit implements Script {
     @Override
     public String getScript(Map<String, Object> data, String s) {

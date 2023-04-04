@@ -2,11 +2,10 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import org.apache.poi.ss.formula.functions.T;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.consts.Model;
 import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoon.common.data.IData;
 import org.xml.sax.Attributes;
 
 import java.util.*;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 17:22
  */
-public class Unit implements UnitType {
+public class Unit implements UnitType, IData<String, Model> {
     String id;
     Unit parent;
     List<Unit> children = new LinkedList<>();
@@ -33,6 +32,16 @@ public class Unit implements UnitType {
 
     public Unit setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    @Override
+    public Model getDataMarker() {
+        return Model.Unit;
+    }
+
+    @Override
+    public IData setDataMarker(Model model) {
         return this;
     }
 
@@ -130,7 +139,7 @@ public class Unit implements UnitType {
     }
 
 
-     Future<Object> startChildUnit(TaskRequest data, Object value, Class<?>... classes) {
+    Future<Object> startChildUnit(TaskRequest data, Object value, Class<?>... classes) {
         Future<Object> f = Future.succeededFuture(value), f1;
         for (Unit child : children) {
             if (Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(child.getClass())).findFirst().isEmpty())

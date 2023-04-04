@@ -21,8 +21,8 @@ import java.util.Map;
  * @Author Septem
  * @Date 17:59
  */
-@Tag(value = "transactional", parentTagTypes = Executable.class)
-@Attr(name = "id", desc = "唯一标识", require = true)
+@Tag(value = "transactional", parentTagTypes = Executable.class, desc = "事务")
+@Attr(name = "id", desc = "唯一标识")
 public class Transactional extends Unit implements Executable {
     static Map<TaskRequest, Map<String, SqlConnection>> MAP = new HashMap<>();
 
