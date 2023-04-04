@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.connect;
 
+import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Future;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.oracleclient.OracleConnection;
@@ -24,21 +25,21 @@ import java.util.Map;
 @Component
 @Db("oracle")
 public class OracleConnectPool implements DataBaseConnectPool<OraclePool, OracleConnection> {
-    Map<String, OraclePool> pools = new HashMap<>();
+    static Map<String, OraclePool> pools = new HashMap<>();
 
-    public void setInstance(String config) {
+    public void setInstance(DatabaseLinkInfo config) {
         OracleConnectOptions connectOptions = new OracleConnectOptions()
-                .setPort(1521)
-                .setHost("the-host")
-                .setDatabase("the-db")
-                .setUser("user")
-                .setPassword("secret");
+                .setPort(config.getPort())
+                .setHost(config.getHost())
+                .setDatabase(config.getDatabase())
+                .setUser(config.getUser())
+                .setPassword(config.getPw());
 
 // Pool Options
-        PoolOptions poolOptions = new PoolOptions().setMaxSize(5);
+        PoolOptions poolOptions = new PoolOptions().setMaxSize(10);
 
 // Create the pool from the data object
-        pools.put("", OraclePool.pool(WorkerVerticle.pool().getOne(), connectOptions, poolOptions));
+        pools.put(config.getName(), OraclePool.pool(WorkerVerticle.pool().getOne(), connectOptions, poolOptions));
     }
 
     @Override
@@ -54,6 +55,11 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
     public Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
         sql = String.format("select * from (select a.*,rownum rn from (%s and rownum <= %d)) where rn> %d", data.getPage().getEnd(), data.getPage().getStart());
         return connection.preparedQuery(sql).execute(Tuple.tuple());
+    }
+
+    @Override
+    public void removeInstance(String name) {
+        pools.remove(name);
     }
 
 }

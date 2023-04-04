@@ -1,8 +1,8 @@
 package org.welisdoom.task.xml.entity;
 
 
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoom.task.xml.intf.type.Stream;
@@ -15,8 +15,8 @@ import java.util.Map;
  * @Author Septem
  * @Date 19:33
  */
-@Tag(value = "iterate", parentTagTypes = {Script.class, Stream.class})
-public class Iterate extends Unit implements Executable {
+@Tag(value = "iterator", parentTagTypes = {Script.class, Stream.class})
+public class Iterator extends Unit implements Executable {
     String itemName = "item";
 
     /*protected void execute(TaskRequest data, Map<String, Object> item) throws Throwable {

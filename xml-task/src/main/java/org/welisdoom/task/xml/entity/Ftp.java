@@ -1,8 +1,8 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.net.ftp.FTPClient;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoom.task.xml.intf.type.UnitType;
@@ -63,8 +63,8 @@ public class Ftp extends Unit implements Stream {
                 client.connect(attributes.get("host"),
                         attributes.containsKey("port") ? Integer.valueOf(attributes.get("post")) : 22);
             }
-            Iterate iterate = getChild(Iterate.class).stream().findFirst().orElse(null);
-            if (iterate == null) {
+            Iterator iterator = getChild(Iterator.class).stream().findFirst().orElse(null);
+            if (iterator == null) {
                 Closeable closeable;
                 if (attributes.containsKey("get")) {
                     closeable = client.retrieveFileStream(attributes.get("get"));

@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import org.apache.commons.collections4.MapUtils;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Initialize;
 import org.xml.sax.Attributes;
 

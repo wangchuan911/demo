@@ -1,12 +1,10 @@
 package org.welisdoom.task.xml.entity;
 
 
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Root;
-import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import java.util.*;
 

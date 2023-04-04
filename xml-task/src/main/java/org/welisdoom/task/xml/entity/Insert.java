@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 

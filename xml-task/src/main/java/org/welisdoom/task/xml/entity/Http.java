@@ -4,10 +4,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
-import java.io.Closeable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;

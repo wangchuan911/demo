@@ -1,4 +1,4 @@
-package org.welisdoom.task.xml.entity;
+package org.welisdoom.task.xml.annotations;
 
 import org.welisdoom.task.xml.intf.type.UnitType;
 

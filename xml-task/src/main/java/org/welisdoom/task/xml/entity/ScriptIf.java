@@ -2,11 +2,10 @@ package org.welisdoom.task.xml.entity;
 
 
 import ognl.OgnlException;
-import org.apache.commons.lang3.StringUtils;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Script;
 
 import java.util.Map;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**

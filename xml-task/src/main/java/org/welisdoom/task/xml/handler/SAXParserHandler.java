@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.handler;
 
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.entity.*;
 import org.welisdoom.task.xml.intf.type.Root;
 import org.xml.sax.Attributes;

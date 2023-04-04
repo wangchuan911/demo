@@ -3,19 +3,15 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.*;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoon.common.data.BaseCondition;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @Classname Select
@@ -88,7 +84,7 @@ public class Select extends Unit implements Script {
         Future<Object> listFuture = Future.succeededFuture();
         for (Map<String, Object> item : list) {
             listFuture = listFuture.compose(o ->
-                    startChildUnit(data, item, Iterate.class)
+                    startChildUnit(data, item, Iterator.class)
             );
         }
         listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
@@ -114,7 +110,7 @@ public class Select extends Unit implements Script {
                 Future<Object> listFuture = Future.succeededFuture();
                 for (Row row : result) {
                     listFuture = listFuture.compose(o ->
-                            startChildUnit(data, this.rowToMap(row), Iterate.class)
+                            startChildUnit(data, this.rowToMap(row), Iterator.class)
                     );
                 }
                 listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);

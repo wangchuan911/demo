@@ -26,7 +26,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     P getPool(String name);
 
-    void setInstance(String config);
+    void setInstance(DatabaseLinkInfo config);
 
     Future<S> getConnect(String name);
 
@@ -51,5 +51,64 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
             map.put(name, sqlType == null ? JDBCType.VARCHAR : sqlType);
         }
         return map;
+    }
+
+    void removeInstance(String name);
+
+    class DatabaseLinkInfo {
+        String name;
+        int port;
+        String host;
+        String database;
+        String user;
+        String pw;
+
+        public int getPort() {
+            return port;
+        }
+
+        public void setPort(int port) {
+            this.port = port;
+        }
+
+        public String getHost() {
+            return host;
+        }
+
+        public void setHost(String host) {
+            this.host = host;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getDatabase() {
+            return database;
+        }
+
+        public void setDatabase(String database) {
+            this.database = database;
+        }
+
+        public String getUser() {
+            return user;
+        }
+
+        public void setUser(String user) {
+            this.user = user;
+        }
+
+        public String getPw() {
+            return pw;
+        }
+
+        public void setPw(String pw) {
+            this.pw = pw;
+        }
     }
 }

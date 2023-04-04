@@ -12,6 +12,7 @@ import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,7 +24,7 @@ import java.util.Map;
 @Component
 @Db("postgresql")
 public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConnection> {
-    Map<String, PgPool> pools;
+    static Map<String, PgPool> pools = new HashMap<>();
 
     @Override
     public PgPool getPool(String name) {
@@ -31,20 +32,20 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     }
 
     @Override
-    public void setInstance(String config) {
+    public void setInstance(DatabaseLinkInfo config) {
         PgConnectOptions connectOptions = new PgConnectOptions()
-                .setPort(5432)
-                .setHost("the-host")
-                .setDatabase("the-db")
-                .setUser("user")
-                .setPassword("secret");
+                .setPort(config.getPort())
+                .setHost(config.getHost())
+                .setDatabase(config.getDatabase())
+                .setUser(config.getUser())
+                .setPassword(config.getPw());
 
 // Pool options
         PoolOptions poolOptions = new PoolOptions()
                 .setMaxSize(5);
 
 // Create the client pool
-        pools.put("", PgPool.pool(ApplicationContextProvider.getBean(WorkerVerticle.class).pool().getOne(), connectOptions, poolOptions));
+        pools.put(config.getName(), PgPool.pool(ApplicationContextProvider.getBean(WorkerVerticle.class).pool().getOne(), connectOptions, poolOptions));
     }
 
     public Future<PgConnection> getConnect(String name) {
@@ -54,5 +55,10 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     public Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
         sql = sql + String.format(" limit %d offset %d", data.getPage().getPageSize(), data.getPage().getStart());
         return connection.preparedQuery(sql).execute(Tuple.tuple());
+    }
+
+    @Override
+    public void removeInstance(String name) {
+        pools.remove(name);
     }
 }

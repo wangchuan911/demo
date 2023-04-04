@@ -3,16 +3,11 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.pgclient.PgConnectOptions;
-import io.vertx.pgclient.PgPool;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.SqlConnection;
+import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.connect.Db;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoom.task.xml.intf.type.Initialize;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
