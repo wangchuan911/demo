@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 17:22
  */
-public class Unit {
+public class Unit implements UnitType {
     String id;
     Unit parent;
     List<Unit> children = new LinkedList<>();
@@ -130,7 +130,7 @@ public class Unit {
     }
 
 
-    protected Future<Object> startChildUnit(TaskRequest data, Object value, Class<?>... classes) {
+     Future<Object> startChildUnit(TaskRequest data, Object value, Class<?>... classes) {
         Future<Object> f = Future.succeededFuture(value), f1;
         for (Unit child : children) {
             if (Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(child.getClass())).findFirst().isEmpty())

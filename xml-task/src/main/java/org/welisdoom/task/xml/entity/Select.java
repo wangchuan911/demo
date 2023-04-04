@@ -6,6 +6,7 @@ import io.vertx.sqlclient.*;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoon.common.data.BaseCondition;
 
@@ -20,7 +21,7 @@ import java.util.regex.Matcher;
  * @Date 18:00
  */
 @Tag(value = "select", parentTagTypes = {Executable.class})
-public class Select extends Unit implements Script {
+public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
 
     /*public void execute(TaskRequest data) {
         data.generateData(this);
@@ -93,7 +94,7 @@ public class Select extends Unit implements Script {
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         data.generateData(this);
-        String sql = getScript(data.getBus(), " ");
+        String sql = getScript(data.getBus());
         log(sql);
 
         if (data.isDebugger) {
@@ -110,7 +111,7 @@ public class Select extends Unit implements Script {
                 Future<Object> listFuture = Future.succeededFuture();
                 for (Row row : result) {
                     listFuture = listFuture.compose(o ->
-                            startChildUnit(data, this.rowToMap(row), Iterator.class)
+                            this.iterator(data, this.rowToMap(row))
                     );
                 }
                 listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
@@ -127,9 +128,8 @@ public class Select extends Unit implements Script {
         return Map.ofEntries(entries);
     }
 
-    @Override
-    public String getScript(Map<String, Object> data, String s) {
-        return getChild(Sql.class).get(0).getScript(data, s).trim();
+    protected String getScript(Map<String, Object> data) {
+        return getChild(Sql.class).get(0).getScript(data, " ").trim();
     }
 
     public static void main(String[] args) {

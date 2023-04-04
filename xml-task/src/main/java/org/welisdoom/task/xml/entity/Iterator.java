@@ -1,9 +1,11 @@
 package org.welisdoom.task.xml.entity;
 
 
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoom.task.xml.intf.type.Stream;
 
@@ -15,7 +17,7 @@ import java.util.Map;
  * @Author Septem
  * @Date 19:33
  */
-@Tag(value = "iterator", parentTagTypes = {Script.class, Stream.class})
+@Tag(value = "iterator", parentTagTypes = Iterable.class)
 public class Iterator extends Unit implements Executable {
     String itemName = "item";
 
@@ -36,5 +38,9 @@ public class Iterator extends Unit implements Executable {
         } finally {
             map.remove(itemName);
         }
+    }
+
+    public static Future<Object> iterator(Unit unit, TaskRequest data, Object item) {
+        return unit.startChildUnit(data, item, Iterator.class);
     }
 }

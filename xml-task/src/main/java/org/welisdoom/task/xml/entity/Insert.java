@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * @Date 18:01
  */
 @Tag(value = "insert", parentTagTypes = Executable.class)
-public class Insert extends Unit implements Script {
+public class Insert extends Unit implements Executable {
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         System.out.println(getScript(data.getBus(), " "));
@@ -24,12 +24,11 @@ public class Insert extends Unit implements Script {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        log(getScript(data.getBus(), " "));
+        log(getScript(data.getBus()));
         toNext.complete(null);
     }
 
-    @Override
-    public String getScript(Map<String, Object> data, String split) {
-        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data, split)).collect(Collectors.joining(split)).trim();
+    public String getScript(Map<String, Object> data) {
+        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data, " ")).collect(Collectors.joining(" ")).trim();
     }
 }
