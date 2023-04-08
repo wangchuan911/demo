@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.util.IOUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
@@ -10,6 +11,9 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -82,22 +86,39 @@ public class Http extends Unit implements Executable {
         HttpURLConnection httpConnection = null;
         try {
             httpConnection = (HttpURLConnection) new URL(attributes.get("url")).openConnection();
-            httpConnection.setDoInput(true);
+            // 打开和URL之间的连接
+
+            // 发送POST请求必须设置如下两行
             httpConnection.setDoOutput(true);
+            httpConnection.setDoInput(true);
+            httpConnection.setRequestMethod("POST");    // POST方法
+
+
             for (Header header : getChild(Header.class)) {
                 httpConnection.setRequestProperty(header.getId(), header.getContent());
             }
+
+            OutputStream output = httpConnection.getOutputStream();
+            try (output) {
+                StreamUtils.copy(body, Charset.forName("utf-8"), output);
+            }
+
             httpConnection.connect();
+
+            InputStream input = httpConnection.getInputStream();
+            /*try (input) {
+                StreamUtils.copyToString(input, Charset.forName("utf-8"));
+            }*/
             Future<Object> future;
             switch (attributes.get("output")) {
                 case "stream":
-                    future = startChildUnit(data, httpConnection.getOutputStream(), Executable.class);
+                    future = startChildUnit(data, input, Executable.class);
                     break;
                 case "json":
-                    future = startChildUnit(data, JSON.parse(StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8"))));
+                    future = startChildUnit(data, JSON.parse(StreamUtils.copyToString(input, Charset.forName("utf-8"))));
                     break;
                 default:
-                    future = startChildUnit(data, StreamUtils.copyToString(httpConnection.getInputStream(), Charset.forName("utf-8")));
+                    future = startChildUnit(data, StreamUtils.copyToString(input, Charset.forName("utf-8")));
                     break;
             }
             future.onSuccess(toNext::complete).onFailure(toNext::fail);
