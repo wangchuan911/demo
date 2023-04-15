@@ -11,5 +11,13 @@ import org.welisdoon.model.query.entity.AbstractQueryEntity;
  * @Date 16:29
  */
 public class TableQueryEntity extends AbstractQueryEntity<TableEntity> {
+    Long tableId;
 
+    public void setTableId(Long tableId) {
+        this.tableId = tableId;
+    }
+
+    public Long getTableId() {
+        return tableId;
+    }
 }

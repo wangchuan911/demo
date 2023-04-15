@@ -1,7 +1,10 @@
 package org.welisdoon.model.query.dao;
 
+import org.springframework.stereotype.Repository;
 import org.welisdoon.model.query.entity.AbstractQueryEntity;
+import org.welisdoon.model.query.entity.condition.HeaderLinkCondition;
 import org.welisdoon.model.query.entity.condition.QueryObjectCondition;
+import org.welisdoon.model.query.entity.query.HeaderLinkEntity;
 import org.welisdoon.web.common.dao.ITemplateDao;
 
 /**
@@ -10,6 +13,6 @@ import org.welisdoon.web.common.dao.ITemplateDao;
  * @Author Septem
  * @Date 15:33
  */
-
-public interface QueryDao extends ITemplateDao<Long, AbstractQueryEntity, QueryObjectCondition> {
+@Repository
+public interface HeaderLinkDao extends ITemplateDao<Long, HeaderLinkEntity, HeaderLinkCondition> {
 }

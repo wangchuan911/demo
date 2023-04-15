@@ -5,9 +5,9 @@
 <mapper namespace="org.welisdoon.model.query.dao.HeaderDao">
 
     <resultMap id="rm_AbstractHeaderEntity" type="org.welisdoon.model.query.entity.AbstractHeaderEntity">
-        <discriminator javaType="int" column="IS_LEAF">
-            <case value="1" resultMap="rm_SimpleHeaderEntity"></case>
-            <case value="0" resultMap="rm_GroupHeaderEntity"></case>
+        <discriminator javaType="boolean" column="IS_LEAF">
+            <case value="true" resultMap="rm_SimpleHeaderEntity"></case>
+            <case value="false" resultMap="rm_GroupHeaderEntity"></case>
         </discriminator>
 
     </resultMap>
@@ -19,21 +19,21 @@
     <resultMap id="rm_SimpleHeaderEntity" type="org.welisdoon.model.query.entity.header.SimpleHeaderEntity">
         <id property="id" column="ID"></id>
         <result property="name" column="NAME"></result>
+
         <result property="code" column="CODE"></result>
-        <association property="column" column="TARGET_ID"
-                     select="org.welisdoon.model.data.dao.ColumnDao.get"></association>
+        <result property="linkId" column="LINK_ID"></result>
     </resultMap>
     <select id="get" parameterType="long"
             resultMap="rm_AbstractHeaderEntity">
         select A.*,
-        <include refid="is_leaf"/>
+        <include refid="is_leaf"></include>
         from DM_QUERY_HEADER A
         where A.ID = #{value}
     </select>
     <select id="list" parameterType="org.welisdoon.model.query.entity.condition.QueryHeaderCondition"
             resultMap="rm_AbstractHeaderEntity">
         SELECT A.*,
-        <include refid="is_leaf"/>
+        <include refid="is_leaf"></include>
         FROM DM_QUERY_HEADER A
         <where>
             <if test="queryId!=null">
@@ -49,8 +49,8 @@
 
     </select>
     <sql id="is_leaf">
-        (CASE WHEN EXISTS (SELECT 1 FROM DM_QUERY_HEADER AA WHERE AA.PARENT_ID = A.ID) THEN 0 ELSE 1 END)
-        AS IS_LEAF
+            (case when link_id is not null and link_id != 0 then true else false end)
+            is_leaf
     </sql>
 
 </mapper>

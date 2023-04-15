@@ -1,17 +1,13 @@
 package org.welisdoon.model.query.web;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoon.model.data.dao.TableDao;
-import org.welisdoon.model.data.entity.database.IColumnDataFormat;
-import org.welisdoon.model.data.entity.database.TableEntity;
-import org.welisdoon.model.data.entity.object.DataObjectEntity;
+import org.welisdoon.model.data.service.DataBaseService;
 import org.welisdoon.model.query.dao.HeaderDao;
+import org.welisdoon.model.query.dao.HeaderLinkDao;
 import org.welisdoon.model.query.entity.condition.QueryHeaderCondition;
-import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -29,10 +25,16 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 @VertxRoutePath(prefix = "/dm/query", requestBodyEnable = true)
 public class QueryManagerRouter {
     HeaderDao headerDao;
+    HeaderLinkDao headerLinkDao;
+    DataBaseService baseService;
+    TableDao tableDao;
 
     @Autowired
-    void setValue(HeaderDao headerDao) {
+    void setValue(HeaderDao headerDao, HeaderLinkDao headerLinkDao, DataBaseService baseService, TableDao tableDao) {
         this.headerDao = headerDao;
+        this.headerLinkDao = headerLinkDao;
+        this.baseService = baseService;
+        this.tableDao = tableDao;
     }
 
     @VertxRouter(path = "\\/(?<type>\\w+)\\/(?<qid>\\d+)",
@@ -48,8 +50,8 @@ public class QueryManagerRouter {
                 }
                 case "query": {
 
+                    return;
                 }
-                break;
                 case "input": {
 
                 }
@@ -59,4 +61,5 @@ public class QueryManagerRouter {
 
         });
     }
+
 }

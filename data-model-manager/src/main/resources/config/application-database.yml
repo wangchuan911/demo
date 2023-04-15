@@ -1,9 +1,9 @@
 values:
   db:
-    jdbc: jdbc:mysql://47.112.217.148/
+    jdbc:
     param: serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true&useSSL=false
-    username: root
-    password: Jx@@114805
+    username:
+    password:
 
 
 spring:

@@ -1,5 +1,6 @@
 package org.welisdoon.model.query.entity;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import org.welisdoon.model.data.entity.common.DictEntity;
 import org.welisdoon.model.data.entity.database.ColumnEntity;
 import org.welisdoon.model.query.annotations.Model;
@@ -14,13 +15,14 @@ import org.welisdoon.model.query.consts.QueryObjectType;
 
 @Model(QueryObjectType.Header)
 public abstract class AbstractHeaderEntity extends AbstractQueryModelEntity {
-    DictEntity targetType;
+    @JSONField(deserialize = false)
+    AbstractHeaderEntity parent;
 
-    public void setTargetType(DictEntity targetType) {
-        this.targetType = targetType;
+    public void setParent(AbstractHeaderEntity parent) {
+        this.parent = parent;
     }
 
-    public DictEntity getTargetType() {
-        return targetType;
+    public AbstractHeaderEntity getParent() {
+        return parent;
     }
 }

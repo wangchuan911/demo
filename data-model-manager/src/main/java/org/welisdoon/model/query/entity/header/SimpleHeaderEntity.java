@@ -11,13 +11,13 @@ import org.welisdoon.model.query.entity.AbstractHeaderEntity;
  */
 
 public class SimpleHeaderEntity extends AbstractHeaderEntity {
-    ColumnEntity column;
+    Long linkId;
 
-    public ColumnEntity getColumn() {
-        return column;
+    public void setLinkId(Long linkId) {
+        this.linkId = linkId;
     }
 
-    public void setColumn(ColumnEntity column) {
-        this.column = column;
+    public Long getLinkId() {
+        return linkId;
     }
 }

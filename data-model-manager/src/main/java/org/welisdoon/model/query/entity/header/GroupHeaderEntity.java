@@ -9,7 +9,7 @@ import org.welisdoon.model.query.entity.AbstractHeaderEntity;
  * @Date 16:30
  */
 
-public class GroupHeaderEntity extends SimpleHeaderEntity {
+public class GroupHeaderEntity extends AbstractHeaderEntity {
     AbstractHeaderEntity[] children;
 
     public void setChildren(AbstractHeaderEntity[] children) {

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.model.query.dao.HeaderLinkDao">
+
+    <resultMap id="rm_HeaderLinkEntity" type="org.welisdoon.model.query.entity.query.HeaderLinkEntity">
+        <id property="id" column="ID"></id>
+        <result property="code" column="C0DE"></result>
+        <result property="name" column="NAME"></result>
+        <result property="targetId" column="TARGET_ID"></result>
+        <result property="queryId" column="QUERY_ID"></result>
+        <result property="targetTypeId" column="TARGET_TYPE_ID"></result>
+        <result property="parentId" column="PARENT_ID"></result>
+        <collection property="children" select="list" column="{parentId=ID}"></collection>
+    </resultMap>
+
+    <select id="get" parameterType="long"
+            resultMap="rm_HeaderLinkEntity">
+        select A.*
+        from DM_QUERY_HEADER_LINK A
+        where A.ID = #{value}
+    </select>
+
+    <select id="list" parameterType="org.welisdoon.model.query.entity.condition.HeaderLinkCondition"
+            resultMap="rm_HeaderLinkEntity">
+        select A.*
+        from DM_QUERY_HEADER_LINK A
+        <where>
+            <if test="linkIds!=null and linkIds.length>0">
+                <foreach collection="linkIds" open="  in (" close=")" separator=",">
+                    and id #{item,jdbcType=NUMERIC}
+                </foreach>
+            </if>
+            <if test="parentId!=null and parentId>0">
+                and PARENT_ID=#{parentId,jdbcType=NUMERIC}
+            </if>
+            <if test="queryId!=null and queryId>0">
+                and QUERY_ID=#{queryId,jdbcType=NUMERIC}
+            </if>
+        </where>
+    </select>
+
+</mapper>
