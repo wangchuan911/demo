@@ -1,5 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
+import ognl.Ognl;
+import ognl.OgnlContext;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoon.common.ObjectUtils;
@@ -17,6 +19,7 @@ import java.util.Map;
 public class TaskRequest implements IData<Long, Model> {
     boolean isDebugger = true;
     Map<String, Object> bus = new HashMap<>();
+    OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
 
     Object lastUnitResult;
 
@@ -76,5 +79,9 @@ public class TaskRequest implements IData<Long, Model> {
 
     public Object getLastUnitResult() {
         return lastUnitResult;
+    }
+
+    public OgnlContext getOgnlContext() {
+        return ognlContext;
     }
 }

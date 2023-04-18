@@ -26,11 +26,11 @@ public class Insert extends Unit implements Executable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        log(getScript(data.getBus()));
+        log(getScript(data));
         toNext.complete(null);
     }
 
-    public String getScript(Map<String, Object> data) {
-        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data, " ")).collect(Collectors.joining(" ")).trim();
+    public String getScript(TaskRequest request) {
+        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, " ")).collect(Collectors.joining(" ")).trim();
     }
 }

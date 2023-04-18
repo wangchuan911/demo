@@ -96,7 +96,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         data.generateData(this);
-        String sql = getScript(data.getBus());
+        String sql = getScript(data);
         log(sql);
 
         if (data.isDebugger) {
@@ -130,7 +130,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         return Map.ofEntries(entries);
     }
 
-    protected String getScript(Map<String, Object> data) {
+    protected String getScript(TaskRequest data) {
         return getChild(Sql.class).get(0).getScript(data, " ").trim();
     }
 

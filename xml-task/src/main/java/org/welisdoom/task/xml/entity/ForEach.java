@@ -30,11 +30,11 @@ public class ForEach extends Unit implements Script {
     static String itemName = "item";
 
     @Override
-    public String getScript(Map<String, Object> data, String split) {
+    public String getScript(TaskRequest request, String split) {
         String collectionName = attributes.get("collection");
         String itemName = (attributes.containsKey("item")) ? attributes.get("item") : ForEach.itemName;
         try {
-            Object o = Ognl.getValue(collectionName, If.ognlContext, data, Object.class);
+            Object o = Ognl.getValue(collectionName, request.ognlContext, request.getBus(), Object.class);
             int size;
             String express;
             if (o.getClass().isArray()) {
@@ -51,7 +51,7 @@ public class ForEach extends Unit implements Script {
                 sb.append(split);
             }
             for (int i = 0; i < size; i++) {
-                tmp = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data, " ")).collect(Collectors.joining(" ")).trim();
+                tmp = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, " ")).collect(Collectors.joining(" ")).trim();
                 sb.append(tmp.replaceAll("\\$\\{" + itemName.replace(".", "\\.").replace("@", "\\@") + "\\,", "${" + collectionName + (String.format(express, i))));
                 sb.append(split);
                 if (attributes.containsKey("separator")) {

@@ -6,12 +6,14 @@ import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgConnection;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.*;
+import org.apache.ibatis.type.JdbcType;
 import org.springframework.stereotype.Component;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
+import java.sql.SQLType;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,6 +58,8 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
         sql = sql + String.format(" limit %d offset %d", data.getPage().getPageSize(), data.getPage().getStart());
         return connection.preparedQuery(sql).execute(Tuple.tuple());
     }
+
+
 
     @Override
     public void removeInstance(String name) {

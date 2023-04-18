@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
 @Attr(name = "test", require = true, desc = "表达式")
 public class ScriptIf extends Unit implements Script {
     @Override
-    public String getScript(Map<String, Object> data, String s) {
+    public String getScript(TaskRequest request, String s) {
         try {
-            if (If.test(attributes.get("test"), data)) {
-                return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data, s).trim()).collect(Collectors.joining(s));
+            if (If.test(attributes.get("test"), request.getOgnlContext(), request.getBus())) {
+                return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, s).trim()).collect(Collectors.joining(s));
             }
         } catch (OgnlException e) {
             throw new RuntimeException(e.getMessage(), e);

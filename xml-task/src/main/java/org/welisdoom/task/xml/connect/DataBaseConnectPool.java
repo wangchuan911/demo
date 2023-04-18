@@ -1,16 +1,19 @@
 package org.welisdoom.task.xml.connect;
 
+import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.*;
+import ognl.Ognl;
+import ognl.OgnlException;
+import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.sql.JDBCType;
 import java.sql.SQLType;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,7 +25,9 @@ import java.util.regex.Pattern;
  * @Date 13:53
  */
 public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
-    Pattern PATTERN = Pattern.compile("\\$\\{([\\w\\.\\_\\@\\-\\&]+)\\,jdbcType\\=(\\w+)\\}");
+    Pattern PATTERN = Pattern.compile("\\#\\{([\\w\\.\\(\\)\\[\\]\\@\\_\\-]+)\\,jdbcType\\=(\\w+)\\}");
+    String PATTERN2 = "\\#\\{.+?\\}";
+
 
     P getPool(String name);
 
@@ -32,25 +37,80 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data);
 
-    default Map<String, SQLType> getSqlParamTypes(String s) {
-        Map<String, SQLType> map = new HashMap<>();
+    default List<Map.Entry<String, JdbcType>> getSqlParamTypes(String s) {
+        List<Map.Entry<String, JdbcType>> list = new LinkedList<>();
         Pattern.compile("\\$\\{([\\w\\.\\_\\@\\-\\&]+)(?:\\,jdbcType\\=)\\}");
         Matcher matcher = DataBaseConnectPool.PATTERN.matcher(s);
-        SQLType sqlType = null;
+        JdbcType sqlType = null;
         String name;
         while (matcher.find()) {
             switch (matcher.groupCount()) {
                 case 2:
-                    sqlType = JDBCType.valueOf(matcher.group(2));
+                    sqlType = JdbcType.valueOf(matcher.group(2));
                 case 1:
                     name = matcher.group(1);
                     break;
                 default:
                     continue;
             }
-            map.put(name, sqlType == null ? JDBCType.VARCHAR : sqlType);
+            list.add(Map.entry(name, sqlType == null ? JdbcType.VARCHAR : sqlType));
         }
-        return map;
+        return list;
+    }
+
+    default String setValueToSql(Tuple tuple, String sql, BaseCondition<Long, TaskRequest> data) {
+        sql = sql.replaceAll(PATTERN2, "?");
+        JdbcType jdbcType;
+        Object value;
+        for (Map.Entry<String, JdbcType> sqlParamType : getSqlParamTypes(sql)) {
+            jdbcType = sqlParamType.getValue();
+            try {
+                value = Ognl.getValue(sqlParamType.getKey(), data.getData().getOgnlContext(), data.getData().getBus(), Object.class);
+            } catch (OgnlException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+            if (value != null)
+                switch (jdbcType) {
+                    case INTEGER:
+                    case SMALLINT:
+                    case TINYINT:
+                        value = TypeUtils.castToInt(value);
+                        break;
+                    case NUMERIC:
+                    case BIGINT:
+                        value = TypeUtils.castToBigDecimal(value);
+                        break;
+                    case BLOB:
+                        value = TypeUtils.castToBytes(value);
+                        break;
+                    case BIT:
+                        value = TypeUtils.castToByte(value);
+                        break;
+                    case BOOLEAN:
+                        value = TypeUtils.castToBoolean(value);
+                        break;
+                    case DOUBLE:
+                        value = TypeUtils.castToDouble(value);
+                        break;
+                    case FLOAT:
+                        value = TypeUtils.castToFloat(value);
+                        break;
+                    case DATE:
+                        value = TypeUtils.castToDate(value);
+                        break;
+                    case CLOB:
+                    case NCHAR:
+                    case NCLOB:
+                    case VARCHAR:
+                    default:
+                        value = TypeUtils.castToString(value);
+                        break;
+
+
+                }
+            tuple.addValue(value);
+        }
+        return sql;
     }
 
     void removeInstance(String name);

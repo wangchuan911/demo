@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "sql", parentTagTypes = Select.class, desc = "sql脚本内容")
 public class Sql extends Unit implements Script {
-    public String getScript(Map<String, Object> map, String s) {
-        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(map, s).trim()).collect(Collectors.joining(s));
+    public String getScript(TaskRequest request, String s) {
+        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, s).trim()).collect(Collectors.joining(s));
     }
 }

@@ -99,7 +99,7 @@ public class Csv extends Unit implements Executable, Stream, Copyable {
             Col[] headers = getChild(Col.class).stream().toArray(Col[]::new);
             csvWriter.writeNext(Arrays.stream(headers).map(col -> {
                 try {
-                    return Ognl.getValue(col.getValue(), If.ognlContext, data.getBus(), String.class);
+                    return Ognl.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class);
                 } catch (OgnlException e) {
                     log(String.format("col[%s] parse fail %s", col.getCode(), e.getMessage()));
                     return "";

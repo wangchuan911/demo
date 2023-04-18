@@ -37,7 +37,7 @@ public class If extends Unit implements Executable {
         log(data.getBus());
         log(attributes.get("test"));
         try {
-            if (test(attributes.get("test"), data.getBus())) {
+            if (test(attributes.get("test"), data.getOgnlContext(), data.getBus())) {
                 log("ture");
                 super.start(data, toNext);
             } else {
@@ -61,9 +61,8 @@ public class If extends Unit implements Executable {
         }
     }*/
 
-    static OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
 
-    public static boolean test(String express, Object o) throws OgnlException {
+    public static boolean test(String express, OgnlContext ognlContext, Object o) throws OgnlException {
         return (boolean) Ognl.getValue(express, ognlContext, o, boolean.class);
     }
 }

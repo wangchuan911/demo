@@ -77,7 +77,7 @@ public class Http extends Unit implements Executable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data.getBus(), "").trim();
+        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
         System.out.println(body);
         if (true) {
             toNext.complete();
@@ -138,10 +138,10 @@ public class Http extends Unit implements Executable {
     @Tag(value = "body", parentTagTypes = Http.class, desc = "post请求内容")
     public static class Body extends Unit implements Script {
 
-        public String getScript(Map<String, Object> data, String split) {
+        public String getScript(TaskRequest request, String split) {
             return children.stream()
                     .filter(unit -> unit instanceof Script)
-                    .map(unit -> ((Script) unit).getScript(data, split).trim()).collect(Collectors.joining(split));
+                    .map(unit -> ((Script) unit).getScript(request, split).trim()).collect(Collectors.joining(split));
         }
     }
 

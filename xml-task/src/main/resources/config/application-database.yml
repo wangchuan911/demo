@@ -1,12 +1,14 @@
 spring:
   datasource:
     enabled: true
-    username:
-    password:
+    username: rimdb
+    #welisdoon
+    password: rimdb123#
+    #We1i$d00n
     #驱动
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: oracle.jdbc.driver.OracleDriver
     #数据库连接路径
-    url: jdbc:mysql://47.112.217.148/hubidaauto?serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true&useSSL=false
+    url: jdbc:oracle:thin:@//localhost:1522/rim
     #连接池类型
     type: com.alibaba.druid.pool.DruidDataSource
     #连接池配置，因为springboot默认是开启了连接池的，它有默认配置，这一段可以忽略

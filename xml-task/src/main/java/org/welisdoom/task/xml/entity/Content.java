@@ -30,7 +30,7 @@ public class Content extends Unit implements Script {
     }
 
     @Override
-    public String getScript(Map<String, Object> data, String s) {
+    public String getScript(TaskRequest request, String s) {
         return content + s;
     }
 }

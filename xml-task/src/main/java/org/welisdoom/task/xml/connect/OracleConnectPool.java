@@ -1,20 +1,29 @@
 package org.welisdoom.task.xml.connect;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.oracleclient.OracleConnection;
 import io.vertx.oracleclient.OraclePool;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.*;
+import ognl.Ognl;
+import ognl.OgnlException;
+import org.apache.ibatis.type.JdbcType;
 import org.springframework.stereotype.Component;
+import org.welisdoom.task.xml.entity.If;
 import org.welisdoom.task.xml.entity.TaskRequest;
+import org.welisdoom.task.xml.entity.Value;
 import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
+import java.sql.JDBCType;
+import java.sql.SQLType;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * @Classname OracleConnect
@@ -53,9 +62,12 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
 
     @Override
     public Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
-        sql = String.format("select * from (select a.*,rownum rn from (%s and rownum <= %d)) where rn> %d", data.getPage().getEnd(), data.getPage().getStart());
-        return connection.preparedQuery(sql).execute(Tuple.tuple());
+        Tuple tuple = Tuple.tuple();
+        sql = String.format("select * from (select a.*,rownum rn from (%s and rownum <= #{page.end,jdbcType=NUMERIC})) where rn> #{page.start,jdbcType=NUMERIC}", sql);
+        sql = setValueToSql(tuple, sql, data);
+        return connection.preparedQuery(sql).execute(tuple);
     }
+
 
     @Override
     public void removeInstance(String name) {
