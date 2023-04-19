@@ -17,7 +17,7 @@ import java.util.Map;
  * @Date 15:46
  */
 public class TaskRequest implements IData<Long, Model> {
-    boolean isDebugger = true;
+    boolean isDebugger = false;
     Map<String, Object> bus = new HashMap<>();
     OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
 

@@ -7,7 +7,9 @@ import io.vertx.pgclient.PgConnection;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.*;
 import org.apache.ibatis.type.JdbcType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -28,8 +30,18 @@ import java.util.Map;
 public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConnection> {
     static Map<String, PgPool> pools = new HashMap<>();
 
+    ConfigDao configDao;
+
+    @Autowired
+    public void setConfigDao(ConfigDao configDao) {
+        this.configDao = configDao;
+    }
+
     @Override
     public PgPool getPool(String name) {
+        if (!pools.containsKey(name)) {
+            setInstance(this.configDao.getDatabase(name));
+        }
         return pools.get(name);
     }
 
@@ -55,10 +67,20 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     }
 
     public Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
-        sql = sql + String.format(" limit %d offset %d", data.getPage().getPageSize(), data.getPage().getStart());
+        Tuple tuple = Tuple.tuple();
+        sql = sql + String.format(" limit ? offset ?");
+        sql = setValueToSql(tuple, sql, data);
+
+        tuple.addValue(data.getPage().getPageSize());
+        tuple.addValue(data.getPage().getStart() - 1);
+        System.out.println(sql);
+        for (int i = 0, len = tuple.size(); i < len; i++) {
+            System.out.print(tuple.getValue(i));
+            System.out.print(len - 1 == i ? "" : ",");
+        }
+
         return connection.preparedQuery(sql).execute(Tuple.tuple());
     }
-
 
 
     @Override

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoom.task.xml.dao.ConfigDao">
+
+    <resultMap id="rm_DatabaseLinkInfo" type="org.welisdoom.task.xml.connect.DataBaseConnectPool$DatabaseLinkInfo">
+        <result column="name" property="name"></result>
+        <result column="port" property="port"></result>
+        <result column="host" property="host"></result>
+        <result column="db" property="database"></result>
+        <result column="usr" property="user"></result>
+        <result column="pw" property="pw"></result>
+    </resultMap>
+
+    <select id="getDatabase" parameterType="string"
+            resultMap="rm_DatabaseLinkInfo">
+        select A.*
+        from XML_TASK_CONNECT A
+        where A.name = #{name}
+    </select>
+
+
+</mapper>

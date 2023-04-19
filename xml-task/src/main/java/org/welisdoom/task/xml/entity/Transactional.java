@@ -52,10 +52,10 @@ public class Transactional extends Unit implements Executable {
 
         try {
             Map<String, SqlConnection> map = ObjectUtils.getMapValueOrNewSafe(MAP, data, () -> new HashMap<>());
-            if (!data.isDebugger && !map.containsKey(attributes.get("name"))) {
+            if (!data.isDebugger && !map.containsKey(attributes.get("id"))) {
                 ((Future<SqlConnection>) Transactional
                         .getDataBaseConnectPool(attributes.get("db"))
-                        .getConnect(attributes.get("name")))
+                        .getConnect(attributes.get("id")))
                         .onSuccess(sqlConnection -> {
                             map.put(attributes.get("name"), sqlConnection);
                             super.start(data, toNext);
@@ -90,7 +90,7 @@ public class Transactional extends Unit implements Executable {
                 .entrySet().stream()
                 .map(Map.Entry::getValue)
                 .filter(dataBaseConnectPool -> dataBaseConnectPool instanceof DataBaseConnectPool &&
-                        ObjectUtils.getGenericTypes(dataBaseConnectPool.getClass(), DataBaseConnectPool.class, 1) == connection.getClass())
+                        ObjectUtils.getGenericTypes(dataBaseConnectPool.getClass(), DataBaseConnectPool.class, 1).isAssignableFrom(connection.getClass()))
                 .findFirst().orElse(null);
     }
 }

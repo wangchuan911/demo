@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.dao;
 
 import org.springframework.stereotype.Repository;
+import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 
 import java.util.Map;
 
@@ -14,7 +15,7 @@ import java.util.Map;
 public interface ConfigDao {
     Map<String, Object> getFtp(String name);
 
-    Map<String, Object> getDatabase(String name);
+    DataBaseConnectPool.DatabaseLinkInfo getDatabase(String name);
 
 
 }

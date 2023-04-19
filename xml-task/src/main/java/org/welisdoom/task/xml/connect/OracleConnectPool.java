@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.connect;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.oracleclient.OracleConnection;
 import io.vertx.oracleclient.OraclePool;
@@ -11,8 +12,11 @@ import io.vertx.sqlclient.*;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.If;
+import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoom.task.xml.entity.Value;
 import org.welisdoon.common.data.BaseCondition;
@@ -36,6 +40,13 @@ import java.util.regex.Pattern;
 public class OracleConnectPool implements DataBaseConnectPool<OraclePool, OracleConnection> {
     static Map<String, OraclePool> pools = new HashMap<>();
 
+    ConfigDao configDao;
+
+    @Autowired
+    public void setConfigDao(ConfigDao configDao) {
+        this.configDao = configDao;
+    }
+
     public void setInstance(DatabaseLinkInfo config) {
         OracleConnectOptions connectOptions = new OracleConnectOptions()
                 .setPort(config.getPort())
@@ -48,11 +59,14 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         PoolOptions poolOptions = new PoolOptions().setMaxSize(10);
 
 // Create the pool from the data object
-        pools.put(config.getName(), OraclePool.pool(WorkerVerticle.pool().getOne(), connectOptions, poolOptions));
+        pools.put(config.getName(), OraclePool.pool(Task.vertx, connectOptions, poolOptions));
     }
 
     @Override
     public OraclePool getPool(String name) {
+        if (!pools.containsKey(name)) {
+            setInstance(this.configDao.getDatabase(name));
+        }
         return pools.get(name);
     }
 
@@ -63,8 +77,19 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
     @Override
     public Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
         Tuple tuple = Tuple.tuple();
-        sql = String.format("select * from (select a.*,rownum rn from (%s and rownum <= #{page.end,jdbcType=NUMERIC})) where rn> #{page.start,jdbcType=NUMERIC}", sql);
+        sql = String.format("select * from (select a.*,rownum as \"@RowNum\" from (%s and rownum <= ?)a) where \"@RowNum\">= ?", sql);
         sql = setValueToSql(tuple, sql, data);
+        tuple.addValue(data.getPage().getEnd());
+        tuple.addValue(data.getPage().getStart());
+        System.out.println("sql:" + sql);
+        System.out.print("params:");
+        for (int i = 0, len = tuple.size(); i < len; i++) {
+            System.out.print(tuple.getValue(i));
+            System.out.print(len - 1 == i ? "" : ",");
+        }
+        System.out.println();
+
+
         return connection.preparedQuery(sql).execute(tuple);
     }
 

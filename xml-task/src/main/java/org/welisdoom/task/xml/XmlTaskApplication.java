@@ -7,7 +7,10 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.welisdoom.task.xml.entity.TaskRequest;
@@ -40,8 +43,8 @@ public class XmlTaskApplication {
         SpringApplication.run(XmlTaskApplication.class, args);
     }
 
-    @PostConstruct
-    public void run() {
+    @EventListener
+    public void run(ApplicationReadyEvent readyEvent) {
         try {
             SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml").run(new TaskRequest(new HashMap<>(Map.of("input1", 1))));
         } catch (Exception e) {

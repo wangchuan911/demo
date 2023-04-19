@@ -16,7 +16,7 @@ import java.util.*;
  */
 @Tag(value = "task", parentTagTypes = Root.class, desc = "根节点")
 public class Task extends Unit implements Root {
-    static Vertx vertx = Vertx.vertx();
+    final public static Vertx vertx = Vertx.vertx();
     static Set<TaskRequest> tasks = new HashSet<>();
 
     public static Vertx getVertx() {

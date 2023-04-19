@@ -11,6 +11,7 @@ import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoon.common.data.BaseCondition;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -105,6 +106,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
             SqlConnection transaction = Transactional.getSqlConnection(data, attributes.get("db-name"));
             BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
             };
+            condition.setData(data);
             condition.setPage(new BaseCondition.Page(1, 100));
             condition.setCondition(data.getBus());
             ((Future<RowSet<Row>>) Transactional
@@ -117,17 +119,18 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                     );
                 }
                 listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
-            });
+            }).onFailure(toNext::fail);
 
         }
     }
 
     Map<String, Object> rowToMap(Row row) {
-        Map.Entry[] entries = new Map.Entry[row.size()];
+        List<Map.Entry> entries = new LinkedList<>();
         for (int i = 0; i < row.size(); i++) {
-            entries[i] = Map.entry(row.getColumnName(i), row.getValue(row.getColumnName(i)));
+            if (row.getColumnName(i).equals("@RowNum")) continue;
+            entries.add(Map.entry(row.getColumnName(i), row.getValue(i)));
         }
-        return Map.ofEntries(entries);
+        return Map.ofEntries(entries.toArray(Map.Entry[]::new));
     }
 
     protected String getScript(TaskRequest data) {

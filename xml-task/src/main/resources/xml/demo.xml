@@ -8,21 +8,22 @@
         <value id="val2"></value>
     </initialization>
     <start>
-        <transactional id="tracns1" batch="50">
+        <transactional id="rimdb" db="oracle" batch="50">
             <http>
                 <body>asdasdasdsadasdasdasdasdas</body>
             </http>
             <select id="select1">
                 <sql>
-                    select 1 from dual union select 2 from dual
+                    select 1 as "val" from dual union select 2 from dual
+                    where
                     <if test="__input.input1==1">
-                        asd
+                        1=1 and
                     </if>
 
-                    asdasdasdasd
+                    1=1
                 </sql>
                 <iterator>
-                    <if test="select1.item.test1=='test1'.toString() and select1.item.test2=='test2'.toString()">
+                    <if test="select1.item.val==2 ">
                         <insert>
                             insert ta(col1,col2) values(#{col1,jdbcType=VARCHAR},#{col2,jdbcType=VARCHAR})
                         </insert>

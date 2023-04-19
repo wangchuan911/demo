@@ -25,8 +25,8 @@ import java.util.regex.Pattern;
  * @Date 13:53
  */
 public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
-    Pattern PATTERN = Pattern.compile("\\#\\{([\\w\\.\\(\\)\\[\\]\\@\\_\\-]+)\\,jdbcType\\=(\\w+)\\}");
-    String PATTERN2 = "\\#\\{.+?\\}";
+    String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
+    Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
 
     P getPool(String name);
@@ -39,7 +39,6 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default List<Map.Entry<String, JdbcType>> getSqlParamTypes(String s) {
         List<Map.Entry<String, JdbcType>> list = new LinkedList<>();
-        Pattern.compile("\\$\\{([\\w\\.\\_\\@\\-\\&]+)(?:\\,jdbcType\\=)\\}");
         Matcher matcher = DataBaseConnectPool.PATTERN.matcher(s);
         JdbcType sqlType = null;
         String name;
@@ -59,7 +58,6 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
     }
 
     default String setValueToSql(Tuple tuple, String sql, BaseCondition<Long, TaskRequest> data) {
-        sql = sql.replaceAll(PATTERN2, "?");
         JdbcType jdbcType;
         Object value;
         for (Map.Entry<String, JdbcType> sqlParamType : getSqlParamTypes(sql)) {
@@ -110,7 +108,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
                 }
             tuple.addValue(value);
         }
-        return sql;
+        return sql.replaceAll(PATTERN_STRING, "?");
     }
 
     void removeInstance(String name);
