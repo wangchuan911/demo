@@ -24,73 +24,25 @@ import java.util.Map;
 @Tag(value = "transactional", parentTagTypes = Executable.class, desc = "事务")
 @Attr(name = "id", desc = "唯一标识")
 public class Transactional extends Unit implements Executable {
-    static Map<TaskRequest, Map<String, SqlConnection>> MAP = new HashMap<>();
-
-    /*@Override
-    protected void execute(TaskRequest data) throws Throwable {
-        Map<String, SqlConnection>
-                map = ObjectUtils.getMapValueOrNewSafe(MAP, data, () -> new HashMap<>());
-        if (!data.isDebugger && !map.containsKey(attributes.get("name"))) {
-            ((Future<SqlConnection>) Transactional
-                    .getDataBaseConnectPool(attributes.get("db"))
-                    .getConnect(attributes.get("name")))
-                    .onSuccess(sqlConnection -> {
-                        map.put(attributes.get("name"), sqlConnection);
-                        try {
-                            super.execute(data);
-                        } catch (Throwable throwable) {
-                            throwable.printStackTrace();
-                        }
-                    }).onFailure(data.promise::fail);
-        } else {
-            super.execute(data);
-        }
-    }*/
+    Map<TaskRequest, SqlConnection> MAP = new HashMap<>();
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
 
-        try {
-            Map<String, SqlConnection> map = ObjectUtils.getMapValueOrNewSafe(MAP, data, () -> new HashMap<>());
-            if (!data.isDebugger && !map.containsKey(attributes.get("id"))) {
-                ((Future<SqlConnection>) Transactional
-                        .getDataBaseConnectPool(attributes.get("db"))
-                        .getConnect(attributes.get("id")))
-                        .onSuccess(sqlConnection -> {
-                            map.put(attributes.get("name"), sqlConnection);
-                            super.start(data, toNext);
-                        }).onFailure(toNext::fail);
-            } else {
-                super.start(data, toNext);
-            }
-        } catch (Throwable throwable) {
-            toNext.fail(throwable);
-        }
+        ((Future<Object>) Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"))).onSuccess(o -> {
+            MAP.put(data, (SqlConnection) o);
+            super.start(data, toNext);
+        }).onFailure(toNext::fail);
     }
 
-    public static SqlConnection getSqlConnection(TaskRequest request, String name) {
-        return MAP.get(request).get(name);
+
+    public SqlConnection getSqlConnection(TaskRequest request) {
+        return MAP.get(request);
     }
 
-    public static DataBaseConnectPool getDataBaseConnectPool(String name) {
-        return (DataBaseConnectPool) ApplicationContextProvider
-                .getApplicationContext()
-                .getBeansWithAnnotation(Db.class)
-                .entrySet().stream()
-                .map(Map.Entry::getValue)
-                .filter(dataBaseConnectPool -> dataBaseConnectPool instanceof DataBaseConnectPool &&
-                        ApplicationContextProvider.getRealClass(dataBaseConnectPool.getClass()).getAnnotation(Db.class).value().equals(name))
-                .findFirst().orElse(null);
-    }
-
-    public static DataBaseConnectPool getDataBaseConnectPool(SqlConnection connection) {
-        return (DataBaseConnectPool) ApplicationContextProvider
-                .getApplicationContext()
-                .getBeansWithAnnotation(Db.class)
-                .entrySet().stream()
-                .map(Map.Entry::getValue)
-                .filter(dataBaseConnectPool -> dataBaseConnectPool instanceof DataBaseConnectPool &&
-                        ObjectUtils.getGenericTypes(dataBaseConnectPool.getClass(), DataBaseConnectPool.class, 1).isAssignableFrom(connection.getClass()))
-                .findFirst().orElse(null);
+    @Override
+    public void destroy(TaskRequest taskRequest) {
+        super.destroy(taskRequest);
+        MAP.remove(taskRequest);
     }
 }

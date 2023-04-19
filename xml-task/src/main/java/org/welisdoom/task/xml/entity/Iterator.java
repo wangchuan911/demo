@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @Tag(value = "iterator", parentTagTypes = Iterable.class, desc = "遍历器，遍历查询结果，文件等")
 public class Iterator extends Unit implements Executable {
-    String itemName = "item";
+    String itemName = "item", itemIndex = "index";
 
     /*protected void execute(TaskRequest data, Map<String, Object> item) throws Throwable {
         Map map = data.getBus(parent.id);
@@ -33,7 +33,8 @@ public class Iterator extends Unit implements Executable {
     protected void start(TaskRequest data, Promise<Object> toNext) {
         Map map = data.getBus(parent.id);
         try {
-            map.put(itemName, data.getLastUnitResult());
+            map.put(itemIndex, ((Map) data.getLastUnitResult()).get("index"));
+            map.put(itemName, ((Map) data.getLastUnitResult()).get("item"));
             super.start(data, toNext);
         } finally {
             map.remove(itemName);

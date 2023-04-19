@@ -8,6 +8,8 @@ import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.data.IData;
 import org.xml.sax.Attributes;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -156,13 +158,14 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     protected Future<Object> prepareNextUnit(TaskRequest data, Object value, Unit unit) {
+        long cost = System.currentTimeMillis();
         return Future.future(promise -> {
             data.lastUnitResult = value;
             System.out.println();
-            unit.log(">>>>>>>>>>开始>>>>>>>>>>>");
+            unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
             unit.start(data, promise);
         }).onComplete(objectAsyncResult -> {
-            unit.log("<<<<<<<<<<结束<<<<<<<<<<<");
+            unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
             System.out.println();
         });
     }

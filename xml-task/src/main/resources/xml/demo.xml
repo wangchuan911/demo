@@ -4,15 +4,16 @@
         <instance id="ftp1" tag="ftp"/>
         <instance id="csv1" tag="csv"/>
         <instance id="http1" tag="http"/>
+        <database id="rimdb" model="oracle"></database>
         <value id="val1"></value>
         <value id="val2"></value>
     </initialization>
     <start>
-        <transactional id="rimdb" db="oracle" batch="50">
+        <transactional link="rimdb" batch="50">
             <http>
                 <body>asdasdasdsadasdasdasdasdas</body>
             </http>
-            <select id="select1">
+            <select id="select1" link="rimdb">
                 <sql>
                     select 1 as "val" from dual union select 2 from dual
                     where
@@ -25,7 +26,7 @@
                 <iterator>
                     <if test="select1.item.val==2 ">
                         <insert>
-                            insert ta(col1,col2) values(#{col1,jdbcType=VARCHAR},#{col2,jdbcType=VARCHAR})
+                            insert pub_scan_log(id,res_id) values(seq_pub_scan_log.nextval,#{item.val,jdbcType=VARCHAR})
                         </insert>
                         <ftp ref="ftp1"></ftp>
                     </if>

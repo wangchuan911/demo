@@ -14,6 +14,7 @@ import org.welisdoon.common.data.BaseCondition;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 
 /**
@@ -94,6 +95,20 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
+    protected DataBaseConnectPool getDataBase(TaskRequest data) {
+        return Database.getDatabase(data, attributes.get("link"));
+    }
+
+    protected Future<SqlConnection> findConnect(TaskRequest data) {
+        Unit p = this.parent;
+        while (!(p == null || p instanceof Transactional)) {
+            p = p.parent;
+        }
+        if (p != null)
+            return Future.succeededFuture(((Transactional) p).getSqlConnection(data));
+        return getDataBase(data).getConnect(attributes.get("link"));
+    }
+
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         data.generateData(this);
@@ -103,24 +118,26 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         if (data.isDebugger) {
             debugStart(data, toNext);
         } else {
-            SqlConnection transaction = Transactional.getSqlConnection(data, attributes.get("db-name"));
-            BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
-            };
-            condition.setData(data);
-            condition.setPage(new BaseCondition.Page(1, 100));
-            condition.setCondition(data.getBus());
-            ((Future<RowSet<Row>>) Transactional
-                    .getDataBaseConnectPool(transaction)
-                    .page(transaction, sql, condition)).onSuccess(result -> {
-                Future<Object> listFuture = Future.succeededFuture();
-                for (Row row : result) {
-                    listFuture = listFuture.compose(o ->
-                            this.iterator(data, this.rowToMap(row))
-                    );
-                }
-                listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
-            }).onFailure(toNext::fail);
 
+            findConnect(data).onSuccess(connection -> {
+                BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
+                };
+                condition.setData(data);
+                condition.setPage(new BaseCondition.Page(1, 100));
+                condition.setCondition(data.getBus());
+                AtomicLong index = new AtomicLong(0);
+                ((Future<RowSet<Row>>) getDataBase(data)
+                        .page(connection, sql, condition)).onSuccess(result -> {
+                    Future<Object> listFuture = Future.succeededFuture();
+                    for (Row row : result) {
+                        listFuture = listFuture.compose(o ->
+                                this.iterator(data, Map.of("index", index.incrementAndGet(), "item", this.rowToMap(row)))
+                        );
+                    }
+                    listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
+                }).onFailure(toNext::fail);
+
+            }).onFailure(toNext::fail);
         }
     }
 
