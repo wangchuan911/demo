@@ -95,7 +95,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
-    protected DataBaseConnectPool getDataBase(TaskRequest data) {
+    /*protected DataBaseConnectPool getDataBase(TaskRequest data) {
         return Database.getDatabase(data, attributes.get("link"));
     }
 
@@ -107,26 +107,25 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         if (p != null)
             return Future.succeededFuture(((Transactional) p).getSqlConnection(data));
         return getDataBase(data).getConnect(attributes.get("link"));
-    }
+    }*/
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         data.generateData(this);
         String sql = getScript(data);
-        log(sql);
 
         if (data.isDebugger) {
             debugStart(data, toNext);
         } else {
 
-            findConnect(data).onSuccess(connection -> {
+            Database.findConnect(this, data).onSuccess(connection -> {
                 BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
                 };
                 condition.setData(data);
                 condition.setPage(new BaseCondition.Page(1, 100));
                 condition.setCondition(data.getBus());
                 AtomicLong index = new AtomicLong(0);
-                ((Future<RowSet<Row>>) getDataBase(data)
+                ((Future<RowSet<Row>>) Database.getDataBase(this, data)
                         .page(connection, sql, condition)).onSuccess(result -> {
                     Future<Object> listFuture = Future.succeededFuture();
                     for (Row row : result) {

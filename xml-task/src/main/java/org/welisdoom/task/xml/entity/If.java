@@ -34,11 +34,13 @@ public class If extends Unit implements Executable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        log(data.getBus());
-        log(attributes.get("test"));
         try {
-            if (test(attributes.get("test"), data.getOgnlContext(), data.getBus())) {
-                log("ture");
+            boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
+            log(String.format("表达式[%s]", attributes.get("test")));
+            log(String.format("参数[%s]", data.getBus().toString()));
+            log(String.format("结果[%s]", test));
+
+            if (test) {
                 super.start(data, toNext);
             } else {
                 toNext.complete();

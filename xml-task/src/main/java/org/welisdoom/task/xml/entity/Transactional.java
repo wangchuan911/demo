@@ -4,6 +4,7 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.Transaction;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -23,6 +24,7 @@ import java.util.Map;
  */
 @Tag(value = "transactional", parentTagTypes = Executable.class, desc = "事务")
 @Attr(name = "id", desc = "唯一标识")
+@Attr(name = "link", desc = "database的Id")
 public class Transactional extends Unit implements Executable {
     Map<TaskRequest, SqlConnection> MAP = new HashMap<>();
 
@@ -31,7 +33,23 @@ public class Transactional extends Unit implements Executable {
 
         ((Future<Object>) Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"))).onSuccess(o -> {
             MAP.put(data, (SqlConnection) o);
-            super.start(data, toNext);
+            ((SqlConnection) o).begin().onSuccess(transaction -> {
+                Promise<Object> promise = Promise.promise();
+                promise.future().onSuccess(o1 -> {
+                    transaction
+                            .commit()
+                            .onSuccess(unused -> {
+                                toNext.complete(o1);
+                            }).onFailure(toNext::fail);
+                }).onFailure(throwable -> {
+                    transaction
+                            .rollback()
+                            .onSuccess(unused -> {
+                                toNext.fail(throwable);
+                            }).onFailure(toNext::fail);
+                });
+                super.start(data, promise);
+            });
         }).onFailure(toNext::fail);
     }
 

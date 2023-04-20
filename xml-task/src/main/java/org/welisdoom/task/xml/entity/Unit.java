@@ -158,14 +158,15 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     protected Future<Object> prepareNextUnit(TaskRequest data, Object value, Unit unit) {
-        long cost = System.currentTimeMillis();
+        final long[] cost = new long[1];
         return Future.future(promise -> {
+            cost[0] = System.currentTimeMillis();
             data.lastUnitResult = value;
             System.out.println();
             unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
             unit.start(data, promise);
         }).onComplete(objectAsyncResult -> {
-            unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
+            unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost[0]) / 1000.0d));
             System.out.println();
         });
     }

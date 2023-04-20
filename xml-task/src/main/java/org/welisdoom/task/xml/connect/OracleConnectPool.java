@@ -81,15 +81,7 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         sql = setValueToSql(tuple, sql, data);
         tuple.addValue(data.getPage().getEnd());
         tuple.addValue(data.getPage().getStart());
-        System.out.println("sql:" + sql);
-        System.out.print("params:");
-        for (int i = 0, len = tuple.size(); i < len; i++) {
-            System.out.print(tuple.getValue(i));
-            System.out.print(len - 1 == i ? "" : ",");
-        }
-        System.out.println();
-
-
+        log(sql, tuple);
         return connection.preparedQuery(sql).execute(tuple);
     }
 

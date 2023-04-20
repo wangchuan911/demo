@@ -37,6 +37,12 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data);
 
+    default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data){
+        Tuple tuple = Tuple.tuple();
+        log(sql = setValueToSql(tuple, sql, data), tuple);
+        return connection.preparedQuery(sql).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
+    }
+
     default List<Map.Entry<String, JdbcType>> getSqlParamTypes(String s) {
         List<Map.Entry<String, JdbcType>> list = new LinkedList<>();
         Matcher matcher = DataBaseConnectPool.PATTERN.matcher(s);
@@ -112,6 +118,16 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
     }
 
     void removeInstance(String name);
+
+    default void log(String sql, Tuple tuple) {
+        System.out.println(String.format("sql[%s]", sql));
+        System.out.print("params[");
+        for (int i = 0, len = tuple.size(); i < len; i++) {
+            System.out.print(tuple.getValue(i));
+            System.out.print(len - 1 == i ? "" : ",");
+        }
+        System.out.println("]");
+    }
 
     class DatabaseLinkInfo {
         String name;

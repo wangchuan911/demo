@@ -92,4 +92,24 @@ public class Database extends Unit {
         super.destroy(taskRequest);
         MAP.remove(taskRequest);
     }
+
+    protected static Future<SqlConnection> findConnect(Unit unit, TaskRequest data) {
+        Unit p = unit.parent;
+        while (!(p == null || p instanceof Transactional)) {
+            p = p.parent;
+        }
+        if (p != null)
+            return Future.succeededFuture(((Transactional) p).getSqlConnection(data));
+        return getDataBase(unit, data).getConnect(unit.attributes.get("link"));
+    }
+
+    protected static DataBaseConnectPool getDataBase(Unit unit, TaskRequest data) {
+        Unit p = unit.parent;
+        while (!(p == null || p instanceof Transactional)) {
+            p = p.parent;
+        }
+        if (p != null)
+            return Database.getDatabase(data, p.attributes.get("link"));
+        return Database.getDatabase(data, unit.attributes.get("link"));
+    }
 }

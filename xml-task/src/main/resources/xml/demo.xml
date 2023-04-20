@@ -26,7 +26,7 @@
                 <iterator>
                     <if test="select1.item.val==2 ">
                         <insert>
-                            insert pub_scan_log(id,res_id) values(seq_pub_scan_log.nextval,#{item.val,jdbcType=VARCHAR})
+                            insert into pub_scan_log(id,res_id) values(seq_pub_scan_log.nextval,#{select1.item.val,jdbcType=VARCHAR})
                         </insert>
                         <ftp ref="ftp1"></ftp>
                     </if>
