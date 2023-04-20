@@ -66,20 +66,14 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
         return (Future) getPool(name).getConnection();
     }
 
-    public Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
-        Tuple tuple = Tuple.tuple();
-        sql = sql + String.format(" limit ? offset ?");
-        sql = setValueToSql(tuple, sql, data);
+    @Override
+    public String toPageSql(String body) {
+        return body + String.format(" limit ? offset ?");
+    }
 
-        tuple.addValue(data.getPage().getPageSize());
-        tuple.addValue(data.getPage().getStart() - 1);
-        System.out.println(sql);
-        for (int i = 0, len = tuple.size(); i < len; i++) {
-            System.out.print(tuple.getValue(i));
-            System.out.print(len - 1 == i ? "" : ",");
-        }
-
-        return connection.preparedQuery(sql).execute(Tuple.tuple());
+    public void setPage(Tuple tuple, BaseCondition.Page page) {
+        tuple.addValue(page.getPageSize());
+        tuple.addValue(page.getStart() - 1);
     }
 
 

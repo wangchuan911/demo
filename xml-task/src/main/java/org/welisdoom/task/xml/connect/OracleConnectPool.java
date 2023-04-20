@@ -3,6 +3,8 @@ package org.welisdoom.task.xml.connect;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.oracleclient.OracleConnection;
@@ -26,7 +28,10 @@ import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 import java.sql.JDBCType;
 import java.sql.SQLType;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -74,16 +79,18 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         return (Future) getPool(name).getConnection();
     }
 
+
     @Override
-    public Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
-        Tuple tuple = Tuple.tuple();
-        sql = String.format("select * from (select a.*,rownum as \"@RowNum\" from (%s and rownum <= ?)a) where \"@RowNum\">= ?", sql);
-        sql = setValueToSql(tuple, sql, data);
-        tuple.addValue(data.getPage().getEnd());
-        tuple.addValue(data.getPage().getStart());
-        log(sql, tuple);
-        return connection.preparedQuery(sql).execute(tuple);
+    public String toPageSql(String body) {
+        return String.format("select * from (select a.*,rownum as \"@RowNum\" from (%s and rownum <= ?)a) where \"@RowNum\">= ?", body);
     }
+
+    @Override
+    public void setPage(Tuple tuple, BaseCondition.Page page) {
+        tuple.addValue(page.getEnd());
+        tuple.addValue(page.getStart());
+    }
+
 
 
     @Override

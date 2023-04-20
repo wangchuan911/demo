@@ -2,6 +2,7 @@ package org.welisdoom.task.xml.connect;
 
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.sqlclient.*;
 import ognl.Ognl;
 import ognl.OgnlException;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,11 +37,41 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     Future<S> getConnect(String name);
 
-    Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data);
+    default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
+        List<Object> params = new LinkedList<>();
+        sql = setValueToSql(params, toPageSql(sql), data);
+        Tuple tuple = Tuple.tuple(params);
+        setPage(tuple, data.getPage());
+        log(sql, tuple);
+        return connection.preparedQuery(sql).execute(tuple);
+    }
 
-    default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data){
-        Tuple tuple = Tuple.tuple();
-        log(sql = setValueToSql(tuple, sql, data), tuple);
+    default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
+        List<Object> params = new LinkedList<>();
+        sql = setValueToSql(params, toPageSql(sql), data);
+        Tuple tuple = Tuple.tuple(params);
+        setPage(tuple, data.getPage());
+        log(sql, tuple);
+        return pageScroll(connection, sql, params, data.getPage(), future);
+    }
+
+    default Future<Object> pageScroll(SqlConnection connection, String sql, List<Object> list, BaseCondition.Page page, Function<RowSet<Row>, Future<Object>> future) {
+        return connection
+                .preparedQuery(sql)
+                .execute(Tuple.tuple(list).addValue(page.getEnd()).addValue(page.getStart())).compose(rows ->
+                        future
+                                .apply(rows)
+                                .compose(o -> rows.rowCount() < page.getPageSize()
+                                        ? Future.succeededFuture()
+                                        : pageScroll(connection, sql, list, page.setPage(page.getPage() + 1), future)
+                                ));
+    }
+
+    default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
+        List<Object> params = new LinkedList<>();
+        sql = setValueToSql(params, sql, data);
+        Tuple tuple = Tuple.tuple(params);
+        log(sql, tuple);
         return connection.preparedQuery(sql).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
     }
 
@@ -63,7 +95,11 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
         return list;
     }
 
-    default String setValueToSql(Tuple tuple, String sql, BaseCondition<Long, TaskRequest> data) {
+    String toPageSql(String body);
+
+    void setPage(Tuple tuple, BaseCondition.Page page);
+
+    default String setValueToSql(List<Object> params, String sql, BaseCondition<Long, TaskRequest> data) {
         JdbcType jdbcType;
         Object value;
         for (Map.Entry<String, JdbcType> sqlParamType : getSqlParamTypes(sql)) {
@@ -112,7 +148,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
 
                 }
-            tuple.addValue(value);
+            params.add(value);
         }
         return sql.replaceAll(PATTERN_STRING, "?");
     }

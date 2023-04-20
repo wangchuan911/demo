@@ -125,16 +125,18 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                 condition.setPage(new BaseCondition.Page(1, 100));
                 condition.setCondition(data.getBus());
                 AtomicLong index = new AtomicLong(0);
-                ((Future<RowSet<Row>>) Database.getDataBase(this, data)
-                        .page(connection, sql, condition)).onSuccess(result -> {
-                    Future<Object> listFuture = Future.succeededFuture();
-                    for (Row row : result) {
-                        listFuture = listFuture.compose(o ->
-                                this.iterator(data, Map.of("index", index.incrementAndGet(), "item", this.rowToMap(row)))
-                        );
-                    }
-                    listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
-                }).onFailure(toNext::fail);
+                Future<Object> future = Database
+                        .getDataBase(this, data)
+                        .pageScroll(connection, sql, condition, rows -> {
+                            Future<Object> listFuture = Future.succeededFuture();
+                            for (Row row : (RowSet<Row>) rows) {
+                                listFuture = listFuture.compose(o ->
+                                        this.iterator(data, Map.of("index", index.incrementAndGet(), "item", this.rowToMap(row)))
+                                );
+                            }
+                            return listFuture;
+                        });
+                future.onSuccess(toNext::complete).onFailure(toNext::fail);
 
             }).onFailure(toNext::fail);
         }
