@@ -78,8 +78,8 @@ public class Http extends Unit implements Executable, Copyable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
-        System.out.println(body);
+        String body = textFormat(data, getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim());
+        log(body);
         if (true) {
             toNext.complete();
             return;
@@ -105,24 +105,28 @@ public class Http extends Unit implements Executable, Copyable {
             }
 
             httpConnection.connect();
-
-            InputStream input = httpConnection.getInputStream();
+            if (httpConnection.getResponseCode() == 0) {
+                InputStream input = httpConnection.getInputStream();
             /*try (input) {
                 StreamUtils.copyToString(input, Charset.forName("utf-8"));
             }*/
-            Future<Object> future;
-            switch (attributes.get("output")) {
-                case "stream":
-                    future = startChildUnit(data, input, Executable.class);
-                    break;
-                case "json":
-                    future = startChildUnit(data, JSON.parse(StreamUtils.copyToString(input, Charset.forName("utf-8"))));
-                    break;
-                default:
-                    future = startChildUnit(data, StreamUtils.copyToString(input, Charset.forName("utf-8")));
-                    break;
+                Future<Object> future;
+                switch (attributes.get("output")) {
+                    case "stream":
+                        future = startChildUnit(data, input, Executable.class);
+                        break;
+                    case "json":
+                        future = startChildUnit(data, JSON.parse(StreamUtils.copyToString(input, Charset.forName("utf-8"))));
+                        break;
+                    default:
+                        future = startChildUnit(data, StreamUtils.copyToString(input, Charset.forName("utf-8")));
+                        break;
+                }
+                future.onSuccess(toNext::complete).onFailure(toNext::fail);
+            } else {
+                InputStream input = httpConnection.getErrorStream();
+                toNext.fail(new RuntimeException(StreamUtils.copyToString(input, Charset.forName("utf-8"))));
             }
-            future.onSuccess(toNext::complete).onFailure(toNext::fail);
         } catch (Throwable e) {
             toNext.fail(e);
         } finally {

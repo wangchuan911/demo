@@ -1,7 +1,10 @@
 package org.welisdoom.task.xml.entity;
 
+import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import ognl.Ognl;
+import ognl.OgnlException;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoom.task.xml.intf.Copyable;
@@ -12,6 +15,8 @@ import org.xml.sax.Attributes;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -190,7 +195,7 @@ public class Unit implements UnitType, IData<String, Model> {
         System.out.print("]==>");
     }
 
-    static <T extends Copyable> T copyableUnit(T source) {
+    protected static <T extends Copyable> T copyableUnit(T source) {
         try {
             Unit target = (Unit) source.getClass().getConstructor().newInstance();
             target.id = ((Unit) source).id;
@@ -209,5 +214,35 @@ public class Unit implements UnitType, IData<String, Model> {
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    final static String DEFAULT_VALUE_SIGN = "\\{\\{(.+?)\\}\\}";
+    final static Pattern PATTERN = Pattern.compile(DEFAULT_VALUE_SIGN);
+    final static String sign = "%@#VALUE#@%";
+
+    protected static String textFormat(TaskRequest request, String text) {
+        if (text == null) return "";
+        List<Map.Entry<String, Object>> list = new LinkedList<>();
+        Matcher matcher = PATTERN.matcher(text);
+        String name;
+        while (matcher.find()) {
+            switch (matcher.groupCount()) {
+                case 1:
+                    name = matcher.group(1);
+                    break;
+                default:
+                    continue;
+            }
+            try {
+                list.add(Map.entry(name, Ognl.getValue(name, request.getOgnlContext(), request.getBus(), Object.class)));
+            } catch (OgnlException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+        }
+        text = text.replaceAll(DEFAULT_VALUE_SIGN, sign);
+        for (Map.Entry<String, Object> entry : list) {
+            text = text.replaceFirst(sign, TypeUtils.castToString(entry.getValue()));
+        }
+        return text;
     }
 }
