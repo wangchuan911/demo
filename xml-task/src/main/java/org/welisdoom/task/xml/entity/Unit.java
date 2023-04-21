@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.data.IData;
 import org.xml.sax.Attributes;
 
@@ -178,21 +179,17 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     protected void log(Object o) {
-        printTag();
+        printTag(true);
+        System.out.print(":");
         System.out.println(o);
     }
 
-    protected void printTag() {
+    protected void printTag(boolean highLight) {
         if (this.parent != null) {
-            this.parent.printTag();
+            this.parent.printTag(false);
         }
-        System.out.print("[");
-        System.out.print(this.getClass().getSimpleName());
-        if (!StringUtils.isEmpty(this.id)) {
-            System.out.print(" id=");
-            System.out.print(this.id);
-        }
-        System.out.print("]==>");
+        String str = String.format("==>[%s%s]", this.getClass().getSimpleName(), !StringUtils.isEmpty(this.id) ? (":" + this.id) : "");
+        System.out.print(highLight ? LogUtils.styleString("", (hashCode() % 5) + 31, 1, str) : str);
     }
 
     protected static <T extends Copyable> T copyableUnit(T source) {

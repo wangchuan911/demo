@@ -36,27 +36,30 @@ public abstract class BaseCondition<ID, D extends IData<ID, ?>> {
             setPage(page);
         }
 
-        protected void compute() {
+        protected Page compute() {
             start = (this.page - 1) * this.pageSize + startIndex;
             end = this.page * this.pageSize;
+            return this;
         }
 
         public int getPage() {
             return page;
         }
 
-        public void setPage(int page) {
+        public Page setPage(int page) {
             this.page = Math.max(page, 1);
             compute();
+            return this;
         }
 
         public int getPageSize() {
             return pageSize;
         }
 
-        public void setPageSize(int pageSize) {
+        public Page setPageSize(int pageSize) {
             this.pageSize = Math.max(pageSize, 1);
             compute();
+            return this;
         }
 
         public long getStart() {
@@ -68,9 +71,10 @@ public abstract class BaseCondition<ID, D extends IData<ID, ?>> {
         }
 
 
-        public void setStartIndex(int startIndex) {
+        public Page setStartIndex(int startIndex) {
             this.startIndex = startIndex;
             compute();
+            return this;
         }
     }
 
