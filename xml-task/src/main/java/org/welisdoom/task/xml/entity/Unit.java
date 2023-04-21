@@ -195,7 +195,7 @@ public class Unit implements UnitType, IData<String, Model> {
             Unit target = (Unit) source.getClass().getConstructor().newInstance();
             target.id = ((Unit) source).id;
             target.attributes = ((Unit) source).attributes;
-            target.children = ((Unit) source)
+            target.children.addAll(0, ((Unit) source)
                     .children
                     .stream()
                     .filter(unit -> unit instanceof Copyable)
@@ -204,7 +204,7 @@ public class Unit implements UnitType, IData<String, Model> {
                         child.setParent(target);
                         return child;
                     })
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
             return (T) target;
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);

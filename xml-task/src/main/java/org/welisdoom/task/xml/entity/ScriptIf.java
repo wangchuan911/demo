@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 17:57
  */
-@Tag(value = "if", parentTagTypes = {Script.class, Instance.class}, desc = "条件判断,返回脚本内容")
+@Tag(value = "if", parentTagTypes = {Script.class}, desc = "条件判断,返回脚本内容")
 @Attr(name = "test", require = true, desc = "表达式")
 public class ScriptIf extends Unit implements Script, Copyable {
     @Override
