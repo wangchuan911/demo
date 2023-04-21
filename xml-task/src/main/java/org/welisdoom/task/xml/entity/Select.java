@@ -119,11 +119,13 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         } else {
 
             Database.findConnect(this, data).onSuccess(connection -> {
-                BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
+                BaseCondition<String, TaskRequest> condition = new BaseCondition<>() {
+                    {
+                        setData(data);
+                        setPage(new BaseCondition.Page(1, 100));
+                        setCondition(data.getBus());
+                    }
                 };
-                condition.setData(data);
-                condition.setPage(new BaseCondition.Page(1, 100));
-                condition.setCondition(data.getBus());
                 AtomicLong index = new AtomicLong(0);
                 Future<Object> future = Database
                         .getDataBase(this, data)

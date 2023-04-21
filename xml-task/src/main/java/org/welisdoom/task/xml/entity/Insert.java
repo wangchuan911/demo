@@ -8,6 +8,7 @@ import io.vertx.sqlclient.SqlConnection;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
+import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoon.common.data.BaseCondition;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "insert", parentTagTypes = Executable.class, desc = "sql写入")
 @Attr(name = "id", desc = "唯一标识")
-public class Insert extends Unit implements Executable {
+public class Insert extends Unit implements Executable, Copyable {
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         System.out.println(getScript(data.getBus(), " "));
@@ -34,7 +35,7 @@ public class Insert extends Unit implements Executable {
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         Database.findConnect(this, data).onSuccess(connection -> {
-            BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
+            BaseCondition<String, TaskRequest> condition = new BaseCondition<String, TaskRequest>() {
             };
             condition.setData(data);
             condition.setCondition(data.getBus());
@@ -47,4 +48,8 @@ public class Insert extends Unit implements Executable {
     }
 
 
+    @Override
+    public Copyable copy() {
+        return copyableUnit(this);
+    }
 }

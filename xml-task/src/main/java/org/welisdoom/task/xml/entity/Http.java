@@ -8,6 +8,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 @Attr(name = "id", desc = "唯一标识")
 @Attr(name = "url", desc = "请求地址")
 @Attr(name = "output", desc = "输出方式:stream流;json;string(默认)")
-public class Http extends Unit implements Executable {
+public class Http extends Unit implements Executable, Copyable {
     /*@Override
     protected void execute(TaskRequest data) {
         String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data.getBus(), "").trim();
@@ -135,21 +136,36 @@ public class Http extends Unit implements Executable {
         }
     }
 
-    @Tag(value = "body", parentTagTypes = Http.class, desc = "post请求内容")
-    public static class Body extends Unit implements Script {
+    @Override
+    public Copyable copy() {
+        return copyableUnit(this);
+    }
+
+    @Tag(value = "body", parentTagTypes = {Http.class, Instance.class}, desc = "post请求内容")
+    public static class Body extends Unit implements Script, Copyable {
 
         public String getScript(TaskRequest request, String split) {
             return children.stream()
                     .filter(unit -> unit instanceof Script)
                     .map(unit -> ((Script) unit).getScript(request, split).trim()).collect(Collectors.joining(split));
         }
+
+        @Override
+        public Copyable copy() {
+            return copyableUnit(this);
+        }
     }
 
-    @Tag(value = "header", parentTagTypes = Http.class, desc = "请求头信息")
-    public static class Header extends Unit {
+    @Tag(value = "header", parentTagTypes = {Http.class, Instance.class}, desc = "请求头信息")
+    public static class Header extends Unit implements Copyable {
 
         public String getContent() {
             return MapUtils.getString(attributes, "content", "").trim();
+        }
+
+        @Override
+        public Copyable copy() {
+            return copyableUnit(this);
         }
     }
 }

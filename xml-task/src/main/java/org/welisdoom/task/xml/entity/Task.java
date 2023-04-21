@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -23,11 +24,11 @@ public class Task extends Unit implements Root {
         return vertx;
     }
 
-    public void run(TaskRequest data) {
+    public Future<Object> run(TaskRequest data) {
         tasks.add(data);
         Promise<Object> promise = Promise.promise();
         start(data, promise);
-        promise.future().onSuccess(o -> {
+        return promise.future().onSuccess(o -> {
             log("success");
         }).onFailure(
                 throwable ->

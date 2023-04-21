@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.consts.Model;
+import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.data.IData;
 import org.xml.sax.Attributes;
@@ -187,5 +188,26 @@ public class Unit implements UnitType, IData<String, Model> {
             System.out.print(this.id);
         }
         System.out.print("]==>");
+    }
+
+    static <T extends Copyable> T copyableUnit(T source) {
+        try {
+            Unit target = (Unit) source.getClass().getConstructor().newInstance();
+            target.id = ((Unit) source).id;
+            target.attributes = ((Unit) source).attributes;
+            target.children = ((Unit) source)
+                    .children
+                    .stream()
+                    .filter(unit -> unit instanceof Copyable)
+                    .map(unit -> {
+                        Unit child = (Unit) ((Copyable) unit).copy();
+                        child.setParent(target);
+                        return child;
+                    })
+                    .collect(Collectors.toList());
+            return (T) target;
+        } catch (Throwable e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 }

@@ -37,7 +37,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     Future<S> getConnect(String name);
 
-    default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
+    default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
         List<Object> params = new LinkedList<>();
         sql = setValueToSql(params, toPageSql(sql), data);
         Tuple tuple = Tuple.tuple(params);
@@ -46,7 +46,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
         return connection.preparedQuery(sql).execute(tuple);
     }
 
-    default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
+    default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
         List<Object> params = new LinkedList<>();
         sql = setValueToSql(params, toPageSql(sql), data);
         Tuple tuple = Tuple.tuple(params);
@@ -67,7 +67,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
                                 ));
     }
 
-    default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<Long, TaskRequest> data) {
+    default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
         List<Object> params = new LinkedList<>();
         sql = setValueToSql(params, sql, data);
         Tuple tuple = Tuple.tuple(params);
@@ -99,7 +99,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     void setPage(Tuple tuple, BaseCondition.Page page);
 
-    default String setValueToSql(List<Object> params, String sql, BaseCondition<Long, TaskRequest> data) {
+    default String setValueToSql(List<Object> params, String sql, BaseCondition<String, TaskRequest> data) {
         JdbcType jdbcType;
         Object value;
         for (Map.Entry<String, JdbcType> sqlParamType : getSqlParamTypes(sql)) {

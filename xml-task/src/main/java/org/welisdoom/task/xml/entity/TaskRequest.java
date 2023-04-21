@@ -16,7 +16,7 @@ import java.util.Map;
  * @Author Septem
  * @Date 15:46
  */
-public class TaskRequest implements IData<Long, Model> {
+public class TaskRequest implements IData<String, Model> {
     boolean isDebugger = false;
     Map<String, Object> bus = new HashMap<>();
     OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
@@ -54,15 +54,15 @@ public class TaskRequest implements IData<Long, Model> {
         bus.put(unit.id, new HashMap<>());
     }
 
-    Long id;
+    String id;
 
     @Override
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
     @Override
-    public IData setId(Long aLong) {
+    public IData setId(String aLong) {
         this.id = aLong;
         return this;
     }
