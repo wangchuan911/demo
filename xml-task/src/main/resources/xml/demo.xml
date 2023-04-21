@@ -17,7 +17,7 @@
                 <sql>
                     select 1 as "val" from dual union select 2 from dual
                     where
-                    <if test="$inputs.input1==1">
+                    <if test="$inputs.input1=='123'">
                         1=1 and
                     </if>
 
@@ -25,8 +25,15 @@
                 </sql>
                 <iterator>
                     <if test="select1.item.val==2 ">
+                        <http url="">
+                            <body>
+                                {"name":"{{$inputs.input1}}","name2":"{{$inputs.input2}}","name3":"{{$inputs.input3}}"}
+
+                            </body>
+                        </http>
                         <insert>
-                            insert into pub_scan_log(id,res_id) values(seq_pub_scan_log.nextval,#{select1.item.val,jdbcType=VARCHAR})
+                            insert into pub_scan_log(id,res_id)
+                            values(seq_pub_scan_log.nextval,#{select1.item.val,jdbcType=VARCHAR})
                         </insert>
                         <ftp ref="ftp1"></ftp>
                     </if>
