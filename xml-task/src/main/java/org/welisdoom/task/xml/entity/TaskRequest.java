@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import com.sun.istack.NotNull;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang3.StringUtils;
@@ -9,6 +10,7 @@ import org.welisdoon.common.data.IData;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @Classname TastRequst
@@ -22,6 +24,10 @@ public class TaskRequest implements IData<String, Model> {
     OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
 
     Object lastUnitResult;
+
+    public TaskRequest(@NotNull String id) {
+        this.id = id;
+    }
 
     public void setBus(Unit unit, String key, Object value) {
         String name;
@@ -44,7 +50,8 @@ public class TaskRequest implements IData<String, Model> {
         return (T) bus.get(key);
     }
 
-    public TaskRequest(Object o) {
+    public TaskRequest(@NotNull String id, Object o) {
+        this.id = id;
         bus.put("$inputs", o);
     }
 
@@ -83,5 +90,18 @@ public class TaskRequest implements IData<String, Model> {
 
     public OgnlContext getOgnlContext() {
         return ognlContext;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TaskRequest that = (TaskRequest) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

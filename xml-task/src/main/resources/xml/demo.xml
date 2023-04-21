@@ -15,7 +15,8 @@
             </http>
             <select id="select1" link="rimdb">
                 <sql>
-                    select 1 as "val" from dual union select 2 from dual
+                    select 1 as "val" from dual union select 2 from dual union select 3 from dual union select 4 from
+                    dual
                     where
                     <if test="$inputs.input1=='123'">
                         1=1 and
@@ -36,6 +37,9 @@
                             values(seq_pub_scan_log.nextval,#{select1.item.val,jdbcType=VARCHAR})
                         </insert>
                         <ftp ref="ftp1"></ftp>
+                    </if>
+                    <if test="select1.item.val==3">
+                        <break ></break>
                     </if>
                 </iterator>
             </select>

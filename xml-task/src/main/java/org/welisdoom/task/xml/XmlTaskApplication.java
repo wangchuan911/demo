@@ -98,7 +98,7 @@ public class XmlTaskApplication {
                             promise.fail("未知的操作");
                             return;
                     }
-                    task.run(new TaskRequest(config.params))
+                    task.run(new TaskRequest(stringStringEntry.getKey(), config.params))
                             .onSuccess(promise::complete).onFailure(promise::fail);
                 } catch (Throwable e) {
                     e.printStackTrace();
