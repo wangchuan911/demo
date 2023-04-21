@@ -17,7 +17,7 @@
                 <sql>
                     select 1 as "val" from dual union select 2 from dual
                     where
-                    <if test="__input.input1==1">
+                    <if test="$inputs.input1==1">
                         1=1 and
                     </if>
 

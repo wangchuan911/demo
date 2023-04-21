@@ -180,12 +180,12 @@ public class Unit implements UnitType, IData<String, Model> {
         if (this.parent != null) {
             this.parent.printTag();
         }
-        System.out.print("<");
+        System.out.print("[");
         System.out.print(this.getClass().getSimpleName());
         if (!StringUtils.isEmpty(this.id)) {
             System.out.print(" id=");
             System.out.print(this.id);
         }
-        System.out.print(">");
+        System.out.print("]==>");
     }
 }

@@ -45,7 +45,7 @@ public class TaskRequest implements IData<Long, Model> {
     }
 
     public TaskRequest(Object o) {
-        bus.put("__input", o);
+        bus.put("$inputs", o);
     }
 
 

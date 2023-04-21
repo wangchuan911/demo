@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task>
+    <initialization>
+        <instance id="ftp1" tag="ftp"/>
+        <instance id="csv1" tag="csv"/>
+        <instance id="http1" tag="http"/>
+        <database id="rimdb" model="oracle"></database>
+        <value id="val1"></value>
+        <value id="val2"
+               value="@java.time.LocalDateTime@now()@format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))"></value>
+    </initialization>
+    <start>
+        <select link="rimdb" id="getProject">
+            <sql>
+                select * from v8_proj_check_rela@link_rimdb where rownum &lt; 20
+            </sql>
+            <iterator>
+                <insert link="rimdb">
+                    update pub_scan_log a set a.res_no='aaaa' where a.res_id='2'
+                </insert>
+                <set-value name="count"></set-value>
+                <if test="$values.count>0">
+
+                </if>
+            </iterator>
+        </select>
+    </start>
+</task>

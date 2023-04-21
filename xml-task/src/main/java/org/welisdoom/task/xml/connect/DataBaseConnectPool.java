@@ -61,7 +61,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
                 .execute(Tuple.tuple(list).addValue(page.getEnd()).addValue(page.getStart())).compose(rows ->
                         future
                                 .apply(rows)
-                                .compose(o -> rows.rowCount() < page.getPageSize()
+                                .compose(o -> rows.size() < page.getPageSize()
                                         ? Future.succeededFuture()
                                         : pageScroll(connection, sql, list, page.setPage(page.getPage() + 1), future)
                                 ));

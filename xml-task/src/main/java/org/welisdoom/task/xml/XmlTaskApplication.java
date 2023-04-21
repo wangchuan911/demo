@@ -46,7 +46,7 @@ public class XmlTaskApplication {
     @EventListener
     public void run(ApplicationReadyEvent readyEvent) {
         try {
-            SAXParserHandler.loadTask("src\\main\\resources\\xml\\demo.xml").run(new TaskRequest(new HashMap<>(Map.of("input1", 1))));
+            SAXParserHandler.loadTask("src\\main\\resources\\xml\\csv-demo.xml").run(new TaskRequest(new HashMap<>(Map.of("input1", 1))));
         } catch (Exception e) {
             e.printStackTrace();
         }
