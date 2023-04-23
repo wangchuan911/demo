@@ -33,13 +33,18 @@ public class Iterator extends Unit implements Executable {
     protected void start(TaskRequest data, Promise<Object> toNext) {
         Map map = data.getBus(parent.id);
         try {
-            map.put(itemIndex, ((Map) data.getLastUnitResult()).get("index"));
-            map.put(itemName, ((Map) data.getLastUnitResult()).get("item"));
+            Iterable.Item item = data.getLastUnitResult();
+            map.put(itemIndex, item.getIndex());
+            map.put(itemName, item.getItem());
+            item.destroy();
+            item = null;
             super.start(data, toNext);
         } finally {
             map.remove(itemName);
+            map.remove(itemName);
         }
     }
+
 
     public static Future<Object> iterator(Unit unit, TaskRequest data, Object item) {
         return unit.startChildUnit(data, item, Iterator.class);

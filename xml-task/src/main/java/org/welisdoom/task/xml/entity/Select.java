@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.*;
-import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
-import java.util.stream.Stream;
 
 /**
  * @Classname Select
@@ -134,7 +132,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                             Future<Object> listFuture = Future.succeededFuture();
                             for (Row row : (RowSet<Row>) rows) {
                                 listFuture = listFuture.compose(o ->
-                                        this.iterator(data, Map.of("index", index.incrementAndGet(), "item", this.rowToMap(row)))
+                                        this.iterator(data, Item.of(index.incrementAndGet(), this.rowToMap(row)))
                                 );
                             }
                             return listFuture;
@@ -142,8 +140,8 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                 future.onSuccess(o -> {
                     toNext.complete(index.get());
                 }).onFailure(throwable -> {
-                    if (throwable instanceof Break.BreakLoopException) {
-                        if (((Break.BreakLoopException) throwable).decrementAndGetDeep() == 0) {
+                    if (throwable instanceof Break.BreakLoopThrowable) {
+                        if (((Break.BreakLoopThrowable) throwable).decrementAndGetDeep() == 0) {
                             toNext.complete(index.get());
                             return;
                         }

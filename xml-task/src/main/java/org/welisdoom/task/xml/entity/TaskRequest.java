@@ -84,8 +84,8 @@ public class TaskRequest implements IData<String, Model> {
         return null;
     }
 
-    public Object getLastUnitResult() {
-        return lastUnitResult;
+    public <T> T getLastUnitResult() {
+        return (T) lastUnitResult;
     }
 
     public OgnlContext getOgnlContext() {

@@ -1,12 +1,11 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Promise;
+import io.vertx.core.impl.NoStackTraceThrowable;
 import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoom.task.xml.intf.type.Stream;
-import org.welisdoom.task.xml.intf.type.UnitType;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,13 +20,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Break extends Unit implements Executable {
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        toNext.fail(new BreakLoopException(MapUtils.getInteger(attributes, "deep", 1)));
+        toNext.fail(new BreakLoopThrowable(MapUtils.getInteger(attributes, "deep", 1)));
     }
 
-    public static class BreakLoopException extends RuntimeException {
+    public static class BreakLoopThrowable extends NoStackTraceThrowable {
         AtomicInteger deep = new AtomicInteger(1);
 
-        BreakLoopException(int deep) {
+        BreakLoopThrowable(int deep) {
+            super("中断");
             this.deep.set(deep);
         }
 
