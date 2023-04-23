@@ -90,7 +90,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         Future<Object> listFuture = Future.succeededFuture();
         for (Map<String, Object> item : list) {
             listFuture = listFuture.compose(o ->
-                    startChildUnit(data, item, Scroll.class)
+                    startChildUnit(data, item, Iterator.class)
             );
         }
         listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
@@ -123,42 +123,21 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                 BaseCondition<String, TaskRequest> condition = new BaseCondition<>() {
                     {
                         setData(data);
+                        setPage(new BaseCondition.Page(1, 100));
                         setCondition(data.getBus());
                     }
                 };
-                Scroll scroll = getChild(Scroll.class).stream().findFirst().orElse(null);
-                if (scroll == null) {
-                    toNext.complete(null);
-                    return;
-                }
-                condition.setPage(new BaseCondition.Page(1, Math.max(MapUtils.getInteger(scroll.attributes, "size", 100), 100)));
-
                 AtomicLong index = new AtomicLong(0);
                 Future<Object> future = Database
                         .getDataBase(this, data)
                         .pageScroll(connection, sql, condition, rows -> {
-                            /*Future<Object> listFuture = Future.succeededFuture();
-                            switch (MapUtils.getString(attributes, "mode", "item")) {
-                                case "items":
-                                    List<Map> list = new LinkedList<>();
-                                    for (Row row : (RowSet<Row>) rows) {
-                                        list.add(this.rowToMap(row));
-                                    }
-                                    break;
-                                default:
-                                    for (Row row : (RowSet<Row>) rows) {
-                                        listFuture = listFuture.compose(o ->
-                                                this.iterator(data, Map.of("index", index.incrementAndGet(), "item", this.rowToMap(row)))
-                                        );
-                                    }
-                                    break;
-                            }
-                            return listFuture;*/
-                            List<Map> list = new LinkedList<>();
+                            Future<Object> listFuture = Future.succeededFuture();
                             for (Row row : (RowSet<Row>) rows) {
-                                list.add(this.rowToMap(row));
+                                listFuture = listFuture.compose(o ->
+                                        this.iterator(data, Map.of("index", index.incrementAndGet(), "item", this.rowToMap(row)))
+                                );
                             }
-                            return scroll.scroll(this, data, list);
+                            return listFuture;
                         });
                 future.onSuccess(o -> {
                     toNext.complete(index.get());

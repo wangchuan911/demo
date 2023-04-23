@@ -24,7 +24,7 @@
 
                     1=1
                 </sql>
-                <scroll size="100" mode="item">
+                <iterator>
                     <if test="select1.item.val==2 ">
                         <http url="">
                             <body>
@@ -41,7 +41,7 @@
                     <if test="select1.item.val==3">
                         <break deep="1"/>
                     </if>
-                </scroll>
+                </iterator>
             </select>
         </transactional>
     </start>

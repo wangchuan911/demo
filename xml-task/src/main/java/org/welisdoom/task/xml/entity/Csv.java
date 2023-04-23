@@ -119,7 +119,7 @@ public class Csv extends Unit implements Executable, Stream, Copyable {
                         entries[i] = Map.entry(headers[i], values[i]);
                     }
                     listFuture = listFuture.compose(o ->
-                            startChildUnit(data, Map.ofEntries(entries), Scroll.class)
+                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                     );
                 }
                 listFuture.onSuccess(promise::complete).onFailure(promise::fail);
