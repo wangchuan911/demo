@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.entity;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Stream;
+import org.xml.sax.Attributes;
 
 /**
  * @Classname Col
@@ -17,6 +18,15 @@ import org.welisdoom.task.xml.intf.type.Stream;
 @Attr(name = "code", require = true, desc = "字段别名")
 public class Col extends Unit {
     String name, value, code;
+
+    @Override
+    public Unit attr(Attributes attributes) {
+        super.attr(attributes);
+        setName(this.attributes.get("name"));
+        setCode(this.attributes.get("code"));
+        setValue(this.attributes.get("value"));
+        return this;
+    }
 
     public String getName() {
         return name;

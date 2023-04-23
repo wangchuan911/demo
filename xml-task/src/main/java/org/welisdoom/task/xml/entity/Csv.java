@@ -13,10 +13,12 @@ import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoon.common.ObjectUtils;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,11 +35,12 @@ import java.util.stream.Collectors;
 @Attr(name = "read", desc = "读文件", require = true, options = {"writer", "read"})
 @Attr(name = "writer", desc = "写文件", require = true, options = {"writer", "read"})
 
-public class Csv extends Unit implements Executable, Stream, Copyable {
+public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<Map<String, Object>> {
     Map<TaskRequest, CSVWriter> map = new HashMap<>();
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
+        data.generateData(this);
         if (attributes.containsKey("read")) {
             read(data).onSuccess(toNext::complete).onFailure(toNext::fail);
         } else if (attributes.containsKey("writer")) {
@@ -48,41 +51,6 @@ public class Csv extends Unit implements Executable, Stream, Copyable {
 
     }
 
-    public static Future<String> guessCharset(File file) {
-        Promise<String> promise = Promise.promise();
-        Future<String> future = promise.future();
-        Map<String, AtomicInteger> map = new HashMap<>();
-        try {
-            nsDetector detector = new nsDetector();
-            detector.Init(charset -> {
-                try {
-                    ObjectUtils.getMapValueOrNewSafe(map, charset, () -> new AtomicInteger(0)).incrementAndGet();
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                }
-            });
-
-            BufferedInputStream input = new BufferedInputStream(new FileInputStream(file));
-            try (input) {
-                byte[] buffer = new byte[4096];
-                int hasRead;
-                while ((hasRead = input.read(buffer)) != -1) {
-                    if (detector.isAscii(buffer, hasRead)) {
-                        detector.Report("ASCII");
-                    } else {
-                        detector.DoIt(buffer, hasRead, false);
-                    }
-                }
-            } finally {
-                detector.DataEnd();
-            }
-
-            promise.complete(map.entrySet().stream().sorted(Comparator.comparingInt(o -> o.getValue().get())).collect(Collectors.toList()).get(0).getKey());
-        } catch (Throwable e) {
-            promise.fail(e);
-        }
-        return future;
-    }
 
     @Override
     public Future<Object> read(TaskRequest data) {
@@ -93,7 +61,8 @@ public class Csv extends Unit implements Executable, Stream, Copyable {
             csvReader = new CSVReaderBuilder(
                     new BufferedReader(
                             new InputStreamReader(
-                                    Objects.equals(mode, "@stream") ? (InputStream) data.lastUnitResult : new FileInputStream(mode))
+                                    Objects.equals(mode, "@stream") ? (InputStream) data.lastUnitResult : new FileInputStream(textFormat(data, mode)),
+                                    attributes.containsKey("charset") ? Charset.forName(getAttrFormatValue("charset", data)) : Charset.defaultCharset())
                     )
             ).build();
             try (csvReader) {
@@ -111,15 +80,18 @@ public class Csv extends Unit implements Executable, Stream, Copyable {
                 Map.Entry[] entries = new Map.Entry[headers.length];
                 String[] values;
                 Future<Object> listFuture = Future.succeededFuture();
+                AtomicInteger index = new AtomicInteger(0);
                 while (iterator.hasNext()) {
                     values = iterator.next();
                     for (int i = 0; i < values.length; i++) {
                         if (StringUtils.isEmpty(values[i]))
                             values[i] = "";
+                        if (i >= headers.length) break;
                         entries[i] = Map.entry(headers[i], values[i]);
                     }
                     listFuture = listFuture.compose(o ->
-                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
+//                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
+                                    this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
                     );
                 }
                 listFuture.onSuccess(promise::complete).onFailure(promise::fail);

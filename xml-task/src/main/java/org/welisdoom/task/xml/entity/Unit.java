@@ -237,9 +237,16 @@ public class Unit implements UnitType, IData<String, Model> {
             }
         }
         text = text.replaceAll(DEFAULT_VALUE_SIGN, sign);
+        int offset;
         for (Map.Entry<String, Object> entry : list) {
-            text = text.replaceFirst(sign, TypeUtils.castToString(entry.getValue()));
+            offset = text.indexOf(sign);
+            text = text.substring(0, offset) + TypeUtils.castToString(entry.getValue()) + text.substring(offset + sign.length());
+//            text = text.replaceFirst(sign, TypeUtils.castToString(entry.getValue()));
         }
         return text;
+    }
+
+    protected String getAttrFormatValue(String name, TaskRequest data) {
+        return textFormat(data, attributes.get(name));
     }
 }

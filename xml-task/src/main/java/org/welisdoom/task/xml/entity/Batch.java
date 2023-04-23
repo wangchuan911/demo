@@ -55,4 +55,10 @@ public class Batch extends Unit implements Executable {
             toNext.fail(throwable);
         }
     }
+
+    @Override
+    public void destroy(TaskRequest taskRequest) {
+        super.destroy(taskRequest);
+        integerMap.remove(taskRequest);
+    }
 }

@@ -7,22 +7,20 @@
         <database id="rimdb" model="oracle"></database>
         <value id="val1"></value>
         <value id="val2"
-               value="@java.time.LocalDateTime@now()@format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))"></value>
+               value="D:\Workspaces\WelisdoonProject\java\web-server\xml-task\src\main\resources\demo\demo.csv"></value>
     </initialization>
     <start>
-        <select link="rimdb" id="getProject">
-            <sql>
-                select * from v8_proj_check_rela@link_rimdb where rownum &lt; 20
-            </sql>
+        <guess-charset id="csvCharset" guess="{{$value.val2}}"></guess-charset>
+        <csv id="demo" read="{{$value.val2}}" charset="{{csvCharset.charset}}">
+            <col code="col1"></col>
+            <col code="col2"></col>
+            <col code="col3"></col>
+            <col code="col4"></col>
             <iterator>
-                <insert link="rimdb">
-                    update pub_scan_log a set a.res_no='aaaa' where a.res_id='2'
-                </insert>
-                <set-value name="count"></set-value>
-                <if test="$values.count>0">
+                <if test="demo.item.col1=='资源查询->设备信息->光路查询'">
 
                 </if>
             </iterator>
-        </select>
+        </csv>
     </start>
 </task>

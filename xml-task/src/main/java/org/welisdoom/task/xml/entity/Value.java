@@ -1,11 +1,15 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Initialize;
+import org.welisdoon.common.ObjectUtils;
 import org.xml.sax.Attributes;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -28,12 +32,25 @@ public class Value extends Unit implements Initialize {
         return MapUtils.getString(attributes, "value", getChild(Content.class).stream().findFirst().orElse(new Content().setContent("")).getContent());
     }
 
-    public static String getValue(Task task, String name) {
+    /*public static String getValue(Task task, String name) {
         return Initialization.getInstance(task)
                 .getChildren(Value.class)
                 .stream()
                 .filter(value -> Objects.equals(name, value.getId()))
                 .findFirst().orElse(new Value()).getValue();
 
+    }*/
+
+    @Override
+    protected void start(TaskRequest data, Promise<Object> toNext) {
+        try {
+            HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$value", HashMap::new);
+            String value = textFormat(data, getValue());
+            log("value:" + value);
+            map.put(this.id, value);
+            toNext.complete();
+        } catch (Throwable throwable) {
+            toNext.fail(throwable);
+        }
     }
 }

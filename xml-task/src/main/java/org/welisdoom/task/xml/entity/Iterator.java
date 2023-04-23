@@ -8,6 +8,7 @@ import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoom.task.xml.intf.type.Stream;
+import org.welisdoon.common.GCUtils;
 
 import java.util.Map;
 
@@ -37,11 +38,11 @@ public class Iterator extends Unit implements Executable {
             map.put(itemIndex, item.getIndex());
             map.put(itemName, item.getItem());
             item.destroy();
-            item = null;
+            item = GCUtils.release(item);
             super.start(data, toNext);
         } finally {
             map.remove(itemName);
-            map.remove(itemName);
+            map.remove(itemIndex);
         }
     }
 
