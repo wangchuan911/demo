@@ -6,6 +6,7 @@ import org.welisdoom.task.xml.handler.SAXParserHandler;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Initialize;
 import org.welisdoom.task.xml.intf.type.Root;
+import org.welisdoon.common.ObjectUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,7 @@ import java.util.Objects;
 @Tag(value = "instance", parentTagTypes = Initialize.class, desc = "实例化标签,此标签实例化，基本信息，其他标签通过ref引用,")
 @Attr(name = "id", desc = "唯一标识", require = true)
 public class Instance extends Unit implements Initialize {
-    static Map<String, Unit> map = new HashMap<>();
+    static Map<Root, Map<String, Unit>> rootMapMap = new HashMap<>();
 
     public Unit getInstance(Unit parent) {
         try {
@@ -50,6 +51,7 @@ public class Instance extends Unit implements Initialize {
 
             Unit unit;
             if (Copyable.class.isAssignableFrom(aClass)) {
+                Map<String, Unit> map = ObjectUtils.getMapValueOrNewSafe(rootMapMap, task, HashMap::new);
                 if (map.containsKey(refName)) {
                     unit = (Unit) ((Copyable) map.get(refName)).copy();
                 } else {
