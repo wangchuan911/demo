@@ -24,7 +24,7 @@
 
                     1=1
                 </sql>
-                <iterator>
+                <scroll size="100" mode="item">
                     <if test="select1.item.val==2 ">
                         <http url="">
                             <body>
@@ -39,9 +39,9 @@
                         <ftp ref="ftp1"></ftp>
                     </if>
                     <if test="select1.item.val==3">
-                        <break ></break>
+                        <break deep="1"/>
                     </if>
-                </iterator>
+                </scroll>
             </select>
         </transactional>
     </start>

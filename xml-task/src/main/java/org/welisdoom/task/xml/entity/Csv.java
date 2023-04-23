@@ -8,6 +8,7 @@ import io.vertx.core.Promise;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.commons.lang3.StringUtils;
+import org.mozilla.intl.chardet.nsDetector;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
@@ -18,6 +19,8 @@ import org.welisdoon.common.ObjectUtils;
 import java.io.*;
 import java.util.*;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @Classname csv
@@ -42,6 +45,43 @@ public class Csv extends Unit implements Executable, Stream, Copyable {
         } else {
             toNext.fail("未知的操作");
         }
+
+    }
+
+    public static Future<String> guessCharset(File file) {
+        Promise<String> promise = Promise.promise();
+        Future<String> future = promise.future();
+        Map<String, AtomicInteger> map = new HashMap<>();
+        try {
+            nsDetector detector = new nsDetector();
+            detector.Init(charset -> {
+                try {
+                    ObjectUtils.getMapValueOrNewSafe(map, charset, () -> new AtomicInteger(0)).incrementAndGet();
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+            });
+
+            BufferedInputStream input = new BufferedInputStream(new FileInputStream(file));
+            try (input) {
+                byte[] buffer = new byte[4096];
+                int hasRead;
+                while ((hasRead = input.read(buffer)) != -1) {
+                    if (detector.isAscii(buffer, hasRead)) {
+                        detector.Report("ASCII");
+                    } else {
+                        detector.DoIt(buffer, hasRead, false);
+                    }
+                }
+            } finally {
+                detector.DataEnd();
+            }
+
+            promise.complete(map.entrySet().stream().sorted(Comparator.comparingInt(o -> o.getValue().get())).collect(Collectors.toList()).get(0).getKey());
+        } catch (Throwable e) {
+            promise.fail(e);
+        }
+        return future;
     }
 
     @Override
@@ -79,7 +119,7 @@ public class Csv extends Unit implements Executable, Stream, Copyable {
                         entries[i] = Map.entry(headers[i], values[i]);
                     }
                     listFuture = listFuture.compose(o ->
-                            startChildUnit(data, Map.ofEntries(entries), org.welisdoom.task.xml.entity.Iterator.class)
+                            startChildUnit(data, Map.ofEntries(entries), Scroll.class)
                     );
                 }
                 listFuture.onSuccess(promise::complete).onFailure(promise::fail);

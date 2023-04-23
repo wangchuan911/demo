@@ -3,12 +3,12 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.*;
+import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
-import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.util.LinkedList;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
+import java.util.stream.Stream;
 
 /**
  * @Classname Select
@@ -89,7 +90,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         Future<Object> listFuture = Future.succeededFuture();
         for (Map<String, Object> item : list) {
             listFuture = listFuture.compose(o ->
-                    startChildUnit(data, item, Iterator.class)
+                    startChildUnit(data, item, Scroll.class)
             );
         }
         listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
@@ -122,29 +123,53 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                 BaseCondition<String, TaskRequest> condition = new BaseCondition<>() {
                     {
                         setData(data);
-                        setPage(new BaseCondition.Page(1, 100));
                         setCondition(data.getBus());
                     }
                 };
+                Scroll scroll = getChild(Scroll.class).stream().findFirst().orElse(null);
+                if (scroll == null) {
+                    toNext.complete(null);
+                    return;
+                }
+                condition.setPage(new BaseCondition.Page(1, Math.max(MapUtils.getInteger(scroll.attributes, "size", 100), 100)));
+
                 AtomicLong index = new AtomicLong(0);
                 Future<Object> future = Database
                         .getDataBase(this, data)
                         .pageScroll(connection, sql, condition, rows -> {
-                            Future<Object> listFuture = Future.succeededFuture();
-                            for (Row row : (RowSet<Row>) rows) {
-                                listFuture = listFuture.compose(o ->
-                                        this.iterator(data, Map.of("index", index.incrementAndGet(), "item", this.rowToMap(row)))
-                                );
+                            /*Future<Object> listFuture = Future.succeededFuture();
+                            switch (MapUtils.getString(attributes, "mode", "item")) {
+                                case "items":
+                                    List<Map> list = new LinkedList<>();
+                                    for (Row row : (RowSet<Row>) rows) {
+                                        list.add(this.rowToMap(row));
+                                    }
+                                    break;
+                                default:
+                                    for (Row row : (RowSet<Row>) rows) {
+                                        listFuture = listFuture.compose(o ->
+                                                this.iterator(data, Map.of("index", index.incrementAndGet(), "item", this.rowToMap(row)))
+                                        );
+                                    }
+                                    break;
                             }
-                            return listFuture;
+                            return listFuture;*/
+                            List<Map> list = new LinkedList<>();
+                            for (Row row : (RowSet<Row>) rows) {
+                                list.add(this.rowToMap(row));
+                            }
+                            return scroll.scroll(this, data, list);
                         });
                 future.onSuccess(o -> {
                     toNext.complete(index.get());
                 }).onFailure(throwable -> {
                     if (throwable instanceof Break.BreakLoopException) {
-                        toNext.complete(index.get());
-                    } else
-                        toNext.fail(throwable);
+                        if (((Break.BreakLoopException) throwable).decrementAndGetDeep() == 0) {
+                            toNext.complete(index.get());
+                            return;
+                        }
+                    }
+                    toNext.fail(throwable);
                 });
 
             }).onFailure(toNext::fail);

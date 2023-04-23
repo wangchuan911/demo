@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.intf.type;
 
+
 /**
  * @Classname UnitType
  * @Description TODO
