@@ -37,10 +37,9 @@ import java.util.stream.Collectors;
 @Attr(name = "writer", desc = "写文件", require = true, options = {"writer", "read"})
 @Attr(name = "header", desc = "文件是否有标题头")
 
-public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<Map<String, Object>> {
+public class Csv extends File implements Executable, Stream, Copyable, Iterable<Map<String, Object>> {
     Map<TaskRequest, CSVWriter> map = new HashMap<>();
-
-    @Override
+    /*@Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         data.generateData(this);
         if (attributes.containsKey("read")) {
@@ -51,7 +50,7 @@ public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<
             toNext.fail("未知的操作");
         }
 
-    }
+    }*/
 
 
     @Override
@@ -61,11 +60,12 @@ public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<
         CSVReader csvReader;
         try {
             csvReader = new CSVReaderBuilder(
-                    new BufferedReader(
+                    /*new BufferedReader(
                             new InputStreamReader(
                                     Objects.equals(mode, "@stream") ? (InputStream) data.lastUnitResult : new FileInputStream(textFormat(data, mode)),
                                     attributes.containsKey("charset") ? Charset.forName(getAttrFormatValue("charset", data)) : Charset.defaultCharset())
-                    )
+                    )*/
+                    this.getReader(data)
             ).build();
             try (csvReader) {
                 Iterator<String[]> iterator = csvReader.iterator();
@@ -77,7 +77,7 @@ public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<
                         throw new RuntimeException("文件获取文件头失败");
                     }
                 } else {
-                    headers = getChild(Col.class).stream().map(col -> col.getCode()).toArray(String[]::new);
+                    headers = Arrays.stream(cols.get(this)).map(col -> col.getCode()).toArray(String[]::new);
                 }
                 Map.Entry[] entries = new Map.Entry[headers.length];
                 String[] values;
@@ -116,7 +116,7 @@ public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<
 
         try {
             CSVWriter csvWriter = getCSVWriter(data);
-            Col[] headers = getChild(Col.class).stream().toArray(Col[]::new);
+            Col[] headers = this.cols.get(this);
             csvWriter.writeNext(Arrays.stream(headers).map(col -> {
                 try {
                     return Ognl.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class);
@@ -133,17 +133,17 @@ public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<
     }
 
     CSVWriter getCSVWriter(TaskRequest data) throws Throwable {
-        return ObjectUtils.getMapValueOrNewSafe(map, data, () -> {
-            String path = attributes.get("writer");
-            return new CSVWriter(new FileWriter(path));
-        });
+        return ObjectUtils.getMapValueOrNewSafe(map, data, () ->
+                new CSVWriter(getWriter(data))
+        );
     }
 
     @Override
     public void destroy(TaskRequest taskRequest) {
         super.destroy(taskRequest);
         try {
-            map.get(taskRequest).close();
+            if (map.containsKey(taskRequest))
+                map.remove(taskRequest).close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -151,9 +151,7 @@ public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<
 
     @Override
     public Copyable copy() {
-        Csv csv = new Csv();
-        csv.setId(this.id);
-        csv.attributes = this.attributes;
+        Csv csv = (Csv) super.copy();
         csv.map = this.map;
         return csv;
     }
