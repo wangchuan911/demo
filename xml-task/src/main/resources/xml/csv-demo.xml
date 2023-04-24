@@ -8,6 +8,7 @@
         <value id="val1"></value>
         <value id="val2"
                value="D:\Workspaces\WelisdoonProject\java\web-server\xml-task\src\main\resources\demo\demo.csv"></value>
+        <value id="now" value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
     </initialization>
     <start>
         <guess-charset id="csvCharset" guess="{{$value.val2}}"></guess-charset>
