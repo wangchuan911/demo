@@ -55,8 +55,6 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
 
     @Override
     public Future<Object> read(TaskRequest data) {
-        Promise<Object> promise = Promise.promise();
-        String mode = attributes.get("read");
         CSVReader csvReader;
         try {
             csvReader = new CSVReaderBuilder(
@@ -67,50 +65,53 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
                     )*/
                     this.getReader(data)
             ).build();
-            try (csvReader) {
-                Iterator<String[]> iterator = csvReader.iterator();
-                String[] headers;
-                if ("false".equals(attributes.get("header"))) {
-                    if (iterator.hasNext()) {
-                        headers = iterator.next();
-                    } else {
-                        throw new RuntimeException("文件获取文件头失败");
-                    }
+
+            Iterator<String[]> iterator = csvReader.iterator();
+            String[] headers;
+            if ("false".equals(attributes.get("header"))) {
+                if (iterator.hasNext()) {
+                    headers = iterator.next();
                 } else {
-                    headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
+                    throw new RuntimeException("文件获取文件头失败");
                 }
-                Map.Entry[] entries = new Map.Entry[headers.length];
-                String[] values;
-                Future<Object> listFuture = Future.succeededFuture();
-                AtomicInteger index = new AtomicInteger(0);
-                while (iterator.hasNext()) {
-                    values = iterator.next();
-                    for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
-                        if (StringUtils.isEmpty(values[i]))
-                            values[i] = "";
-                        entries[i] = Map.entry(headers[i], values[i]);
-                    }
+            } else {
+                headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
+            }
+            Map.Entry[] entries = new Map.Entry[headers.length];
+            String[] values;
+            Future<Object> listFuture = Future.succeededFuture();
+            AtomicInteger index = new AtomicInteger(0);
+            while (iterator.hasNext()) {
+                values = iterator.next();
+                for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
+                    if (StringUtils.isEmpty(values[i]))
+                        values[i] = "";
+                    entries[i] = Map.entry(headers[i], values[i]);
+                }
                     /*listFuture = listFuture.compose(o ->
 //                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                                     this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
                     );*/
-                    listFuture = bigFutureLoop(countReset(index, 500, 0), 500, listFuture,
-                            o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
-                }
-                listFuture.onSuccess(promise::complete).onFailure(promise::fail);
+                listFuture = bigFutureLoop(countReset(index, 500, 0), 500, listFuture,
+                        o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
             }
+            return listFuture.onComplete(objectAsyncResult -> {
+                try (csvReader) {
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (Throwable e) {
-            promise.fail(e);
+            return Future.failedFuture(e);
         }
-        return promise.future();
     }
 
     @Override
     public Future<Object> writer(TaskRequest data) {
-        Promise<Object> promise = Promise.promise();
-
+        CSVWriter csvWriter = null;
         try {
-            CSVWriter csvWriter = getCSVWriter(data);
+            csvWriter = getCSVWriter(data);
             Col[] headers = this.cols;
             csvWriter.writeNext(Arrays.stream(headers).map(col -> {
                 try {
@@ -120,11 +121,17 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
                     return "";
                 }
             }).toArray(String[]::new));
-            promise.complete();
         } catch (Throwable e) {
-            promise.fail(e);
+            if (csvWriter != null) {
+                try {
+                    csvWriter.close();
+                } catch (IOException ioException) {
+                    log(ioException.getMessage());
+                }
+            }
+            return Future.failedFuture(e);
         }
-        return promise.future();
+        return Future.succeededFuture();
     }
 
     CSVWriter getCSVWriter(TaskRequest data) throws Throwable {

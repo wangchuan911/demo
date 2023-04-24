@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -37,73 +38,80 @@ import java.util.stream.Collectors;
 
 
 public class File extends StreamUnit implements Iterable<Map<String, Object>> {
-    String delimiter, quote, linebreak;
     final protected Map<TaskRequest, Writer> writer = new HashMap<>();
 
-
-
-    @Override
-    public Unit attr(Attributes attributes) {
-        super.attr(attributes);
-        this.delimiter = MapUtils.getString(this.attributes, "delimiter", ",");
-        this.quote = MapUtils.getString(this.attributes, "quote", ",");
-        this.linebreak = MapUtils.getString(this.attributes, "linebreak", ",");
-        return this;
-    }
-
-
-
-    protected String[] readLine(BufferedReader reader) throws IOException {
+    protected String[] readLine(BufferedReader reader, StringBuilder builder) throws IOException {
         String line;
-        while ((line = reader.readLine()) != null) {
-
+        int index;
+        String linebreak = MapUtils.getString(File.this.attributes, "line-break");
+        String delimiter = MapUtils.getString(File.this.attributes, "delimiter");
+        String quote = MapUtils.getString(File.this.attributes, "quote");
+        delimiter = String.format("%s(%s%s)?", quote, delimiter, quote);
+        while ((line = (reader.readLine())) != null) {
+            if ((index = (line += "\n").indexOf(linebreak)) >= 0) {
+                builder.append(line, 0, index);
+                String[] strings = builder.toString().replaceFirst(delimiter, "").split(delimiter);
+                builder.setLength(0);
+                builder.append(line, index + linebreak.length(), line.length());
+                return strings;
+            } else {
+                builder.append(line);
+            }
         }
         return null;
     }
 
     @Override
     public Future<Object> read(TaskRequest data) {
-        Promise<Object> promise = Promise.promise();
 
+        StringBuilder builder = new StringBuilder("");
         try {
             BufferedReader reader = this.getReader(data);
 
             String[] line;
-            try (reader) {
-                String[] headers;
-                if ("false".equals(attributes.get("header"))) {
-                    if ((headers = readLine(reader)) == null) {
-                        throw new RuntimeException("文件获取文件头失败");
-                    }
-                } else {
-                    headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
+            String[] headers;
+            if ("false".equals(attributes.get("header"))) {
+                if ((headers = readLine(reader, builder)) == null) {
+                    throw new RuntimeException("文件获取文件头失败");
                 }
-                Map.Entry[] entries = new Map.Entry[headers.length];
-                String[] values;
-                Future<Object> listFuture = Future.succeededFuture();
-                AtomicInteger index = new AtomicInteger(0);
-                while ((line = readLine(reader)) != null) {
-                    values = line;
-                    for (int i = 0; i < values.length; i++) {
-                        if (StringUtils.isEmpty(values[i]))
-                            values[i] = "";
-                        if (i >= headers.length) break;
-                        entries[i] = Map.entry(headers[i], values[i]);
-                    }
+            } else {
+                headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
+            }
+            Map.Entry[] entries = new Map.Entry[headers.length];
+            String[] values;
+            Future<Object> listFuture = Future.succeededFuture();
+            AtomicInteger index = new AtomicInteger(0);
+            while ((line = readLine(reader, builder)) != null) {
+                values = line;
+                for (int i = 0; i < values.length; i++) {
+                    if (StringUtils.isEmpty(values[i]))
+                        values[i] = "";
+                    if (i >= headers.length) break;
+                    entries[i] = Map.entry(headers[i], values[i]);
+                }
                     /*listFuture = listFuture.compose(o ->
 //                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                                     this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
                     );*/
-                    listFuture = bigFutureLoop(countReset(index, 500, 0), 500, listFuture,
-                            o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
-                }
+                listFuture = bigFutureLoop(countReset(index, 500, 0), 500, listFuture,
+                        o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
             }
-        } catch (Throwable e) {
-            promise.fail(e);
-        }
-        return promise.future();
-    }
+            listFuture.onComplete(objectAsyncResult -> {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        log(e.getMessage());
+                    }
+                }
+            });
+            return listFuture;
 
+        } catch (Throwable e) {
+            log(builder.toString());
+            return Future.failedFuture(e);
+        }
+    }
 
 
     @Override
@@ -142,11 +150,6 @@ public class File extends StreamUnit implements Iterable<Map<String, Object>> {
             promise.fail(e);
         }
         return promise.future();
-    }
-
-    @Override
-    public Copyable copy() {
-        return copyableUnit(this);
     }
 
     @Override
