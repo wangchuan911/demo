@@ -2,13 +2,16 @@ package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoom.task.xml.intf.Copyable;
+import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.data.IData;
 import org.xml.sax.Attributes;
@@ -16,6 +19,7 @@ import org.xml.sax.Attributes;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -248,5 +252,15 @@ public class Unit implements UnitType, IData<String, Model> {
 
     protected String getAttrFormatValue(String name, TaskRequest data) {
         return textFormat(data, attributes.get(name));
+    }
+
+    protected  static <T, K> Future<T> bigFutureLoop(int count, int triggerCount, Future<K> preFuture, Handler<Promise<T>> trigger, Function<K, Future<T>> loop) {
+        switch (count % triggerCount) {
+            case 0:
+                GCUtils.toSafePoint();
+                return Future.future(trigger);
+            default:
+                return preFuture.compose(loop);
+        }
     }
 }

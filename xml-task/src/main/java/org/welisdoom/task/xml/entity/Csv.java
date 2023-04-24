@@ -15,6 +15,7 @@ import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Stream;
+import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.ObjectUtils;
 
 import java.io.*;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 @Attr(name = "id", desc = "唯一标识")
 @Attr(name = "read", desc = "读文件", require = true, options = {"writer", "read"})
 @Attr(name = "writer", desc = "写文件", require = true, options = {"writer", "read"})
+@Attr(name = "header", desc = "文件是否有标题头")
 
 public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<Map<String, Object>> {
     Map<TaskRequest, CSVWriter> map = new HashMap<>();
@@ -89,10 +91,16 @@ public class Csv extends Unit implements Executable, Stream, Copyable, Iterable<
                         if (i >= headers.length) break;
                         entries[i] = Map.entry(headers[i], values[i]);
                     }
-                    listFuture = listFuture.compose(o ->
+                    /*listFuture = listFuture.compose(o ->
 //                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                                     this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
-                    );
+                    );*/
+                    listFuture = bigFutureLoop(index.incrementAndGet(), 500, listFuture, promise1 -> {
+                        index.set(0);
+                        ((Future<Object>) this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))))
+                                .onSuccess(promise1::complete)
+                                .onFailure(promise1::fail);
+                    }, o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
                 }
                 listFuture.onSuccess(promise::complete).onFailure(promise::fail);
             }
