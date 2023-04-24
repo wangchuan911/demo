@@ -1,9 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.TypeUtils;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import com.opencsv.CSVWriter;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import ognl.Ognl;
@@ -16,13 +13,13 @@ import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Stream;
-import org.welisdoon.common.ObjectUtils;
+import org.xml.sax.Attributes;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -34,34 +31,34 @@ import java.util.stream.Collectors;
 @Tag(value = "file", parentTagTypes = Executable.class, desc = "读取")
 @Attr(name = "id", desc = "唯一标识", require = true)
 @Attr(name = "charset", desc = "编码", require = true)
+@Attr(name = "delimiter", desc = "分隔符", require = true)
+@Attr(name = "quote", desc = "字符引号", require = true)
+@Attr(name = "line-break", desc = "换行", require = true)
 
-public class File extends Unit implements Stream, Copyable, Iterable<Map<String, Object>> {
-    final protected Map<File, Col[]> cols = new HashMap<>();
+
+public class File extends StreamUnit implements Iterable<Map<String, Object>> {
+    String delimiter, quote, linebreak;
+    final protected Map<TaskRequest, Writer> writer = new HashMap<>();
+
+
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
-        try {
-            ObjectUtils.getMapValueOrNewSafe(cols, this, () -> getChild(Col.class).stream().toArray(Col[]::new));
-            data.generateData(this);
-            if (attributes.containsKey("read")) {
-                read(data).onSuccess(toNext::complete).onFailure(toNext::fail);
-            } else if (attributes.containsKey("writer")) {
-                writer(data).onSuccess(toNext::complete).onFailure(toNext::fail);
-            } else {
-                toNext.fail("未知的操作");
-            }
-        } catch (Throwable throwable) {
-            toNext.fail(throwable);
-        }
+    public Unit attr(Attributes attributes) {
+        super.attr(attributes);
+        this.delimiter = MapUtils.getString(this.attributes, "delimiter", ",");
+        this.quote = MapUtils.getString(this.attributes, "quote", ",");
+        this.linebreak = MapUtils.getString(this.attributes, "linebreak", ",");
+        return this;
     }
 
-    Reader getReader(TaskRequest data) throws FileNotFoundException {
-        String mode = attributes.get("read");
-        return new BufferedReader(
-                new InputStreamReader(
-                        Objects.equals(mode, "@stream") ? (InputStream) data.lastUnitResult : new FileInputStream(textFormat(data, mode)),
-                        attributes.containsKey("charset") ? Charset.forName(getAttrFormatValue("charset", data)) : Charset.defaultCharset())
-        );
+
+
+    protected String[] readLine(BufferedReader reader) throws IOException {
+        String line;
+        while ((line = reader.readLine()) != null) {
+
+        }
+        return null;
     }
 
     @Override
@@ -69,9 +66,37 @@ public class File extends Unit implements Stream, Copyable, Iterable<Map<String,
         Promise<Object> promise = Promise.promise();
 
         try {
-            Reader reader = this.getReader(data);
-            try (reader) {
+            BufferedReader reader = this.getReader(data);
 
+            String[] line;
+            try (reader) {
+                String[] headers;
+                if ("false".equals(attributes.get("header"))) {
+                    if ((headers = readLine(reader)) == null) {
+                        throw new RuntimeException("文件获取文件头失败");
+                    }
+                } else {
+                    headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
+                }
+                Map.Entry[] entries = new Map.Entry[headers.length];
+                String[] values;
+                Future<Object> listFuture = Future.succeededFuture();
+                AtomicInteger index = new AtomicInteger(0);
+                while ((line = readLine(reader)) != null) {
+                    values = line;
+                    for (int i = 0; i < values.length; i++) {
+                        if (StringUtils.isEmpty(values[i]))
+                            values[i] = "";
+                        if (i >= headers.length) break;
+                        entries[i] = Map.entry(headers[i], values[i]);
+                    }
+                    /*listFuture = listFuture.compose(o ->
+//                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
+                                    this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
+                    );*/
+                    listFuture = bigFutureLoop(countReset(index, 500, 0), 500, listFuture,
+                            o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
+                }
             }
         } catch (Throwable e) {
             promise.fail(e);
@@ -79,15 +104,7 @@ public class File extends Unit implements Stream, Copyable, Iterable<Map<String,
         return promise.future();
     }
 
-    Writer getWriter(TaskRequest data) throws IOException {
-        String path = attributes.get("writer");
-        switch (path) {
-            case "@stream":
-                return new PrintWriter((OutputStream) data.lastUnitResult);
-            default:
-                return new FileWriter(path);
-        }
-    }
+
 
     @Override
     public Future<Object> writer(TaskRequest data) {
@@ -95,7 +112,7 @@ public class File extends Unit implements Stream, Copyable, Iterable<Map<String,
 
         try {
             Writer writer = getWriter(data);
-            Col[] headers = cols.get(this);
+            Col[] headers = this.cols;
             String delimiter = attributes.get("delimiter"), quote = MapUtils.getString(attributes, "quote", "");
 
             Arrays.stream(headers).map(col -> {
@@ -130,5 +147,16 @@ public class File extends Unit implements Stream, Copyable, Iterable<Map<String,
     @Override
     public Copyable copy() {
         return copyableUnit(this);
+    }
+
+    @Override
+    public void destroy(TaskRequest taskRequest) {
+        super.destroy(taskRequest);
+        try {
+            if (this.writer.containsKey(taskRequest))
+                this.writer.remove(taskRequest).close();
+        } catch (IOException e) {
+            log(e.getMessage());
+        }
     }
 }

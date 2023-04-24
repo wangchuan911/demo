@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Attr(name = "writer", desc = "写文件", require = true, options = {"writer", "read"})
 @Attr(name = "header", desc = "文件是否有标题头")
 
-public class Csv extends File implements Executable, Stream, Copyable, Iterable<Map<String, Object>> {
+public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
     Map<TaskRequest, CSVWriter> map = new HashMap<>();
     /*@Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
@@ -77,7 +77,7 @@ public class Csv extends File implements Executable, Stream, Copyable, Iterable<
                         throw new RuntimeException("文件获取文件头失败");
                     }
                 } else {
-                    headers = Arrays.stream(cols.get(this)).map(col -> col.getCode()).toArray(String[]::new);
+                    headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
                 }
                 Map.Entry[] entries = new Map.Entry[headers.length];
                 String[] values;
@@ -85,22 +85,17 @@ public class Csv extends File implements Executable, Stream, Copyable, Iterable<
                 AtomicInteger index = new AtomicInteger(0);
                 while (iterator.hasNext()) {
                     values = iterator.next();
-                    for (int i = 0; i < values.length; i++) {
+                    for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
                         if (StringUtils.isEmpty(values[i]))
                             values[i] = "";
-                        if (i >= headers.length) break;
                         entries[i] = Map.entry(headers[i], values[i]);
                     }
                     /*listFuture = listFuture.compose(o ->
 //                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                                     this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
                     );*/
-                    listFuture = bigFutureLoop(index.incrementAndGet(), 500, listFuture, promise1 -> {
-                        index.set(0);
-                        ((Future<Object>) this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))))
-                                .onSuccess(promise1::complete)
-                                .onFailure(promise1::fail);
-                    }, o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
+                    listFuture = bigFutureLoop(countReset(index, 500, 0), 500, listFuture,
+                            o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
                 }
                 listFuture.onSuccess(promise::complete).onFailure(promise::fail);
             }
@@ -116,7 +111,7 @@ public class Csv extends File implements Executable, Stream, Copyable, Iterable<
 
         try {
             CSVWriter csvWriter = getCSVWriter(data);
-            Col[] headers = this.cols.get(this);
+            Col[] headers = this.cols;
             csvWriter.writeNext(Arrays.stream(headers).map(col -> {
                 try {
                     return Ognl.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class);

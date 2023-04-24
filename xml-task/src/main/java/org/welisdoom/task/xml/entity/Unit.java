@@ -19,6 +19,8 @@ import org.xml.sax.Attributes;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -254,13 +256,29 @@ public class Unit implements UnitType, IData<String, Model> {
         return textFormat(data, attributes.get(name));
     }
 
-    protected  static <T, K> Future<T> bigFutureLoop(int count, int triggerCount, Future<K> preFuture, Handler<Promise<T>> trigger, Function<K, Future<T>> loop) {
-        switch (count % triggerCount) {
-            case 0:
-                GCUtils.toSafePoint();
-                return Future.future(trigger);
-            default:
-                return preFuture.compose(loop);
+    protected static <T, K> Future<T> bigFutureLoop(int count, int triggerCount, Future<K> preFuture, Function<K, Future<T>> loop) {
+        if (count % triggerCount == 0 || preFuture == null) {
+            GCUtils.toSafePoint();
+            Promise<K> promise = Promise.promise();
+            preFuture = promise.future();
+            preFuture
+                    .onSuccess(promise::complete)
+                    .onFailure(promise::fail);
         }
+        return preFuture.compose(loop);
+    }
+
+    protected static long countReset(AtomicLong aLong, long triggerCount, long reset) {
+        if (aLong.incrementAndGet() > triggerCount) {
+            aLong.set(reset);
+        }
+        return aLong.get();
+    }
+
+    protected static int countReset(AtomicInteger aLong, int triggerCount, int reset) {
+        if (aLong.incrementAndGet() > triggerCount) {
+            aLong.set(reset);
+        }
+        return aLong.get();
     }
 }
