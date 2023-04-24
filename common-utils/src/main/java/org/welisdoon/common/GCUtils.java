@@ -2,6 +2,9 @@ package org.welisdoon.common;
 
 import java.lang.ref.SoftReference;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Classname GCUtils
@@ -42,5 +45,22 @@ public interface GCUtils {
     static <T> T release(T objects) {
         new SoftReference(objects);
         return (T) null;
+    }
+
+    static boolean toSafePoint() {
+        try {
+            Thread.sleep(0);
+            return true;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    static boolean toSafePointOnLoop(int count, int triggerCount) {
+        if (count % triggerCount == 0) {
+            return GCUtils.toSafePoint();
+        }
+        return true;
     }
 }
