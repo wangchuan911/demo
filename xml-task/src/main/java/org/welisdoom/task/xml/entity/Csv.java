@@ -77,23 +77,19 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
             } else {
                 headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
             }
-            Map.Entry[] entries = new Map.Entry[headers.length];
+            List<Map.Entry> entries = new LinkedList<>();
             String[] values;
             Future<Object> listFuture = Future.succeededFuture();
             AtomicInteger index = new AtomicInteger(0);
             while (iterator.hasNext()) {
                 values = iterator.next();
+                entries.clear();
                 for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
                     if (StringUtils.isEmpty(values[i]))
                         values[i] = "";
-                    entries[i] = Map.entry(headers[i], values[i]);
+                    entries.add(Map.entry(headers[i], values[i]));
                 }
-                    /*listFuture = listFuture.compose(o ->
-//                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
-                                    this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
-                    );*/
-                listFuture = bigFutureLoop(countReset(index, 500, 0), 500, listFuture,
-                        o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
+                listFuture = this.bigFutureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), countReset(index, 500, 0), 500, listFuture, data);
             }
             return listFuture.onComplete(objectAsyncResult -> {
                 try (csvReader) {

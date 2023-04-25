@@ -270,25 +270,6 @@ public class Unit implements UnitType, IData<String, Model> {
         return textFormat(data, attributes.get(name));
     }
 
-    protected static <T, K> Future<T> bigFutureLoop(int count, int triggerCount, Future<K> preFuture, Function<K, Future<T>> loop) {
-        if (count % triggerCount == 0 || preFuture == null) {
-            GCUtils.toSafePoint();
-            Promise<K> promise = Promise.promise();
-            preFuture = promise.future();
-            preFuture
-                    .onSuccess(promise::complete)
-                    .onFailure(promise::fail);
-        }
-        return preFuture.compose(loop);
-    }
-
-    protected static long countReset(AtomicLong aLong, long triggerCount, long reset) {
-        if (aLong.incrementAndGet() > triggerCount) {
-            aLong.set(reset);
-        }
-        return aLong.get();
-    }
-
     protected static int countReset(AtomicInteger aLong, int triggerCount, int reset) {
         if (aLong.incrementAndGet() > triggerCount) {
             aLong.set(reset);

@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Promise;
+import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -27,6 +28,7 @@ public class Commit extends Unit implements Executable {
     @Override
     public Unit attr(Attributes attributes) {
         super.attr(attributes);
+        batch = MapUtils.getInteger(this.attributes, "batch", 1);
         return this;
     }
 

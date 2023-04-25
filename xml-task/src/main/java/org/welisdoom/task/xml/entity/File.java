@@ -79,20 +79,21 @@ public class File extends StreamUnit implements Iterable<Map<String, Object>> {
             String[] values;
             Future<Object> listFuture = Future.succeededFuture();
             AtomicInteger index = new AtomicInteger(0);
+            List<Map.Entry> entries = new LinkedList<>();
             while ((line = readLine(reader, builder)) != null) {
                 values = line;
-                Map.Entry[] entries = new Map.Entry[Math.min(headers.length, values.length)];
-                for (int i = 0; i < entries.length; i++) {
+                entries.clear();
+                for (int i = 0; i < Math.min(values.length, headers.length); i++) {
                     if (StringUtils.isEmpty(values[i]))
                         values[i] = "";
-                    entries[i] = (Map.entry(headers[i], values[i]));
+                    entries.add(Map.entry(headers[i], values[i]));
                 }
                     /*listFuture = listFuture.compose(o ->
 //                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                                     this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
                     );*/
-                listFuture = bigFutureLoop(countReset(index, 500, 0), 500, listFuture,
-                        o -> this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries))));
+                listFuture = this.bigFutureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), countReset(index, 500, 0), 500, listFuture, data);
+
             }
             listFuture.onComplete(objectAsyncResult -> {
                 if (reader != null) {

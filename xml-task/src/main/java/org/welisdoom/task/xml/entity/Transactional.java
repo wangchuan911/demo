@@ -64,7 +64,7 @@ public class Transactional extends Unit implements Executable {
     public void destroy(TaskRequest taskRequest) {
         super.destroy(taskRequest);
         MAP.remove(taskRequest).close();
-        MAP.remove(taskRequest).close();
+        MAP1.remove(taskRequest);
     }
 
     public static Future<Void> commit(TaskRequest data) {
