@@ -27,6 +27,7 @@ import java.util.Map;
 @Attr(name = "link", desc = "database的Id")
 public class Transactional extends Unit implements Executable {
     Map<TaskRequest, SqlConnection> MAP = new HashMap<>();
+    static Map<TaskRequest, Transaction> MAP1 = new HashMap<>();
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
@@ -36,6 +37,7 @@ public class Transactional extends Unit implements Executable {
             ((SqlConnection) o).begin().onSuccess(transaction -> {
                 Promise<Object> promise = Promise.promise();
                 promise.future().onSuccess(o1 -> {
+                    MAP1.put(data, transaction);
                     transaction
                             .commit()
                             .onSuccess(unused -> {
@@ -61,6 +63,15 @@ public class Transactional extends Unit implements Executable {
     @Override
     public void destroy(TaskRequest taskRequest) {
         super.destroy(taskRequest);
-        MAP.remove(taskRequest);
+        MAP.remove(taskRequest).close();
+        MAP.remove(taskRequest).close();
+    }
+
+    public static Future<Void> commit(TaskRequest data) {
+        return MAP1.get(data).commit();
+    }
+
+    public static Future<Void> rollback(TaskRequest data) {
+        return MAP1.get(data).rollback();
     }
 }

@@ -11,9 +11,10 @@ import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.common.StreamUtils;
 
-import java.io.Closeable;
-import java.io.IOException;
+import java.io.*;
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.Set;
 @Attr(name = "id", desc = "唯一标识")
 @Attr(name = "get", desc = "获取流", require = true, options = {"get", "put"})
 @Attr(name = "put", desc = "写入文件", require = true, options = {"get", "put"})
+@Attr(name = "local", desc = "本地文件位置", require = true, options = {"get", "put"})
 
 public class Ftp extends Unit implements Stream, Executable, Copyable {
     Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
@@ -36,13 +38,13 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     @Override
     public Future<Object> read(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
-        Cache cache = null;
+        Cache cache;
         try {
             cache = getCache(data);
             FTPClient client = getClient(cache);
-            Closeable closeable = client.retrieveFileStream(attributes.get("get"));
-            cache.closeables.add(closeable);
-            toNext.complete(closeable);
+            String file = getAttrFormatValue("local", data);
+            StreamUtils.write(client.retrieveFileStream(attributes.get("get")), new FileOutputStream(new File(file)));
+            toNext.complete(file);
         } catch (Throwable throwable) {
             toNext.fail(throwable);
         }
@@ -52,13 +54,14 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     @Override
     public Future<Object> writer(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
-        Cache cache = null;
+        Cache cache;
         try {
             cache = getCache(data);
             FTPClient client = getClient(cache);
-            Closeable closeable = client.storeFileStream(attributes.get("put"));
-            cache.closeables.add(closeable);
-            toNext.complete(closeable);
+
+            String file = getAttrFormatValue("local", data);
+            StreamUtils.write(new FileInputStream(new File(file)), client.storeFileStream(attributes.get("put")));
+            toNext.complete(file);
         } catch (Throwable throwable) {
             toNext.fail(throwable);
         }
@@ -80,17 +83,10 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
         }
 
         FTPClient client;
-        Set<Closeable> closeables = new HashSet<>();
 
         void destroy() {
             try {
                 if (client != null) client.disconnect();
-                for (Closeable closeable : this.closeables) {
-                    try (closeable) {
-
-                    }
-                }
-                this.closeables.clear();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -103,7 +99,7 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
 
     FTPClient getClient(Cache cache) throws Throwable {
         FTPClient client = cache.client;
-        if (!client.isConnected()) {
+        if (client == null || !client.isConnected()) {
             client = new FTPClient();
             client.connect(attributes.get("host"),
                     attributes.containsKey("port") ? Integer.valueOf(attributes.get("post")) : 22);

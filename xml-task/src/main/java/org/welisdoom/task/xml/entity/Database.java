@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnection;
+import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -15,6 +16,7 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @Classname Database
@@ -94,12 +96,15 @@ public class Database extends Unit {
     }
 
     protected static Future<SqlConnection> findConnect(Unit unit, TaskRequest data) {
-        Unit p = unit.parent;
-        while (!(p == null || p instanceof Transactional)) {
-            p = p.parent;
+        String link = unit.attributes.get("link");
+        Optional<Transactional> optional;
+        if (StringUtils.isEmpty(link)) {
+            optional = Optional.ofNullable(unit.getParent(Transactional.class));
+        } else {
+            optional = unit.getParents(Transactional.class).stream().filter(transactional -> transactional.attributes.get("link").equals("link")).findFirst();
         }
-        if (p != null)
-            return Future.succeededFuture(((Transactional) p).getSqlConnection(data));
+        if (optional.isPresent())
+            return Future.succeededFuture(optional.get().getSqlConnection(data));
         return getDataBase(unit, data).getConnect(unit.attributes.get("link"));
     }
 

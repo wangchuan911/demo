@@ -120,6 +120,15 @@ public class Unit implements UnitType, IData<String, Model> {
         return (T) target;
     }
 
+    protected <T extends Unit> List<T> getParents(Class<T> tClass) {
+        List<T> list = new LinkedList<>();
+        Unit t = this;
+        while ((t = t.getParent(tClass)) != null) {
+            list.add((T) t);
+        }
+        return list;
+    }
+
     /*protected void execute(TaskRequest data) {
         execute(data, Object.class);
     }
