@@ -35,9 +35,9 @@ public class Transactional extends Unit implements Executable {
         ((Future<Object>) Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"))).onSuccess(o -> {
             MAP.put(data, (SqlConnection) o);
             ((SqlConnection) o).begin().onSuccess(transaction -> {
+                MAP1.put(data, transaction);
                 Promise<Object> promise = Promise.promise();
                 promise.future().onSuccess(o1 -> {
-                    MAP1.put(data, transaction);
                     transaction
                             .commit()
                             .onSuccess(unused -> {

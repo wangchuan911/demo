@@ -10,6 +10,7 @@ import org.apache.ibatis.type.JdbcType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoom.task.xml.dao.ConfigDao;
+import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -17,6 +18,7 @@ import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import java.sql.SQLType;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,7 +61,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
                 .setMaxSize(5);
 
 // Create the client pool
-        pools.put(config.getName(), PgPool.pool(ApplicationContextProvider.getBean(WorkerVerticle.class).pool().getOne(), connectOptions, poolOptions));
+        pools.put(config.getName(), PgPool.pool(Task.vertx, connectOptions, poolOptions));
     }
 
     public Future<PgConnection> getConnect(String name) {
@@ -74,6 +76,14 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     public void setPage(Tuple tuple, BaseCondition.Page page) {
         tuple.addValue(page.getPageSize());
         tuple.addValue(page.getStart() - 1);
+    }
+
+    @Override
+    public String sqlFormat(String sql, List<Object> param) {
+        for (int i = 0; i < param.size(); i++) {
+            sql = sql.replaceFirst(PATTERN_STRING, "\\$" + (i + 1));
+        }
+        return sql;
     }
 
 

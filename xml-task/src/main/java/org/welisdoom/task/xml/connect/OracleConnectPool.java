@@ -91,6 +91,10 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         tuple.addValue(page.getStart());
     }
 
+    @Override
+    public String sqlFormat(String sql, List<Object> param) {
+        return sql.replaceAll(PATTERN_STRING, "?");
+    }
 
 
     @Override

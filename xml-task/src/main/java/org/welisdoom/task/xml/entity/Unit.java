@@ -115,6 +115,7 @@ public class Unit implements UnitType, IData<String, Model> {
         Unit target = this;
         do {
             target = target.parent;
+            if (target == null) break;
             pClass = target.getClass();
         } while (pClass != tClass);
         return (T) target;
@@ -237,6 +238,7 @@ public class Unit implements UnitType, IData<String, Model> {
         List<Map.Entry<String, Object>> list = new LinkedList<>();
         Matcher matcher = PATTERN.matcher(text);
         String name;
+        Map.Entry<String, Object> value;
         while (matcher.find()) {
             switch (matcher.groupCount()) {
                 case 1:
@@ -246,10 +248,13 @@ public class Unit implements UnitType, IData<String, Model> {
                     continue;
             }
             try {
-                list.add(Map.entry(name, Ognl.getValue(name, request.getOgnlContext(), request.getBus(), Object.class)));
-            } catch (OgnlException e) {
-                throw new RuntimeException(e.getMessage(), e);
+                value = Map.entry(name, Ognl.getValue(name, request.getOgnlContext(), request.getBus(), Object.class));
+            } catch (Throwable e) {/*
+                throw new RuntimeException(e.getMessage(), e);*/
+                System.err.println(e.getMessage());
+                value = Map.entry(name, "");
             }
+            list.add(value);
         }
         text = text.replaceAll(DEFAULT_VALUE_SIGN, sign);
         int offset;

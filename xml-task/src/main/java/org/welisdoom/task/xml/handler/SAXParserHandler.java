@@ -91,6 +91,7 @@ public class SAXParserHandler extends DefaultHandler {
                         .setId(attributes.getValue("id"));
             units.addLast(current);
         } catch (Exception e) {
+            System.out.println(s2);
             throw new SAXException(e.getMessage(), e);
         }
         root = root != null ? root : current;

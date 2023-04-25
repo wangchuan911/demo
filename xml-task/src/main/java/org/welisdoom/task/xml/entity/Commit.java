@@ -18,8 +18,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Date 11:39
  */
 
-@Tag(value = "commit", parentTagTypes = Stream.class, desc = "提交")
-@Attr(name = "batch", desc = "字段信息")
+@Tag(value = "commit", parentTagTypes = Executable.class, desc = "提交")
+@Attr(name = "batch", desc = "批次提交")
 public class Commit extends Unit implements Executable {
     int batch = 1;
     AtomicInteger count = new AtomicInteger(0);

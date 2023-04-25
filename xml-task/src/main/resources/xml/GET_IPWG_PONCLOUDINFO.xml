@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task>
+    <initialization>
+        <database id="rimdb_pg" model="postgresql"></database>
+        <value id="val1"></value>
+        <value id="now"
+               value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
+        <value id="path" value="/slview/guangkuan/IPWG_PONCLOUDINFO_{{now}}.txt"></value>
+        <value id="path"
+               value="D:\Workspaces\WelisdoonProject\java\web-server\xml-task\src\main\resources\demo\demo2.csv"></value>
+    </initialization>
+    <start>
+        <insert id="trunc" link="rimdb_pg">
+            truncate table rc_res_test.mid_ftp_zhy_pon_cloud
+        </insert>
+        <transactional link="rimdb_pg">
+            <!--<ftp id="guessCharsetFtp" get="{{$value.path}}" local="/app/R9"></ftp>-->
+            <guess-charset id="csvCharset" guess="{{$value.path}}"></guess-charset>
+            <file id="demo" read="{{$value.path}}" charset="{{csvCharset.charset}}" delimiter="\|\|"
+                  line-break="&#x00A;">
+                <col code="wg_busi_no"/>
+                <col code="wg_circuit_no"/>
+                <col code="wg_olt_ip"/>
+                <col code="wg_olt_uport"/>
+                <col code="sw_eqp1_ip"/>
+                <col code="sw_eqp1_dport"/>
+                <col code="sw_eqp1_uport"/>
+                <col code="sw_eqp2_ip"/>
+                <col code="sw_eqp2_dport"/>
+                <col code="sw_eqp2_uport"/>
+                <col code="sw_eqp3_ip"/>
+                <col code="sw_eqp3_dport"/>
+                <col code="sw_eqp3_uport"/>
+                <col code="bars_eqp_ip"/>
+                <col code="bars_eqp_port"/>
+                <col code="cust_ipaddress"/>
+                <col code="bars_module_alias"/>
+                <col code="access_type"/>
+                <col code="circuit_dowm_rate"/>
+                <col code="circuit_up_rate"/>
+                <col code="vpn"/>
+                <col code="vrf"/>
+                <col code="ce_pe_mode"/>
+                <col code="pe_user_ipaddress"/>
+                <col code="ce_user_ipaddress"/>
+                <col code="busi_no"/>
+                <col code="olt_wg_ip"/>
+                <col code="bars_wg_ip"/>
+                <col code="bars_port_module_alias"/>
+                <col code="svlan"/>
+                <col code="cvlan"/>
+                <col code="loid"/>
+                <col code="asbr1_pe1_cir_no"/>
+                <col code="asbr2_pe2_cir_no"/>
+                <col code="vlan1"/>
+                <col code="vlan2"/>
+                <iterator>
+                    <insert id="insert">
+                        INSERT INTO rc_res_test.mid_ftp_zhy_pon_cloud
+                        (
+                        wg_busi_no,
+                        wg_circuit_no,
+                        wg_olt_ip,
+                        wg_olt_uport,
+                        sw_eqp1_ip,
+                        sw_eqp1_dport,
+                        sw_eqp1_uport,
+                        sw_eqp2_ip,
+                        sw_eqp2_dport,
+                        sw_eqp2_uport,
+                        sw_eqp3_ip,
+                        sw_eqp3_dport,
+                        sw_eqp3_uport,
+                        bars_eqp_ip,
+                        bars_eqp_port,
+                        cust_ipaddress,
+                        bars_module_alias,
+                        access_type,
+                        circuit_dowm_rate,
+                        circuit_up_rate,
+                        vpn,
+                        vrf,
+                        ce_pe_mode,
+                        pe_user_ipaddress,
+                        ce_user_ipaddress,
+                        busi_no,
+                        olt_wg_ip,
+                        bars_wg_ip,
+                        bars_port_module_alias,
+                        svlan,
+                        cvlan,
+                        loid,
+                        asbr1_pe1_cir_no,
+                        asbr2_pe2_cir_no,
+                        vlan1,
+                        vlan2
+                        )
+                        VALUES (
+                        #{demo.item.wg_busi_no,jdbcType=VARCHAR},
+                        #{demo.item.wg_circuit_no,jdbcType=VARCHAR},
+                        #{demo.item.wg_olt_ip,jdbcType=VARCHAR},
+                        #{demo.item.wg_olt_uport,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp1_ip,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp1_dport,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp1_uport,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp2_ip,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp2_dport,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp2_uport,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp3_ip,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp3_dport,jdbcType=VARCHAR},
+                        #{demo.item.sw_eqp3_uport,jdbcType=VARCHAR},
+                        #{demo.item.bars_eqp_ip,jdbcType=VARCHAR},
+                        #{demo.item.bars_eqp_port,jdbcType=VARCHAR},
+                        #{demo.item.cust_ipaddress,jdbcType=VARCHAR},
+                        #{demo.item.bars_module_alias,jdbcType=VARCHAR},
+                        #{demo.item.access_type,jdbcType=VARCHAR},
+                        #{demo.item.circuit_dowm_rate,jdbcType=VARCHAR},
+                        #{demo.item.circuit_up_rate,jdbcType=VARCHAR},
+                        #{demo.item.vpn,jdbcType=VARCHAR},
+                        #{demo.item.vrf,jdbcType=VARCHAR},
+                        #{demo.item.ce_pe_mode,jdbcType=VARCHAR},
+                        #{demo.item.pe_user_ipaddress,jdbcType=VARCHAR},
+                        #{demo.item.ce_user_ipaddress,jdbcType=VARCHAR},
+                        #{demo.item.busi_no,jdbcType=VARCHAR},
+                        #{demo.item.olt_wg_ip,jdbcType=VARCHAR},
+                        #{demo.item.bars_wg_ip,jdbcType=VARCHAR},
+                        #{demo.item.bars_port_module_alias,jdbcType=VARCHAR},
+                        #{demo.item.svlan,jdbcType=VARCHAR},
+                        #{demo.item.cvlan,jdbcType=VARCHAR},
+                        #{demo.item.loid,jdbcType=VARCHAR},
+                        #{demo.item.asbr1_pe1_cir_no,jdbcType=VARCHAR},
+                        #{demo.item.asbr2_pe2_cir_no,jdbcType=VARCHAR},
+                        #{demo.item.vlan1,jdbcType=VARCHAR},
+                        #{demo.item.vlan2,jdbcType=VARCHAR}
+                        )
+
+                    </insert>
+                    <commit batch="100"></commit>
+                </iterator>
+            </file>
+        </transactional>
+    </start>
+</task>

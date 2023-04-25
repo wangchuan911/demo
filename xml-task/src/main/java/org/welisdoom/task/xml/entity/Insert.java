@@ -34,11 +34,13 @@ public class Insert extends Unit implements Executable, Copyable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
+        System.out.println(data.getBus());
         Database.findConnect(this, data).onSuccess(connection -> {
             BaseCondition<String, TaskRequest> condition = new BaseCondition<String, TaskRequest>() {
             };
             condition.setData(data);
             condition.setCondition(data.getBus());
+            System.out.println(data.getBus());
             ((Future<Integer>) Database.getDataBase(Insert.this, data).update(connection, getScript(data), condition)).onSuccess(toNext::complete).onFailure(toNext::fail);
         }).onFailure(toNext::fail);
     }

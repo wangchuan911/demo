@@ -8,20 +8,22 @@
         <value id="val1"></value>
         <value id="val2"
                value="D:\Workspaces\WelisdoonProject\java\web-server\xml-task\src\main\resources\demo\demo.csv"></value>
-        <value id="now" value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
+        <value id="now"
+               value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
     </initialization>
     <start>
         <guess-charset id="csvCharset" guess="{{$value.val2}}"></guess-charset>
-        <csv id="demo" read="{{$value.val2}}" charset="{{csvCharset.charset}}">
+        <file id="demo" read="{{$value.val2}}" charset="{{csvCharset.charset}}" delimiter="," quote='"'
+              line-break="&#x00A;">
             <col code="col1"></col>
             <col code="col2"></col>
             <col code="col3"></col>
             <col code="col4"></col>
             <iterator>
                 <if test="demo.item.col1=='资源查询->设备信息->光路查询'">
-
                 </if>
+                <!--<sleep time="100"></sleep>-->
             </iterator>
-        </csv>
+        </file>
     </start>
 </task>

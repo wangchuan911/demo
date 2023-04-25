@@ -39,7 +39,8 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
         List<Object> params = new LinkedList<>();
-        sql = setValueToSql(params, toPageSql(sql), data);
+        setValueToSql(params, toPageSql(sql), data);
+        sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         setPage(tuple, data.getPage());
         log(sql, tuple);
@@ -48,7 +49,8 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
         List<Object> params = new LinkedList<>();
-        sql = setValueToSql(params, toPageSql(sql), data);
+        setValueToSql(params, toPageSql(sql), data);
+        sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         setPage(tuple, data.getPage());
         log(sql, tuple);
@@ -69,7 +71,8 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
         List<Object> params = new LinkedList<>();
-        sql = setValueToSql(params, sql, data);
+        setValueToSql(params, sql, data);
+        sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         log(sql, tuple);
         return connection.preparedQuery(sql).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
@@ -99,7 +102,9 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     void setPage(Tuple tuple, BaseCondition.Page page);
 
-    default String setValueToSql(List<Object> params, String sql, BaseCondition<String, TaskRequest> data) {
+    String sqlFormat(String sql, List<Object> param);
+
+    default void setValueToSql(List<Object> params, String sql, BaseCondition<String, TaskRequest> data) {
         JdbcType jdbcType;
         Object value;
         for (Map.Entry<String, JdbcType> sqlParamType : getSqlParamTypes(sql)) {
@@ -150,7 +155,6 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
                 }
             params.add(value);
         }
-        return sql.replaceAll(PATTERN_STRING, "?");
     }
 
     void removeInstance(String name);
