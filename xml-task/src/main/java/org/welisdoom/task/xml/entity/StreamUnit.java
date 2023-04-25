@@ -8,6 +8,7 @@ import org.welisdoom.task.xml.intf.type.Stream;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Classname StreamUnit
@@ -57,5 +58,22 @@ public abstract class StreamUnit extends Unit implements Stream, Copyable {
             default:
                 return new FileWriter(path);
         }
+    }
+
+    protected Future<Object> listeningBreak(Future<Object> listFuture, Closeable reader, AtomicInteger index) {
+        Promise<Object> promise = Promise.promise();
+        listFuture
+                .onSuccess(promise::complete)
+                .onFailure(throwable -> {
+                    Break.onBreak(throwable, promise, index.get());
+                })
+                .onComplete(objectAsyncResult -> {
+                    try (reader) {
+//                        reader.close();
+                    } catch (IOException e) {
+                        log(e.getMessage());
+                    }
+                });
+        return promise.future();
     }
 }

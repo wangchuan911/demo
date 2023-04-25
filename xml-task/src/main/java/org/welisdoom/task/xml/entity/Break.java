@@ -39,4 +39,14 @@ public class Break extends Unit implements Executable {
             return deep.get();
         }
     }
+
+    public static void onBreak(Throwable throwable, Promise<Object> toNext, Object result) {
+        if (throwable instanceof Break.BreakLoopThrowable) {
+            if (((Break.BreakLoopThrowable) throwable).decrementAndGetDeep() == 0) {
+                toNext.complete(result);
+                return;
+            }
+        }
+        toNext.fail(throwable);
+    }
 }

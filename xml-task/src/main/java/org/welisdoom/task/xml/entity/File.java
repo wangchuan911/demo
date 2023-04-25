@@ -9,18 +9,12 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
-import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
-import org.welisdoom.task.xml.intf.type.Stream;
-import org.xml.sax.Attributes;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -95,16 +89,8 @@ public class File extends StreamUnit implements Iterable<Map<String, Object>> {
                 listFuture = this.bigFutureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), countReset(index, 500, 0), 500, listFuture, data);
 
             }
-            listFuture.onComplete(objectAsyncResult -> {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        log(e.getMessage());
-                    }
-                }
-            });
-            return listFuture;
+            return listeningBreak(listFuture, reader, index);
+
 
         } catch (Throwable e) {
             log(builder.toString());

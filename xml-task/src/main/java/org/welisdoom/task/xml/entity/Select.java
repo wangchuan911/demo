@@ -140,13 +140,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                 future.onSuccess(o -> {
                     toNext.complete(index.get());
                 }).onFailure(throwable -> {
-                    if (throwable instanceof Break.BreakLoopThrowable) {
-                        if (((Break.BreakLoopThrowable) throwable).decrementAndGetDeep() == 0) {
-                            toNext.complete(index.get());
-                            return;
-                        }
-                    }
-                    toNext.fail(throwable);
+                    Break.onBreak(throwable, toNext, index.get());
                 });
 
             }).onFailure(toNext::fail);

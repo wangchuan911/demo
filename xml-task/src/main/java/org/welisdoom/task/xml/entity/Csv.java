@@ -91,13 +91,14 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
                 }
                 listFuture = this.bigFutureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), countReset(index, 500, 0), 500, listFuture, data);
             }
-            return listFuture.onComplete(objectAsyncResult -> {
+            /*return listFuture.onComplete(objectAsyncResult -> {
                 try (csvReader) {
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            });
+            });*/
+            return listeningBreak(listFuture, csvReader, index);
         } catch (Throwable e) {
             return Future.failedFuture(e);
         }
