@@ -42,7 +42,7 @@ public class Commit extends Unit implements Executable {
                 optional = Optional.ofNullable(getParent(Transactional.class));
             }
             if (optional.isPresent()) {
-                Transactional.commit(data).onSuccess(toNext::complete).onFailure(toNext::fail);
+                optional.get().commit(data).onSuccess(toNext::complete).onFailure(toNext::fail);
                 return;
             }
         }

@@ -55,6 +55,7 @@
                 <col code="vlan1"/>
                 <col code="vlan2"/>
                 <iterator>
+                    <!--<if test="demo.index>3"><break deep="1"></break></if>-->
                     <insert id="insert">
                         INSERT INTO rc_res_test.mid_ftp_zhy_pon_cloud
                         (
@@ -135,7 +136,7 @@
                         )
 
                     </insert>
-                    <commit batch="100"></commit>
+                    <commit batch="50"></commit>
                 </iterator>
             </file>
         </transactional>
