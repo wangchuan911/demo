@@ -46,14 +46,13 @@ public class File extends StreamUnit implements Iterable<Map<String, Object>> {
         String linebreak = MapUtils.getString(File.this.attributes, "line-break");
         String delimiter = MapUtils.getString(File.this.attributes, "delimiter");
         String quote = MapUtils.getString(File.this.attributes, "quote");
-        delimiter = String.format("%s(%s%s)?", quote, delimiter, quote);
-        while ((line = (reader.readLine())) != null) {
+        while ((line = reader.readLine()) != null) {
             if ((index = (line += "\n").indexOf(linebreak)) >= 0) {
                 builder.append(line, 0, index);
-                String[] strings = builder.toString().replaceFirst(delimiter, "").split(delimiter);
+                String[] strings = builder.toString().split(delimiter);
                 builder.setLength(0);
                 builder.append(line, index + linebreak.length(), line.length());
-                return strings;
+                return StringUtils.isEmpty(quote) ? strings : Arrays.stream(strings).map(s -> s.substring(quote.length(), s.length() - quote.length())).toArray(value -> strings);
             } else {
                 builder.append(line);
             }
