@@ -25,8 +25,7 @@ import java.util.Set;
 @Attr(name = "id", desc = "唯一标识")
 @Attr(name = "link", desc = "database的Id")
 public class Transactional extends Unit implements Executable {
-    Map<TaskRequest, SqlConnection> MAP = new HashMap<>();
-    Map<TaskRequest, Transaction> MAP1 = new HashMap<>();
+    Map<TaskRequest, Map.Entry<SqlConnection, Transaction>> MAP = new HashMap<>();
 
     static HookRollbackThread hookRollbackThread = new HookRollbackThread();
 
@@ -36,9 +35,10 @@ public class Transactional extends Unit implements Executable {
         @Override
         public void run() {
             for (Transactional transactional : transactions) {
-                for (Map.Entry<TaskRequest, Transaction> taskRequestTransactionEntry : transactional.MAP1.entrySet()) {
+                for (Map.Entry<TaskRequest, Map.Entry<SqlConnection, Transaction>> entry : transactional.MAP.entrySet()) {
                     try {
-                        taskRequestTransactionEntry
+                        entry
+                                .getValue()
                                 .getValue()
                                 .rollback()
                                 .onSuccess(unused -> {
@@ -51,10 +51,9 @@ public class Transactional extends Unit implements Executable {
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                }
-                for (Map.Entry<TaskRequest, SqlConnection> entry : transactional.MAP.entrySet()) {
                     try {
-                        entry.getValue().close()
+                        entry.getValue().getKey()
+                                .close()
                                 .onSuccess(unused -> {
                                     System.out.println(LogUtils.styleString("", 31, 1, "连接终止"));
                                 })
@@ -88,70 +87,62 @@ public class Transactional extends Unit implements Executable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        this.getDatabase(data).compose(connection -> {
-            MAP.put(data, connection);
-            return connection.begin().compose(transaction -> {
-                MAP1.put(data, transaction);
-                Promise<Object> promise = Promise.promise();
-                Future<Object> future = promise.future().onSuccess(o1 -> {
-                    MAP1.get(data)
-                            .commit()
-                            .onSuccess(unused -> {
-                                toNext.complete(o1);
-                            }).onFailure(toNext::fail);
-                }).onFailure(throwable -> {
-                    MAP1.get(data)
-                            .rollback()
-                            .onSuccess(unused -> {
-                                toNext.fail(throwable);
-                            }).onFailure(toNext::fail);
-                }).onComplete(objectAsyncResult -> {
-                    MAP1.remove(data);
-                    MAP.remove(data).close();
-                });
-                super.start(data, promise);
-                return future;
-            });
-        }).onFailure(toNext::fail);
+        this.getDatabase(data).compose(connection ->
+                connection.begin().compose(transaction -> {
+                    MAP.put(data, Map.entry(connection, transaction));
+                    Promise<Object> promise = Promise.promise();
+                    Future<Object> future = promise.future().onSuccess(o1 -> {
+                        MAP.get(data).getValue()
+                                .commit()
+                                .onSuccess(unused -> {
+                                    toNext.complete(o1);
+                                }).onFailure(toNext::fail);
+                    }).onFailure(throwable -> {
+                        MAP.get(data).getValue()
+                                .rollback()
+                                .onSuccess(unused -> {
+                                    toNext.fail(throwable);
+                                }).onFailure(toNext::fail);
+                    }).onComplete(objectAsyncResult -> {
+                        MAP.remove(data).getKey().close();
+                    });
+                    super.start(data, promise);
+                    return future;
+                })
+        ).onFailure(toNext::fail);
     }
 
 
     public SqlConnection getSqlConnection(TaskRequest request) {
-        return MAP.get(request);
+        return MAP.get(request).getKey();
     }
 
     @Override
     public void destroy(TaskRequest taskRequest) {
         super.destroy(taskRequest);
         MAP.remove(taskRequest);
-        MAP1.remove(taskRequest);
     }
 
     public Future<?> commit(TaskRequest data) {
-        log("提交");
-        log(MAP1.get(data));
-        return MAP1.get(data).commit().compose(voidAsyncResult ->
-                getDatabase(data).compose(connection -> {
-                    return connection.begin().onSuccess(transaction -> {
-                        MAP.put(data, connection).close();
-                        MAP1.put(data, transaction);
-                        log(MAP1.get(data));
-                    });
-                })
+        /*log("提交");
+        log(MAP.get(data));*/
+        return MAP.get(data).getValue().commit().compose(voidAsyncResult ->
+                newTransaction(data)
         );
     }
 
     public Future<?> rollback(TaskRequest data) {
-        log("回滚");
-        log(MAP1.get(data));
-        return MAP1.get(data).rollback().compose(voidAsyncResult ->
-                getDatabase(data).compose(connection -> {
-                    return connection.begin().onSuccess(transaction -> {
-                        MAP.put(data, connection).close();
-                        MAP1.put(data, transaction);
-                        log(MAP1.get(data));
-                    });
-                })
+        /*log("回滚");
+        log(MAP1.get(data));*/
+        return MAP.get(data).getValue().rollback().compose(voidAsyncResult ->
+                newTransaction(data)
         );
+    }
+
+    protected Future<Transaction> newTransaction(TaskRequest data) {
+        return getDatabase(data).compose(connection ->
+                connection.begin().onSuccess(transaction -> {
+                    MAP.put(data, Map.entry(connection, transaction)).getKey().close();
+                }));
     }
 }

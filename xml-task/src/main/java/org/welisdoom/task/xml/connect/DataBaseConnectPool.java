@@ -171,9 +171,9 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
         Object obj;
         for (int i = 0, len = tuple.size(); i < len; i++) {
             obj = tuple.getValue(i);
-            builder.append(obj).append(" (").append(obj == null ? "null" : obj.getClass().getSimpleName()).append(")").append(i == 0 ? "" : ",");
+            builder.append(obj).append(", (").append(obj == null ? "null" : obj.getClass().getSimpleName()).append(")");
         }
-        log(prefix, builder.toString());
+        log(prefix, builder.length() == 0 ? builder.toString() : builder.substring(1));
     }
 
     default void log(String prefix, String content) {
