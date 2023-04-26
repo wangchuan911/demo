@@ -64,7 +64,7 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         PoolOptions poolOptions = new PoolOptions().setMaxSize(10);
 
 // Create the pool from the data object
-        pools.put(config.getName(), OraclePool.pool(Task.vertx, connectOptions, poolOptions));
+        pools.put(config.getName(), OraclePool.pool(Task.getVertx(), connectOptions, poolOptions));
     }
 
     @Override

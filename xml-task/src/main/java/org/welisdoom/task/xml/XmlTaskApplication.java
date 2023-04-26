@@ -1,5 +1,7 @@
 package org.welisdoom.task.xml;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.WorkerExecutor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mybatis.spring.annotation.MapperScan;
@@ -39,6 +41,7 @@ import java.util.regex.Pattern;
 public class XmlTaskApplication {
     static Map<String, SubTask.Config> taskList = new LinkedHashMap<>();
     final static Pattern pattern = Pattern.compile("\\@task\\-(.+?)\\=(.+)"), pattern1 = Pattern.compile("\\@task\\-(.+?)\\-params\\-(.+?)\\=.+"), pattern2 = Pattern.compile("(\\w+):(.+)");
+    static VertxOptions options = new VertxOptions();
 
     public static void main(String[] args) throws Throwable {
         List<String> newArgs = new LinkedList<>();
@@ -81,9 +84,13 @@ public class XmlTaskApplication {
 
     @EventListener
     public void run(ApplicationReadyEvent readyEvent) {
-        final WorkerExecutor executor = Task.vertx.createSharedWorkerExecutor("task", 5, 10, TimeUnit.DAYS);
+        options.setMaxEventLoopExecuteTime(1);
+        options.setMaxEventLoopExecuteTimeUnit(TimeUnit.HOURS);
+        options.setMaxWorkerExecuteTime(10);
+        options.setMaxWorkerExecuteTimeUnit(TimeUnit.DAYS);
+        Task.setVertxOption(options);
         for (Map.Entry<String, SubTask.Config> stringStringEntry : Map.copyOf(taskList).entrySet()) {
-            executor.executeBlocking(promise -> {
+            Task.getVertx().executeBlocking(promise -> {
                 SubTask.run(stringStringEntry.getKey(), stringStringEntry.getValue());
             });
         }

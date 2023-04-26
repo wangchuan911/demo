@@ -4,6 +4,8 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import org.springframework.util.Assert;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Root;
 
@@ -17,11 +19,16 @@ import java.util.*;
  */
 @Tag(value = "task", parentTagTypes = Root.class, desc = "根节点")
 public class Task extends Unit implements Root {
-    final public static Vertx vertx = Vertx.vertx();
+    private static Vertx vertx;
     static Set<TaskRequest> tasks = new HashSet<>();
 
     public static Vertx getVertx() {
         return vertx;
+    }
+
+    public static void setVertxOption(VertxOptions options) {
+        Assert.isNull(vertx, "vertx is created!");
+        vertx = Vertx.vertx(options);
     }
 
     public Future<Object> run(TaskRequest data) {

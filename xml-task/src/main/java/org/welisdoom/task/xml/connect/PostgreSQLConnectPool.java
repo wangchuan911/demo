@@ -61,7 +61,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
                 .setMaxSize(5);
 
 // Create the client pool
-        pools.put(config.getName(), PgPool.pool(Task.vertx, connectOptions, poolOptions));
+        pools.put(config.getName(), PgPool.pool(Task.getVertx(), connectOptions, poolOptions));
     }
 
     public Future<PgConnection> getConnect(String name) {
