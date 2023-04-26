@@ -18,4 +18,8 @@ public interface Script extends UnitType {
     default String getScript(TaskRequest request, String split) {
         return " ";
     }
+
+    default boolean isStaticContent() {
+        return false;
+    }
 }

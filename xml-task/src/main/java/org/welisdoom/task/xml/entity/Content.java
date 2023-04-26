@@ -41,4 +41,9 @@ public class Content extends Unit implements Script, Copyable {
         content.content = this.content;
         return content;
     }
+
+    @Override
+    public boolean isStaticContent() {
+        return true;
+    }
 }

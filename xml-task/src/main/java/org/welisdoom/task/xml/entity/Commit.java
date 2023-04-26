@@ -34,7 +34,9 @@ public class Commit extends Unit implements Executable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        if (batch == count.incrementAndGet()) {
+        log(String.format("batch:%d,count:%d", batch, count.incrementAndGet()));
+        if (batch == count.get()) {
+            count.set(0);
             Optional<Transactional> optional;
             if (attributes.containsKey("link")) {
                 optional = getParents(Transactional.class).stream().filter(transactional -> transactional.getId().equals(attributes.containsKey("link"))).findFirst();
@@ -43,6 +45,7 @@ public class Commit extends Unit implements Executable {
             }
             if (optional.isPresent()) {
                 optional.get().commit(data).onSuccess(toNext::complete).onFailure(toNext::fail);
+                log("提交");
                 return;
             }
         }

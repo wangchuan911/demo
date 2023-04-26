@@ -5,6 +5,7 @@ import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.Tuple;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -13,6 +14,8 @@ import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoon.common.data.BaseCondition;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -31,18 +34,38 @@ public class Insert extends Unit implements Executable, Copyable {
         System.out.println(getScript(data.getBus(), " "));
         data.next(null);
     }*/
+    Boolean isStaticContent;
+    String sql;
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
+        if (isStaticContent == null) {
+            isStaticContent = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).isStaticContent()).reduce(Boolean.TRUE, (aBoolean, aBoolean2) -> aBoolean && aBoolean2);
+        }
         System.out.println(data.getBus());
-        Database.findConnect(this, data).onSuccess(connection -> {
+        Future<Object> future = Database.findConnect(this, data).compose(connection -> {
             BaseCondition<String, TaskRequest> condition = new BaseCondition<String, TaskRequest>() {
             };
             condition.setData(data);
             condition.setCondition(data.getBus());
             System.out.println(data.getBus());
-            ((Future<Integer>) Database.getDataBase(Insert.this, data).update(connection, getScript(data), condition)).onSuccess(toNext::complete).onFailure(toNext::fail);
-        }).onFailure(toNext::fail);
+            DataBaseConnectPool pool = Database.getDataBase(Insert.this, data);
+            if (!isStaticContent) {
+                return pool.update(connection, getScript(data), condition);
+            } else {
+                if (this.sql == null) {
+                    this.sql = getScript(data);
+                    pool.log(sql, Tuple.tuple());
+                }
+                List<Object> params = new LinkedList<>();
+                pool.setValueToSql(params, sql, condition);
+                String sql = pool.sqlFormat(this.sql, params);
+                Tuple tuple = Tuple.tuple(params);
+                pool.log("", tuple);
+                return connection.preparedQuery(sql).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
+            }
+        });
+        future.onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
     public String getScript(TaskRequest request) {
@@ -54,4 +77,6 @@ public class Insert extends Unit implements Executable, Copyable {
     public Copyable copy() {
         return copyableUnit(this);
     }
+
+
 }
