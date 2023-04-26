@@ -43,7 +43,8 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
         sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         setPage(tuple, data.getPage());
-        log(sql, tuple);
+        log("sql", sql);
+        log("params", tuple);
         return connection.preparedQuery(sql).execute(tuple);
     }
 
@@ -53,7 +54,8 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
         sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         setPage(tuple, data.getPage());
-        log(sql, tuple);
+        log("sql", sql);
+        log("params", tuple);
         return pageScroll(connection, sql, params, data.getPage(), future);
     }
 
@@ -74,7 +76,8 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
         setValueToSql(params, sql, data);
         sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
-        log(sql, tuple);
+        log("sql", sql);
+        log("params", tuple);
         return connection.preparedQuery(sql).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
     }
 
@@ -159,14 +162,23 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     void removeInstance(String name);
 
-    default void log(String sql, Tuple tuple) {
-        System.out.println(String.format("sql[%s]", sql));
-        System.out.print("params[");
+    default void log(String prefix, Tuple tuple) {
+        StringBuilder builder = new StringBuilder();
+        Object obj;
         for (int i = 0, len = tuple.size(); i < len; i++) {
-            System.out.print(tuple.getValue(i));
-            System.out.print(len - 1 == i ? "" : ",");
+            obj = tuple.getValue(i);
+            builder.append(obj).append(" (").append(obj == null ? "null" : obj.getClass().getSimpleName()).append(")").append(i == 0 ? "" : ",");
         }
-        System.out.println("]");
+        log(prefix, builder.toString());
+    }
+
+    default void log(String prefix, String content) {
+        System.out.print("==>");
+        System.out.print(prefix);
+        System.out.print("==>");
+        System.out.print("[ ");
+        System.out.print(content);
+        System.out.println(" ]");
     }
 
     class DatabaseLinkInfo {

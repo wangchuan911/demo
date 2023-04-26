@@ -42,26 +42,26 @@ public class Insert extends Unit implements Executable, Copyable {
         if (isStaticContent == null) {
             isStaticContent = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).isStaticContent()).reduce(Boolean.TRUE, (aBoolean, aBoolean2) -> aBoolean && aBoolean2);
         }
-        System.out.println(data.getBus());
+//        System.out.println(data.getBus());
         Future<Object> future = Database.findConnect(this, data).compose(connection -> {
             BaseCondition<String, TaskRequest> condition = new BaseCondition<String, TaskRequest>() {
             };
             condition.setData(data);
             condition.setCondition(data.getBus());
-            System.out.println(data.getBus());
+//            System.out.println(data.getBus());
             DataBaseConnectPool pool = Database.getDataBase(Insert.this, data);
             if (!isStaticContent) {
                 return pool.update(connection, getScript(data), condition);
             } else {
                 if (this.sql == null) {
                     this.sql = getScript(data);
-                    pool.log(sql, Tuple.tuple());
+                    pool.log("sql", this.sql);
                 }
                 List<Object> params = new LinkedList<>();
                 pool.setValueToSql(params, sql, condition);
                 String sql = pool.sqlFormat(this.sql, params);
                 Tuple tuple = Tuple.tuple(params);
-                pool.log("", tuple);
+                pool.log("params", tuple);
                 return connection.preparedQuery(sql).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
             }
         });

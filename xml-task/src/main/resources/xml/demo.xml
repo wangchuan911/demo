@@ -9,7 +9,7 @@
         <value id="val2"></value>
     </initialization>
     <start>
-        <transactional link="rimdb" batch="50">
+        <transactional link="rimdb" >
             <http>
                 <body>asdasdasdsadasdasdasdasdas</body>
             </http>
