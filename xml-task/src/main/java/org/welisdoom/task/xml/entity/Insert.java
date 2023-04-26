@@ -6,6 +6,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
+import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -35,7 +36,7 @@ public class Insert extends Unit implements Executable, Copyable {
         data.next(null);
     }*/
     Boolean isStaticContent;
-    String sql;
+    DataBaseConnectPool.StaticSql sql;
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
@@ -53,16 +54,21 @@ public class Insert extends Unit implements Executable, Copyable {
             if (!isStaticContent) {
                 return pool.update(connection, getScript(data), condition);
             } else {
-                if (this.sql == null) {
-                    this.sql = getScript(data);
-                    pool.log("sql", this.sql);
-                }
+
                 List<Object> params = new LinkedList<>();
-                pool.setValueToSql(params, sql, condition);
-                String sql = pool.sqlFormat(this.sql, params);
+                if (this.sql == null) {
+                    String sql = getScript(data);
+                    List<Map.Entry<String, JdbcType>> list = pool.getSqlParamTypes(sql);
+                    pool.setValueToSql(params, list, condition);
+                    sql = pool.sqlFormat(sql, params);
+                    this.sql = new DataBaseConnectPool.StaticSql(sql, list);
+                    pool.log("static sql", this.sql.getSql());
+                } else {
+                    pool.setValueToSql(params, this.sql.getTypes(), condition);
+                }
                 Tuple tuple = Tuple.tuple(params);
                 pool.log("params", tuple);
-                return connection.preparedQuery(sql).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
+                return connection.preparedQuery(this.sql.getSql()).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
             }
         });
         future.onSuccess(toNext::complete).onFailure(toNext::fail);

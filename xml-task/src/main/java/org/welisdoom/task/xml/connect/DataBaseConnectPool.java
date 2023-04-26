@@ -39,7 +39,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
         List<Object> params = new LinkedList<>();
-        setValueToSql(params, toPageSql(sql), data);
+        setValueToSql(params, getSqlParamTypes(toPageSql(sql)), data);
         sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         setPage(tuple, data.getPage());
@@ -50,7 +50,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
         List<Object> params = new LinkedList<>();
-        setValueToSql(params, toPageSql(sql), data);
+        setValueToSql(params, getSqlParamTypes(toPageSql(sql)), data);
         sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         setPage(tuple, data.getPage());
@@ -73,7 +73,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
         List<Object> params = new LinkedList<>();
-        setValueToSql(params, sql, data);
+        setValueToSql(params, getSqlParamTypes(sql), data);
         sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         log("sql", sql);
@@ -107,10 +107,10 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     String sqlFormat(String sql, List<Object> param);
 
-    default void setValueToSql(List<Object> params, String sql, BaseCondition<String, TaskRequest> data) {
+    default void setValueToSql(List<Object> params, List<Map.Entry<String, JdbcType>> jdbcTypes, BaseCondition<String, TaskRequest> data) {
         JdbcType jdbcType;
         Object value;
-        for (Map.Entry<String, JdbcType> sqlParamType : getSqlParamTypes(sql)) {
+        for (Map.Entry<String, JdbcType> sqlParamType : jdbcTypes) {
             jdbcType = sqlParamType.getValue();
             try {
                 value = Ognl.getValue(sqlParamType.getKey(), data.getData().getOgnlContext(), data.getData().getBus(), Object.class);
@@ -159,6 +159,10 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
             params.add(value);
         }
     }
+
+    /*default void setValueToSql(List<Object> params, String sql, BaseCondition<String, TaskRequest> data) {
+        setValueToSql(params, getSqlParamTypes(sql), data);
+    }*/
 
     void removeInstance(String name);
 
@@ -237,4 +241,24 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
             this.pw = pw;
         }
     }
+
+    class StaticSql {
+        String sql;
+        List<Map.Entry<String, JdbcType>> types;
+
+        public StaticSql(String sql, List<Map.Entry<String, JdbcType>> types) {
+            this.sql = sql;
+            this.types = types;
+        }
+
+        public List<Map.Entry<String, JdbcType>> getTypes() {
+            return types;
+        }
+
+        public String getSql() {
+            return sql;
+        }
+
+    }
+
 }
