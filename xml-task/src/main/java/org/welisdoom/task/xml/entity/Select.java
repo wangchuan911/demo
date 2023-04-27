@@ -88,7 +88,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         Future<Object> listFuture = Future.succeededFuture();
         for (Map<String, Object> item : list) {
             listFuture = listFuture.compose(o ->
-                    startChildUnit(data, item, Iterator.class)
+                    startChildUnit(data, item, typeMatched(Iterator.class))
             );
         }
         listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);

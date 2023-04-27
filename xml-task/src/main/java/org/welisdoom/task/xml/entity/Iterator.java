@@ -54,6 +54,6 @@ public class Iterator extends Unit implements Executable {
 
 
     public static Future<Object> iterator(Unit unit, TaskRequest data, Object item) {
-        return unit.startChildUnit(data, item, Iterator.class);
+        return unit.startChildUnit(data, item, typeMatched(Iterator.class));
     }
 }

@@ -101,7 +101,7 @@ public class Http extends Unit implements Executable, Copyable {
             // 发送POST请求必须设置如下两行
             httpConnection.setDoOutput(true);
             httpConnection.setDoInput(true);
-            httpConnection.setRequestMethod("POST");    // POST方法
+            httpConnection.setRequestMethod(attributes.getOrDefault("method", "POST"));    // POST方法
 
 
             for (Header header : getChild(Header.class)) {
@@ -120,7 +120,7 @@ public class Http extends Unit implements Executable, Copyable {
             /*try (input) {
                 StreamUtils.copyToString(input, Charset.forName("utf-8"));
             }*/
-                switch (MapUtils.getString(attributes, "output", "default")) {
+                switch (attributes.getOrDefault("output", "default")) {
                     case "stream":
                         outputBody = "data is stream";
                         result = (input);
@@ -156,7 +156,7 @@ public class Http extends Unit implements Executable, Copyable {
         if ("true".equals(attributes.get("is-log"))) {
             try {
                 ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
-                log(data,input,ExceptionUtils.getStackTrace(e));
+                log(data, input, ExceptionUtils.getStackTrace(e));
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }

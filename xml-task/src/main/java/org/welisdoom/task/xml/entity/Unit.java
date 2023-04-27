@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -71,6 +72,7 @@ public class Unit implements UnitType, IData<String, Model> {
             /*System.out.println("属性值：" + name + "=" + value);*/
             this.attributes.put(name, value);
         }
+        this.id = this.attributes.get("id");
         return this;
     }
 
@@ -160,14 +162,17 @@ public class Unit implements UnitType, IData<String, Model> {
     }*/
 
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        startChildUnit(data, data.lastUnitResult, UnitType.class).onSuccess(toNext::complete).onFailure(toNext::fail);
+        startChildUnit(data, data.lastUnitResult, Objects::nonNull).onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
+    protected static Predicate<Unit> typeMatched(Class<?>... classes) {
+        return unit -> Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(unit.getClass())).findFirst().isPresent();
+    }
 
-    Future<Object> startChildUnit(TaskRequest data, Object value, Class<?>... classes) {
+    Future<Object> startChildUnit(TaskRequest data, Object value, Predicate<Unit> predicate) {
         Future<Object> f = Future.succeededFuture(value), f1;
         for (Unit child : children) {
-            if (Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(child.getClass())).findFirst().isEmpty())
+            if (!predicate.test(child))
                 continue;
             f = f.compose(o -> /*{
                 return Future.future(promise -> {
