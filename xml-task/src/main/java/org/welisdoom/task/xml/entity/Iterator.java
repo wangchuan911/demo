@@ -33,17 +33,20 @@ public class Iterator extends Unit implements Executable {
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         Map map = data.getBus(parent.id);
-        try {
-            Iterable.Item item = data.getLastUnitResult();
-            map.put(itemIndex, item.getIndex());
-            map.put(itemName, item.getItem());
-            item.destroy();
-            item = GCUtils.release(item);
-            super.start(data, toNext);
-        } finally {
-            map.remove(itemName);
-            map.remove(itemIndex);
-        }
+        Iterable.Item item = data.getLastUnitResult();
+        map.put(itemIndex, item.getIndex());
+        map.put(itemName, item.getItem());
+        item.destroy();
+        item = GCUtils.release(item);
+        Promise<Object> promise = Promise.promise();
+        promise.future()
+                .onSuccess(toNext::complete)
+                .onFailure(toNext::fail)
+                .onComplete(objectAsyncResult -> {
+                    map.remove(itemName);
+                    map.remove(itemIndex);
+                });
+        super.start(data, promise);
     }
 
 

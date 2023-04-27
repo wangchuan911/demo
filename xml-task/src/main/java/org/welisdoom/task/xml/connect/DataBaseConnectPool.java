@@ -39,7 +39,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
         List<Object> params = new LinkedList<>();
-        setValueToSql(params, getSqlParamTypes(toPageSql(sql)), data);
+        setValueToSql(params, getSqlParamTypes(sql = toPageSql(sql)), data);
         sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         setPage(tuple, data.getPage());
@@ -50,19 +50,19 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
         List<Object> params = new LinkedList<>();
-        setValueToSql(params, getSqlParamTypes(toPageSql(sql)), data);
+        setValueToSql(params, getSqlParamTypes(sql = toPageSql(sql)), data);
         sql = sqlFormat(sql, params);
-        Tuple tuple = Tuple.tuple(params);
-        setPage(tuple, data.getPage());
-        log("sql", sql);
-        log("params", tuple);
         return pageScroll(connection, sql, params, data.getPage(), future);
     }
 
     default Future<Object> pageScroll(SqlConnection connection, String sql, List<Object> list, BaseCondition.Page page, Function<RowSet<Row>, Future<Object>> future) {
+        Tuple tuple = Tuple.tuple(list);
+        setPage(tuple, page);
+        log("sql", sql);
+        log("params", tuple);
         return connection
                 .preparedQuery(sql)
-                .execute(Tuple.tuple(list).addValue(page.getEnd()).addValue(page.getStart())).compose(rows ->
+                .execute(tuple).compose(rows ->
                         future
                                 .apply(rows)
                                 .compose(o -> rows.size() < page.getPageSize()
@@ -171,7 +171,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
         Object obj;
         for (int i = 0, len = tuple.size(); i < len; i++) {
             obj = tuple.getValue(i);
-            builder.append(obj).append(", (").append(obj == null ? "null" : obj.getClass().getSimpleName()).append(")");
+            builder.append(", ").append(obj).append("(").append(obj == null ? "null" : obj.getClass().getSimpleName()).append(")");
         }
         log(prefix, builder.length() == 0 ? builder.toString() : builder.substring(1));
     }
@@ -192,6 +192,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
         String database;
         String user;
         String pw;
+        String model;
 
         public int getPort() {
             return port;
@@ -239,6 +240,14 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
         public void setPw(String pw) {
             this.pw = pw;
+        }
+
+        public String getModel() {
+            return model;
+        }
+
+        public void setModel(String model) {
+            this.model = model;
         }
     }
 

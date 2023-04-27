@@ -49,13 +49,13 @@ public interface Iterable<T> extends UnitType {
         }
     }
 
-    default Future<Object> bigFutureLoop(T t, int index, int triggerCount, Future<?> preFuture, TaskRequest data) {
+    default Future<Object> bigFutureLoop(T t, long index, long triggerCount, Future<?> preFuture, TaskRequest data) {
         return bigFutureLoop(index, triggerCount, preFuture,
                 o -> this.iterator(data, Item.of(index, t)));
 
     }
 
-    static <T, K> Future<T> bigFutureLoop(int count, int triggerCount, Future<K> preFuture, Function<K, Future<T>> loop) {
+    static <T, K> Future<T> bigFutureLoop(long count, long triggerCount, Future<K> preFuture, Function<K, Future<T>> loop) {
         if (count % triggerCount == 0 || preFuture == null) {
             GCUtils.toSafePoint();
             Promise<K> promise = Promise.promise();

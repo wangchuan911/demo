@@ -11,6 +11,7 @@
         <result column="db" property="database"></result>
         <result column="usr" property="user"></result>
         <result column="pw" property="pw"></result>
+        <result column="model" property="model"></result>
     </resultMap>
 
     <select id="getDatabase" parameterType="string"

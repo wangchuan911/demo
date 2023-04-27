@@ -11,6 +11,7 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
+import org.welisdoon.common.ObjectUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -78,14 +80,16 @@ public class Http extends Unit implements Executable, Copyable {
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
-        String body = textFormat(data, getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim());
-        log(body);
-        if (true) {
-            toNext.complete();
-            return;
-        }
+        String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim(),
+                outputBody = "empty data";
+        log(inputBody);
+        boolean isLog = "true".equals(attributes.get("is-log"));
         HttpURLConnection httpConnection = null;
         try {
+            if (true) {
+                toNext.complete();
+                return;
+            }
             httpConnection = (HttpURLConnection) new URL(attributes.get("url")).openConnection();
             // 打开和URL之间的连接
 
@@ -101,7 +105,7 @@ public class Http extends Unit implements Executable, Copyable {
 
             OutputStream output = httpConnection.getOutputStream();
             try (output) {
-                StreamUtils.copy(body, Charset.forName("utf-8"), output);
+                StreamUtils.copy(inputBody, Charset.forName("utf-8"), output);
             }
 
             httpConnection.connect();
@@ -110,19 +114,18 @@ public class Http extends Unit implements Executable, Copyable {
             /*try (input) {
                 StreamUtils.copyToString(input, Charset.forName("utf-8"));
             }*/
-                Future<Object> future;
-                switch (attributes.get("output")) {
+                switch (MapUtils.getString(attributes, "output", "default")) {
                     case "stream":
-                        future = startChildUnit(data, input, Executable.class);
+                        outputBody = "data is stream";
+                        toNext.complete(input);
                         break;
                     case "json":
-                        future = startChildUnit(data, JSON.parse(StreamUtils.copyToString(input, Charset.forName("utf-8"))));
+                        toNext.complete(JSON.parse(outputBody = StreamUtils.copyToString(input, Charset.forName("utf-8"))));
                         break;
                     default:
-                        future = startChildUnit(data, StreamUtils.copyToString(input, Charset.forName("utf-8")));
+                        toNext.complete(outputBody = StreamUtils.copyToString(input, Charset.forName("utf-8")));
                         break;
                 }
-                future.onSuccess(toNext::complete).onFailure(toNext::fail);
             } else {
                 InputStream input = httpConnection.getErrorStream();
                 toNext.fail(new RuntimeException(StreamUtils.copyToString(input, Charset.forName("utf-8"))));
@@ -137,6 +140,16 @@ public class Http extends Unit implements Executable, Copyable {
                     e1.printStackTrace();
                 }
             }
+            if (isLog) {
+                Map log = null;
+                try {
+                    log = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("name"), HashMap::new);
+                    log.put("input", inputBody);
+                    log.put("output", outputBody);
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+            }
         }
     }
 
@@ -145,13 +158,13 @@ public class Http extends Unit implements Executable, Copyable {
         return copyableUnit(this);
     }
 
-    @Tag(value = "body", parentTagTypes = {Http.class, Instance.class}, desc = "post请求内容")
+    @Tag(value = "body", parentTagTypes = {Http.class, Initialization.class}, desc = "post请求内容")
     public static class Body extends Unit implements Script, Copyable {
 
         public String getScript(TaskRequest request, String split) {
-            return children.stream()
+            return textFormat(request, children.stream()
                     .filter(unit -> unit instanceof Script)
-                    .map(unit -> ((Script) unit).getScript(request, split).trim()).collect(Collectors.joining(split));
+                    .map(unit -> ((Script) unit).getScript(request, split).trim()).collect(Collectors.joining(split)));
         }
 
         @Override
@@ -160,11 +173,15 @@ public class Http extends Unit implements Executable, Copyable {
         }
     }
 
-    @Tag(value = "header", parentTagTypes = {Http.class, Instance.class}, desc = "请求头信息")
+    @Tag(value = "header", parentTagTypes = {Http.class, Initialization.class}, desc = "请求头信息")
     public static class Header extends Unit implements Copyable {
 
         public String getContent() {
             return MapUtils.getString(attributes, "content", "").trim();
+        }
+
+        public String getName() {
+            return attributes.containsKey("name") ? attributes.get("name") : getId();
         }
 
         @Override

@@ -8,6 +8,7 @@ import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.connect.Db;
+import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
@@ -28,10 +29,10 @@ import java.util.Optional;
 @Attr(name = "id", desc = "数据库标识")
 @Attr(name = "db", desc = "数据库类型")
 public class Database extends Unit {
-    static Map<TaskRequest, Map<String, DataBaseConnectPool>> MAP = new HashMap<>();
+    static Map<String, DataBaseConnectPool> MAP = new HashMap<>();
 
     public static DataBaseConnectPool getDatabase(TaskRequest request, String name) {
-        return MAP.get(request).get(name);
+        return MAP.get(name);
     }
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {
@@ -57,8 +58,8 @@ public class Database extends Unit {
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         try {
-            ObjectUtils.getMapValueOrNewSafe(ObjectUtils.getMapValueOrNewSafe(MAP, data, () -> new HashMap<>()), attributes.get("id"), () -> Database
-                    .getDataBaseConnectPool(attributes.get("model")));
+            ObjectUtils.getMapValueOrNewSafe(MAP, attributes.get("id"), () -> Database
+                    .getDataBaseConnectPool(attributes.get("id")));
             super.start(data, toNext);
 
         } catch (Throwable throwable) {
@@ -68,31 +69,25 @@ public class Database extends Unit {
 
 
     public static DataBaseConnectPool getDataBaseConnectPool(String name) {
-        return (DataBaseConnectPool) ApplicationContextProvider
+        DataBaseConnectPool.DatabaseLinkInfo linkInfo = ApplicationContextProvider.getApplicationContext().getBean(ConfigDao.class).getDatabase(name);
+        DataBaseConnectPool pool = ApplicationContextProvider
                 .getApplicationContext()
                 .getBeansWithAnnotation(Db.class)
                 .entrySet().stream()
-                .map(Map.Entry::getValue)
+                .map(stringObjectEntry -> (DataBaseConnectPool) stringObjectEntry.getValue())
                 .filter(dataBaseConnectPool -> dataBaseConnectPool instanceof DataBaseConnectPool &&
-                        ApplicationContextProvider.getRealClass(dataBaseConnectPool.getClass()).getAnnotation(Db.class).value().equals(name))
+                        ApplicationContextProvider.getRealClass(dataBaseConnectPool.getClass()).getAnnotation(Db.class).value().equals(linkInfo.getModel()))
                 .findFirst().orElse(null);
+        return pool;
     }
 
-    public static DataBaseConnectPool getDataBaseConnectPool(SqlConnection connection) {
-        return (DataBaseConnectPool) ApplicationContextProvider
-                .getApplicationContext()
-                .getBeansWithAnnotation(Db.class)
-                .entrySet().stream()
-                .map(Map.Entry::getValue)
-                .filter(dataBaseConnectPool -> dataBaseConnectPool instanceof DataBaseConnectPool &&
-                        ObjectUtils.getGenericTypes(dataBaseConnectPool.getClass(), DataBaseConnectPool.class, 1).isAssignableFrom(connection.getClass()))
-                .findFirst().orElse(null);
+    public static Future<SqlConnection> getConnect(String name) {
+        return getDataBaseConnectPool(name).getConnect(name);
     }
 
     @Override
     public void destroy(TaskRequest taskRequest) {
         super.destroy(taskRequest);
-        MAP.remove(taskRequest);
     }
 
     protected static Future<SqlConnection> findConnect(Unit unit, TaskRequest data) {
