@@ -114,7 +114,7 @@ public class Http extends Unit implements Executable, Copyable {
             }
 
             httpConnection.connect();
-            if (httpConnection.getResponseCode() == 0) {
+            if (httpConnection.getResponseCode() == 200) {
                 InputStream input = httpConnection.getInputStream();
                 Object result;
             /*try (input) {
@@ -139,7 +139,7 @@ public class Http extends Unit implements Executable, Copyable {
                 throw new NoStackTraceThrowable(StreamUtils.copyToString(input, Charset.forName("utf-8")));
             }
         } catch (Throwable e) {
-            log(data, inputBody, ExceptionUtils.getStackTrace(e));
+            log(data, inputBody, e);
             toNext.fail(e);
         } finally {
             if (httpConnection != null) {
@@ -152,10 +152,21 @@ public class Http extends Unit implements Executable, Copyable {
         }
     }
 
+    protected void log(TaskRequest data, String input, Throwable e) {
+        if ("true".equals(attributes.get("is-log"))) {
+            try {
+                ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
+                log(data,input,ExceptionUtils.getStackTrace(e));
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        }
+    }
+
     protected void log(TaskRequest data, String input, String output) {
         if ("true".equals(attributes.get("is-log"))) {
             try {
-                Map log = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("name"), HashMap::new);
+                Map log = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
                 log.put("url", getUrl(data));
                 log.put("input", input);
                 log.put("output", output);

@@ -15,8 +15,8 @@
         </insert>
         <transactional link="rimdb_pg">
             <!--<ftp id="guessCharsetFtp" get="{{$value.path}}" local="/app/R9"></ftp>-->
-            <guess-charset id="csvCharset" guess="{{$value.path}}"></guess-charset>
-            <file id="demo" read="{{$value.path}}" charset="{{csvCharset.charset}}" delimiter="\|\|"
+            <guess-charset id="csvCharset" guess="{{$values.path}}"></guess-charset>
+            <file id="demo" read="{{$values.path}}" charset="{{csvCharset.charset}}" delimiter="\|\|"
                   line-break="&#x00A;">
                 <col code="wg_busi_no"/>
                 <col code="wg_circuit_no"/>
