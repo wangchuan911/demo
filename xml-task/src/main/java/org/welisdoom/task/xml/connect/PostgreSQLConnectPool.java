@@ -64,9 +64,9 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
         pools.put(config.getName(), PgPool.pool(Task.getVertx(), connectOptions, poolOptions));
     }
 
-    public Future<PgConnection> getConnect(String name) {
+    /*public Future<PgConnection> getConnect(String name) {
         return (Future) getPool(name).getConnection();
-    }
+    }*/
 
     @Override
     public String toPageSql(String body) {

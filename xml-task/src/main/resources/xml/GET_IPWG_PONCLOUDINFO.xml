@@ -136,7 +136,7 @@
                         )
 
                     </insert>
-                    <commit batch="10"></commit>
+                    <commit batch="5"></commit>
                 </iterator>
             </file>
         </transactional>

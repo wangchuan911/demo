@@ -142,7 +142,7 @@ public class Transactional extends Unit implements Executable {
     protected Future<Transaction> newTransaction(TaskRequest data) {
         return getDatabase(data).compose(connection ->
                 connection.begin().onSuccess(transaction -> {
-                    MAP.put(data, Map.entry(connection, transaction)).getKey().close();
+                    MAP.put(data, Map.entry(connection, transaction));
                 }));
     }
 }

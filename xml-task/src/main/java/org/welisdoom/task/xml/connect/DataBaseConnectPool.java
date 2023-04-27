@@ -2,7 +2,6 @@ package org.welisdoom.task.xml.connect;
 
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.sqlclient.*;
 import ognl.Ognl;
 import ognl.OgnlException;
@@ -10,8 +9,6 @@ import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoon.common.data.BaseCondition;
 
-import java.sql.JDBCType;
-import java.sql.SQLType;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,12 +27,19 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
     String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
+    Map<String, SqlConnection> connectings = new HashMap<>();
 
     P getPool(String name);
 
     void setInstance(DatabaseLinkInfo config);
 
-    Future<S> getConnect(String name);
+    default Future<S> getConnect(String name) {
+        if (connectings.containsKey(name))
+            return (Future) Future.succeededFuture(connectings.get(name));
+        return (Future) getPool(name).getConnection().onSuccess(connection -> {
+            connectings.put(name, connection);
+        });
+    }
 
     default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
         List<Object> params = new LinkedList<>();

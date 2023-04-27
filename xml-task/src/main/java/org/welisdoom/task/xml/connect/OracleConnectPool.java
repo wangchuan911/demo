@@ -76,9 +76,9 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         return pools.get(name);
     }
 
-    public Future<OracleConnection> getConnect(String name) {
+    /*public Future<OracleConnection> getConnect(String name) {
         return (Future) getPool(name).getConnection();
-    }
+    }*/
 
 
     @Override

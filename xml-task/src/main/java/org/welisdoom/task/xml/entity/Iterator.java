@@ -40,11 +40,14 @@ public class Iterator extends Unit implements Executable {
         item = GCUtils.release(item);
         Promise<Object> promise = Promise.promise();
         promise.future()
-                .onSuccess(toNext::complete)
-                .onFailure(toNext::fail)
                 .onComplete(objectAsyncResult -> {
                     map.remove(itemName);
                     map.remove(itemIndex);
+                    if (objectAsyncResult.failed()) {
+                        toNext.fail(objectAsyncResult.cause());
+                    } else {
+                        toNext.complete(objectAsyncResult.result());
+                    }
                 });
         super.start(data, promise);
     }
