@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Tag(value = "sql", parentTagTypes = {Select.class, Initialization.class}, desc = "sql脚本内容")
 public class Sql extends Unit implements Script, Copyable {
     public String getScript(TaskRequest request, String s) {
-        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, s).trim()).collect(Collectors.joining(s));
+        return textFormat(request, children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, s).trim()).collect(Collectors.joining(s)));
     }
 
     @Override

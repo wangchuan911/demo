@@ -44,7 +44,7 @@ public class Value extends Unit implements Initialize {
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         try {
-            HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$value", HashMap::new);
+            HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$values", HashMap::new);
             String value = textFormat(data, getValue());
             log("value:" + value);
             map.put(this.id, value);

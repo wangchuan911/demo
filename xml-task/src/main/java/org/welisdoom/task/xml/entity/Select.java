@@ -131,9 +131,10 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                         .pageScroll(connection, sql, condition, rows -> {
                             Future<Object> listFuture = Future.succeededFuture();
                             for (Row row : (RowSet<Row>) rows) {
-                                listFuture = listFuture.compose(o ->
+                                /*listFuture = listFuture.compose(o ->
                                         this.iterator(data, Item.of(index.incrementAndGet(), this.rowToMap(row)))
-                                );
+                                );*/
+                                listFuture = bigFutureLoop(this.rowToMap(row), Iterable.countReset(index, 500, 0), 500, listFuture, data);
                             }
                             return listFuture;
                         });

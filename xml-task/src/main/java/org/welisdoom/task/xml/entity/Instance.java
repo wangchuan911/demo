@@ -56,16 +56,25 @@ public class Instance extends Unit implements Initialize {
                     unit = (Unit) ((Copyable) map.get(refName)).copy();
                 } else {
                     unit = aClass.getConstructor().newInstance().setId(instance1.getId());
+                    copyChildren(unit, instance1);
                     map.put(refName, unit);
                 }
             } else {
                 unit = aClass.getConstructor().newInstance().setId(instance1.getId());
+                copyChildren(unit, instance1);
             }
             unit.setParent(parent);
             return unit;
 
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    protected static void copyChildren(Unit unit, Instance instance) {
+        for (Unit child : instance.children) {
+            if (child instanceof Copyable)
+                unit.children.add((Unit) ((Copyable) child).copy());
         }
     }
 }

@@ -56,15 +56,18 @@ public interface Iterable<T> extends UnitType {
     }
 
     static <T, K> Future<T> bigFutureLoop(long count, long triggerCount, Future<K> preFuture, Function<K, Future<T>> loop) {
-        if (count % triggerCount == 0 || preFuture == null) {
+        if (count % triggerCount == 0) {
             GCUtils.toSafePoint();
             Promise<K> promise = Promise.promise();
-            preFuture = promise.future();
-            preFuture
-                    .onSuccess(promise::complete)
-                    .onFailure(promise::fail);
-        }
-        return preFuture.compose(loop);
+            preFuture.onComplete(kAsyncResult -> {
+                if (kAsyncResult.failed())
+                    promise.fail(kAsyncResult.cause());
+                else
+                    promise.complete(kAsyncResult.result());
+            });
+            return promise.future().compose(loop);
+        } else
+            return preFuture.compose(loop);
     }
 
     static long countReset(AtomicLong aLong, long triggerCount, long reset) {
