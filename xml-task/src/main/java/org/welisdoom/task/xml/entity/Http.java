@@ -4,13 +4,16 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.util.IOUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.impl.NoStackTraceThrowable;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
+import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.ObjectUtils;
 
 import java.io.ByteArrayInputStream;
@@ -77,20 +80,22 @@ public class Http extends Unit implements Executable, Copyable {
             }
         }
     }*/
+    protected String getUrl(TaskRequest data) {
+        return textFormat(data, attributes.get("url"));
+    }
 
     @Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim(),
                 outputBody = "empty data";
-        log(inputBody);
-        boolean isLog = "true".equals(attributes.get("is-log"));
+        log(LogUtils.styleString("params:", 42, 2, inputBody));
         HttpURLConnection httpConnection = null;
         try {
-            if (true) {
+            /*if (true) {
                 toNext.complete();
                 return;
-            }
-            httpConnection = (HttpURLConnection) new URL(attributes.get("url")).openConnection();
+            }*/
+            httpConnection = (HttpURLConnection) new URL(getUrl(data)).openConnection();
             // 打开和URL之间的连接
 
             // 发送POST请求必须设置如下两行
@@ -111,26 +116,30 @@ public class Http extends Unit implements Executable, Copyable {
             httpConnection.connect();
             if (httpConnection.getResponseCode() == 0) {
                 InputStream input = httpConnection.getInputStream();
+                Object result;
             /*try (input) {
                 StreamUtils.copyToString(input, Charset.forName("utf-8"));
             }*/
                 switch (MapUtils.getString(attributes, "output", "default")) {
                     case "stream":
                         outputBody = "data is stream";
-                        toNext.complete(input);
+                        result = (input);
                         break;
                     case "json":
-                        toNext.complete(JSON.parse(outputBody = StreamUtils.copyToString(input, Charset.forName("utf-8"))));
+                        result = (JSON.parse(outputBody = StreamUtils.copyToString(input, Charset.forName("utf-8"))));
                         break;
                     default:
-                        toNext.complete(outputBody = StreamUtils.copyToString(input, Charset.forName("utf-8")));
+                        result = (outputBody = StreamUtils.copyToString(input, Charset.forName("utf-8")));
                         break;
                 }
+                log(data, inputBody, outputBody);
+                toNext.complete(result);
             } else {
                 InputStream input = httpConnection.getErrorStream();
-                toNext.fail(new RuntimeException(StreamUtils.copyToString(input, Charset.forName("utf-8"))));
+                throw new NoStackTraceThrowable(StreamUtils.copyToString(input, Charset.forName("utf-8")));
             }
         } catch (Throwable e) {
+            log(data, inputBody, ExceptionUtils.getStackTrace(e));
             toNext.fail(e);
         } finally {
             if (httpConnection != null) {
@@ -140,15 +149,19 @@ public class Http extends Unit implements Executable, Copyable {
                     e1.printStackTrace();
                 }
             }
-            if (isLog) {
-                Map log = null;
-                try {
-                    log = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("name"), HashMap::new);
-                    log.put("input", inputBody);
-                    log.put("output", outputBody);
-                } catch (Throwable throwable) {
-                    throwable.printStackTrace();
-                }
+        }
+    }
+
+    protected void log(TaskRequest data, String input, String output) {
+        if ("true".equals(attributes.get("is-log"))) {
+            try {
+                Map log = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("name"), HashMap::new);
+                log.put("url", getUrl(data));
+                log.put("input", input);
+                log.put("output", output);
+                log(log);
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
             }
         }
     }
