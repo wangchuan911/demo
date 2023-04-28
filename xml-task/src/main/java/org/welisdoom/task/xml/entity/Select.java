@@ -109,7 +109,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
     }*/
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         data.generateData(this);
         String sql = getScript(data);
 

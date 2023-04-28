@@ -31,9 +31,9 @@ public class Iterator extends Unit implements Executable {
     }*/
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         Map map = data.getBus(parent.id);
-        Iterable.Item item = data.getLastUnitResult();
+        Iterable.Item item = (Iterable.Item) preUnitResult;
         map.put(itemIndex, item.getIndex());
         map.put(itemName, item.getItem());
         item.destroy();
@@ -49,7 +49,7 @@ public class Iterator extends Unit implements Executable {
                         toNext.complete(objectAsyncResult.result());
                     }
                 });
-        super.start(data, promise);
+        super.start(data, preUnitResult, promise);
     }
 
 

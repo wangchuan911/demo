@@ -26,11 +26,11 @@ import java.util.Map;
 public class Group extends Unit implements Executable {
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         try {
             if (If.test(attributes.get("test"), data.getOgnlContext(), data.getBus())) {
                 List list = (List) ObjectUtils.getMapValueOrNewSafe(data.getBus(), getId(), () -> new LinkedList<>());
-                list.add(data.getLastUnitResult());
+                list.add(preUnitResult);
             }
             toNext.complete();
         } catch (Throwable throwable) {

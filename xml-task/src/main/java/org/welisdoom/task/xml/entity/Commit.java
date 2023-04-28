@@ -33,7 +33,7 @@ public class Commit extends Unit implements Executable {
     }
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data,Object preUnitResult, Promise<Object> toNext) {
         log(String.format("batch:%d,count:%d", batch, count.incrementAndGet()));
         if (batch == count.get()) {
             count.set(0);

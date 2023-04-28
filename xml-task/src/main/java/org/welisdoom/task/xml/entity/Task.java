@@ -34,7 +34,7 @@ public class Task extends Unit implements Root {
     public Future<Object> run(TaskRequest data) {
         tasks.add(data);
         Promise<Object> promise = Promise.promise();
-        start(data, promise);
+        start(data, null, promise);
         return promise.future().onSuccess(o -> {
             log("success");
         }).onFailure(

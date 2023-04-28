@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 15:30
  */
-@Tag(value = "file", parentTagTypes = Executable.class, desc = "读取")
+@Tag(value = "sheet", parentTagTypes = Executable.class, desc = "表单文件")
 @Attr(name = "id", desc = "唯一标识", require = true)
 @Attr(name = "charset", desc = "编码", require = true)
 @Attr(name = "delimiter", desc = "分隔符", require = true)
@@ -31,15 +31,15 @@ import java.util.stream.Collectors;
 @Attr(name = "line-break", desc = "换行", require = true)
 
 
-public class File extends StreamUnit implements Iterable<Map<String, Object>> {
+public class Sheet extends StreamUnit implements Iterable<Map<String, Object>> {
     final protected Map<TaskRequest, Writer> writer = new HashMap<>();
 
     protected String[] readLine(BufferedReader reader, StringBuilder builder) throws IOException {
         String line;
         int index;
-        String linebreak = MapUtils.getString(File.this.attributes, "line-break");
-        String delimiter = MapUtils.getString(File.this.attributes, "delimiter");
-        String quote = MapUtils.getString(File.this.attributes, "quote");
+        String linebreak = MapUtils.getString(Sheet.this.attributes, "line-break");
+        String delimiter = MapUtils.getString(Sheet.this.attributes, "delimiter");
+        String quote = MapUtils.getString(Sheet.this.attributes, "quote");
         while ((line = reader.readLine()) != null) {
             if ((index = (line += "\n").indexOf(linebreak)) >= 0) {
                 builder.append(line, 0, index);

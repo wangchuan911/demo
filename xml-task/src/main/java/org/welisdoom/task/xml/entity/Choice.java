@@ -17,20 +17,20 @@ import org.welisdoom.task.xml.intf.type.Executable;
 public class Choice extends Unit {
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         Future<Object> future = null;
         for (When when : getChild(When.class)) {
             if (when.match(data)) {
-                future = startChildUnit(data, data.getLastUnitResult(), unit -> unit.equals(when));
+                future = startChildUnit(data, preUnitResult, unit -> unit.equals(when));
                 break;
             }
         }
         for (Otherwise otherwise : getChild(Otherwise.class)) {
-            future = startChildUnit(data, data.getLastUnitResult(), unit -> unit.equals(otherwise));
+            future = startChildUnit(data, preUnitResult, unit -> unit.equals(otherwise));
             break;
         }
         if (future == null)
-            future = Future.succeededFuture(data.lastUnitResult);
+            future = Future.succeededFuture(preUnitResult);
         future.onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 

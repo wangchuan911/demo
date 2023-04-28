@@ -17,7 +17,7 @@ import org.welisdoom.task.xml.intf.type.Executable;
 @Attr(name = "time", desc = "阻塞时间", require = true)
 public class Sleep extends Unit implements Executable {
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         try {
             long time = MapUtils.getLong(attributes, "time");
             log("阻塞:" + time + "ms");
@@ -25,6 +25,6 @@ public class Sleep extends Unit implements Executable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        super.start(data, toNext);
+        super.start(data, preUnitResult, toNext);
     }
 }

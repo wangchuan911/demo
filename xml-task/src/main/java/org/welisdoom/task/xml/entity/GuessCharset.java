@@ -29,13 +29,13 @@ import java.util.stream.Collectors;
 @Attr(name = "read", desc = "读文件", require = true)
 public class GuessCharset extends Unit implements Executable {
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
 
         String guess = getAttrFormatValue("guess", data);
         log(guess);
         int guessMaxLength = Math.max(MapUtils.getInteger(attributes, "max-length", 65535), 65535);
         try {
-            Map<String, AtomicInteger> result = guessCharset(Objects.equals(guess, "@stream") ? (InputStream) data.lastUnitResult : new FileInputStream(guess), guessMaxLength);
+            Map<String, AtomicInteger> result = guessCharset(Objects.equals(guess, "@stream") ? (InputStream) preUnitResult : new FileInputStream(guess), guessMaxLength);
             log("预测的字符集：" + result);
             List<String> list = result.entrySet().stream()
                     .sorted(Comparator.comparingInt(o -> o.getValue().get())).map(Map.Entry::getKey).collect(Collectors.toList());

@@ -18,10 +18,10 @@ public class Catch extends Unit implements Executable {
     Error error;
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         if (error == null)
             error = getChild(Error.class).stream().findFirst().orElse((Error) new Error().setParent(this));
-        startChildUnit(data, data.getLastUnitResult(), unit -> !(unit instanceof Error)).onSuccess(toNext::complete).onFailure(event -> {
+        startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error)).onSuccess(toNext::complete).onFailure(event -> {
             prepareNextUnit(data, event, error).onSuccess(toNext::complete).onFailure(toNext::fail);
         });
     }
@@ -30,8 +30,8 @@ public class Catch extends Unit implements Executable {
     @Attr(name = "throw", desc = "是否抛出")
     public static class Error extends Unit implements Executable {
         @Override
-        protected void start(TaskRequest data, Promise<Object> toNext) {
-            super.start(data, toNext);
+        protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+            super.start(data, preUnitResult, toNext);
         }
     }
 }

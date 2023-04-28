@@ -56,11 +56,11 @@ public class Database extends Unit {
     }*/
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         try {
             ObjectUtils.getMapValueOrNewSafe(MAP, attributes.get("id"), () -> Database
                     .getDataBaseConnectPool(attributes.get("id")));
-            super.start(data, toNext);
+            super.start(data, preUnitResult, toNext);
 
         } catch (Throwable throwable) {
             toNext.fail(throwable);

@@ -33,7 +33,7 @@ public class If extends Unit implements Executable {
     }*/
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         try {
             boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
             log(String.format("表达式[%s]", attributes.get("test")));
@@ -41,9 +41,9 @@ public class If extends Unit implements Executable {
             log(String.format("结果[%s]", test));
 
             if (test) {
-                super.start(data, toNext);
+                super.start(data, true, toNext);
             } else {
-                toNext.complete();
+                toNext.complete(false);
             }
         } catch (OgnlException e) {
             toNext.fail(e);

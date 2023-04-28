@@ -21,7 +21,7 @@ import java.util.Map;
 @Attr(name = "name", desc = "设置的变量名", require = true)
 public class SetValue extends Unit {
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         Map<String, Object> map;
         try {
             map = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$values", () -> new HashMap<>());
@@ -29,7 +29,7 @@ public class SetValue extends Unit {
             toNext.fail(e);
             return;
         }
-        map.put(attributes.get("name"), data.getLastUnitResult());
-        super.start(data, toNext);
+        map.put(attributes.get("name"), preUnitResult);
+        super.start(data, preUnitResult, toNext);
     }
 }

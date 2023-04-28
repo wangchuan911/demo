@@ -85,7 +85,7 @@ public class Http extends Unit implements Executable, Copyable {
     }
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim(),
                 outputBody = "empty data";
         log(LogUtils.styleString("params:", 42, 2, inputBody));

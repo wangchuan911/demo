@@ -39,7 +39,7 @@ public class Insert extends Unit implements Executable, Copyable {
     DataBaseConnectPool.StaticSql sql;
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         if (isStaticContent == null) {
             isStaticContent = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).isStaticContent()).reduce(Boolean.TRUE, (aBoolean, aBoolean2) -> aBoolean && aBoolean2);
         }

@@ -16,7 +16,7 @@
         <transactional link="rimdb_pg">
             <!--<ftp id="guessCharsetFtp" get="{{$value.path}}" local="/app/R9"></ftp>-->
             <guess-charset id="csvCharset" guess="{{$values.path}}"></guess-charset>
-            <file id="demo" read="{{$values.path}}" charset="{{csvCharset.charset}}" delimiter="\|\|"
+            <sheet id="demo" read="{{$values.path}}" charset="{{csvCharset.charset}}" delimiter="\|\|"
                   line-break="&#x00A;">
                 <col code="wg_busi_no"/>
                 <col code="wg_circuit_no"/>
@@ -138,7 +138,7 @@
                     </insert>
                     <commit batch="5"></commit>
                 </iterator>
-            </file>
+            </sheet>
         </transactional>
     </start>
 </task>

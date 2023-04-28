@@ -112,10 +112,10 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     }
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         log("ftp");
         if (true) {
-            super.start(data, toNext);
+            super.start(data, preUnitResult, toNext);
             return;
         }
         try {

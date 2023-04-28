@@ -86,7 +86,7 @@ public class Transactional extends Unit implements Executable {
     }
 
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         this.getDatabase(data).compose(connection ->
                 connection.begin().compose(transaction -> {
                     MAP.put(data, Map.entry(connection, transaction));
@@ -106,7 +106,7 @@ public class Transactional extends Unit implements Executable {
                     }).onComplete(objectAsyncResult -> {
                         MAP.remove(data).getKey().close();
                     });
-                    super.start(data, promise);
+                    super.start(data, preUnitResult, promise);
                     return future;
                 })
         ).onFailure(toNext::fail);

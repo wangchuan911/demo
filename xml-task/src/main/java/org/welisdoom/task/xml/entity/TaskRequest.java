@@ -23,7 +23,7 @@ public class TaskRequest implements IData<String, Model> {
     Map<String, Object> bus = new HashMap<>();
     OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
 
-    Object lastUnitResult;
+//    Object lastUnitResult;
 
     public TaskRequest(@NotNull String id) {
         this.id = id;
@@ -84,9 +84,9 @@ public class TaskRequest implements IData<String, Model> {
         return null;
     }
 
-    public <T> T getLastUnitResult() {
-        return (T) lastUnitResult;
-    }
+//    public <T> T getLastUnitResult() {
+//        return (T) lastUnitResult;
+//    }
 
     public OgnlContext getOgnlContext() {
         return ognlContext;

@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Attr(name = "deep", desc = "中断深度")
 public class Break extends Unit implements Executable {
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         toNext.fail(new BreakLoopThrowable(MapUtils.getInteger(attributes, "deep", 1)));
     }
 

@@ -23,9 +23,9 @@ import java.util.Map;
 @Tag(value = "sub-task", parentTagTypes = Executable.class, desc = "任务子执行")
 public class SubTask extends Unit implements Executable {
     @Override
-    protected void start(TaskRequest data, Promise<Object> toNext) {
-        
-        super.start(data, toNext);
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+
+        super.start(data, preUnitResult, toNext);
     }
 
     public static Future<Object> run(String name, SubTask.Config config) {

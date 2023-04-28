@@ -161,8 +161,8 @@ public class Unit implements UnitType, IData<String, Model> {
         execute(data, Future.succeededFuture(), aClass);
     }*/
 
-    protected void start(TaskRequest data, Promise<Object> toNext) {
-        startChildUnit(data, data.lastUnitResult, Objects::nonNull).onSuccess(toNext::complete).onFailure(toNext::fail);
+    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+        startChildUnit(data, /*data.lastUnitResult*/preUnitResult, Objects::nonNull).onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
     protected static Predicate<Unit> typeMatched(Class<?>... classes) {
@@ -189,10 +189,10 @@ public class Unit implements UnitType, IData<String, Model> {
         final long[] cost = new long[1];
         return Future.future(promise -> {
             cost[0] = System.currentTimeMillis();
-            data.lastUnitResult = value;
+//            data.lastUnitResult = value;
             System.out.println();
             unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-            unit.start(data, promise);
+            unit.start(data, value, promise);
         }).onComplete(objectAsyncResult -> {
             if (objectAsyncResult.failed())
                 unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
