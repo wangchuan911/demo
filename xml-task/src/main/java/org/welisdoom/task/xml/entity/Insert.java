@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "insert", parentTagTypes = Executable.class, desc = "sql写入")
 @Attr(name = "id", desc = "唯一标识")
-public class Insert extends Unit implements Executable, Copyable {
+public class Insert extends Unit implements Script, Copyable {
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         System.out.println(getScript(data.getBus(), " "));
@@ -74,8 +74,13 @@ public class Insert extends Unit implements Executable, Copyable {
         future.onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
+    @Override
+    public String getScript(TaskRequest request, String split) {
+        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split)).trim();
+    }
+
     public String getScript(TaskRequest request) {
-        return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, " ")).collect(Collectors.joining(" ")).trim();
+        return getScript(request, " ");
     }
 
 

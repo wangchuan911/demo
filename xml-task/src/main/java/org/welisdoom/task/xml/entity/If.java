@@ -65,11 +65,6 @@ public class If extends Unit implements Executable {
 
 
     public static boolean test(String express, OgnlContext ognlContext, Object o) throws OgnlException {
-        try {
-            return (boolean) Ognl.getValue(express, ognlContext, o, boolean.class);
-        } catch (Throwable e) {
-            System.err.println(express + ":" + e.getMessage());
-            return false;
-        }
+        return (boolean) Ognl.getValue(express, ognlContext, o, boolean.class);
     }
 }

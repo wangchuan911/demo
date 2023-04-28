@@ -78,9 +78,9 @@ public class Unit implements UnitType, IData<String, Model> {
 
     @Override
     public String toString() {
-        return this.getClass().getCanonicalName() + "{" +
-                "name='" + id + '\'' +
-                '}';
+        return this.getClass().getCanonicalName() + "[" +
+                "id:'" + id + '\'' +
+                ']';
     }
 
 

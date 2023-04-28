@@ -7,6 +7,8 @@ import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 
+import java.util.List;
+
 /**
  * @Classname Chooce
  * @Description TODO
@@ -19,26 +21,25 @@ public class Choice extends Unit {
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         Future<Object> future = Future.succeededFuture();
-        for (When when : getChild(When.class)) {
+        List<Unit> list = (List) getChild(When.class);
+        list.add(getChild(Otherwise.class).stream().findFirst().orElse((Otherwise) new Otherwise().setParent(this)));
+        for (Unit when : list) {
             future = future.compose(o ->
                             prepareNextUnit(data, preUnitResult, when)
                     ,
                     throwable -> {
-                        if (throwable instanceof Break.BreakLoopThrowable) {
-                            return Future.succeededFuture();
-                        } else if (throwable instanceof Break.SkipOneLoopThrowable) {
+                        if (throwable instanceof Break.SkipOneLoopThrowable) {
                             return prepareNextUnit(data, preUnitResult, when);
                         } else
                             return Future.failedFuture(throwable);
                     });
         }
-        for (Otherwise otherwise : getChild(Otherwise.class)) {
-            future = prepareNextUnit(data, preUnitResult, otherwise);
-            break;
-        }
-        if (future == null)
-            future = Future.succeededFuture(preUnitResult);
-        future.onSuccess(toNext::complete).onFailure(toNext::fail);
+        future.onSuccess(toNext::complete).onFailure(event -> {
+            if (event instanceof Break.BreakLoopThrowable) {
+                toNext.complete();
+            } else
+                toNext.fail(event);
+        });
     }
 
     @Tag(value = "when", parentTagTypes = Choice.class, desc = "if else")
