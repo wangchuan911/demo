@@ -43,7 +43,7 @@ public class Iterator extends Unit implements Executable {
                 .onComplete(objectAsyncResult -> {
                     map.remove(itemName);
                     map.remove(itemIndex);
-                    if (objectAsyncResult.failed()) {
+                    if (objectAsyncResult.failed() && !(objectAsyncResult.cause() instanceof Break.SkipOneLoopThrowable)) {
                         toNext.fail(objectAsyncResult.cause());
                     } else {
                         toNext.complete(objectAsyncResult.result());

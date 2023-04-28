@@ -40,6 +40,13 @@ public class Break extends Unit implements Executable {
         }
     }
 
+    public static class SkipOneLoopThrowable extends NoStackTraceThrowable {
+
+        SkipOneLoopThrowable() {
+            super("跳过");
+        }
+    }
+
     public static void onBreak(Throwable throwable, Promise<Object> toNext, Object result) {
         if (throwable instanceof Break.BreakLoopThrowable) {
             if (((Break.BreakLoopThrowable) throwable).decrementAndGetDeep() == 0) {
@@ -49,4 +56,13 @@ public class Break extends Unit implements Executable {
         }
         toNext.fail(throwable);
     }
+
+    @Tag(value = "continue", parentTagTypes = Executable.class, desc = "跳过循环")
+    public static class Continue extends Unit implements Executable {
+        @Override
+        protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+            toNext.fail(new SkipOneLoopThrowable());
+        }
+    }
+
 }

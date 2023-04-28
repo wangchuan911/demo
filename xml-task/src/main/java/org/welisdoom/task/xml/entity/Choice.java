@@ -18,15 +18,22 @@ public class Choice extends Unit {
 
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
-        Future<Object> future = null;
+        Future<Object> future = Future.succeededFuture();
         for (When when : getChild(When.class)) {
-            if (when.match(data)) {
-                future = startChildUnit(data, preUnitResult, unit -> unit.equals(when));
-                break;
-            }
+            future = future.compose(o ->
+                            prepareNextUnit(data, preUnitResult, when)
+                    ,
+                    throwable -> {
+                        if (throwable instanceof Break.BreakLoopThrowable) {
+                            return Future.succeededFuture();
+                        } else if (throwable instanceof Break.SkipOneLoopThrowable) {
+                            return prepareNextUnit(data, preUnitResult, when);
+                        } else
+                            return Future.failedFuture(throwable);
+                    });
         }
         for (Otherwise otherwise : getChild(Otherwise.class)) {
-            future = startChildUnit(data, preUnitResult, unit -> unit.equals(otherwise));
+            future = prepareNextUnit(data, preUnitResult, otherwise);
             break;
         }
         if (future == null)
@@ -36,13 +43,29 @@ public class Choice extends Unit {
 
     @Tag(value = "when", parentTagTypes = Choice.class, desc = "if else")
     public static class When extends Unit implements Executable {
-        protected boolean match(TaskRequest data) {
+        @Override
+        protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+            boolean test;
             try {
-                return If.test(attributes.get("test"), data.getOgnlContext(), data.getBus());
+                test = If.test(attributes.get("test"), data.getOgnlContext(), data.getBus());
             } catch (OgnlException e) {
-                e.printStackTrace();
-                return false;
+                test = false;
             }
+            log(String.format("表达式[%s]", attributes.get("test")));
+            log(String.format("参数[%s]", data.getBus().toString()));
+            log(String.format("结果[%s]", test));
+            if (test) {
+                Promise<Object> promise = Promise.promise();
+                promise.future().onComplete(event -> {
+                    if (event.failed()) {
+                        toNext.fail(event.cause());
+                    } else {
+                        toNext.fail(new Break.BreakLoopThrowable(0));
+                    }
+                });
+                super.start(data, preUnitResult, promise);
+            } else
+                toNext.fail(new Break.SkipOneLoopThrowable());
         }
     }
 
