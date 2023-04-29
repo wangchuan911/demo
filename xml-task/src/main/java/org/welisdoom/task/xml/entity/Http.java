@@ -157,7 +157,7 @@ public class Http extends Unit implements Executable, Copyable {
         if ("true".equals(attributes.get("is-log"))) {
             try {
                 ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
-                log(data, input, ExceptionUtils.getStackTrace(e));
+                log(data, input, /*ExceptionUtils.getStackTrace(e)*/e.getMessage());
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }

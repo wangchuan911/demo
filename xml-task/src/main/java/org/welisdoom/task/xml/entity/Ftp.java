@@ -70,7 +70,7 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
 
     @Override
     public Copyable copy() {
-        Ftp ftp = copyableUnit(new Ftp());
+        Ftp ftp = copyableUnit(this);
         ftp.ftpClientMap = this.ftpClientMap;
         return ftp;
     }

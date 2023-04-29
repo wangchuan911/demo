@@ -232,24 +232,14 @@ public class Unit implements UnitType, IData<String, Model> {
             Unit target = (Unit) source.getClass().getConstructor().newInstance();
             target.id = ((Unit) source).id;
             target.attributes = ((Unit) source).attributes;
-            System.out.println(source.getClass().getName());
-            System.out.print(((Unit) source).children.size());
-            System.out.print("-");
-            System.out.print(((Unit) source).children.size());
             ((Unit) source)
                     .children
                     .stream()
                     .filter(unit -> unit instanceof Copyable)
-                    .map(unit -> {
+                    .forEach(unit -> {
                         Unit child = (Unit) ((Copyable) unit).copy();
                         child.setParent(target);
-                        return child;
-                    })
-                    .forEach(unit -> {
-                        target.children.add(unit);
                     });
-            System.out.print("-");
-            System.out.println(((Unit) source).children.size());
             return (T) target;
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);
