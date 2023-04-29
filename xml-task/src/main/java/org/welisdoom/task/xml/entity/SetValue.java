@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Promise;
+import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -9,6 +10,7 @@ import org.welisdoon.common.ObjectUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Classname SetValue
@@ -29,7 +31,14 @@ public class SetValue extends Unit {
             toNext.fail(e);
             return;
         }
-        map.put(attributes.get("name"), preUnitResult);
+        Object value;
+        if (attributes.containsKey("value")) {
+            value = textFormat(data, attributes.get("value"));
+        } else if (getChild(Content.class).stream().filter(content -> !StringUtils.isBlank(content.getContent())).count() > 0) {
+            value = textFormat(data,getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" ")));
+        } else
+            value = preUnitResult;
+        map.put(attributes.get("name"), value);
         super.start(data, preUnitResult, toNext);
     }
 }

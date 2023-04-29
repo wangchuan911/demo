@@ -72,6 +72,9 @@ public class Instance extends Unit implements Initialize {
     }
 
     protected static void copyChildren(Unit unit, Instance instance) {
+        instance.attributes.entrySet().stream().filter(stringStringEntry -> !stringStringEntry.equals("tag")).forEach(stringStringEntry -> {
+            unit.attributes.put(stringStringEntry.getKey(), stringStringEntry.getValue());
+        });
         for (Unit child : instance.children) {
             if (child instanceof Copyable)
                 unit.children.add((Unit) ((Copyable) child).copy());

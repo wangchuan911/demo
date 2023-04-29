@@ -105,7 +105,8 @@ public class Http extends Unit implements Executable, Copyable {
 
 
             for (Header header : getChild(Header.class)) {
-                httpConnection.setRequestProperty(header.getId(), header.getContent());
+                httpConnection.setRequestProperty(header.getName(), header.getContent());
+                log(String.format("header: %s = %s", header.getName(), header.getContent()));
             }
 
             OutputStream output = httpConnection.getOutputStream();

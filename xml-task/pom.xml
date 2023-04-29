@@ -69,6 +69,12 @@
             <artifactId>ojdbc10</artifactId>
             <version>19.17.0.0</version>
         </dependency>
+
+        <!--webclient-->
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+        </dependency>
     </dependencies>
 
     <properties>

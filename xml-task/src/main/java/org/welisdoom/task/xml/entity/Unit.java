@@ -170,19 +170,31 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     Future<Object> startChildUnit(TaskRequest data, Object value, Predicate<Unit> predicate) {
-        Future<Object> f = Future.succeededFuture(value), f1;
+        Future<Object> f = Future.succeededFuture(value);
         for (Unit child : children) {
             if (!predicate.test(child))
                 continue;
-            f = f.compose(o -> /*{
+            /*f = f.compose(o -> *//*{
                 return Future.future(promise -> {
                     data.lastUnitResult = o;
                     child.start(data, promise);
                 };
-            }*/prepareNextUnit(data, o, child));
-
+            }*//*prepareNextUnit(data, o, child));*/
+            f = startChildUnit(child, data, f);
         }
         return f;
+    }
+
+    Future<Object> startChildUnit(Unit child, TaskRequest data, Future<Object> future) {
+        Promise<Object> promise = Promise.promise();
+        future.onComplete(event -> {
+            if (event.failed()) {
+                promise.fail(event.cause());
+            } else {
+                promise.complete(event.result());
+            }
+        });
+        return promise.future().compose(o -> prepareNextUnit(data, o, child));
     }
 
     protected Future<Object> prepareNextUnit(TaskRequest data, Object value, Unit unit) {
@@ -215,12 +227,16 @@ public class Unit implements UnitType, IData<String, Model> {
         System.out.print(highLight ? LogUtils.styleString("", (hashCode() % 5) + 31, 1, str) : str);
     }
 
-    protected static <T extends Copyable> T copyableUnit(T source) {
+    protected synchronized static <T extends Copyable> T copyableUnit(T source) {
         try {
             Unit target = (Unit) source.getClass().getConstructor().newInstance();
             target.id = ((Unit) source).id;
             target.attributes = ((Unit) source).attributes;
-            target.children.addAll(0, ((Unit) source)
+            System.out.println(source.getClass().getName());
+            System.out.print(((Unit) source).children.size());
+            System.out.print("-");
+            System.out.print(((Unit) source).children.size());
+            ((Unit) source)
                     .children
                     .stream()
                     .filter(unit -> unit instanceof Copyable)
@@ -229,7 +245,11 @@ public class Unit implements UnitType, IData<String, Model> {
                         child.setParent(target);
                         return child;
                     })
-                    .collect(Collectors.toList()));
+                    .forEach(unit -> {
+                        target.children.add(unit);
+                    });
+            System.out.print("-");
+            System.out.println(((Unit) source).children.size());
             return (T) target;
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);
