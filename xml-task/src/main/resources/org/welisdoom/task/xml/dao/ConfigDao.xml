@@ -21,5 +21,8 @@
         where A.name = #{name}
     </select>
 
+    <select id="getTaskXML" parameterType="long" resultType="string">
+        select content from XML_TASK_TEMPLATE where id=#{value}
+    </select>
 
 </mapper>

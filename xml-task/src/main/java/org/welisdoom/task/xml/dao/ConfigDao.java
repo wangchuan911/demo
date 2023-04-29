@@ -17,5 +17,5 @@ public interface ConfigDao {
 
     DataBaseConnectPool.DatabaseLinkInfo getDatabase(String name);
 
-    String getTaskXML(String name);
+    String getTaskXML(Long id);
 }

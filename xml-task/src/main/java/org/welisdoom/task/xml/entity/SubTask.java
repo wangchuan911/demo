@@ -44,7 +44,7 @@ public class SubTask extends Unit implements Executable {
                     task = SAXParserHandler.loadTask(new File(config.getPath()));
                     break;
                 case db:
-                    task = SAXParserHandler.loadTask(new ByteArrayInputStream(ApplicationContextProvider.getApplicationContext().getBean(ConfigDao.class).getTaskXML(config.getPath()).getBytes("utf-8")));
+                    task = SAXParserHandler.loadTask(new ByteArrayInputStream(ApplicationContextProvider.getApplicationContext().getBean(ConfigDao.class).getTaskXML(Long.valueOf(config.getPath())).getBytes("utf-8")));
                     break;
                 default:
                     throw new RuntimeException("未知的操作");
