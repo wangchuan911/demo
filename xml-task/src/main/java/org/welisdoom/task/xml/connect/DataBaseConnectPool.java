@@ -2,17 +2,17 @@ package org.welisdoom.task.xml.connect;
 
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.sqlclient.*;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.entity.TaskRequest;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.BaseCondition;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,18 +27,35 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
     String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
-    Map<String, SqlConnection> connectings = new HashMap<>();
+    Map<IToken, Map<String, SqlConnection>> connectings = new HashMap<>();
+    Map<String, ReentrantLock> locks = new HashMap<>();
 
     P getPool(String name);
 
     void setInstance(DatabaseLinkInfo config);
 
-    default Future<S> getConnect(String name) {
-        if (connectings.containsKey(name))
-            return (Future) Future.succeededFuture(connectings.get(name));
-        return (Future) getPool(name).getConnection().onSuccess(connection -> {
-            connectings.put(name, connection);
-        });
+    default Future<S> getConnect(String name, IToken token) {
+        try {
+            Map<String, SqlConnection> map = ObjectUtils.getMapValueOrNewSafe(connectings, token, () -> new HashMap<>());
+            if (map.containsKey(name)) {
+                return (Future) Future.succeededFuture(map.get(name));
+            }
+            ReentrantLock lock = ObjectUtils.getMapValueOrNewSafe(locks, name, () -> new ReentrantLock());
+            lock.lock();
+            if (map.containsKey(name)) {
+                lock.unlock();
+                return (Future) Future.succeededFuture(map.get(name));
+            }
+            return (Future) getPool(name).getConnection()
+                    .onSuccess(event -> {
+                        map.put(name, event);
+                    })
+                    .onComplete(event -> {
+                        lock.unlock();
+                    });
+        } catch (Throwable e) {
+            return Future.failedFuture(e);
+        }
     }
 
     default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
@@ -274,4 +291,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     }
 
+    interface IToken {
+
+    }
 }

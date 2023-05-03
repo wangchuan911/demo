@@ -81,9 +81,6 @@ public class Database extends Unit {
         return pool;
     }
 
-    public static Future<SqlConnection> getConnect(String name) {
-        return getDataBaseConnectPool(name).getConnect(name);
-    }
 
     @Override
     public void destroy(TaskRequest taskRequest) {
@@ -100,7 +97,7 @@ public class Database extends Unit {
         }
         if (optional.isPresent())
             return Future.succeededFuture(optional.get().getSqlConnection(data));
-        return getDataBase(unit, data).getConnect(unit.attributes.get("link"));
+        return getDataBase(unit, data).getConnect(unit.attributes.get("link"), data);
     }
 
     protected static DataBaseConnectPool getDataBase(Unit unit, TaskRequest data) {

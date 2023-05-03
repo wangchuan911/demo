@@ -4,6 +4,7 @@ import com.sun.istack.NotNull;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang3.StringUtils;
+import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
@@ -18,7 +19,7 @@ import java.util.Objects;
  * @Author Septem
  * @Date 15:46
  */
-public class TaskRequest implements IData<String, Model> {
+public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IToken {
     boolean isDebugger = false;
     Map<String, Object> bus = new HashMap<>();
     OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
