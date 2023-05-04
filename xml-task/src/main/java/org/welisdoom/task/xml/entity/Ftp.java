@@ -33,7 +33,7 @@ import java.util.Set;
 @Attr(name = "local", desc = "本地文件位置", require = true, options = {"get", "put"})
 
 public class Ftp extends Unit implements Stream, Executable, Copyable {
-    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
+//    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
     @Override
     public Future<Object> read(TaskRequest data) {
@@ -71,7 +71,7 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     @Override
     public Copyable copy() {
         Ftp ftp = copyableUnit(this);
-        ftp.ftpClientMap = this.ftpClientMap;
+//        ftp.ftpClientMap = this.ftpClientMap;
         return ftp;
     }
 
@@ -92,7 +92,7 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     }
 
     Cache getCache(TaskRequest data) throws Throwable {
-        return ObjectUtils.getMapValueOrNewSafe(ftpClientMap, data, () -> new Cache(new FTPClient()));
+        return ObjectUtils.getMapValueOrNewSafe(((Map<TaskRequest, Cache>) data.cache(this)), data, () -> new Cache(new FTPClient()));
     }
 
     FTPClient getClient(Cache cache) throws Throwable {
@@ -162,7 +162,7 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     }*/
 
     @Override
-    public void destroy(TaskRequest request) {
-        ftpClientMap.remove(request).destroy();
+    protected void destroy(TaskRequest request) {
+        ((Cache) request.clearCache(this)).destroy();
     }
 }

@@ -90,6 +90,7 @@ public class Http extends Unit implements Executable, Copyable {
                 outputBody = "empty data";
         log(LogUtils.styleString("params:", 42, 2, inputBody));
         HttpURLConnection httpConnection = null;
+        log(data, "不记录", "不记录");
         try {
             /*if (true) {
                 toNext.complete();

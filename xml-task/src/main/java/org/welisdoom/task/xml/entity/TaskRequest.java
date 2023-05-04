@@ -1,17 +1,18 @@
 package org.welisdoom.task.xml.entity;
 
 import com.sun.istack.NotNull;
+import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.Transaction;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.consts.Model;
+import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @Classname TastRequst
@@ -23,8 +24,21 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     boolean isDebugger = false;
     Map<String, Object> bus = new HashMap<>();
     OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
+    Map<Unit, Object> cache = new HashMap<>();
 
 //    Object lastUnitResult;
+
+    public void cache(Unit unit, Object o) {
+        cache.put(unit, o);
+    }
+
+    public <T> T cache(Unit unit) {
+        return (T) cache.get(unit);
+    }
+
+    public <T> T clearCache(Unit unit) {
+        return (T) cache.remove(unit);
+    }
 
     public TaskRequest(@NotNull String id) {
         this.id = id;
@@ -105,4 +119,6 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     public int hashCode() {
         return Objects.hash(id);
     }
+
+
 }

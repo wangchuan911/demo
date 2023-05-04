@@ -48,4 +48,26 @@ public class Task extends Unit implements Root {
 //        v.close();
 
     }
+
+    static TaskHookThread taskHookThread = new TaskHookThread();
+
+    static {
+        Runtime.getRuntime().addShutdownHook(taskHookThread);
+    }
+
+    static class TaskHookThread extends Thread {
+
+        @Override
+        public void run() {
+            for (TaskRequest task : tasks) {
+                for (Map.Entry<Unit, Object> unitObjectEntry : task.cache.entrySet()) {
+                    try {
+                        unitObjectEntry.getKey().hook(task);
+                    } catch (Throwable e) {
+                        e.getMessage();
+                    }
+                }
+            }
+        }
+    }
 }

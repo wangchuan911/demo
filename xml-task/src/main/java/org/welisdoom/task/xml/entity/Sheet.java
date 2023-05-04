@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 
 public class Sheet extends StreamUnit implements Iterable<Map<String, Object>> {
-    final protected Map<TaskRequest, Writer> writer = new HashMap<>();
+//    final protected Map<TaskRequest, Writer> writer = new HashMap<>();
 
     protected String[] readLine(BufferedReader reader, StringBuilder builder) throws IOException {
         String line;
@@ -139,12 +139,12 @@ public class Sheet extends StreamUnit implements Iterable<Map<String, Object>> {
 
     @Override
     public void destroy(TaskRequest taskRequest) {
+        Writer writer = taskRequest.clearCache(this);
         super.destroy(taskRequest);
-        try {
-            if (this.writer.containsKey(taskRequest))
-                this.writer.remove(taskRequest).close();
+        try (writer) {
+
         } catch (IOException e) {
-            log(e.getMessage());
+            e.printStackTrace();
         }
     }
 }

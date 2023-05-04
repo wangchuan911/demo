@@ -28,7 +28,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
     Map<IToken, Map<String, SqlConnection>> connectings = new HashMap<>();
-    Map<String, ReentrantLock> locks = new HashMap<>();
+    Map<String, Future<SqlConnection>> locks = new HashMap<>();
 
     P getPool(String name);
 
@@ -40,19 +40,13 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
             if (map.containsKey(name)) {
                 return (Future) Future.succeededFuture(map.get(name));
             }
-            ReentrantLock lock = ObjectUtils.getMapValueOrNewSafe(locks, name, () -> new ReentrantLock());
-            lock.lock();
-            if (map.containsKey(name)) {
-                lock.unlock();
-                return (Future) Future.succeededFuture(map.get(name));
-            }
-            return (Future) getPool(name).getConnection()
+            Future<SqlConnection> lock = ObjectUtils.getMapValueOrNewSafe(locks, name, () -> getPool(name).getConnection()
                     .onSuccess(event -> {
                         map.put(name, event);
-                    })
-                    .onComplete(event -> {
-                        lock.unlock();
-                    });
+                    }).onComplete(event -> {
+                        locks.remove(name);
+                    }));
+            return (Future) lock;
         } catch (Throwable e) {
             return Future.failedFuture(e);
         }

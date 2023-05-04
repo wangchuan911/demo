@@ -95,8 +95,12 @@ public class Unit implements UnitType, IData<String, Model> {
         this.attributes = null;
     }
 
-    public void destroy(TaskRequest taskRequest) {
+    protected void destroy(TaskRequest taskRequest) {
+        taskRequest.clearCache(this);
+    }
 
+    protected void hook(TaskRequest taskRequest) {
+        this.destroy(taskRequest);
     }
 
     protected <T extends Unit> List<T> getChild(Class<T> tClass) {

@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @Attr(name = "header", desc = "文件是否有标题头")
 
 public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
-    Map<TaskRequest, CSVWriter> map = new HashMap<>();
+//    Map<TaskRequest, CSVWriter> map = new HashMap<>();
     /*@Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         data.generateData(this);
@@ -132,17 +132,17 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
     }
 
     CSVWriter getCSVWriter(TaskRequest data) throws Throwable {
-        return ObjectUtils.getMapValueOrNewSafe(map, data, () ->
+        return ObjectUtils.getMapValueOrNewSafe(data.cache(this), data, () ->
                 new CSVWriter(getWriter(data))
         );
     }
 
     @Override
     public void destroy(TaskRequest taskRequest) {
+        CSVWriter writer = taskRequest.clearCache(this);
         super.destroy(taskRequest);
-        try {
-            if (map.containsKey(taskRequest))
-                map.remove(taskRequest).close();
+        try (writer) {
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -151,7 +151,7 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
     @Override
     public Copyable copy() {
         Csv csv = (Csv) super.copy();
-        csv.map = this.map;
+//        csv.map = this.map;
         return csv;
     }
 }

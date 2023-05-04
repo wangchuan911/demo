@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class StreamUnit extends Unit implements Stream, Copyable {
     protected Col[] cols;
-    Map<TaskRequest, Object> map = new HashMap<>();
+//    Map<TaskRequest, Object> map = new HashMap<>();
 
     @Override
     public Copyable copy() {
@@ -30,13 +30,13 @@ public abstract class StreamUnit extends Unit implements Stream, Copyable {
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         try {
-            map.put(data, preUnitResult);
+            data.cache(this, preUnitResult);
             this.cols = getChild(Col.class).stream().toArray(Col[]::new);
             data.generateData(this);
             if (attributes.containsKey("read")) {
-                read(data).onSuccess(toNext::complete).onFailure(toNext::fail).onComplete(event -> map.remove(data));
+                read(data).onSuccess(toNext::complete).onFailure(toNext::fail).onComplete(event -> data.clearCache(this));
             } else if (attributes.containsKey("writer")) {
-                writer(data).onSuccess(toNext::complete).onFailure(toNext::fail).onComplete(event -> map.remove(data));
+                writer(data).onSuccess(toNext::complete).onFailure(toNext::fail).onComplete(event -> data.clearCache(this));
             } else {
                 toNext.fail("未知的操作");
             }
@@ -49,7 +49,7 @@ public abstract class StreamUnit extends Unit implements Stream, Copyable {
         String mode = attributes.get("read");
         return new BufferedReader(
                 new InputStreamReader(
-                        Objects.equals(mode, "@stream") ? (InputStream) map.get(data) : new FileInputStream(textFormat(data, mode)),
+                        Objects.equals(mode, "@stream") ?  data.cache(this) : new FileInputStream(textFormat(data, mode)),
                         attributes.containsKey("charset") ? Charset.forName(getAttrFormatValue("charset", data)) : Charset.defaultCharset())
         );
     }
@@ -58,7 +58,7 @@ public abstract class StreamUnit extends Unit implements Stream, Copyable {
         String path = attributes.get("writer");
         switch (path) {
             case "@stream":
-                return new PrintWriter((OutputStream) map.get(data));
+                return new PrintWriter((OutputStream) data.cache(this));
             default:
                 return new FileWriter(path);
         }
