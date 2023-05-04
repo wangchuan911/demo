@@ -30,13 +30,13 @@ public abstract class StreamUnit extends Unit implements Stream, Copyable {
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         try {
-            data.cache(this, preUnitResult);
+            /*data.cache(this, preUnitResult);*/
             this.cols = getChild(Col.class).stream().toArray(Col[]::new);
             data.generateData(this);
             if (attributes.containsKey("read")) {
-                read(data).onSuccess(toNext::complete).onFailure(toNext::fail).onComplete(event -> data.clearCache(this));
+                read(data).onSuccess(toNext::complete).onFailure(toNext::fail);
             } else if (attributes.containsKey("writer")) {
-                writer(data).onSuccess(toNext::complete).onFailure(toNext::fail).onComplete(event -> data.clearCache(this));
+                writer(data).onSuccess(toNext::complete).onFailure(toNext::fail);
             } else {
                 toNext.fail("未知的操作");
             }
@@ -49,19 +49,23 @@ public abstract class StreamUnit extends Unit implements Stream, Copyable {
         String mode = attributes.get("read");
         return new BufferedReader(
                 new InputStreamReader(
-                        Objects.equals(mode, "@stream") ?  data.cache(this) : new FileInputStream(textFormat(data, mode)),
+                        Objects.equals(mode, "@stream") ? data.cache(this) : new FileInputStream(textFormat(data, mode)),
                         attributes.containsKey("charset") ? Charset.forName(getAttrFormatValue("charset", data)) : Charset.defaultCharset())
         );
     }
 
     Writer getWriter(TaskRequest data) throws IOException {
-        String path = attributes.get("writer");
+        String path = getAttrFormatValue("writer", data);
         switch (path) {
             case "@stream":
                 return new PrintWriter((OutputStream) data.cache(this));
             default:
-                return new FileWriter(path);
+                return new FileWriter(path, getCharset(data), "true".equals(attributes.get("append")));
         }
+    }
+
+    Charset getCharset(TaskRequest data) {
+        return Charset.forName(textFormat(data, attributes.getOrDefault("charset", "utf-")));
     }
 
     protected Future<Object> listeningBreak(Future<Object> listFuture, Closeable reader, AtomicInteger index) {

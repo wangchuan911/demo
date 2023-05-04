@@ -14,6 +14,7 @@ import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.StreamUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
+import org.xml.sax.Attributes;
 
 import java.io.*;
 import java.io.File;
@@ -40,10 +41,11 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     @Override
     public Future<Object> read(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
-        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(attributes.get("link"), data).onSuccess(client -> {
+        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
             try {
-                String file = getAttrFormatValue("local", data);
-                StreamUtils.write(client.retrieveFileStream(textFormat(data, "get")), new FileOutputStream(new File(file)));
+                String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("get", data);
+                log(String.format("%s=====>%s", remote, file));
+                StreamUtils.write(client.retrieveFileStream(remote), new FileOutputStream(file));
                 toNext.complete(file);
             } catch (Throwable throwable) {
                 toNext.fail(throwable);
@@ -55,10 +57,11 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     @Override
     public Future<Object> writer(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
-        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(attributes.get("link"), data).onSuccess(client -> {
+        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
             try {
-                String file = getAttrFormatValue("local", data);
-                StreamUtils.write(new FileInputStream(file), client.storeFileStream(textFormat(data, "put")));
+                String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
+                log(String.format("%s=====>%s", file, remote));
+                StreamUtils.write(new FileInputStream(file), client.storeFileStream(remote));
                 toNext.complete(file);
             } catch (Throwable throwable) {
                 toNext.fail(throwable);
@@ -74,14 +77,13 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
         return ftp;
     }
 
-
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
-        log("ftp");
+        /*log("ftp");
         if (true) {
             super.start(data, preUnitResult, toNext);
             return;
-        }
+        }*/
         try {
             if (attributes.containsKey("get")) {
                 this.read(data).onSuccess(toNext::complete).onFailure(toNext::fail);
@@ -128,7 +130,13 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     }*/
 
     @Override
-    protected void destroy(TaskRequest request) {
-
+    protected void destroy(TaskRequest data) {
+        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(event -> {
+            try {
+                event.disconnect();
+            } catch (Throwable e) {
+            }
+        });
+        super.destroy(data);
     }
 }

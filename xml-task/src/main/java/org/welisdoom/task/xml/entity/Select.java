@@ -152,6 +152,8 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         List<Map.Entry> entries = new LinkedList<>();
         for (int i = 0; i < row.size(); i++) {
             if (row.getColumnName(i).equals("@RowNum")) continue;
+            if (row.getValue(i) == null)
+                continue;
             entries.add(Map.entry(row.getColumnName(i), row.getValue(i)));
         }
         return Map.ofEntries(entries.toArray(Map.Entry[]::new));

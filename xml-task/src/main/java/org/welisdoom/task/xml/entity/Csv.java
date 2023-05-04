@@ -105,20 +105,27 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
     }
 
     @Override
+    Charset getCharset(TaskRequest data) {
+        return Charset.forName("gbk");
+    }
+
+    @Override
     public Future<Object> writer(TaskRequest data) {
         CSVWriter csvWriter = null;
         try {
-            csvWriter = ObjectUtils.getMapValueOrNewSafe(data.cache(this), data, () ->
-                    new CSVWriter(getWriter(data))
-            );
-            csvWriter.writeNext(Arrays.stream(this.cols).map(col -> {
-                try {
-                    return Ognl.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class);
-                } catch (OgnlException e) {
-                    log(String.format("col[%s] parse fail %s", col.getCode(), e.getMessage()));
-                    return "";
+            Map<String, CSVWriter> map = data.cache(this, HashMap::new);
+            csvWriter = ObjectUtils.getMapValueOrNewSafe(map, getAttrFormatValue("put", data), () -> {
+                CSVWriter writer = new CSVWriter(getWriter(data));
+                if ("true".equals(attributes.get("header"))) {
+                    writer.writeNext(Arrays.stream(this.cols).map(Col::getName).toArray(String[]::new));
+                    writer.flush();
                 }
-            }).toArray(String[]::new));
+                return writer;
+            });
+            String[] value = Arrays.stream(this.cols).map(col -> textFormat(data, col.getValue())).toArray(String[]::new);
+            log(Arrays.toString(value));
+            csvWriter.writeNext(value);
+            csvWriter.flush();
         } catch (Throwable e) {
             if (csvWriter != null) {
                 try {
@@ -135,13 +142,16 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
 
     @Override
     public void destroy(TaskRequest taskRequest) {
-        CSVWriter writer = taskRequest.clearCache(this);
-        super.destroy(taskRequest);
-        try (writer) {
+        Map<String, CSVWriter> writerMap = taskRequest.clearCache(this);
+        for (Map.Entry<String, CSVWriter> writerEntry : writerMap.entrySet()) {
+            Closeable closeable = writerEntry.getValue();
+            try (closeable) {
 
-        } catch (IOException e) {
-            e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+        super.destroy(taskRequest);
     }
 
     @Override
