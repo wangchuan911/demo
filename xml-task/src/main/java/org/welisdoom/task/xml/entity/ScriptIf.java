@@ -53,8 +53,9 @@ public class ScriptIf extends Unit implements Script, Copyable {
             for (Unit child : children) {
                 if (child instanceof When && isMatched == false) {
                     list.add(((Script) child).getScript(request, split));
-                    isMatched = StringUtils.isAllBlank(list.get(list.size() - 1));
-                } else if (child instanceof Otherwise && isMatched == false) {
+                    isMatched = !StringUtils.isAllBlank(list.get(list.size() - 1));
+                } else if (child instanceof Otherwise) {
+                    if (isMatched) continue;
                     list.add(((Script) child).getScript(request, split));
                 } else if (child instanceof Script) {
                     list.add(((Script) child).getScript(request, split));

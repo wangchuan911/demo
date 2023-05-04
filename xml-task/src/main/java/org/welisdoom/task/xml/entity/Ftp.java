@@ -6,12 +6,14 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.connect.FtpConnectPool;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.StreamUtils;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.io.*;
 import java.io.File;
@@ -38,33 +40,30 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     @Override
     public Future<Object> read(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
-        Cache cache;
-        try {
-            cache = getCache(data);
-            FTPClient client = getClient(cache);
-            String file = getAttrFormatValue("local", data);
-            StreamUtils.write(client.retrieveFileStream(attributes.get("get")), new FileOutputStream(new File(file)));
-            toNext.complete(file);
-        } catch (Throwable throwable) {
-            toNext.fail(throwable);
-        }
+        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(attributes.get("link"), data).onSuccess(client -> {
+            try {
+                String file = getAttrFormatValue("local", data);
+                StreamUtils.write(client.retrieveFileStream(textFormat(data, "get")), new FileOutputStream(new File(file)));
+                toNext.complete(file);
+            } catch (Throwable throwable) {
+                toNext.fail(throwable);
+            }
+        }).onFailure(toNext::fail);
         return toNext.future();
     }
 
     @Override
     public Future<Object> writer(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
-        Cache cache;
-        try {
-            cache = getCache(data);
-            FTPClient client = getClient(cache);
-
-            String file = getAttrFormatValue("local", data);
-            StreamUtils.write(new FileInputStream(new File(file)), client.storeFileStream(attributes.get("put")));
-            toNext.complete(file);
-        } catch (Throwable throwable) {
-            toNext.fail(throwable);
-        }
+        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(attributes.get("link"), data).onSuccess(client -> {
+            try {
+                String file = getAttrFormatValue("local", data);
+                StreamUtils.write(new FileInputStream(file), client.storeFileStream(textFormat(data, "put")));
+                toNext.complete(file);
+            } catch (Throwable throwable) {
+                toNext.fail(throwable);
+            }
+        }).onFailure(toNext::fail);
         return toNext.future();
     }
 
@@ -75,39 +74,6 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
         return ftp;
     }
 
-    static class Cache {
-        Cache(FTPClient client) {
-            this.client = client;
-        }
-
-        FTPClient client;
-
-        void destroy() {
-            try {
-                if (client != null) client.disconnect();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    Cache getCache(TaskRequest data) throws Throwable {
-        return ObjectUtils.getMapValueOrNewSafe(((Map<TaskRequest, Cache>) data.cache(this)), data, () -> new Cache(new FTPClient()));
-    }
-
-    FTPClient getClient(Cache cache) throws Throwable {
-        FTPClient client = cache.client;
-        if (client == null || !client.isConnected()) {
-            client = new FTPClient();
-            client.connect(attributes.get("host"),
-                    attributes.containsKey("port") ? Integer.valueOf(attributes.get("post")) : 22);
-            client.user("");
-            client.pass("");
-            client.pasv();
-            client.mode(FTP.BINARY_FILE_TYPE);
-        }
-        return client;
-    }
 
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
@@ -163,6 +129,6 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
 
     @Override
     protected void destroy(TaskRequest request) {
-        ((Cache) request.clearCache(this)).destroy();
+
     }
 }

@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  * @Author Septem
  * @Date 13:53
  */
-public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
+public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> extends ConnectPool {
     String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
@@ -285,7 +285,5 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> {
 
     }
 
-    interface IToken {
 
-    }
 }

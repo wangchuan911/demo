@@ -36,6 +36,10 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         return (T) cache.get(unit);
     }
 
+    public <T> T cache(Unit unit, ObjectUtils.IfNull<T> function) throws Throwable {
+        return (T) ObjectUtils.getMapValueOrNewSafe(cache, unit, (ObjectUtils.IfNull) function);
+    }
+
     public <T> T clearCache(Unit unit) {
         return (T) cache.remove(unit);
     }

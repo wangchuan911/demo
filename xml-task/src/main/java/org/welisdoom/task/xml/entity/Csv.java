@@ -108,9 +108,10 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
     public Future<Object> writer(TaskRequest data) {
         CSVWriter csvWriter = null;
         try {
-            csvWriter = getCSVWriter(data);
-            Col[] headers = this.cols;
-            csvWriter.writeNext(Arrays.stream(headers).map(col -> {
+            csvWriter = ObjectUtils.getMapValueOrNewSafe(data.cache(this), data, () ->
+                    new CSVWriter(getWriter(data))
+            );
+            csvWriter.writeNext(Arrays.stream(this.cols).map(col -> {
                 try {
                     return Ognl.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class);
                 } catch (OgnlException e) {
@@ -131,11 +132,6 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
         return Future.succeededFuture();
     }
 
-    CSVWriter getCSVWriter(TaskRequest data) throws Throwable {
-        return ObjectUtils.getMapValueOrNewSafe(data.cache(this), data, () ->
-                new CSVWriter(getWriter(data))
-        );
-    }
 
     @Override
     public void destroy(TaskRequest taskRequest) {

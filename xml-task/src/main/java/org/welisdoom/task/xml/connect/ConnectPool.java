@@ -7,4 +7,7 @@ package org.welisdoom.task.xml.connect;
  * @Date 13:53
  */
 public interface ConnectPool {
+    interface IToken {
+
+    }
 }

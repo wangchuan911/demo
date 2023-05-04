@@ -25,4 +25,18 @@
         select content from XML_TASK_TEMPLATE where id=#{value}
     </select>
 
+    <resultMap id="rm_FtpLinkInfo" type="org.welisdoom.task.xml.connect.FtpConnectPool$FtpLinkInfo">
+    <result column="name" property="name"></result>
+    <result column="port" property="port"></result>
+    <result column="host" property="host"></result>
+    <result column="usr" property="user"></result>
+    <result column="pw" property="pw"></result>
+    <result column="model" property="model"></result>
+</resultMap>
+    <select id="getFtp" parameterType="string" resultMap="rm_FtpLinkInfo">
+        select A.*
+        from XML_TASK_CONNECT A
+        where A.name = #{name}
+    </select>
+
 </mapper>
