@@ -136,9 +136,10 @@
                         )
 
                     </insert>
-                    <commit batch="5"></commit>
+                    <commit batch="50"></commit>
                 </iterator>
             </sheet>
+            <commit></commit>
         </transactional>
     </start>
 </task>

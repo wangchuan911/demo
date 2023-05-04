@@ -1,6 +1,8 @@
 package org.welisdoom.task.xml.intf.type;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import org.welisdoom.task.xml.entity.Iterator;
 import org.welisdoom.task.xml.entity.TaskRequest;
@@ -58,15 +60,20 @@ public interface Iterable<T> extends UnitType {
     static <T, K> Future<T> bigFutureLoop(long count, long triggerCount, Future<K> preFuture, Function<K, Future<T>> loop) {
         if (count % triggerCount == 0) {
             GCUtils.toSafePoint();
+            Promise<K> promise = Promise.promise();
+            preFuture.onComplete(bigFutureLoop(promise));
+            return promise.future().compose(loop);
         }
-        Promise<K> promise = Promise.promise();
-        preFuture.onComplete(kAsyncResult -> {
+        return preFuture.compose(loop);
+    }
+
+    static <K> Handler<AsyncResult<K>> bigFutureLoop(Promise<K> promise) {
+        return (kAsyncResult -> {
             if (kAsyncResult.failed())
                 promise.fail(kAsyncResult.cause());
             else
                 promise.complete(kAsyncResult.result());
         });
-        return promise.future().compose(loop);
     }
 
     static long countReset(AtomicLong aLong, long triggerCount, long reset) {
