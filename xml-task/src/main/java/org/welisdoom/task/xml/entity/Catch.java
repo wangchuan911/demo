@@ -22,6 +22,7 @@ public class Catch extends Unit implements Executable {
         if (error == null)
             error = getChild(Error.class).stream().findFirst().orElse((Error) new Error().setParent(this));
         startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error)).onSuccess(toNext::complete).onFailure(event -> {
+            event.printStackTrace();
             prepareNextUnit(data, event, error).onSuccess(toNext::complete).onFailure(toNext::fail);
         });
     }

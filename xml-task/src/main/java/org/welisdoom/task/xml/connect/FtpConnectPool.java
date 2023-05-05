@@ -11,6 +11,7 @@ import org.welisdoon.common.ObjectUtils;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @Classname FtpConnectPool
@@ -34,7 +35,6 @@ public class FtpConnectPool implements ConnectPool {
                     () -> {
                         FtpLinkInfo ftpLinkInfo = configDao.getFtp(name);
                         FTPClient client = new FTPClient();
-                        client = new FTPClient();
                         client.connect(ftpLinkInfo.host,
                                 ftpLinkInfo.port);
                         client.user(ftpLinkInfo.user);
@@ -123,6 +123,19 @@ public class FtpConnectPool implements ConnectPool {
 
         public void setModel(String model) {
             this.model = model;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            FtpLinkInfo that = (FtpLinkInfo) o;
+            return port == that.port && Objects.equals(host, that.host) && Objects.equals(user, that.user);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(port, host, user);
         }
     }
 }
