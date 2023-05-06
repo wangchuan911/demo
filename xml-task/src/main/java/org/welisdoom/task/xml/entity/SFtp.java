@@ -28,7 +28,7 @@ import java.io.*;
 @Attr(name = "put", desc = "写入文件", require = true, options = {"get", "put"})
 @Attr(name = "local", desc = "本地文件位置", require = true, options = {"get", "put"})
 
-public class SFtp extends Unit implements Stream, Executable, Copyable {
+public class SFtp extends Ftp implements Executable, Copyable {
 //    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
     @Override
@@ -47,8 +47,10 @@ public class SFtp extends Unit implements Stream, Executable, Copyable {
         return toNext.future();
     }
 
+
+
     @Override
-    public Future<Object> writer(TaskRequest data) {
+    public Future<Object> write(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
         ApplicationContextProvider.getBean(SFtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
             try {
@@ -70,13 +72,13 @@ public class SFtp extends Unit implements Stream, Executable, Copyable {
         return ftp;
     }
 
-    @Override
+    /*@Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
-        /*log("ftp");
+        *//*log("ftp");
         if (true) {
             super.start(data, preUnitResult, toNext);
             return;
-        }*/
+        }*//*
         try {
             if (attributes.containsKey("get")) {
                 this.read(data).onSuccess(toNext::complete).onFailure(toNext::fail);
@@ -89,7 +91,8 @@ public class SFtp extends Unit implements Stream, Executable, Copyable {
         } catch (Throwable e) {
             toNext.fail(e);
         }
-    }
+    }*/
+
 
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {

@@ -14,7 +14,7 @@ import org.welisdoom.task.xml.intf.type.Iterable;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -31,8 +31,10 @@ import java.util.stream.Collectors;
 @Attr(name = "line-break", desc = "换行", require = true)
 
 
-public class Sheet extends StreamUnit implements Iterable<Map<String, Object>> {
+public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<Map<String, Object>> {
 //    final protected Map<TaskRequest, Writer> writer = new HashMap<>();
+
+    String delimiter, quote;
 
     protected String[] readLine(BufferedReader reader, StringBuilder builder) throws IOException {
         String line;
@@ -72,7 +74,7 @@ public class Sheet extends StreamUnit implements Iterable<Map<String, Object>> {
             }
             String[] values;
             Future<Object> listFuture = Future.succeededFuture();
-            AtomicInteger index = new AtomicInteger(0);
+            AtomicLong index = new AtomicLong(0);
             List<Map.Entry> entries = new LinkedList<>();
             while ((line = readLine(reader, builder)) != null) {
                 values = line;
@@ -86,7 +88,10 @@ public class Sheet extends StreamUnit implements Iterable<Map<String, Object>> {
 //                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                                     this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
                     );*/
-                listFuture = this.bigFutureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), countReset(index, 500, 0), 500, listFuture, data);
+                listFuture = this.futureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), index, listFuture, data);
+                if (index.get() % 100 == 0) {
+                    Thread.sleep(0);
+                }
 
             }
             return listeningBreak(listFuture, reader, index);
@@ -100,36 +105,39 @@ public class Sheet extends StreamUnit implements Iterable<Map<String, Object>> {
 
 
     @Override
-    public Future<Object> writer(TaskRequest data) {
+    public Future<Object> write(TaskRequest data) {
+        this.delimiter = attributes.get("delimiter");
+        this.quote = MapUtils.getString(attributes, "quote", "");
+        java.io.Writer writer;
+        try {
+            writer = data.cache(this, () -> getWriter(data));
+        } catch (Throwable throwable) {
+            return Future.failedFuture(throwable);
+        }
+        return super.write(data).onComplete(event -> {
+            try {
+                writer.close();
+            } catch (IOException e) {
+            }
+            data.clearCache(this);
+        });
+    }
+
+    @Override
+    public Future<Object> write(TaskRequest data, StreamUnit.WriteLine unit) {
         Promise<Object> promise = Promise.promise();
 
         try {
-            Writer writer = getWriter(data);
-            Col[] headers = this.cols;
-            String delimiter = attributes.get("delimiter"), quote = MapUtils.getString(attributes, "quote", "");
-
-            Arrays.stream(headers).map(col -> {
+            java.io.Writer writer = data.cache(this, () -> getWriter(data));
+            writer.append(unit.getChild(Col.class).stream().map(col -> {
                 try {
-                    try {
-                        writer.append(quote);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                     return TypeUtils.castToString(Ognl.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class));
                 } catch (OgnlException e) {
                     log(String.format("col[%s] parse fail %s", col.getCode(), e.getMessage()));
                     return "";
-                } finally {
-                    try {
-                        writer.append(quote);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
-
-
-            }).collect(Collectors.joining(delimiter));
-            writer.append("\n");
+            }).map(s -> StringUtils.isEmpty(quote) ? s : String.format("%s%s%s", quote, s, quote)).collect(Collectors.joining(delimiter)))
+                    .append("\n");
             promise.complete();
         } catch (Throwable e) {
             promise.fail(e);
@@ -139,7 +147,7 @@ public class Sheet extends StreamUnit implements Iterable<Map<String, Object>> {
 
     @Override
     public void destroy(TaskRequest taskRequest) {
-        Writer writer = taskRequest.clearCache(this);
+        java.io.Writer writer = taskRequest.clearCache(this);
         super.destroy(taskRequest);
         try (writer) {
 

@@ -51,6 +51,10 @@ public interface Iterable<T> extends UnitType {
         }
     }
 
+    default Future<Object> futureLoop(T t, AtomicLong index, Future<?> preFuture, TaskRequest data) {
+        return preFuture.compose(o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));
+    }
+
     default Future<Object> bigFutureLoop(T t, long index, long triggerCount, Future<?> preFuture, TaskRequest data) {
         return bigFutureLoop(index, triggerCount, preFuture,
                 o -> this.iterator(data, Item.of(index, t)));

@@ -5,25 +5,18 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import ognl.Ognl;
-import ognl.OgnlException;
 import org.apache.commons.lang3.StringUtils;
-import org.mozilla.intl.chardet.nsDetector;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
-import org.welisdoom.task.xml.intf.type.Stream;
-import org.welisdoon.common.GCUtils;
-import org.welisdoon.common.ObjectUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @Classname csv
@@ -33,11 +26,11 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "csv", parentTagTypes = Executable.class, desc = "csv文件读写")
 @Attr(name = "id", desc = "唯一标识")
-@Attr(name = "read", desc = "读文件", require = true, options = {"writer", "read"})
-@Attr(name = "writer", desc = "写文件", require = true, options = {"writer", "read"})
+@Attr(name = "read", desc = "读文件", require = true, options = {"write", "read"})
+@Attr(name = "write", desc = "写文件", require = true, options = {"write", "read"})
 @Attr(name = "header", desc = "文件是否有标题头")
 
-public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
+public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 //    Map<TaskRequest, CSVWriter> map = new HashMap<>();
     /*@Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
@@ -80,7 +73,7 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
             List<Map.Entry> entries = new LinkedList<>();
             String[] values;
             Future<Object> listFuture = Future.succeededFuture();
-            AtomicInteger index = new AtomicInteger(0);
+            AtomicLong index = new AtomicLong(0);
             while (iterator.hasNext()) {
                 values = iterator.next();
                 entries.clear();
@@ -89,7 +82,7 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
                         values[i] = "";
                     entries.add(Map.entry(headers[i], values[i]));
                 }
-                listFuture = this.bigFutureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), countReset(index, 500, 0), 500, listFuture, data);
+                listFuture = this.bigFutureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), index.incrementAndGet(), 100, listFuture, data);
             }
             /*return listFuture.onComplete(objectAsyncResult -> {
                 try (csvReader) {
@@ -110,33 +103,43 @@ public class Csv extends StreamUnit implements Iterable<Map<String, Object>> {
     }
 
     @Override
-    public Future<Object> writer(TaskRequest data) {
-        CSVWriter csvWriter = null;
+    public Future<Object> write(TaskRequest request) {
         try {
-            Map<String, CSVWriter> map = data.cache(this, HashMap::new);
-            csvWriter = ObjectUtils.getMapValueOrNewSafe(map, getAttrFormatValue("put", data), () -> {
-                CSVWriter writer = new CSVWriter(getWriter(data));
+            request.cache(this, () -> {
+                CSVWriter writer = new CSVWriter(getWriter(request));
                 if ("true".equals(attributes.get("header"))) {
                     writer.writeNext(Arrays.stream(this.cols).map(Col::getName).toArray(String[]::new));
                     writer.flush();
                 }
                 return writer;
             });
-            String[] value = Arrays.stream(this.cols).map(col -> textFormat(data, col.getValue())).toArray(String[]::new);
+        } catch (Throwable throwable) {
+            return Future.failedFuture(throwable);
+        }
+        return super.write(request).onComplete(event -> {
+            try {
+                CSVWriter writer = request.clearCache(this);
+                writer.close();
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public Future<Object> write(TaskRequest data, StreamUnit.WriteLine unit) {
+        Promise<Object> promise = Promise.promise();
+        try {
+            CSVWriter csvWriter = data.cache(this);
+            String[] value = unit.getChild(Col.class).stream().map(col -> textFormat(data, col.getValue())).toArray(String[]::new);
             log(Arrays.toString(value));
             csvWriter.writeNext(value);
             csvWriter.flush();
+            promise.complete();
         } catch (Throwable e) {
-            if (csvWriter != null) {
-                try {
-                    csvWriter.close();
-                } catch (IOException ioException) {
-                    log(ioException.getMessage());
-                }
-            }
-            return Future.failedFuture(e);
+            promise.fail(e);
         }
-        return Future.succeededFuture();
+        return promise.future();
     }
 
 

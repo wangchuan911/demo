@@ -12,7 +12,7 @@ import org.xml.sax.Attributes;
  * @Date 12:17
  */
 
-@Tag(value = "col", parentTagTypes = Stream.class, desc = "将数据整合成为一个map,code为键，value为值")
+@Tag(value = "col", parentTagTypes = {Stream.class, Stream.Writer.class}, desc = "将数据整合成为一个map,code为键，value为值")
 @Attr(name = "name", desc = "字段信息")
 @Attr(name = "value", desc = "字段的值")
 @Attr(name = "code", require = true, desc = "字段别名")

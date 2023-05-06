@@ -10,9 +10,17 @@ import org.welisdoom.task.xml.entity.TaskRequest;
  * @Author Septem
  * @Date 9:39
  */
-public interface Stream extends UnitType {
+public interface Stream<WRITER extends Stream.Writer> extends UnitType {
 
     Future<Object> read(TaskRequest request);
 
-    Future<Object> writer(TaskRequest request);
+    default Future<Object> write(TaskRequest request){
+        return Future.succeededFuture();
+    }
+
+    Future<Object> write(TaskRequest request, WRITER writer);
+
+    interface Writer extends UnitType {
+
+    }
 }

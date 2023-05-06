@@ -35,7 +35,7 @@ import java.util.Set;
 @Attr(name = "put", desc = "写入文件", require = true, options = {"get", "put"})
 @Attr(name = "local", desc = "本地文件位置", require = true, options = {"get", "put"})
 
-public class Ftp extends Unit implements Stream, Executable, Copyable {
+public class Ftp extends StreamUnit<StreamUnit.WriteLine> implements Executable, Copyable {
 //    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
     @Override
@@ -54,8 +54,12 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
         return toNext.future();
     }
 
+    public Future<Object> write(TaskRequest data, StreamUnit.WriteLine unit) {
+        return Future.failedFuture("不支持的操作");
+    }
+
     @Override
-    public Future<Object> writer(TaskRequest data) {
+    public Future<Object> write(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
         ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
             try {
@@ -78,12 +82,21 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
     }
 
     @Override
+    protected String getRead() {
+        return attributes.get("get");
+    }
+
+    @Override
+    protected String getWrite() {
+        return attributes.get("put");
+    }
+   /* @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
-        /*log("ftp");
+        *//*log("ftp");
         if (true) {
             super.start(data, preUnitResult, toNext);
             return;
-        }*/
+        }*//*
         try {
             if (attributes.containsKey("get")) {
                 this.read(data).onSuccess(toNext::complete).onFailure(toNext::fail);
@@ -96,7 +109,7 @@ public class Ftp extends Unit implements Stream, Executable, Copyable {
         } catch (Throwable e) {
             toNext.fail(e);
         }
-    }
+    }*/
 
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {
