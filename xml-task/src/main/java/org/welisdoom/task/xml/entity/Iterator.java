@@ -35,7 +35,7 @@ public class Iterator extends Unit implements Executable {
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         Map map = data.getBus(parent.id);
         Iterable.Item item = (Iterable.Item) preUnitResult;
-        log(LogUtils.styleString("", 42, 3, "循环第" + item.getIndex() + "次"));
+        log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
         map.put(itemIndex, item.getIndex());
         map.put(itemName, item.getItem());
         item.destroy();
