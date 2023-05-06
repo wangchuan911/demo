@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import ognl.OgnlException;
-import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 
@@ -25,11 +24,11 @@ public class Choice extends Unit {
         list.add(getChild(Otherwise.class).stream().findFirst().orElse((Otherwise) new Otherwise().setParent(this)));
         for (Unit when : list) {
             future = future.compose(o ->
-                            prepareNextUnit(data, preUnitResult, when)
+                            startChildUnit(data, preUnitResult, when)
                     ,
                     throwable -> {
                         if (throwable instanceof Break.SkipOneLoopThrowable) {
-                            return prepareNextUnit(data, preUnitResult, when);
+                            return startChildUnit(data, preUnitResult, when);
                         } else
                             return Future.failedFuture(throwable);
                     });

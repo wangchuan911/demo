@@ -2,16 +2,13 @@ package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import ognl.Ognl;
-import ognl.OgnlException;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.UnitType;
-import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.data.IData;
 import org.xml.sax.Attributes;
@@ -20,8 +17,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -198,7 +193,7 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     Future<Object> startChildUnit(Unit child, TaskRequest data, Future<Object> future) {
-        Promise<Object> promise = Promise.promise();
+        /*Promise<Object> promise = Promise.promise();
         future.onComplete(event -> {
             if (event.failed()) {
                 promise.fail(event.cause());
@@ -206,11 +201,12 @@ public class Unit implements UnitType, IData<String, Model> {
                 promise.complete(event.result());
             }
         });
-        return promise.future().compose(o -> prepareNextUnit(data, o, child));
+        return promise.future().compose(o -> prepareNextUnit(data, o, child));*/
+        return Iterable.compose(future, o -> startChildUnit(data, o, child));
     }
 
-    protected Future<Object> prepareNextUnit(TaskRequest data, Object value, Unit unit) {
-        final long[] cost = new long[1];
+    protected Future<Object> startChildUnit(TaskRequest data, Object value, Unit unit) {
+        /*final long[] cost = new long[1];
         return Future.future(promise -> {
             cost[0] = System.currentTimeMillis();
 //            data.lastUnitResult = value;
@@ -221,6 +217,18 @@ public class Unit implements UnitType, IData<String, Model> {
             if (objectAsyncResult.failed())
                 unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
             unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost[0]) / 1000.0d));
+            System.out.println();
+        });*/
+        Promise<Object> promise = Promise.promise();
+        long cost = System.currentTimeMillis();
+        System.out.println();
+        unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+        unit.start(data, value, promise);
+
+        return promise.future().onComplete(objectAsyncResult -> {
+            if (objectAsyncResult.failed())
+                unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
+            unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
             System.out.println();
         });
     }
@@ -305,4 +313,5 @@ public class Unit implements UnitType, IData<String, Model> {
         }
         return aLong.get();
     }
+
 }

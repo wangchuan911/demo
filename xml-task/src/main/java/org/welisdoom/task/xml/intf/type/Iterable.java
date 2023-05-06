@@ -1,15 +1,12 @@
 package org.welisdoom.task.xml.intf.type;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import org.welisdoom.task.xml.entity.Iterator;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -51,8 +48,20 @@ public interface Iterable<T> extends UnitType {
         }
     }
 
-    default Future<Object> futureLoop(T t, AtomicLong index, Future<?> preFuture, TaskRequest data) {
-        return preFuture.compose(o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));
+    default Future<Object> futureLoop(T t, AtomicLong index, Future<Object> preFuture, TaskRequest data) {
+        /*return preFuture.compose(o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));*/
+        return compose(preFuture, o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));
+    }
+
+    static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
+        Promise<K> promise = Promise.promise();
+        preFuture.onComplete(event -> {
+            if (event.failed())
+                promise.fail(event.cause());
+            else
+                promise.complete(event.result());
+        });
+        return promise.future().compose(loop);
     }
 
     default Future<Object> bigFutureLoop(T t, long index, long triggerCount, Future<?> preFuture, TaskRequest data) {
@@ -64,21 +73,22 @@ public interface Iterable<T> extends UnitType {
     static <T, K> Future<T> bigFutureLoop(long count, long triggerCount, Future<K> preFuture, Function<K, Future<T>> loop) {
         if (count % triggerCount == 0) {
             GCUtils.toSafePoint();
-            Promise<K> promise = Promise.promise();
-            preFuture.onComplete(bigFutureLoop(promise));
-            return promise.future().compose(loop);
+            /*Promise<K> promise = Promise.promise();
+            preFuture.onComplete(compose(promise));
+            return promise.future().compose(loop);*/
+            return compose(preFuture, loop);
         }
         return preFuture.compose(loop);
     }
 
-    static <K> Handler<AsyncResult<K>> bigFutureLoop(Promise<K> promise) {
+    /*static <K> Handler<AsyncResult<K>> compose(Promise<K> promise) {
         return (kAsyncResult -> {
             if (kAsyncResult.failed())
                 promise.fail(kAsyncResult.cause());
             else
                 promise.complete(kAsyncResult.result());
         });
-    }
+    }*/
 
     static long countReset(AtomicLong aLong, long triggerCount, long reset) {
         if (aLong.incrementAndGet() > triggerCount) {

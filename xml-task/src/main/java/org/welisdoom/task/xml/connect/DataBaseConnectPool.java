@@ -8,11 +8,11 @@ import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.entity.TaskRequest;
+import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,7 +75,16 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
         setPage(tuple, page);
         log("sql", sql);
         log("params", tuple);
-        return connection
+        Promise<Object> promise = Promise.promise();
+        return Iterable.compose(connection
+                .preparedQuery(sql)
+                .execute(tuple), rows ->
+                Iterable.compose(future.apply(rows), o ->
+                        rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(connection, sql, list, page.setPage(page.getPage() + 1), future)
+                )
+        );
+
+        /*return connection
                 .preparedQuery(sql)
                 .execute(tuple).compose(rows ->
                         future
@@ -83,7 +92,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                                 .compose(o -> rows.size() < page.getPageSize()
                                         ? Future.succeededFuture()
                                         : pageScroll(connection, sql, list, page.setPage(page.getPage() + 1), future)
-                                ));
+                                ));*/
     }
 
     default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
