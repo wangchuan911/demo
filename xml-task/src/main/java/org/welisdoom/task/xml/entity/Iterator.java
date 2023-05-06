@@ -9,6 +9,7 @@ import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoon.common.GCUtils;
+import org.welisdoon.common.LogUtils;
 
 import java.util.Map;
 
@@ -34,6 +35,7 @@ public class Iterator extends Unit implements Executable {
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         Map map = data.getBus(parent.id);
         Iterable.Item item = (Iterable.Item) preUnitResult;
+        log(LogUtils.styleString("", 42, 3, "循环第" + item.getIndex() + "次"));
         map.put(itemIndex, item.getIndex());
         map.put(itemName, item.getItem());
         item.destroy();
