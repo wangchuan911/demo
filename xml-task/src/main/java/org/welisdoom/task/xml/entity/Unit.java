@@ -117,20 +117,28 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     protected <T extends Unit> T getParent(Class<T> tClass) {
+        return getParent(aClass -> aClass == tClass);
+    }
+
+    protected <T extends Unit> List<T> getParents(Class<T> tClass) {
+        return getParents(aClass -> aClass == tClass);
+    }
+
+    protected <T extends Unit> T getParent(Predicate<Class<?>> predicate) {
         Class<? extends Unit> pClass = null;
         Unit target = this;
         do {
             target = target.parent;
             if (target == null) break;
             pClass = target.getClass();
-        } while (pClass != tClass);
+        } while (!predicate.test(pClass));
         return (T) target;
     }
 
-    protected <T extends Unit> List<T> getParents(Class<T> tClass) {
+    protected <T extends Unit> List<T> getParents(Predicate<Class<?>> predicate) {
         List<T> list = new LinkedList<>();
         Unit t = this;
-        while ((t = t.getParent(tClass)) != null) {
+        while ((t = t.getParent(predicate)) != null) {
             list.add((T) t);
         }
         return list;

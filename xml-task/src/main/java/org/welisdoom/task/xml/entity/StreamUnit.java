@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @Author Septem
  * @Date 17:56
  */
-public abstract class StreamUnit<T extends Stream.Writer> extends Unit implements Stream<T>, Copyable {
+public abstract class StreamUnit<T extends Stream.Writer> extends Unit implements Stream<T>, Copyable, Executable {
     protected Col[] cols;
 //    Map<TaskRequest, Object> map = new HashMap<>();
 
@@ -108,9 +108,9 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
                 synchronized (this) {
                     if (stream == null)
                         if (attributes.containsKey("link"))
-                            stream = getParents(StreamUnit.class).stream().filter(t -> Objects.equals(t.getId(), getId())).findFirst().get();
+                            stream = (StreamUnit) getParents(aClass -> StreamUnit.class.isAssignableFrom(aClass)).stream().filter(t -> Objects.equals(t.getId(), attributes.get("link"))).findFirst().get();
                         else
-                            stream = getParent(StreamUnit.class);
+                            stream = getParent(aClass -> StreamUnit.class.isAssignableFrom(aClass));
                 }
             }
             ((Future<Object>) stream.write(data, this)).onSuccess(toNext::complete).onFailure(toNext::fail);

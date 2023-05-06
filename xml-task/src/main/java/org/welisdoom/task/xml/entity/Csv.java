@@ -5,12 +5,14 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
+import org.xml.sax.Attributes;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -102,29 +104,16 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
         return Charset.forName("gbk");
     }
 
-    @Override
-    public Future<Object> write(TaskRequest request) {
-        try {
-            request.cache(this, () -> {
-                CSVWriter writer = new CSVWriter(getWriter(request));
-                if ("true".equals(attributes.get("header"))) {
-                    writer.writeNext(Arrays.stream(this.cols).map(Col::getName).toArray(String[]::new));
-                    writer.flush();
-                }
-                return writer;
-            });
-        } catch (Throwable throwable) {
-            return Future.failedFuture(throwable);
+    protected Closeable initWriter(TaskRequest request) throws Throwable {
+        CSVWriter writer = new CSVWriter(getWriter(request));
+        if ("true".equals(attributes.get("header"))) {
+            writer.writeNext(Arrays.stream(this.cols).map(Col::getName).toArray(String[]::new));
+            writer.flush();
         }
-        return super.write(request).onComplete(event -> {
-            try {
-                CSVWriter writer = request.clearCache(this);
-                writer.close();
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        });
+        return writer;
     }
+
+
 
     @Override
     public Future<Object> write(TaskRequest data, StreamUnit.WriteLine unit) {

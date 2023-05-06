@@ -11,6 +11,7 @@ import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
+import org.xml.sax.Attributes;
 
 import java.io.*;
 import java.util.*;
@@ -34,13 +35,13 @@ import java.util.stream.Collectors;
 public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<Map<String, Object>> {
 //    final protected Map<TaskRequest, Writer> writer = new HashMap<>();
 
-    String delimiter, quote;
+    String delimiter, quote, linebreak;
 
     protected String[] readLine(BufferedReader reader, StringBuilder builder) throws IOException {
         String line;
         int index;
-        String linebreak = MapUtils.getString(Sheet.this.attributes, "line-break");
-        String delimiter = MapUtils.getString(Sheet.this.attributes, "delimiter");
+        /*String linebreak = MapUtils.getString(Sheet.this.attributes, "line-break");
+        String delimiter = MapUtils.getString(Sheet.this.attributes, "delimiter");*/
         String quote = MapUtils.getString(Sheet.this.attributes, "quote");
         while ((line = reader.readLine()) != null) {
             if ((index = (line += "\n").indexOf(linebreak)) >= 0) {
@@ -54,6 +55,15 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
             }
         }
         return null;
+    }
+
+    @Override
+    public Unit attr(Attributes attributes) {
+        super.attr(attributes);
+        this.delimiter = this.attributes.getOrDefault("delimiter", ",");
+        this.quote = MapUtils.getString(this.attributes, "quote", "");
+        this.linebreak = MapUtils.getString(Sheet.this.attributes, "line-break", "\n");
+        return this;
     }
 
     @Override
@@ -103,23 +113,24 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
         }
     }
 
+    protected Closeable initWriter(TaskRequest request) throws Throwable {
+        return getWriter(request);
+    }
 
     @Override
-    public Future<Object> write(TaskRequest data) {
-        this.delimiter = attributes.get("delimiter");
-        this.quote = MapUtils.getString(attributes, "quote", "");
-        java.io.Writer writer;
+    public Future<Object> write(TaskRequest request) {
         try {
-            writer = data.cache(this, () -> getWriter(data));
+            request.cache(this, () -> initWriter(request));
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
         }
-        return super.write(data).onComplete(event -> {
+        return super.write(request).onComplete(event -> {
             try {
-                writer.close();
-            } catch (IOException e) {
+                Closeable closeable = request.clearCache(this);
+                closeable.close();
+            } catch (Throwable e) {
+                e.printStackTrace();
             }
-            data.clearCache(this);
         });
     }
 

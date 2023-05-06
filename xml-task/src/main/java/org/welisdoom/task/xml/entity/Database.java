@@ -93,7 +93,7 @@ public class Database extends Unit {
         if (StringUtils.isEmpty(link)) {
             optional = Optional.ofNullable(unit.getParent(Transactional.class));
         } else {
-            optional = unit.getParents(Transactional.class).stream().filter(transactional -> transactional.attributes.get("link").equals("link")).findFirst();
+            optional = unit.getParents(Transactional.class).stream().filter(transactional -> transactional.attributes.get("link").equals(link)).findFirst();
         }
         if (optional.isPresent())
             return Future.succeededFuture(optional.get().getSqlConnection(data));
