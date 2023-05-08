@@ -75,12 +75,13 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
         setPage(tuple, page);
         log("sql", sql);
         log("params", tuple);
-        Promise<Object> promise = Promise.promise();
+        int nextPageNum = page.getPage() + 1;
+        System.out.println(nextPageNum);
         return Iterable.compose(connection
                 .preparedQuery(sql)
                 .execute(tuple), rows ->
                 Iterable.compose(future.apply(rows), o ->
-                        rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(connection, sql, list, page.setPage(page.getPage() + 1), future)
+                        rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(connection, sql, list, page.setPage(nextPageNum), future)
                 )
         );
 

@@ -128,6 +128,10 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
             try {
                 Closeable closeable = request.clearCache(this);
                 closeable.close();
+                /*File file = new File(textFormat(request, getWrite()));
+                log("文件名：" + file.getAbsolutePath());
+                log("文件存在：" + file.exists());
+                log("文件大小：" + file.length());*/
             } catch (Throwable e) {
                 e.printStackTrace();
             }

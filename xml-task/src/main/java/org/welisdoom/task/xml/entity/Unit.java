@@ -273,7 +273,8 @@ public class Unit implements UnitType, IData<String, Model> {
     final static String sign = "%@#VALUE#@%";
 
     protected static String textFormat(TaskRequest request, String text) {
-        if (text == null) return "";
+        if (StringUtils.isEmpty(text)) return "";
+        if (text.indexOf("{{") == -1) return text;
         List<Map.Entry<String, Object>> list = new LinkedList<>();
         Matcher matcher = PATTERN.matcher(text);
         String name;
@@ -290,7 +291,7 @@ public class Unit implements UnitType, IData<String, Model> {
                 value = Map.entry(name, Ognl.getValue(name, request.getOgnlContext(), request.getBus(), Object.class));
             } catch (Throwable e) {/*
                 throw new RuntimeException(e.getMessage(), e);*/
-                System.err.println(e.getMessage());
+                System.err.println(text + "===>" + name + "==>" + e.getMessage());
                 value = Map.entry(name, "");
             }
             list.add(value);
@@ -319,6 +320,7 @@ public class Unit implements UnitType, IData<String, Model> {
     static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
         return Iterable.compose(preFuture, loop);
     }
+
     static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop, Function<Throwable, Future<T>> failureMapper) {
         return Iterable.compose(preFuture, loop, failureMapper);
     }
