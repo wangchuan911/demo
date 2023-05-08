@@ -142,13 +142,13 @@ public class Transactional extends Unit implements Executable {
         /*log("回滚");
         log(MAP1.get(data));*/
         return
-                ((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().rollback().compose(voidAsyncResult ->
+                compose(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().rollback(),voidAsyncResult ->
                         newTransaction(data)
                 );
     }
 
     protected Future<Transaction> newTransaction(TaskRequest data) {
-        return getDatabase(data).compose(connection ->
+        return compose(getDatabase(data), connection ->
                 connection.begin().onSuccess(transaction -> {
                     /*MAP.put(data, Map.entry(connection, transaction));*/
                     data.cache(this, Map.entry(connection, transaction));
