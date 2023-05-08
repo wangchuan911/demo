@@ -34,33 +34,57 @@ public class Transactional extends Unit implements Executable {
 
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
-        this.getDatabase(data).compose(connection ->
+        compose(this.getDatabase(data), connection ->
+                compose(connection.begin(), transaction -> {
+                    data.cache(this, Map.entry(connection, transaction));
+                    Promise<Object> promise = Promise.promise();
+                    super.start(data, preUnitResult, promise);
+
+                    return promise.future().transform(event -> {
+                        Map.Entry<SqlConnection, Transaction> entry = data.cache(this);
+                        if (event.succeeded())
+                            return entry.getValue().commit();
+                        else
+                            return entry.getValue().rollback();
+                    }).onComplete(event -> {
+                        data.clearCache(this);
+                        connection.close();
+                    });
+                })
+        ).onComplete(event -> {
+            if (event.succeeded()) {
+                toNext.complete();
+            } else {
+                toNext.fail(event.cause());
+            }
+        });
+        /*this.getDatabase(data).compose(connection ->
                         connection.begin().compose(transaction -> {
                             data.cache(this, Map.entry(connection, transaction));
 //                    MAP.put(data, Map.entry(connection, transaction));
                             Promise<Object> promise = Promise.promise();
                             Future<Object> future = promise.future().onSuccess(o1 -> {
-                                /*MAP.get(data)*/
+                                *//*MAP.get(data)*//*
                                 ((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue()
                                         .commit()
                                         .onSuccess(unused -> {
                                             toNext.complete(o1);
                                         }).onFailure(toNext::fail);
                             }).onFailure(throwable -> {
-                                /*MAP.get(data)*/
+                                *//*MAP.get(data)*//*
                                 ((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue()
                                         .rollback()
                                         .onSuccess(unused -> {
                                             toNext.fail(throwable);
                                         }).onFailure(toNext::fail);
                             }).onComplete(objectAsyncResult -> {
-                                /*MAP.remove(data)*/
+                                *//*MAP.remove(data)*//*
                                 ((Map.Entry<SqlConnection, Transaction>) data.clearCache(this)).getKey().close();
                             });
                             super.start(data, preUnitResult, promise);
                             return future;
                         })
-        ).onFailure(toNext::fail);
+        ).onFailure(toNext::fail);*/
     }
 
 
@@ -89,10 +113,10 @@ public class Transactional extends Unit implements Executable {
                     .getValue()
                     .rollback()
                     .onSuccess(unused -> {
-                        System.out.println(LogUtils.styleString("", 31, 1, "事务终止"));
+                        log(LogUtils.styleString("", 31, 1, "事务终止"));
                     })
                     .onFailure(throwable -> {
-                        System.out.println(LogUtils.styleString("", 31, 1, "事务终止 回滚失败"));
+                        log(LogUtils.styleString("", 31, 1, "事务终止 回滚失败"));
                         throwable.printStackTrace();
                     });
         } catch (Throwable e) {
@@ -102,10 +126,10 @@ public class Transactional extends Unit implements Executable {
             entry.getKey()
                     .close()
                     .onSuccess(unused -> {
-                        System.out.println(LogUtils.styleString("", 31, 1, "连接终止"));
+                        log(LogUtils.styleString("", 31, 1, "连接终止"));
                     })
                     .onFailure(throwable -> {
-                        System.out.println(LogUtils.styleString("", 31, 1, "连接终止失败"));
+                        log(LogUtils.styleString("", 31, 1, "连接终止失败"));
                         throwable.printStackTrace();
                     });
         } catch (Throwable e) {

@@ -23,7 +23,8 @@ public class Choice extends Unit {
         List<Unit> list = (List) getChild(When.class);
         list.add(getChild(Otherwise.class).stream().findFirst().orElse((Otherwise) new Otherwise().setParent(this)));
         for (Unit when : list) {
-            future = future.compose(o ->
+            future = compose(future,
+                    o ->
                             startChildUnit(data, preUnitResult, when)
                     ,
                     throwable -> {

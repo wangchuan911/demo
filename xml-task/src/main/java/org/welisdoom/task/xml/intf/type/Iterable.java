@@ -54,6 +54,10 @@ public interface Iterable<T> extends UnitType {
     }
 
     static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
+        return compose(preFuture, loop, Future::failedFuture);
+    }
+
+    static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop, Function<Throwable, Future<T>> failureMapper) {
         Promise<K> promise = Promise.promise();
         preFuture.onComplete(event -> {
             if (event.failed())
@@ -61,7 +65,7 @@ public interface Iterable<T> extends UnitType {
             else
                 promise.complete(event.result());
         });
-        return promise.future().compose(loop);
+        return promise.future().compose(loop, failureMapper);
     }
 
     default Future<Object> bigFutureLoop(T t, long index, long triggerCount, Future<?> preFuture, TaskRequest data) {

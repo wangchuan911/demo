@@ -2,6 +2,7 @@ package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import ognl.Ognl;
 import org.springframework.util.StringUtils;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -314,4 +316,10 @@ public class Unit implements UnitType, IData<String, Model> {
         return aLong.get();
     }
 
+    static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
+        return Iterable.compose(preFuture, loop);
+    }
+    static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop, Function<Throwable, Future<T>> failureMapper) {
+        return Iterable.compose(preFuture, loop, failureMapper);
+    }
 }
