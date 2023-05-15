@@ -115,8 +115,8 @@ public class Transactional extends Unit implements Executable {
             return Future.succeededFuture(cache.getKey());
         Future<SqlConnection> future = Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data);
         return compose(future, connection -> {
-            log(data.id);
-            log(connection);
+            /*log(data.id);
+            log(connection);*/
             return compose(connection.begin(), transaction -> {
                 data.cache(this, Map.entry(connection, transaction));
                 return Future.succeededFuture(connection);
