@@ -27,11 +27,6 @@ import java.util.Set;
 public class Transactional extends Unit implements Executable {
 //    Map<TaskRequest, Map.Entry<SqlConnection, Transaction>> MAP = new HashMap<>();
 
-
-    protected Future<? extends SqlConnection> getDatabase(TaskRequest data) {
-        return Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data);
-    }
-
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         compose(getSqlConnection(data), connection -> {
@@ -110,9 +105,11 @@ public class Transactional extends Unit implements Executable {
 
 
     public Future<SqlConnection> getSqlConnection(TaskRequest data) {
-        if (data.cache(this) != null)
-            return Future.succeededFuture(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getKey());
-        return compose(this.getDatabase(data), connection -> {
+        Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
+        if (cache != null)
+            return Future.succeededFuture(cache.getKey());
+        Future<SqlConnection> future = Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data);
+        return compose(future, connection -> {
             log(data.id);
             log(connection);
             return compose(connection.begin(), transaction -> {
@@ -130,7 +127,7 @@ public class Transactional extends Unit implements Executable {
     public Future<?> commit(TaskRequest data) {
         /*log("提交");
         log(MAP.get(data));*/
-        return ((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().commit().compose(voidAsyncResult ->
+        return compose(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().commit(), voidAsyncResult ->
                 newTransaction(data)
         );
     }
@@ -178,7 +175,10 @@ public class Transactional extends Unit implements Executable {
     }
 
     protected Future<Transaction> newTransaction(TaskRequest data) {
-        return compose(getDatabase(data), connection ->
+        Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
+        Future<SqlConnection> future = compose((cache != null) ? (Future) cache.getKey().close() : Future.succeededFuture(),
+                o -> Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data));
+        return compose(future, connection ->
                 connection.begin().onSuccess(transaction -> {
                     /*MAP.put(data, Map.entry(connection, transaction));*/
                     data.cache(this, Map.entry(connection, transaction));
