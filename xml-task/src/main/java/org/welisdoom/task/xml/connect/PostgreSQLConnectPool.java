@@ -49,16 +49,10 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
 
     @Override
     public void setInstance(DatabaseLinkInfo config) {
-        PgConnectOptions connectOptions = new PgConnectOptions()
-                .setPort(config.getPort())
-                .setHost(config.getHost())
-                .setDatabase(config.getDatabase())
-                .setUser(config.getUser())
-                .setPassword(config.getPw());
+        PgConnectOptions connectOptions = getSqlConnectOptions(new PgConnectOptions(), config);
 
 // Pool options
-        PoolOptions poolOptions = new PoolOptions()
-                .setMaxSize(5);
+        PoolOptions poolOptions = getPoolOptions();
 
 // Create the client pool
         pools.put(config.getName(), PgPool.pool(Task.getVertx(), connectOptions, poolOptions));

@@ -179,6 +179,21 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
 
     void removeInstance(String name);
 
+    default <S extends SqlConnectOptions> S getSqlConnectOptions(S connectOptions, DatabaseLinkInfo config) {
+        return (S) connectOptions
+                .setPort(config.getPort())
+                .setHost(config.getHost())
+                .setDatabase(config.getDatabase())
+                .setUser(config.getUser())
+                .setPassword(config.getPw());
+    }
+
+    default PoolOptions getPoolOptions() {
+        return new PoolOptions()
+                .setMaxSize(10)
+                .setConnectionTimeout(5).setConnectionTimeoutUnit(TimeUnit.MINUTES);
+    }
+
     default void log(String prefix, Tuple tuple) {
         StringBuilder builder = new StringBuilder();
         Object obj;

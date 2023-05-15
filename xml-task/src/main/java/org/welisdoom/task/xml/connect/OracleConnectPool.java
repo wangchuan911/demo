@@ -53,15 +53,10 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
     }
 
     public void setInstance(DatabaseLinkInfo config) {
-        OracleConnectOptions connectOptions = new OracleConnectOptions()
-                .setPort(config.getPort())
-                .setHost(config.getHost())
-                .setDatabase(config.getDatabase())
-                .setUser(config.getUser())
-                .setPassword(config.getPw());
+        OracleConnectOptions connectOptions = getSqlConnectOptions(new OracleConnectOptions(), config);
 
 // Pool Options
-        PoolOptions poolOptions = new PoolOptions().setMaxSize(10);
+        PoolOptions poolOptions = getPoolOptions();
 
 // Create the pool from the data object
         if (pools.containsKey(config.getName())) return;
