@@ -227,7 +227,7 @@ public class Unit implements UnitType, IData<String, Model> {
             unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost[0]) / 1000.0d));
             System.out.println();
         });*/
-        Promise<Object> promise = Promise.promise();
+        /*Promise<Object> promise = Promise.promise();
         long cost = System.currentTimeMillis();
         System.out.println();
         unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
@@ -238,6 +238,17 @@ public class Unit implements UnitType, IData<String, Model> {
                 objectAsyncResult.cause().printStackTrace();
                 unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
             }
+            unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
+            System.out.println();
+        });*/
+        long cost = System.currentTimeMillis();
+        return executeBlocking(promise -> {
+            System.out.println();
+            unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+            unit.start(data, value, promise);
+        }).onComplete(objectAsyncResult -> {
+            if (objectAsyncResult.failed())
+                unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
             unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
             System.out.println();
         });
@@ -339,5 +350,9 @@ public class Unit implements UnitType, IData<String, Model> {
         } else {
             promise.fail(asyncResult.cause());
         }
+    }
+
+    protected static <T> Future<T> executeBlocking(Handler<Promise<T>> blockingCodeHandler) {
+        return Task.getVertx().executeBlocking(blockingCodeHandler);
     }
 }

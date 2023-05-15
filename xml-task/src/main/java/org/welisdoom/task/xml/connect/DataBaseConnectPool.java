@@ -7,12 +7,14 @@ import io.vertx.sqlclient.*;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
+import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,7 +50,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
         setPage(tuple, data.getPage());
         log("sql", sql);
         log("params", tuple);
-        return connection.preparedQuery(sql).execute(tuple);
+        return /*connection.preparedQuery(sql).execute(tuple)*/execute(connection, sql, tuple);
     }
 
     default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
@@ -65,9 +67,9 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
         log("params", tuple);
         int nextPageNum = page.getPage() + 1;
         System.out.println(nextPageNum);
-        return Iterable.compose(connection
+        return Iterable.compose(/*connection
                 .preparedQuery(sql)
-                .execute(tuple), rows ->
+                .execute(tuple)*/execute(connection, sql, tuple), rows ->
                 Iterable.compose(future.apply(rows), o ->
                         rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(connection, sql, list, page.setPage(nextPageNum), future)
                 )
@@ -91,7 +93,12 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
         Tuple tuple = Tuple.tuple(params);
         log("sql", sql);
         log("params", tuple);
-        return connection.preparedQuery(sql).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
+        return /*connection.preparedQuery(sql).execute(tuple).compose(rows -> Task.getVertx().executeBlocking(event -> event.complete(rows.rowCount())))*/
+                execute(connection, sql, tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
+    }
+
+    default Future<RowSet<Row>> execute(SqlConnection connection, String sql, Tuple tuple) {
+        return connection.preparedQuery(sql).execute(tuple);
     }
 
     default List<Map.Entry<String, JdbcType>> getSqlParamTypes(String s) {

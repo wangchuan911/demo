@@ -5,6 +5,7 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
+import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
@@ -93,6 +94,13 @@ public class Iterator extends Unit implements Executable {
             futures.clear();
             return future;
         }
+    }
+
+    @Override
+    protected synchronized void printTag(boolean highLight) {
+        super.printTag(highLight);
+        String str = String.format("[THREAD@%s]", Thread.currentThread().getName());
+        System.out.print(highLight ? LogUtils.styleString("", ((hashCode() + 1) % 5) + 31, 1, str) : str);
     }
 
     protected Future<Object> thread(TaskRequest data, Iterable.Item o) {
