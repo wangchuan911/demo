@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.TypeUtils;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -330,5 +331,13 @@ public class Unit implements UnitType, IData<String, Model> {
 
     static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop, Function<Throwable, Future<T>> failureMapper) {
         return Iterable.compose(preFuture, loop, failureMapper);
+    }
+
+    static void complete(AsyncResult asyncResult, Promise promise) {
+        if (asyncResult.succeeded()) {
+            promise.complete(asyncResult.result());
+        } else {
+            promise.fail(asyncResult.cause());
+        }
     }
 }

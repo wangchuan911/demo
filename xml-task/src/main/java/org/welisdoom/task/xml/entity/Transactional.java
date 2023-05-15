@@ -194,7 +194,7 @@ public class Transactional extends Unit implements Executable {
 
     protected Future<Transaction> newTransaction(TaskRequest data) {
         Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
-        Future<SqlConnection> future = compose((cache != null) ? (Future) cache.getKey().close() : Future.succeededFuture(),
+        Future<SqlConnection> future = compose((Future) cache.getKey().close(),
                 o -> Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data));
         return compose(future, connection ->
                 connection.begin().onSuccess(transaction -> {
