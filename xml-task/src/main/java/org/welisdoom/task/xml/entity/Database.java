@@ -96,8 +96,8 @@ public class Database extends Unit {
             optional = unit.getParents(Transactional.class).stream().filter(transactional -> transactional.attributes.get("link").equals(link)).findFirst();
         }
         if (optional.isPresent())
-            return Future.succeededFuture(optional.get().getSqlConnection(data));
-        return getDataBase(unit, data).getConnect(unit.attributes.get("link"), data);
+            return optional.get().getSqlConnection(data);
+        return getDataBase(unit, data).getConnect(unit.attributes.get("link"));
     }
 
     protected static DataBaseConnectPool getDataBase(Unit unit, TaskRequest data) {

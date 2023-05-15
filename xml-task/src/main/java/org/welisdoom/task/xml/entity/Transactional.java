@@ -29,12 +29,33 @@ public class Transactional extends Unit implements Executable {
 
 
     protected Future<? extends SqlConnection> getDatabase(TaskRequest data) {
-        return Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data);
+        return Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"));
     }
 
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
-        compose(this.getDatabase(data), connection ->
+        compose(getSqlConnection(data), connection -> {
+            Promise<Object> promise = Promise.promise();
+            super.start(data, preUnitResult, promise);
+
+            return promise.future().transform(event -> {
+                Map.Entry<SqlConnection, Transaction> entry = data.cache(this);
+                if (event.succeeded())
+                    return entry.getValue().commit();
+                else
+                    return entry.getValue().rollback();
+            }).onComplete(event -> {
+                Map.Entry<SqlConnection, Transaction> entry = data.clearCache(this);
+                entry.getKey().close();
+            });
+        }).onComplete(event -> {
+            if (event.succeeded()) {
+                toNext.complete();
+            } else {
+                toNext.fail(event.cause());
+            }
+        });
+        /*compose(this.getDatabase(data), connection ->
                 compose(connection.begin(), transaction -> {
                     data.cache(this, Map.entry(connection, transaction));
                     Promise<Object> promise = Promise.promise();
@@ -57,7 +78,7 @@ public class Transactional extends Unit implements Executable {
             } else {
                 toNext.fail(event.cause());
             }
-        });
+        });*/
         /*this.getDatabase(data).compose(connection ->
                         connection.begin().compose(transaction -> {
                             data.cache(this, Map.entry(connection, transaction));
@@ -88,8 +109,17 @@ public class Transactional extends Unit implements Executable {
     }
 
 
-    public SqlConnection getSqlConnection(TaskRequest request) {
-        return /*MAP.get(request)*/((Map.Entry<SqlConnection, Transaction>) request.cache(this)).getKey();
+    public Future<SqlConnection> getSqlConnection(TaskRequest data) {
+        if (data.cache(this) != null)
+            return Future.succeededFuture(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getKey());
+        return compose(this.getDatabase(data), connection -> {
+            log(data.id);
+            log(connection);
+            return compose(connection.begin(), transaction -> {
+                data.cache(this, Map.entry(connection, transaction));
+                return Future.succeededFuture(connection);
+            });
+        });
     }
 
     @Override
@@ -142,7 +172,7 @@ public class Transactional extends Unit implements Executable {
         /*log("回滚");
         log(MAP1.get(data));*/
         return
-                compose(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().rollback(),voidAsyncResult ->
+                compose(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().rollback(), voidAsyncResult ->
                         newTransaction(data)
                 );
     }

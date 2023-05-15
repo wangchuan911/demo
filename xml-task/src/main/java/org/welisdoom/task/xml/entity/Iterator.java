@@ -58,4 +58,18 @@ public class Iterator extends Unit implements Executable {
     public static Future<Object> iterator(Unit unit, TaskRequest data, Object item) {
         return unit.startChildUnit(data, item, typeMatched(Iterator.class));
     }
+
+    @Override
+    protected void destroy(TaskRequest taskRequest) {
+        super.destroy(taskRequest);
+        taskRequest.clearCache(this);
+    }
+
+    public Future<Object> iterateFinish(TaskRequest data) {
+        ThreadInfo threadInfo = data.cache(this);
+        if (threadInfo == null) {
+            return Future.succeededFuture();
+        }
+        return threadInfo.flush();
+    }
 }

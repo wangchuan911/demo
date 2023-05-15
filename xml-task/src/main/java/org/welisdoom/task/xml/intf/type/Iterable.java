@@ -7,6 +7,7 @@ import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -53,6 +54,14 @@ public interface Iterable<T> extends UnitType {
         return compose(preFuture, o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));
     }
 
+    default Future<Object> loopEnd(TaskRequest data) {
+        Optional<Unit> iterator = ((Unit) this).getChild(Unit.typeMatched(Iterator.class)).stream().findFirst();
+        if (iterator.isPresent())
+            return ((Iterator) iterator.get()).iterateFinish(data);
+        return Future.succeededFuture();
+    }
+
+
     static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
         return compose(preFuture, loop, Future::failedFuture);
     }
@@ -68,9 +77,9 @@ public interface Iterable<T> extends UnitType {
         return promise.future().compose(loop, failureMapper);
     }
 
-    default Future<Object> bigFutureLoop(T t, long index, long triggerCount, Future<?> preFuture, TaskRequest data) {
-        return bigFutureLoop(index, triggerCount, preFuture,
-                o -> this.iterator(data, Item.of(index, t)));
+    default Future<Object> bigFutureLoop(Item<T> item, long triggerCount, Future<?> preFuture, TaskRequest data) {
+        return bigFutureLoop(item.index, triggerCount, preFuture,
+                o -> this.iterator(data, item));
 
     }
 

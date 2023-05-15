@@ -84,7 +84,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
                         values[i] = "";
                     entries.add(Map.entry(headers[i], values[i]));
                 }
-                listFuture = this.bigFutureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), index.incrementAndGet(), 100, listFuture, data);
+                listFuture = this.bigFutureLoop(Item.of(index.incrementAndGet(), Map.ofEntries(entries.toArray(Map.Entry[]::new))), 100, listFuture, data);
             }
             /*return listFuture.onComplete(objectAsyncResult -> {
                 try (csvReader) {
@@ -93,7 +93,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
                     e.printStackTrace();
                 }
             });*/
-            return listeningBreak(listFuture, csvReader, index);
+            return listeningBreak(listFuture.compose(o -> loopEnd(data)), csvReader, index);
         } catch (Throwable e) {
             return Future.failedFuture(e);
         }
@@ -112,7 +112,6 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
         }
         return writer;
     }
-
 
 
     @Override

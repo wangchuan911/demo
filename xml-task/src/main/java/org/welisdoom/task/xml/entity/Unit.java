@@ -100,9 +100,14 @@ public class Unit implements UnitType, IData<String, Model> {
         this.destroy(taskRequest);
     }
 
-    protected <T extends Unit> List<T> getChild(Class<T> tClass) {
+    public <T extends Unit> List<T> getChild(Class<T> tClass) {
         return (List) children.stream().filter(unit -> unit.getClass() == tClass).collect(Collectors.toList());
     }
+
+    public <T extends Unit> List<T> getChild(Predicate<Unit> predicate) {
+        return (List) children.stream().filter(predicate).collect(Collectors.toList());
+    }
+
 
     protected <T extends Unit> List<T> getChildren(Class<T> tClass) {
         List<Unit> units = new LinkedList<>();
@@ -174,7 +179,7 @@ public class Unit implements UnitType, IData<String, Model> {
         startChildUnit(data, /*data.lastUnitResult*/preUnitResult, Objects::nonNull).onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
-    protected static Predicate<Unit> typeMatched(Class<?>... classes) {
+    public static Predicate<Unit> typeMatched(Class<?>... classes) {
         return unit -> Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(unit.getClass())).findFirst().isPresent();
     }
 
@@ -228,8 +233,10 @@ public class Unit implements UnitType, IData<String, Model> {
         unit.start(data, value, promise);
 
         return promise.future().onComplete(objectAsyncResult -> {
-            if (objectAsyncResult.failed())
+            if (objectAsyncResult.failed()) {
+                objectAsyncResult.cause().printStackTrace();
                 unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
+            }
             unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
             System.out.println();
         });

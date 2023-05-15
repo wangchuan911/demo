@@ -138,7 +138,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                             }
                             return listFuture;
                         });
-                future.onSuccess(o -> {
+                future.compose(o -> loopEnd(data)).onSuccess(o -> {
                     toNext.complete(index.get());
                 }).onFailure(throwable -> {
                     Break.onBreak(throwable, toNext, index.get());

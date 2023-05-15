@@ -104,7 +104,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
                 }
 
             }
-            return listeningBreak(listFuture, reader, index);
+            return listeningBreak(listFuture.compose(o -> loopEnd(data)), reader, index);
 
 
         } catch (Throwable e) {
