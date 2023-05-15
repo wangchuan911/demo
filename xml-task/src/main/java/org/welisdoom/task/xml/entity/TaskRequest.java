@@ -1,14 +1,12 @@
 package org.welisdoom.task.xml.entity;
 
 import com.sun.istack.NotNull;
-import io.vertx.sqlclient.SqlConnection;
-import io.vertx.sqlclient.Transaction;
 import ognl.Ognl;
 import ognl.OgnlContext;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.consts.Model;
-import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
 
@@ -25,6 +23,8 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     Map<String, Object> bus = new HashMap<>();
     OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
     Map<Unit, Object> cache = new HashMap<>();
+    List<TaskRequest> childrenRequest = new LinkedList<>();
+    TaskRequest parentRequest;
 
 //    Object lastUnitResult;
 
@@ -125,4 +125,19 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     }
 
 
+    public TaskRequest copy(String subId) {
+        TaskRequest taskRequest = new TaskRequest(String.format("%s-%s", this.id, subId));
+        taskRequest.bus.putAll(SerializationUtils.clone((HashMap) this.bus));
+        taskRequest.parentRequest = this;
+        this.childrenRequest.add(taskRequest);
+        return taskRequest;
+    }
+
+    public TaskRequest getParentRequest() {
+        return parentRequest;
+    }
+
+    public TaskRequest[] getChildrenRequest() {
+        return childrenRequest.toArray(TaskRequest[]::new);
+    }
 }

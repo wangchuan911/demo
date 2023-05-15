@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnection;
@@ -10,10 +11,8 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoon.common.LogUtils;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Classname Transactional
@@ -34,11 +33,17 @@ public class Transactional extends Unit implements Executable {
             super.start(data, preUnitResult, promise);
 
             return promise.future().transform(event -> {
-                Map.Entry<SqlConnection, Transaction> entry = data.cache(this);
+                /*Map.Entry<SqlConnection, Transaction> entry = data.cache(this);
                 if (event.succeeded())
                     return entry.getValue().commit();
                 else
-                    return entry.getValue().rollback();
+                    return entry.getValue().rollback();*/
+                return CompositeFuture.all(this.allTransaction(data).stream().map(entry -> {
+                    if (event.succeeded())
+                        return entry.getValue().commit();
+                    else
+                        return entry.getValue().rollback();
+                }).collect(Collectors.toList()));
             }).onComplete(event -> {
                 Map.Entry<SqlConnection, Transaction> entry = data.clearCache(this);
                 entry.getKey().close();
@@ -134,35 +139,48 @@ public class Transactional extends Unit implements Executable {
 
     @Override
     protected void hook(TaskRequest taskRequest) {
-        Map.Entry<SqlConnection, Transaction> entry = taskRequest.clearCache(this);
-        try {
-            entry
-                    .getValue()
-                    .rollback()
-                    .onSuccess(unused -> {
-                        log(LogUtils.styleString("", 31, 1, "事务终止"));
-                    })
-                    .onFailure(throwable -> {
-                        log(LogUtils.styleString("", 31, 1, "事务终止 回滚失败"));
-                        throwable.printStackTrace();
-                    });
-        } catch (Throwable e) {
-            e.printStackTrace();
+        for (Map.Entry<SqlConnection, Transaction> entry : allTransaction(taskRequest)) {
+            try {
+                entry
+                        .getValue()
+                        .rollback()
+                        .onSuccess(unused -> {
+                            log(LogUtils.styleString("", 31, 1, "事务终止"));
+                        })
+                        .onFailure(throwable -> {
+                            log(LogUtils.styleString("", 31, 1, "事务终止 回滚失败"));
+                            throwable.printStackTrace();
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+            try {
+                entry.getKey()
+                        .close()
+                        .onSuccess(unused -> {
+                            log(LogUtils.styleString("", 31, 1, "连接终止"));
+                        })
+                        .onFailure(throwable -> {
+                            log(LogUtils.styleString("", 31, 1, "连接终止失败"));
+                            throwable.printStackTrace();
+                        });
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
         }
-        try {
-            entry.getKey()
-                    .close()
-                    .onSuccess(unused -> {
-                        log(LogUtils.styleString("", 31, 1, "连接终止"));
-                    })
-                    .onFailure(throwable -> {
-                        log(LogUtils.styleString("", 31, 1, "连接终止失败"));
-                        throwable.printStackTrace();
-                    });
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
+        clearCache(taskRequest);
         super.hook(taskRequest);
+    }
+
+    protected List<Map.Entry<SqlConnection, Transaction>> allTransaction(TaskRequest data) {
+        List<Map.Entry<SqlConnection, Transaction>> list = new LinkedList<>();
+        Map.Entry<SqlConnection, Transaction> map = data.cache(this);
+        if (map != null)
+            list.add(map);
+        for (TaskRequest taskRequest : data.childrenRequest) {
+            list.addAll(allTransaction(taskRequest));
+        }
+        return list;
     }
 
     public Future<?> rollback(TaskRequest data) {
@@ -183,5 +201,12 @@ public class Transactional extends Unit implements Executable {
                     /*MAP.put(data, Map.entry(connection, transaction));*/
                     data.cache(this, Map.entry(connection, transaction));
                 }));
+    }
+
+    protected void clearCache(TaskRequest data) {
+        data.clearCache(this);
+        for (TaskRequest taskRequest : data.childrenRequest) {
+            taskRequest.clearCache(this);
+        }
     }
 }

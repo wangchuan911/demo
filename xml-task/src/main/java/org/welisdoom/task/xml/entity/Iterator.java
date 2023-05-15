@@ -1,8 +1,10 @@
 package org.welisdoom.task.xml.entity;
 
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
@@ -10,8 +12,13 @@ import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
+import org.xml.sax.Attributes;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.function.Function;
 
 /**
  * @Classname Sql
@@ -33,27 +40,98 @@ public class Iterator extends Unit implements Executable {
 
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+        thread(data, (Iterable.Item) preUnitResult).onComplete(event -> {
+            if (event.succeeded()) {
+                toNext.complete();
+            } else {
+                toNext.fail(event.cause());
+            }
+        });
+    }
+
+    protected Future<Object> execute(TaskRequest data, Iterable.Item item) {
         Map map = data.getBus(parent.id);
-        Iterable.Item item = (Iterable.Item) preUnitResult;
         log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
         map.put(itemIndex, item.getIndex());
         map.put(itemName, item.getItem());
         item.destroy();
         item = GCUtils.release(item);
         Promise<Object> promise = Promise.promise();
-        promise.future()
+        Future<Object> future = promise.future()
                 .onComplete(objectAsyncResult -> {
                     map.remove(itemName);
                     map.remove(itemIndex);
-                    if (objectAsyncResult.failed() && !(objectAsyncResult.cause() instanceof Break.SkipOneLoopThrowable)) {
-                        toNext.fail(objectAsyncResult.cause());
-                    } else {
-                        toNext.complete(objectAsyncResult.result());
-                    }
                 });
-        super.start(data, preUnitResult, promise);
+        super.start(data, null, promise);
+        return future;
     }
 
+    public static class ThreadInfo {
+        Queue<TaskRequest> idles = new LinkedList<>();
+        List<Future> futures = new LinkedList<>();
+        final int count;
+
+        ThreadInfo(TaskRequest taskRequest, int threadCount) {
+            count = threadCount;
+            for (int i = 0; i < threadCount; i++) {
+                idles.add(taskRequest.copy("thread-" + (i + 1)));
+            }
+        }
+
+        Future<Object> run(Function<TaskRequest, Future<Object>> function) {
+
+            TaskRequest taskRequest = idles.poll();
+            futures.add(function.apply(taskRequest).onComplete(event -> idles.add(taskRequest)));
+            if (futures.size() >= count)
+                return flush();
+            else
+                return Future.succeededFuture();
+        }
+
+        Future<Object> flush() {
+            Future future = CompositeFuture.all(futures);
+            futures.clear();
+            return future;
+        }
+    }
+
+    protected Future<Object> thread(TaskRequest data, Iterable.Item o) {
+        switch (threadCount()) {
+            case 1:
+                return execute(data, o);
+            default:
+                try {
+                    ThreadInfo threadInfo = data.cache(this, () -> new ThreadInfo(data, threadCount()));
+                    log("线程中");
+                    return threadInfo.run(taskRequest ->
+                            Task.getVertx().executeBlocking(event -> {
+                                execute(taskRequest, o).onComplete(event1 -> {
+                                    if (event1.succeeded()) {
+                                        event.complete();
+                                    } else {
+                                        event.fail(event1.cause());
+                                    }
+                                });
+                            })
+                    );
+                } catch (Throwable throwable) {
+                    return Future.failedFuture(throwable);
+                }
+        }
+    }
+
+    int thread = 1;
+
+    protected int threadCount() {
+        return thread;
+    }
+
+    @Override
+    public Unit attr(Attributes attributes) {
+        super.attr(attributes);
+        this.thread = Math.min(Math.max(1, MapUtils.getInteger(this.attributes, "thread", this.thread)), 8);
+        return this;
+    }
 
     public static Future<Object> iterator(Unit unit, TaskRequest data, Object item) {
         return unit.startChildUnit(data, item, typeMatched(Iterator.class));
