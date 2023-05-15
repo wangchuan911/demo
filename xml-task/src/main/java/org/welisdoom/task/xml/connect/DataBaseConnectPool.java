@@ -27,27 +27,14 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
     String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
-    Map<IToken, Map<String, SqlConnection>> connectings = new HashMap<>();
 
     P getPool(String name);
 
     void setInstance(DatabaseLinkInfo config);
 
-    default Future<S> getConnect(String name, IToken token, boolean cache) {
+    default Future<S> getConnect(String name, IToken token) {
         try {
-            if (cache) {
-                Map<String, SqlConnection> map = ObjectUtils.getMapValueOrNewSafe(connectings, token, () -> new HashMap<>());
-                if (map.containsKey(name)) {
-                    return (Future) Future.succeededFuture(map.get(name));
-                } else {
-                    return (Future) getPool(name).getConnection()
-                            .onSuccess(event -> {
-                                if (cache)
-                                    map.put(name, event);
-                            });
-                }
-            }
-            return (Future) getPool(name);
+            return (Future) getPool(name).getConnection();
         } catch (Throwable e) {
             return Future.failedFuture(e);
         }

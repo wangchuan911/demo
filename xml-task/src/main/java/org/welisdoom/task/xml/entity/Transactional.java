@@ -29,7 +29,7 @@ public class Transactional extends Unit implements Executable {
 
 
     protected Future<? extends SqlConnection> getDatabase(TaskRequest data) {
-        return Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data, false);
+        return Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data);
     }
 
     @Override

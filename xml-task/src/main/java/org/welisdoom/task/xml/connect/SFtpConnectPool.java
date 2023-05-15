@@ -67,7 +67,7 @@ public class SFtpConnectPool implements ConnectPool<ChannelSftp> {
         this.configDao = configDao;
     }
 
-    public Future<ChannelSftp> getConnect(String name, IToken token, boolean cache) {
+    public Future<ChannelSftp> getConnect(String name, IToken token) {
         try {
             return Future.succeededFuture(ObjectUtils.getMapValueOrNewSafe(ObjectUtils.getMapValueOrNewSafe(client, token, HashMap::new), name,
                     () -> {

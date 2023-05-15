@@ -14,9 +14,5 @@ public interface ConnectPool<T> {
 
     }
 
-    Future<T> getConnect(String name, IToken token, boolean cache);
-
-    default Future<T> getConnect(String name, IToken token) {
-        return getConnect(name, token, false);
-    }
+    Future<T> getConnect(String name, IToken token);
 }

@@ -29,7 +29,7 @@ public class FtpConnectPool implements ConnectPool<FTPClient> {
         this.configDao = configDao;
     }
 
-    public Future<FTPClient> getConnect(String name, IToken token, boolean cache) {
+    public Future<FTPClient> getConnect(String name, IToken token) {
         try {
             return Future.succeededFuture(ObjectUtils.getMapValueOrNewSafe(ObjectUtils.getMapValueOrNewSafe(client, token, () -> new HashMap<>()), name,
                     () -> {
