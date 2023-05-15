@@ -20,7 +20,7 @@ import java.util.Objects;
  * @Date 14:52
  */
 @Component
-public class FtpConnectPool implements ConnectPool {
+public class FtpConnectPool implements ConnectPool<FTPClient> {
     Map<IToken, Map<String, FTPClient>> client = new HashMap<>();
     ConfigDao configDao;
 
@@ -29,7 +29,7 @@ public class FtpConnectPool implements ConnectPool {
         this.configDao = configDao;
     }
 
-    public Future<FTPClient> getConnect(String name, IToken token) {
+    public Future<FTPClient> getConnect(String name, IToken token, boolean cache) {
         try {
             return Future.succeededFuture(ObjectUtils.getMapValueOrNewSafe(ObjectUtils.getMapValueOrNewSafe(client, token, () -> new HashMap<>()), name,
                     () -> {

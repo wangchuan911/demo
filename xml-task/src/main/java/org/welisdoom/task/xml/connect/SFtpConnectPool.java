@@ -18,7 +18,7 @@ import java.util.*;
  * @Date 14:52
  */
 @Component
-public class SFtpConnectPool implements ConnectPool {
+public class SFtpConnectPool implements ConnectPool<ChannelSftp> {
     Map<IToken, Map<String, ChannelSftp>> client = new HashMap<>();
     ConfigDao configDao;
     static Set<SFtpLinkInfo> SESSIONS = new HashSet<>();
@@ -67,7 +67,7 @@ public class SFtpConnectPool implements ConnectPool {
         this.configDao = configDao;
     }
 
-    public Future<ChannelSftp> getConnect(String name, IToken token) {
+    public Future<ChannelSftp> getConnect(String name, IToken token, boolean cache) {
         try {
             return Future.succeededFuture(ObjectUtils.getMapValueOrNewSafe(ObjectUtils.getMapValueOrNewSafe(client, token, HashMap::new), name,
                     () -> {

@@ -97,7 +97,7 @@ public class Database extends Unit {
         }
         if (optional.isPresent())
             return optional.get().getSqlConnection(data);
-        return getDataBase(unit, data).getConnect(unit.attributes.get("link"));
+        return getDataBase(unit, data).getConnect(unit.attributes.get("link"), data, true);
     }
 
     protected static DataBaseConnectPool getDataBase(Unit unit, TaskRequest data) {

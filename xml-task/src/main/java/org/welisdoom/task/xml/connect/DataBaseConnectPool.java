@@ -23,17 +23,34 @@ import java.util.regex.Pattern;
  * @Author Septem
  * @Date 13:53
  */
-public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> extends ConnectPool {
+public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> extends ConnectPool<S> {
     String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
+    Map<IToken, Map<String, SqlConnection>> connectings = new HashMap<>();
 
     P getPool(String name);
 
     void setInstance(DatabaseLinkInfo config);
 
-    default Future<S> getConnect(String name) {
-        return (Future) getPool(name).getConnection();
+    default Future<S> getConnect(String name, IToken token, boolean cache) {
+        try {
+            if (cache) {
+                Map<String, SqlConnection> map = ObjectUtils.getMapValueOrNewSafe(connectings, token, () -> new HashMap<>());
+                if (map.containsKey(name)) {
+                    return (Future) Future.succeededFuture(map.get(name));
+                } else {
+                    return (Future) getPool(name).getConnection()
+                            .onSuccess(event -> {
+                                if (cache)
+                                    map.put(name, event);
+                            });
+                }
+            }
+            return (Future) getPool(name);
+        } catch (Throwable e) {
+            return Future.failedFuture(e);
+        }
     }
 
     default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {

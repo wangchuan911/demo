@@ -242,13 +242,13 @@ public class Unit implements UnitType, IData<String, Model> {
         });
     }
 
-    protected void log(Object o) {
+    protected synchronized void log(Object o) {
         printTag(true);
         System.out.print(":");
         System.out.println(o);
     }
 
-    protected void printTag(boolean highLight) {
+    protected synchronized void printTag(boolean highLight) {
         if (this.parent != null) {
             this.parent.printTag(false);
         }
