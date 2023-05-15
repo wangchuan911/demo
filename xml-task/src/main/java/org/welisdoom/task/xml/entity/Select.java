@@ -134,7 +134,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                                 /*listFuture = listFuture.compose(o ->
                                         this.iterator(data, Item.of(index.incrementAndGet(), this.rowToMap(row)))
                                 );*/
-                                listFuture = futureLoop(this.rowToMap(row), index, listFuture, data);
+                                listFuture = futureLoop(Item.of(index.incrementAndGet(), this.rowToMap(row)), listFuture, data);
                             }
                             return listFuture;
                         });

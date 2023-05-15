@@ -98,7 +98,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
 //                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                                     this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
                     );*/
-                listFuture = this.futureLoop(Map.ofEntries(entries.toArray(Map.Entry[]::new)), index, listFuture, data);
+                listFuture = this.futureLoop(Item.of(index.incrementAndGet(), Map.ofEntries(entries.toArray(Map.Entry[]::new))), listFuture, data);
                 if (index.get() % 100 == 0) {
                     Thread.sleep(0);
                 }
