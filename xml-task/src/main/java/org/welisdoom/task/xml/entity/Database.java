@@ -88,7 +88,7 @@ public class Database extends Unit {
     }
 
     protected static Future<SqlConnection> findConnect(Unit unit, TaskRequest data) {
-        String link = unit.attributes.get("link");
+        /*String link = unit.attributes.get("link");
         Optional<Transactional> optional;
         if (StringUtils.isEmpty(link)) {
             optional = Optional.ofNullable(unit.getParent(Transactional.class));
@@ -101,7 +101,38 @@ public class Database extends Unit {
             return data.cache(unit, () -> getDataBase(unit, data).getConnect(unit.attributes.get("link"), data));
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
+        }*/
+        Optional<Transactional> optional = getTransactional(unit, data);
+        if (optional.isPresent()) {
+            return optional.get().getSqlConnection(data);
+        } else {
+            try {
+                return data.cache(unit, () -> getDataBase(unit, data).getConnect(unit.attributes.get("link"), data));
+            } catch (Throwable throwable) {
+                return Future.failedFuture(throwable);
+            }
         }
+    }
+
+    protected static Optional<Transactional> getTransactional(Unit unit, TaskRequest data) {
+        String link = unit.attributes.get("link");
+        Optional<Transactional> optional;
+        if (StringUtils.isEmpty(link)) {
+            optional = Optional.ofNullable(unit.getParent(Transactional.class));
+        } else {
+            optional = unit.getParents(Transactional.class).stream().filter(transactional -> transactional.attributes.get("link").equals(link)).findFirst();
+        }
+        return optional;
+    }
+
+    protected static Future<Object> commit(Unit unit, TaskRequest data) {
+        Optional<Transactional> optional = getTransactional(unit, data);
+        if (optional.isPresent()) {
+            return Future.succeededFuture();
+        } else if (data.cache(unit) == null) {
+            return Future.failedFuture("not connect");
+        } else
+            return (Future) compose((Future<SqlConnection>) data.clearCache(unit), connection -> connection.close());
     }
 
     protected static DataBaseConnectPool getDataBase(Unit unit, TaskRequest data) {

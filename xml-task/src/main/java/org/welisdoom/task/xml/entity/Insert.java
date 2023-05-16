@@ -44,33 +44,38 @@ public class Insert extends Unit implements Script, Copyable {
             isStaticContent = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).isStaticContent()).reduce(Boolean.TRUE, (aBoolean, aBoolean2) -> aBoolean && aBoolean2);
         }
 //        System.out.println(data.getBus());
-        Future<Object> future = Database.findConnect(this, data).compose(connection -> {
-            BaseCondition<String, TaskRequest> condition = new BaseCondition<String, TaskRequest>() {
-            };
-            condition.setData(data);
-            condition.setCondition(data.getBus());
+        Future<Object> future = compose(Database.findConnect(this, data),
+                connection -> {
+                    BaseCondition<String, TaskRequest> condition = new BaseCondition<String, TaskRequest>() {
+                    };
+                    condition.setData(data);
+                    condition.setCondition(data.getBus());
 //            System.out.println(data.getBus());
-            DataBaseConnectPool pool = Database.getDataBase(Insert.this, data);
-            if (!isStaticContent) {
-                return pool.update(connection, getScript(data), condition);
-            } else {
+                    DataBaseConnectPool pool = Database.getDataBase(Insert.this, data);
+                    Future<Integer> insertFuture;
+                    if (!isStaticContent) {
+                        insertFuture = pool.update(connection, getScript(data), condition).onComplete(event -> connection.close());
+                    } else {
 
-                List<Object> params = new LinkedList<>();
-                if (this.sql == null) {
-                    String sql = getScript(data);
-                    List<Map.Entry<String, JdbcType>> list = pool.getSqlParamTypes(sql);
-                    pool.setValueToSql(params, list, condition);
-                    sql = pool.sqlFormat(sql, params);
-                    this.sql = new DataBaseConnectPool.StaticSql(sql, list);
-                    pool.log("static sql", this.sql.getSql());
-                } else {
-                    pool.setValueToSql(params, this.sql.getTypes(), condition);
-                }
-                Tuple tuple = Tuple.tuple(params);
-                pool.log("params", tuple);
-                return connection.preparedQuery(this.sql.getSql()).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
-            }
-        });
+                        List<Object> params = new LinkedList<>();
+                        if (this.sql == null) {
+                            String sql = getScript(data);
+                            List<Map.Entry<String, JdbcType>> list = pool.getSqlParamTypes(sql);
+                            pool.setValueToSql(params, list, condition);
+                            sql = pool.sqlFormat(sql, params);
+                            this.sql = new DataBaseConnectPool.StaticSql(sql, list);
+                            pool.log("static sql", this.sql.getSql());
+                        } else {
+                            pool.setValueToSql(params, this.sql.getTypes(), condition);
+                        }
+                        Tuple tuple = Tuple.tuple(params);
+                        pool.log("params", tuple);
+                        insertFuture = connection.preparedQuery(this.sql.getSql()).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
+                    }
+                    return compose(insertFuture, integer ->
+                            compose(Database.commit(this, data), unused -> Future.succeededFuture(integer))
+                    );
+                });
         future.onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
