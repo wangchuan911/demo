@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnection;
 import org.apache.commons.lang3.StringUtils;
+import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -107,19 +108,25 @@ public class Database extends Unit {
         if (optional.isPresent()) {
             return optional.get().getSqlConnection(data);
         } else {
-            try {
-                return data.cache(unit, () -> getDataBase(unit, data).getConnect(unit.attributes.get("link"), data).onSuccess(connection -> {
-                    if (sqlConnectionCounter.containsKey(connection)) {
-                        sqlConnectionCounter.get(connection).incrementAndGet();
+            if (data.cache(unit) == null) {
+                return getDataBase(unit, data).getConnect(unit.attributes.get("link"), data).onSuccess(connection -> {
+                    AtomicInteger atomicInteger = sqlConnectionCounter.get(connection);
+                    if (atomicInteger == null) {
+                        synchronized (sqlConnectionCounter) {
+                            if (atomicInteger == null) {
+                                sqlConnectionCounter.put((SqlConnection) connection, atomicInteger = new AtomicInteger(0));
+                                data.cache(unit, connection);
+                            }
+                        }
                     }
-                }));
-            } catch (Throwable throwable) {
-                return Future.failedFuture(throwable);
+                    atomicInteger.incrementAndGet();
+                });
             }
+            return Future.succeededFuture(data.cache(unit));
         }
     }
 
-    static Map<SqlConnection, AtomicInteger> sqlConnectionCounter = new HashMap<>();
+    static Map<SqlConnection, AtomicInteger> sqlConnectionCounter = new ConcurrentHashMap<>();
 
     protected static Optional<Transactional> getTransactional(Unit unit, TaskRequest data) {
         String link = unit.attributes.get("link");
@@ -132,22 +139,23 @@ public class Database extends Unit {
         return optional;
     }
 
-    protected static Future<Object> commit(Unit unit, TaskRequest data) {
+    protected static Future<Object> releaseConnect(Unit unit, TaskRequest data) {
         Optional<Transactional> optional = getTransactional(unit, data);
         if (optional.isPresent()) {
             return Future.succeededFuture();
         } else if (data.cache(unit) == null) {
             return Future.failedFuture("not connect");
-        } else
-            return (Future) compose((Future<SqlConnection>) data.clearCache(unit), connection -> {
-                if (sqlConnectionCounter.containsKey(connection)) {
-                    if (sqlConnectionCounter.get(connection).decrementAndGet() <= 0)
-                        sqlConnectionCounter.remove(connection);
-                    else
-                        return Future.succeededFuture();
-                }
-                return connection.close();
-            });
+        } else {
+            SqlConnection connection = data.clearCache(unit);
+            AtomicInteger count = sqlConnectionCounter.get(connection);
+            if (count != null) {
+                if (count.decrementAndGet() <= 0)
+                    sqlConnectionCounter.remove(connection);
+                else
+                    return Future.succeededFuture();
+            }
+            return (Future) connection.close();
+        }
     }
 
     protected static DataBaseConnectPool getDataBase(Unit unit, TaskRequest data) {
