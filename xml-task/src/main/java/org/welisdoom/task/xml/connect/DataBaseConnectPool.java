@@ -7,6 +7,7 @@ import io.vertx.sqlclient.*;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
+import org.welisdoom.task.xml.consts.Consts;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoom.task.xml.intf.type.Iterable;
@@ -195,9 +196,12 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                 .setPassword(config.getPw());
     }
 
+
     default PoolOptions getPoolOptions() {
+        log("cpu core count:", Consts.cpuCoreCount + "");
         return new PoolOptions()
-                .setMaxSize(10)
+                .setMaxSize(Consts.cpuCoreCount * 2)
+                .setMaxWaitQueueSize(Consts.cpuCoreCount * Consts.maxTaskCount)
                 .setConnectionTimeout(5).setConnectionTimeoutUnit(TimeUnit.MINUTES);
     }
 

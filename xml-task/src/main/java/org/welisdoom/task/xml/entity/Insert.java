@@ -71,10 +71,7 @@ public class Insert extends Unit implements Script, Copyable {
                 return connection.preparedQuery(this.sql.getSql()).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
             }
         });
-        future.onComplete(event -> {
-            Database.releaseConnect(this, data);
-            complete(event, toNext);
-        });
+        future.onComplete(event -> Database.releaseConnect(this, data).onComplete(event1 -> complete(event, toNext)));
     }
 
     @Override

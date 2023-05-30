@@ -22,7 +22,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     boolean isDebugger = false;
     Map<String, Object> bus = new HashMap<>();
     OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
-    Map<Unit, Object> cache = new HashMap<>();
+    Map<Unit, Object> cache = new LinkedHashMap<>();
     List<TaskRequest> childrenRequest = new LinkedList<>();
     TaskRequest parentRequest;
 
@@ -137,7 +137,25 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         return parentRequest;
     }
 
+    public TaskRequest getRootRequest() {
+        TaskRequest root = parentRequest;
+        while (root.getParentRequest() != null) {
+            root = root.getParentRequest();
+        }
+        return root;
+    }
+
     public TaskRequest[] getChildrenRequest() {
         return childrenRequest.toArray(TaskRequest[]::new);
+    }
+
+    public void destroy() {
+        for (Map.Entry<Unit, Object> entry : cache.entrySet().stream().toArray(Map.Entry[]::new)) {
+            entry.getKey().destroy(this);
+        }
+        bus.clear();
+        for (TaskRequest taskRequest : childrenRequest) {
+            taskRequest.destroy();
+        }
     }
 }

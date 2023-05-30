@@ -99,6 +99,11 @@ public class Unit implements UnitType, IData<String, Model> {
 
     protected void hook(TaskRequest taskRequest) {
         this.destroy(taskRequest);
+        if (taskRequest.getParentRequest() == null) {
+            for (TaskRequest request : taskRequest.getChildrenRequest()) {
+                this.hook(request);
+            }
+        }
     }
 
     public <T extends Unit> List<T> getChild(Class<T> tClass) {
