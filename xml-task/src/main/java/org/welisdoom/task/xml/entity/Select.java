@@ -10,10 +10,12 @@ import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoon.common.data.BaseCondition;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 
 /**
@@ -26,134 +28,41 @@ import java.util.regex.Matcher;
 @Attr(name = "id", desc = "唯一标识")
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
 
-    /*public void execute(TaskRequest data) {
-        data.generateData(this);
-        String sql = getScript(data.getBus(), " ");
-        System.out.println(sql);
-        Iterate iterate = getChild(Iterate.class).get(0);
-        Promise<Object> parentPromise = data.promise;
-
-        if (data.isDebugger) {
-            List<Map<String, Object>> list = List.of(Map.of("test1", "test1", "test2", "test2", "test3", "test3", "test4", "test4"));
-            Future<Object> listFuture = Future.succeededFuture();
-            for (Map<String, Object> item : list) {
-                listFuture = listFuture.compose(o ->
-                        Future.future(promise -> {
-                            try {
-                                data.setPromise(promise);
-                                iterate.execute(data, item);
-                            } catch (Throwable e) {
-                                promise.fail(e);
-                                return;
-                            }
-                        })
-                );
-            }
-            listFuture.onSuccess(parentPromise::complete).onFailure(parentPromise::fail);
-        } else {
-            SqlConnection transaction = Transactional.getSqlConnection(data, attributes.get("db-name"));
-            BaseCondition<Long, TaskRequest> condition = new BaseCondition<Long, TaskRequest>() {
-            };
-            condition.setPage(new BaseCondition.Page(1, 100));
-            condition.setCondition(data.getBus());
-            ((Future<RowSet<Row>>) Transactional
-                    .getDataBaseConnectPool(transaction)
-                    .page(transaction, sql, condition)).onSuccess(result -> {
-                Map<String, Object> item = new HashMap<>();
-                Future<Object> listFuture = Future.succeededFuture();
-                for (Row row : result) {
-                    for (int i = 0; i < row.size(); i++) {
-                        item.put(row.getColumnName(i), row.getValue(row.getColumnName(i)));
-                    }
-                    listFuture = listFuture.compose(o ->
-                            Future.future(promise -> {
-                                try {
-                                    data.setPromise(promise);
-                                    iterate.execute(data, item);
-                                } catch (Throwable e) {
-                                    promise.fail(e);
-                                    return;
-                                }
-                            })
-                    );
-                }
-                listFuture.onSuccess(parentPromise::complete).onFailure(parentPromise::fail);
-            });
-        }
-
-    }*/
-
-    protected void debugStart(TaskRequest data, Promise<Object> toNext) {
-        List<Map<String, Object>> list = List.of(Map.of("test1", "test1", "test2", "test2", "test3", "test3", "test4", "test4"));
-        Future<Object> listFuture = Future.succeededFuture();
-        for (Map<String, Object> item : list) {
-            listFuture = listFuture.compose(o ->
-                    startChildUnit(data, item, typeMatched(Iterator.class))
-            );
-        }
-        listFuture.onSuccess(toNext::complete).onFailure(toNext::fail);
-    }
-
-    /*protected DataBaseConnectPool getDataBase(TaskRequest data) {
-        return Database.getDatabase(data, attributes.get("link"));
-    }
-
-    protected Future<SqlConnection> findConnect(TaskRequest data) {
-        Unit p = this.parent;
-        while (!(p == null || p instanceof Transactional)) {
-            p = p.parent;
-        }
-        if (p != null)
-            return Future.succeededFuture(((Transactional) p).getSqlConnection(data));
-        return getDataBase(data).getConnect(attributes.get("link"));
-    }*/
 
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
         data.generateData(this);
-        String sql = getScript(data);
 
-        if (data.isDebugger) {
-            debugStart(data, toNext);
-        } else {
+        Database.findConnect(this, data).onSuccess(connection -> {
+            BaseCondition.Page page = new BaseCondition.Page(1, 100);
+            AtomicLong index = new AtomicLong(0);
+            DataBaseConnectPool pool = Database.getDataBase(this);
+            String sql = getScript(data);
+            List<Object> params = new LinkedList<>();
+            pool.setValueToSql(params, pool.getSqlParamTypes(sql = pool.toPageSql(sql)), data.getOgnlContext(), data.getBus());
+            sql = pool.sqlFormat(sql, params);
+            Future<Object> future = pageScroll(pool, sql, params, data, page, rows -> {
+                Future<Object> listFuture = Future.succeededFuture();
+                for (Map<String, Object> row : rows) {
+                    listFuture = futureLoop(Item.of(index.incrementAndGet(), row), listFuture, data);
+                }
+                return listFuture;
+            });
 
-            Database.findConnect(this, data).onSuccess(connection -> {
-                BaseCondition<String, TaskRequest> condition = new BaseCondition<>() {
-                    {
-                        setData(data);
-                        setPage(new BaseCondition.Page(1, 100));
-                        setCondition(data.getBus());
-                    }
-                };
-                AtomicLong index = new AtomicLong(0);
-                Future<Object> future = Database
-                        .getDataBase(this, data)
-                        .pageScroll(connection, sql, condition, rows -> {
-                            Future<Object> listFuture = Future.succeededFuture();
-                            for (Row row : (RowSet<Row>) rows) {
-                                /*listFuture = listFuture.compose(o ->
-                                        this.iterator(data, Item.of(index.incrementAndGet(), this.rowToMap(row)))
-                                );*/
-                                listFuture = futureLoop(Item.of(index.incrementAndGet(), this.rowToMap(row)), listFuture, data);
-                            }
-                            return listFuture;
-                        });
-                future.compose(o -> loopEnd(data)).onComplete(event ->
-                        Database.releaseConnect(this, data).onComplete(event1 -> {
-                            if (event.succeeded()) {
-                                toNext.complete(index.get());
-                            } else {
-                                Break.onBreak(event.cause(), toNext, index.get());
-                            }
-                        })
-                )/*.onSuccess(o -> {
+            future.compose(o -> loopEnd(data)).onComplete(event -> {
+                if (event.succeeded()) {
+                    toNext.complete(index.get());
+                } else {
+                    Break.onBreak(event.cause(), toNext, index.get());
+                }
+            })/*.onSuccess(o -> {
                     toNext.complete(index.get());
                 }).onFailure(throwable -> {
                     Break.onBreak(throwable, toNext, index.get());
                 })*/;
 
-            }).onFailure(toNext::fail);
-        }
+        }).onFailure(toNext::fail);
+
     }
 
     Map<String, Object> rowToMap(Row row) {
@@ -167,17 +76,38 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         return Map.ofEntries(entries.toArray(Map.Entry[]::new));
     }
 
+    Collection<Map<String, Object>> rowToMaps(RowSet<Row> rows) {
+        List<Map<String, Object>> list = new LinkedList<>();
+        for (Row row : rows) {
+            list.add(rowToMap(row));
+        }
+        return list;
+    }
+
     protected String getScript(TaskRequest data) {
         return getChild(Sql.class).get(0).getScript(data, " ").trim();
     }
 
-    public static void main(String[] args) {
-        Matcher matcher = DataBaseConnectPool.PATTERN.matcher("${asd,jdbcType=asd},${asdaaa,jdbcType=asd}==============${asddasd,jdbcType=asd}");
-        while (matcher.find()) {
-            System.out.println(matcher.group(0));
-            System.out.println(matcher.group(1));
-            System.out.println(matcher.group(2));
-            ;
-        }
+
+    Future<Object> pageScroll(DataBaseConnectPool pool, String sql, List<Object> list, TaskRequest data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> future) {
+        Tuple tuple = Tuple.tuple(list);
+        pool.setPage(tuple, page);
+        pool.log("sql", sql);
+        pool.log("params", tuple);
+        int nextPageNum = page.getPage() + 1;
+        System.out.println(nextPageNum);
+        return compose(Database.findConnect(this, data), connection ->
+                compose(pool.execute(connection, sql, tuple), rows -> {
+                    Promise<Object> promise = Promise.promise();
+                    Collection<Map<String, Object>> results = rowToMaps((RowSet<Row>) rows);
+                    Database.releaseConnect(this, data).onComplete(event -> {
+                        future.apply(results).onComplete(event1 -> {
+                            complete(event1, promise);
+                        });
+                    });
+                    return compose(promise.future(), o -> results.size() < page.getPageSize() ?
+                            Future.succeededFuture() :
+                            pageScroll(pool, sql, list, data, page.setPage(nextPageNum), future));
+                }));
     }
 }

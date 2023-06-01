@@ -7,6 +7,7 @@ import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
 import org.apache.ibatis.type.JdbcType;
+import org.apache.poi.ss.formula.functions.Rows;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -45,26 +46,29 @@ public class Insert extends Unit implements Script, Copyable {
         }
 //        System.out.println(data.getBus());
         Future<Object> future = Database.findConnect(this, data).compose(connection -> {
-            BaseCondition<String, TaskRequest> condition = new BaseCondition<String, TaskRequest>() {
-            };
-            condition.setData(data);
-            condition.setCondition(data.getBus());
 //            System.out.println(data.getBus());
-            DataBaseConnectPool pool = Database.getDataBase(Insert.this, data);
+            DataBaseConnectPool pool = Database.getDataBase(Insert.this);
             if (!isStaticContent) {
-                return pool.update(connection, getScript(data), condition);
+                String sql = getScript(data);
+                List<Object> params = new LinkedList<>();
+                pool.setValueToSql(params, pool.getSqlParamTypes(sql), data.getOgnlContext(), data.getBus());
+                sql = pool.sqlFormat(sql, params);
+                Tuple tuple = Tuple.tuple(params);
+                pool.log("sql", sql);
+                pool.log("params", tuple);
+                return pool.execute(connection, sql, tuple).compose(rows -> Future.succeededFuture(((RowSet<Row>) rows).rowCount()));
             } else {
 
                 List<Object> params = new LinkedList<>();
                 if (this.sql == null) {
                     String sql = getScript(data);
                     List<Map.Entry<String, JdbcType>> list = pool.getSqlParamTypes(sql);
-                    pool.setValueToSql(params, list, condition);
+                    pool.setValueToSql(params, list, data.getOgnlContext(), data.getBus());
                     sql = pool.sqlFormat(sql, params);
                     this.sql = new DataBaseConnectPool.StaticSql(sql, list);
                     pool.log("static sql", this.sql.getSql());
                 } else {
-                    pool.setValueToSql(params, this.sql.getTypes(), condition);
+                    pool.setValueToSql(params, this.sql.getTypes(), data.getOgnlContext(), data.getBus());
                 }
                 Tuple tuple = Tuple.tuple(params);
                 pool.log("params", tuple);

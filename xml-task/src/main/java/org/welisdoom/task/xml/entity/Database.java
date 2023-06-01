@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Database extends Unit {
     static Map<String, DataBaseConnectPool> MAP = new HashMap<>();
 
-    public static DataBaseConnectPool getDatabase(TaskRequest request, String name) {
+    public static DataBaseConnectPool getDatabase(String name) {
         return MAP.get(name);
     }
     /*@Override
@@ -109,7 +109,7 @@ public class Database extends Unit {
             return optional.get().getSqlConnection(data);
         } else {
             if (data.cache(unit) == null) {
-                return getDataBase(unit, data).getConnect(unit.attributes.get("link"), data).onSuccess(connection -> {
+                return getDataBase(unit).getConnect(unit.attributes.get("link"), data).onSuccess(connection -> {
                     AtomicInteger atomicInteger = sqlConnectionCounter.get(connection);
                     if (atomicInteger == null) {
                         synchronized (sqlConnectionCounter) {
@@ -158,13 +158,13 @@ public class Database extends Unit {
         }
     }
 
-    protected static DataBaseConnectPool getDataBase(Unit unit, TaskRequest data) {
+    protected static DataBaseConnectPool getDataBase(Unit unit) {
         Unit p = unit.parent;
         while (!(p == null || p instanceof Transactional)) {
             p = p.parent;
         }
         if (p != null)
-            return Database.getDatabase(data, p.attributes.get("link"));
-        return Database.getDatabase(data, unit.attributes.get("link"));
+            return Database.getDatabase(p.attributes.get("link"));
+        return Database.getDatabase(unit.attributes.get("link"));
     }
 }

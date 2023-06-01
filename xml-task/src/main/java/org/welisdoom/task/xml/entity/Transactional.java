@@ -113,7 +113,7 @@ public class Transactional extends Unit implements Executable {
         Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
         if (cache != null)
             return Future.succeededFuture(cache.getKey());
-        Future<SqlConnection> future = Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data);
+        Future<SqlConnection> future = Database.getDatabase(attributes.get("link")).getConnect(attributes.get("link"), data);
         return compose(future, connection -> {
             /*log(data.id);
             log(connection);*/
@@ -195,7 +195,7 @@ public class Transactional extends Unit implements Executable {
     protected Future<Transaction> newTransaction(TaskRequest data) {
         Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
         Future<SqlConnection> future = compose((Future) cache.getKey().close(),
-                o -> Database.getDatabase(data, attributes.get("link")).getConnect(attributes.get("link"), data));
+                o -> Database.getDatabase(attributes.get("link")).getConnect(attributes.get("link"), data));
         return compose(future, connection ->
                 connection.begin().onSuccess(transaction -> {
                     /*MAP.put(data, Map.entry(connection, transaction));*/

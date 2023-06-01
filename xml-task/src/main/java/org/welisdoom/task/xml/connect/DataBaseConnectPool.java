@@ -5,6 +5,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.*;
 import ognl.Ognl;
+import ognl.OgnlContext;
 import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.consts.Consts;
@@ -43,18 +44,8 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
         }
     }
 
-    default Future<RowSet<Row>> page(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
-        List<Object> params = new LinkedList<>();
-        setValueToSql(params, getSqlParamTypes(sql = toPageSql(sql)), data);
-        sql = sqlFormat(sql, params);
-        Tuple tuple = Tuple.tuple(params);
-        setPage(tuple, data.getPage());
-        log("sql", sql);
-        log("params", tuple);
-        return /*connection.preparedQuery(sql).execute(tuple)*/execute(connection, sql, tuple);
-    }
 
-    default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
+    /*default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
         List<Object> params = new LinkedList<>();
         setValueToSql(params, getSqlParamTypes(sql = toPageSql(sql)), data);
         sql = sqlFormat(sql, params);
@@ -68,15 +59,15 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
         log("params", tuple);
         int nextPageNum = page.getPage() + 1;
         System.out.println(nextPageNum);
-        return Iterable.compose(/*connection
+        return Iterable.compose(*//*connection
                 .preparedQuery(sql)
-                .execute(tuple)*/execute(connection, sql, tuple), rows ->
+                .execute(tuple)*//*execute(connection, sql, tuple), rows ->
                 Iterable.compose(future.apply(rows), o ->
                         rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(connection, sql, list, page.setPage(nextPageNum), future)
                 )
         );
 
-        /*return connection
+        *//*return connection
                 .preparedQuery(sql)
                 .execute(tuple).compose(rows ->
                         future
@@ -84,19 +75,19 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                                 .compose(o -> rows.size() < page.getPageSize()
                                         ? Future.succeededFuture()
                                         : pageScroll(connection, sql, list, page.setPage(page.getPage() + 1), future)
-                                ));*/
+                                ));*//*
     }
 
-    default Future<Integer> update(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data) {
+    default Future<Integer> update(SqlConnection connection, String sql, TaskRequest data) {
         List<Object> params = new LinkedList<>();
-        setValueToSql(params, getSqlParamTypes(sql), data);
+        setValueToSql(params, getSqlParamTypes(sql), data.getOgnlContext(), data.getBus());
         sql = sqlFormat(sql, params);
         Tuple tuple = Tuple.tuple(params);
         log("sql", sql);
         log("params", tuple);
-        return /*connection.preparedQuery(sql).execute(tuple).compose(rows -> Task.getVertx().executeBlocking(event -> event.complete(rows.rowCount())))*/
+        return *//*connection.preparedQuery(sql).execute(tuple).compose(rows -> Task.getVertx().executeBlocking(event -> event.complete(rows.rowCount())))*//*
                 execute(connection, sql, tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
-    }
+    }*/
 
     default Future<RowSet<Row>> execute(SqlConnection connection, String sql, Tuple tuple) {
         return connection.preparedQuery(sql).execute(tuple);
@@ -128,13 +119,13 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
 
     String sqlFormat(String sql, List<Object> param);
 
-    default void setValueToSql(List<Object> params, List<Map.Entry<String, JdbcType>> jdbcTypes, BaseCondition<String, TaskRequest> data) {
+    default void setValueToSql(List<Object> params, List<Map.Entry<String, JdbcType>> jdbcTypes, OgnlContext context, Map data) {
         JdbcType jdbcType;
         Object value;
         for (Map.Entry<String, JdbcType> sqlParamType : jdbcTypes) {
             jdbcType = sqlParamType.getValue();
             try {
-                value = Ognl.getValue(sqlParamType.getKey(), data.getData().getOgnlContext(), data.getData().getBus(), Object.class);
+                value = Ognl.getValue(sqlParamType.getKey(), context, data, Object.class);
             } catch (OgnlException e) {
                 throw new RuntimeException(e.getMessage(), e);
             }
