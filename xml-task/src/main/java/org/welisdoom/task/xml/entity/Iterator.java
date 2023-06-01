@@ -4,10 +4,10 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.impl.cpu.CpuCoreSensor;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Tag;
-import org.welisdoom.task.xml.consts.Consts;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Script;
@@ -138,7 +138,7 @@ public class Iterator extends Unit implements Executable {
     @Override
     public Unit attr(Attributes attributes) {
         super.attr(attributes);
-        this.thread = Math.min(Math.max(1, MapUtils.getInteger(this.attributes, "thread", this.thread)), Consts.cpuCoreCount);
+        this.thread = Math.min(Math.max(1, MapUtils.getInteger(this.attributes, "thread", this.thread)), CpuCoreSensor.availableProcessors());
         return this;
     }
 

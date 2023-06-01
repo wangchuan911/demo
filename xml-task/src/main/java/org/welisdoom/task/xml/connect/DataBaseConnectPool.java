@@ -3,12 +3,13 @@ package org.welisdoom.task.xml.connect;
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.sqlclient.*;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
-import org.welisdoom.task.xml.consts.Consts;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoom.task.xml.intf.type.Iterable;
@@ -184,15 +185,16 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                 .setHost(config.getHost())
                 .setDatabase(config.getDatabase())
                 .setUser(config.getUser())
-                .setPassword(config.getPw());
+                .setPassword(config.getPw())
+                .setReconnectAttempts(5)
+                .setReconnectInterval(1000);
     }
 
 
     default PoolOptions getPoolOptions() {
-        log("cpu core count:", Consts.cpuCoreCount + "");
+        log("cpu core count:", CpuCoreSensor.availableProcessors() + "");
         return new PoolOptions()
-                .setMaxSize(Consts.cpuCoreCount * 2)
-                .setMaxWaitQueueSize(Consts.cpuCoreCount * Consts.maxTaskCount)
+                .setMaxSize(VertxOptions.DEFAULT_EVENT_LOOP_POOL_SIZE)
                 .setConnectionTimeout(5).setConnectionTimeoutUnit(TimeUnit.MINUTES);
     }
 
