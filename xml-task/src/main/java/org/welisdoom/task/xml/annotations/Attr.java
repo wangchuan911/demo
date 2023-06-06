@@ -19,4 +19,6 @@ public @interface Attr {
     boolean require() default false;
 
     String[] options() default {};
+
+    int defaultOption() default -1;
 }

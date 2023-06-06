@@ -7,6 +7,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import ognl.Ognl;
 import org.springframework.util.StringUtils;
+import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Iterable;
@@ -71,6 +72,13 @@ public class Unit implements UnitType, IData<String, Model> {
             this.attributes.put(name, value);
         }
         this.id = this.attributes.get("id");
+
+        Arrays.stream(this.getClass().getAnnotations()).filter(annotation -> annotation instanceof Attr).map(annotation -> (Attr) annotation).forEach(attr -> {
+            if (attr.options().length > 0 && attr.defaultOption() >= 0 && !this.attributes.containsKey(attr.name())) {
+                this.attributes.put(attr.name(), attr.options()[attr.defaultOption()]);
+            }
+        });
+
         return this;
     }
 

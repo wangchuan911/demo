@@ -9,6 +9,7 @@ import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoon.common.data.BaseCondition;
+import org.xml.sax.Attributes;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -26,8 +27,8 @@ import java.util.regex.Matcher;
  */
 @Tag(value = "select", parentTagTypes = {Executable.class}, desc = "sql查询")
 @Attr(name = "id", desc = "唯一标识")
+@Attr(name = "mode", options = {"page", "tetris"}, defaultOption = 0)
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
-
 
     @Override
     protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
@@ -94,8 +95,8 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         pool.setPage(tuple, page);
         pool.log("sql", sql);
         pool.log("params", tuple);
-        int nextPageNum = page.getPage() + 1;
-        System.out.println(nextPageNum);
+        int nextPageNum = page.getPage() + ("tetris".equals(attributes.get("mode")) ? 0 : 1);
+        log(String.format("第%d页", nextPageNum));
         return compose(Database.findConnect(this, data), connection ->
                 compose(pool.execute(connection, sql, tuple), rows -> {
                     Promise<Object> promise = Promise.promise();

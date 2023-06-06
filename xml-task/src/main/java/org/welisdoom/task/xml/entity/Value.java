@@ -1,7 +1,11 @@
 package org.welisdoom.task.xml.entity;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
+import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Initialize;
@@ -53,4 +57,31 @@ public class Value extends Unit implements Initialize {
             toNext.fail(throwable);
         }
     }
+
+
+    public static Object get(Object val, String longKey) {
+        if (val == null) return null;
+        if (val instanceof JSON) {
+            for (String s : longKey.split("[\\.\\[\\]]+")) {
+                if (val == null) return null;
+                if (StringUtils.isEmpty(s)) continue;
+                if (val instanceof JSONObject) {
+                    val = ((JSONObject) val).get(s);
+                } else if (val instanceof JSONArray) {
+                    val = ((JSONArray) val).get(Integer.valueOf(s));
+                } else {
+                    val = null;
+                }
+            }
+            return val;
+        }
+        if (val instanceof CharSequence) {
+            return get(JSON.parse(val.toString()), longKey);
+        }
+        return get(JSON.toJSON(val), longKey);
+    }
+
+    /*public static void main(String[] args) {
+        System.out.println(get("{\"A\":{\"b\":[{\"v\":1}]}}", "A.b[0].v").getClass());
+    }*/
 }
