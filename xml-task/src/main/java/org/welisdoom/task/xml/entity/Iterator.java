@@ -65,7 +65,9 @@ public class Iterator extends Unit implements Executable {
                     map.remove(itemIndex);
                 });
         super.start(data, null, promise);
-        return future;
+        return future.transform(objectAsyncResult ->
+                (objectAsyncResult.succeeded() || (objectAsyncResult.cause() instanceof Break.SkipOneLoopThrowable)) ? Future.succeededFuture() : Future.failedFuture(objectAsyncResult.cause())
+        );
     }
 
     public static class ThreadInfo {
