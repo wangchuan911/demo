@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 @Component
 @Db("oracle")
 public class OracleConnectPool implements DataBaseConnectPool<OraclePool, OracleConnection> {
-    static Map<String, OraclePool> pools = new HashMap<>();
+    volatile static Map<String, OraclePool> pools = new HashMap<>();
 
     ConfigDao configDao;
 
@@ -52,7 +52,7 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         this.configDao = configDao;
     }
 
-    public void setInstance(DatabaseLinkInfo config) {
+    public synchronized void setInstance(DatabaseLinkInfo config) {
         OracleConnectOptions connectOptions = getSqlConnectOptions(new OracleConnectOptions(), config);
 
 // Pool Options
@@ -64,7 +64,7 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
     }
 
     @Override
-    public OraclePool getPool(String name) {
+    public synchronized OraclePool getPool(String name) {
         if (!pools.containsKey(name)) {
             setInstance(this.configDao.getDatabase(name));
         }

@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Attr(name = "id", desc = "数据库标识")
 @Attr(name = "db", desc = "数据库类型")
 public class Database extends Unit {
-    static Map<String, DataBaseConnectPool> MAP = new HashMap<>();
+    static volatile Map<String, DataBaseConnectPool> MAP = new HashMap<>();
 
     public static DataBaseConnectPool getDatabase(String name) {
         return MAP.get(name);
@@ -121,7 +121,7 @@ public class Database extends Unit {
         }
     }
 
-    static Map<SqlConnection, AtomicInteger> sqlConnectionCounter = new ConcurrentHashMap<>();
+    static volatile Map<SqlConnection, AtomicInteger> sqlConnectionCounter = new ConcurrentHashMap<>();
 
     protected static Optional<Transactional> getTransactional(Unit unit, TaskRequest data) {
         String link = unit.attributes.get("link");

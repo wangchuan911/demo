@@ -30,7 +30,7 @@ import java.util.Map;
 @Component
 @Db("postgresql")
 public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConnection> {
-    static Map<String, PgPool> pools = new HashMap<>();
+    volatile static Map<String, PgPool> pools = new HashMap<>();
 
     ConfigDao configDao;
 
@@ -40,7 +40,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     }
 
     @Override
-    public PgPool getPool(String name) {
+    public synchronized PgPool getPool(String name) {
         if (!pools.containsKey(name)) {
             setInstance(this.configDao.getDatabase(name));
         }
@@ -48,7 +48,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     }
 
     @Override
-    public void setInstance(DatabaseLinkInfo config) {
+    public synchronized void setInstance(DatabaseLinkInfo config) {
         PgConnectOptions connectOptions = getSqlConnectOptions(new PgConnectOptions(), config);
 
 // Pool options
