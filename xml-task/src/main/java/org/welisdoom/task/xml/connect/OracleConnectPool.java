@@ -52,7 +52,7 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         this.configDao = configDao;
     }
 
-    public synchronized void setInstance(DatabaseLinkInfo config) {
+    public void setInstance(DatabaseLinkInfo config) {
         OracleConnectOptions connectOptions = getSqlConnectOptions(new OracleConnectOptions(), config);
 
 // Pool Options
