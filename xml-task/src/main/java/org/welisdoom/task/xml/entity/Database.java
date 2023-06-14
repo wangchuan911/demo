@@ -70,7 +70,7 @@ public class Database extends Unit {
     }
 
 
-    public static DataBaseConnectPool getDataBaseConnectPool(String name) {
+    public static synchronized DataBaseConnectPool getDataBaseConnectPool(String name) {
         DataBaseConnectPool.DatabaseLinkInfo linkInfo = ApplicationContextProvider.getApplicationContext().getBean(ConfigDao.class).getDatabase(name);
         DataBaseConnectPool pool = ApplicationContextProvider
                 .getApplicationContext()
@@ -80,6 +80,8 @@ public class Database extends Unit {
                 .filter(dataBaseConnectPool -> dataBaseConnectPool instanceof DataBaseConnectPool &&
                         ApplicationContextProvider.getRealClass(dataBaseConnectPool.getClass()).getAnnotation(Db.class).value().equals(linkInfo.getModel()))
                 .findFirst().orElse(null);
+        if (pool != null)
+            pool.setInstance(linkInfo);
         return pool;
     }
 

@@ -6,6 +6,8 @@ import org.springframework.util.Assert;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Root;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,14 @@ public class Task extends Unit implements Root {
     public static void setVertxOption(VertxOptions options) {
         Assert.isNull(vertx, "vertx is created!");
         vertx = Vertx.vertx(options);
+        longTimeNotice();
+    }
+
+    public static void longTimeNotice() {
+        String s = Arrays.stream(new Character[10]).map(character -> "-").collect(Collectors.joining("-"));
+        vertx.setPeriodic(1000, event -> {
+            System.out.println(String.format("%s%s%s", s, LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), s));
+        });
     }
 
     public synchronized Future<Object> run(TaskRequest data) {
