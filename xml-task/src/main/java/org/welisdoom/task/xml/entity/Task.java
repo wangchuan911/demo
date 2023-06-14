@@ -1,15 +1,13 @@
 package org.welisdoom.task.xml.entity;
 
 
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
+import io.vertx.core.*;
 import org.springframework.util.Assert;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Root;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Classname Task
@@ -31,43 +29,60 @@ public class Task extends Unit implements Root {
         vertx = Vertx.vertx(options);
     }
 
-    public Future<Object> run(TaskRequest data) {
+    public synchronized Future<Object> run(TaskRequest data) {
         tasks.add(data);
         Promise<Object> promise = Promise.promise();
-        start(data, null, promise);
-        return promise.future().onSuccess(o -> {
-            log("success");
-        }).onFailure(
-                throwable ->
-                        throwable.printStackTrace())
+        try {
+            start(data, null, promise);
+        } catch (Throwable e) {
+            promise.fail(e);
+        }
+        return promise.future()
+                .onSuccess(o -> {
+                    log("success");
+                })
+                .onFailure(
+                        throwable -> {
+                            log("fail");
+                            throwable.printStackTrace();
+                        })
                 .onComplete(objectAsyncResult -> {
                     tasks.remove(data);
-                    if (tasks.size() == 0)
-                        vertx.close();
+                    CompositeFuture
+                            .all(data.cache.entrySet()
+                                    .stream()
+                                    .map(unitObjectEntry -> unitObjectEntry
+                                            .getKey()
+                                            .destroy(data))
+                                    .collect(Collectors.toList()))
+                            .onComplete(event -> {
+                                if (tasks.size() == 0)
+                                    vertx.close();
+                            });
+
                 });
-//        v.close();
-
     }
-
-    static TaskHookThread taskHookThread = new TaskHookThread();
 
     static {
-        Runtime.getRuntime().addShutdownHook(taskHookThread);
-    }
-
-    static class TaskHookThread extends Thread {
-
-        @Override
-        public void run() {
-            for (TaskRequest task : tasks) {
-                for (Map.Entry<Unit, Object> unitObjectEntry : task.cache.entrySet()) {
-                    try {
-                        unitObjectEntry.getKey().hook(task);
-                    } catch (Throwable e) {
-                        e.getMessage();
-                    }
-                }
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                CompositeFuture
+                        .all(tasks.stream()
+                                .map(taskRequest -> CompositeFuture.all(taskRequest.cache.entrySet().stream()
+                                        .map(unitObjectEntry -> unitObjectEntry.getKey()
+                                                .hook(taskRequest))
+                                        .collect(Collectors.toList())))
+                                .collect(Collectors.toList())).onComplete(event -> {
+                    if (Task.getVertx() != null)
+                        Task.getVertx().close().onSuccess(unused -> {
+                            System.out.println("vertx 停止");
+                        }).onFailure(throwable -> {
+                            System.out.println("vertx 失败");
+                            throwable.printStackTrace();
+                        });
+                });
             }
-        }
+        });
     }
 }

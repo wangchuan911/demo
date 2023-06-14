@@ -149,9 +149,8 @@ public class Iterator extends Unit implements Executable {
     }
 
     @Override
-    protected void destroy(TaskRequest taskRequest) {
-        super.destroy(taskRequest);
-        taskRequest.clearCache(this);
+    protected Future<Void> destroy(TaskRequest taskRequest) {
+        return super.destroy(taskRequest).onComplete(event -> taskRequest.clearCache(this));
     }
 
     public Future<Object> iterateFinish(TaskRequest data) {

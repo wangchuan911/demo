@@ -84,11 +84,6 @@ public class Database extends Unit {
     }
 
 
-    @Override
-    public void destroy(TaskRequest taskRequest) {
-        super.destroy(taskRequest);
-    }
-
     protected static Future<SqlConnection> findConnect(Unit unit, TaskRequest data) {
         /*String link = unit.attributes.get("link");
         Optional<Transactional> optional;

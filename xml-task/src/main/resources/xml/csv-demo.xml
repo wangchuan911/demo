@@ -12,18 +12,12 @@
                value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
     </initialization>
     <start>
-        <guess-charset id="csvCharset" guess="{{$value.val2}}"></guess-charset>
-        <file id="demo" read="{{$value.val2}}" charset="{{csvCharset.charset}}" delimiter="," quote='"'
-              line-break="&#x00A;">
-            <col code="col1"></col>
-            <col code="col2"></col>
-            <col code="col3"></col>
-            <col code="col4"></col>
-            <iterator>
-                <if test="demo.item.col1=='资源查询->设备信息->光路查询'">
-                </if>
-                <!--<sleep time="100"></sleep>-->
-            </iterator>
-        </file>
+        <insert>
+            insert asd
+            <choice>
+                <when>asd</when>
+                <otherwise>qwe</otherwise>
+            </choice>
+        </insert>
     </start>
 </task>

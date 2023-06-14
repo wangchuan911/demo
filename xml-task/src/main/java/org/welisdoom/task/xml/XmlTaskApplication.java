@@ -43,21 +43,7 @@ public class XmlTaskApplication {
     final static Pattern pattern = Pattern.compile("\\@task\\-(.+?)\\=(.+)"), pattern1 = Pattern.compile("\\@task\\-(.+?)\\-params\\-(.+?)\\=.+"), pattern2 = Pattern.compile("(\\w+):(.+)");
     static VertxOptions options = new VertxOptions();
 
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                System.out.println("终止执行");
-                if (Task.getVertx() != null)
-                    Task.getVertx().close().onSuccess(unused -> {
-                        System.out.println("vertx 停止");
-                    }).onFailure(throwable -> {
-                        System.out.println("vertx 失败");
-                        throwable.printStackTrace();
-                    });
-            }
-        });
-    }
+
 
     public static void main(String[] args) throws Throwable {
         List<String> newArgs = new LinkedList<>();

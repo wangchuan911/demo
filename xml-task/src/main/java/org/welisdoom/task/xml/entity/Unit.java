@@ -1,10 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.TypeUtils;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
+import io.vertx.core.*;
 import ognl.Ognl;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -101,17 +98,19 @@ public class Unit implements UnitType, IData<String, Model> {
         this.attributes = null;
     }
 
-    protected void destroy(TaskRequest taskRequest) {
+    protected Future<Void> destroy(TaskRequest taskRequest) {
+        log("释放");
         taskRequest.clearCache(this);
+        return Future.succeededFuture();
     }
 
-    protected void hook(TaskRequest taskRequest) {
+    protected Future<Void> hook(TaskRequest taskRequest) {
+        log("销毁");
         this.destroy(taskRequest);
-        if (taskRequest.getParentRequest() == null) {
-            for (TaskRequest request : taskRequest.getChildrenRequest()) {
-                this.hook(request);
-            }
+        if (taskRequest.getChildrenRequest() == null) {
+            return (Future) CompositeFuture.all(Arrays.stream(taskRequest.getChildrenRequest()).map(taskRequest1 -> this.hook(taskRequest)).collect(Collectors.toList()));
         }
+        return Future.succeededFuture();
     }
 
     public <T extends Unit> List<T> getChild(Class<T> tClass) {

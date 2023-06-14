@@ -13,7 +13,7 @@
         <insert id="trunc" link="rimdb_pg">
             truncate table rc_res_test.mid_ftp_zhy_pon_cloud
         </insert>
-        <transactional link="rimdb_pg">
+        <!--<transactional link="rimdb_pg">-->
             <!--<ftp id="guessCharsetFtp" get="{{$value.path}}" local="/app/R9"></ftp>-->
             <guess-charset id="csvCharset" guess="{{$values.path}}"></guess-charset>
             <sheet id="demo" read="{{$values.path}}" charset="{{csvCharset.charset}}" delimiter="\|\|"
@@ -54,9 +54,9 @@
                 <col code="asbr2_pe2_cir_no"/>
                 <col code="vlan1"/>
                 <col code="vlan2"/>
-                <iterator>
+                <iterator thread="6">
                     <!--<if test="demo.index>3"><break deep="1"></break></if>-->
-                    <insert id="insert">
+                    <insert id="insert" link="rimdb_pg">
                         INSERT INTO rc_res_test.mid_ftp_zhy_pon_cloud
                         (
                         wg_busi_no,
@@ -136,10 +136,10 @@
                         )
 
                     </insert>
-                    <commit batch="50"></commit>
+                    <!--<commit batch="50"></commit>-->
                 </iterator>
             </sheet>
-            <commit></commit>
-        </transactional>
+            <!--<commit></commit>-->
+        <!--</transactional>-->
     </start>
 </task>

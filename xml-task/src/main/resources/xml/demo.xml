@@ -9,7 +9,7 @@
         <value id="val2"></value>
     </initialization>
     <start>
-        <transactional link="rimdb" >
+        <!--<transactional link="rimdb" >
             <http>
                 <body>asdasdasdsadasdasdasdasdas</body>
             </http>
@@ -43,6 +43,13 @@
                     </if>
                 </iterator>
             </select>
-        </transactional>
+        </transactional>-->
+        <insert link="rimdb">
+            insert asd
+            <choice>
+                <when test="1==1">asd</when>
+                <otherwise>qwe</otherwise>
+            </choice>
+        </insert>
     </start>
 </task>

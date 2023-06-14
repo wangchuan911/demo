@@ -132,7 +132,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 
 
     @Override
-    public void destroy(TaskRequest taskRequest) {
+    public Future<Void> destroy(TaskRequest taskRequest) {
         Map<String, CSVWriter> writerMap = taskRequest.clearCache(this);
         for (Map.Entry<String, CSVWriter> writerEntry : writerMap.entrySet()) {
             Closeable closeable = writerEntry.getValue();
@@ -142,7 +142,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
                 e.printStackTrace();
             }
         }
-        super.destroy(taskRequest);
+        return super.destroy(taskRequest);
     }
 
     @Override

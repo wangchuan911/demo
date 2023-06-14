@@ -48,7 +48,6 @@ public class SFtp extends Ftp implements Executable, Copyable {
     }
 
 
-
     @Override
     public Future<Object> write(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
@@ -126,8 +125,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
     }*/
 
     @Override
-    protected void destroy(TaskRequest data) {
-        ApplicationContextProvider.getBean(SFtpConnectPool.class).close(getId(), data);
-        super.destroy(data);
+    protected Future<Void> destroy(TaskRequest data) {
+        return ApplicationContextProvider.getBean(SFtpConnectPool.class).close(getId(), data).transform(v -> super.destroy(data));
     }
 }

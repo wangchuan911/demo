@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -38,8 +39,4 @@ public class Group extends Unit implements Executable {
         }
     }
 
-    @Override
-    public void destroy(TaskRequest taskRequest) {
-        super.destroy(taskRequest);
-    }
 }

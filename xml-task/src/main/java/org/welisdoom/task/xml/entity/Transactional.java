@@ -125,8 +125,8 @@ public class Transactional extends Unit implements Executable {
     }
 
     @Override
-    public void destroy(TaskRequest taskRequest) {
-        super.destroy(taskRequest);
+    public Future<Void> destroy(TaskRequest taskRequest) {
+        return super.destroy(taskRequest);
     }
 
     public Future<?> commit(TaskRequest data) {
@@ -138,38 +138,33 @@ public class Transactional extends Unit implements Executable {
     }
 
     @Override
-    protected void hook(TaskRequest taskRequest) {
-        for (Map.Entry<SqlConnection, Transaction> entry : allTransaction(taskRequest)) {
-            try {
-                entry
-                        .getValue()
-                        .rollback()
-                        .onSuccess(unused -> {
-                            log(LogUtils.styleString("", 31, 1, "事务终止"));
-                        })
-                        .onFailure(throwable -> {
-                            log(LogUtils.styleString("", 31, 1, "事务终止 回滚失败"));
-                            throwable.printStackTrace();
-                        });
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-            try {
-                entry.getKey()
-                        .close()
-                        .onSuccess(unused -> {
-                            log(LogUtils.styleString("", 31, 1, "连接终止"));
-                        })
-                        .onFailure(throwable -> {
-                            log(LogUtils.styleString("", 31, 1, "连接终止失败"));
-                            throwable.printStackTrace();
-                        });
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-        clearCache(taskRequest);
-        super.hook(taskRequest);
+    protected Future<Void> hook(TaskRequest taskRequest) {
+        return CompositeFuture.all(allTransaction(taskRequest).stream().map(entry ->
+                CompositeFuture.all(Arrays.asList(
+                        entry
+                                .getValue()
+                                .rollback()
+                                .onSuccess(unused -> {
+                                    log(LogUtils.styleString("", 31, 1, "事务终止"));
+                                })
+                                .onFailure(throwable -> {
+                                    log(LogUtils.styleString("", 31, 1, "事务终止 回滚失败"));
+                                    throwable.printStackTrace();
+                                }),
+                        entry.getKey()
+                                .close()
+                                .onSuccess(unused -> {
+                                    log(LogUtils.styleString("", 31, 1, "连接终止"));
+                                })
+                                .onFailure(throwable -> {
+                                    log(LogUtils.styleString("", 31, 1, "连接终止失败"));
+                                    throwable.printStackTrace();
+                                })
+                ))
+        ).collect(Collectors.toList())).transform(compositeFutureAsyncResult -> {
+            clearCache(taskRequest);
+            return super.hook(taskRequest);
+        });
     }
 
     protected List<Map.Entry<SqlConnection, Transaction>> allTransaction(TaskRequest data) {

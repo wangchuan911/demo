@@ -143,13 +143,14 @@ public class Ftp extends StreamUnit<StreamUnit.WriteLine> implements Executable,
     }*/
 
     @Override
-    protected void destroy(TaskRequest data) {
-        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(event -> {
+    protected Future<Void> destroy(TaskRequest data) {
+        return ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).compose(event -> {
             try {
                 event.disconnect();
             } catch (Throwable e) {
+                return Future.failedFuture(e);
             }
-        });
-        super.destroy(data);
+            return Future.succeededFuture();
+        }).transform(objectAsyncResult -> super.destroy(data));
     }
 }

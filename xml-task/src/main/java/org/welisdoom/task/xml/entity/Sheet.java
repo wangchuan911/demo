@@ -161,13 +161,16 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
     }
 
     @Override
-    public void destroy(TaskRequest taskRequest) {
+    public Future<Void> destroy(TaskRequest taskRequest) {
         java.io.Writer writer = taskRequest.clearCache(this);
-        super.destroy(taskRequest);
-        try (writer) {
+        return super.destroy(taskRequest).onComplete(voidAsyncResult -> {
+            try (writer) {
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            } catch (IOException e) {
+                e.printStackTrace();
+
+            }
+        });
+
     }
 }
