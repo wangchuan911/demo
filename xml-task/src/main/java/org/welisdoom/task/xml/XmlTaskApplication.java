@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.WorkerExecutor;
@@ -26,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @Classname XmlTaslApplication
@@ -42,7 +44,6 @@ public class XmlTaskApplication {
     static Map<String, SubTask.Config> taskList = new LinkedHashMap<>();
     final static Pattern pattern = Pattern.compile("\\@task\\-(.+?)\\=(.+)"), pattern1 = Pattern.compile("\\@task\\-(.+?)\\-params\\-(.+?)\\=.+"), pattern2 = Pattern.compile("(\\w+):(.+)");
     static VertxOptions options = new VertxOptions();
-
 
 
     public static void main(String[] args) throws Throwable {
@@ -91,11 +92,15 @@ public class XmlTaskApplication {
         options.setMaxWorkerExecuteTime(10);
         options.setMaxWorkerExecuteTimeUnit(TimeUnit.DAYS);
         Task.setVertxOption(options);
-        for (Map.Entry<String, SubTask.Config> stringStringEntry : Map.copyOf(taskList).entrySet()) {
-            Task.getVertx().executeBlocking(promise -> {
-                SubTask.run(stringStringEntry.getKey(), stringStringEntry.getValue());
+        CompositeFuture.all(taskList.entrySet().stream().map(entry -> Task.getVertx().executeBlocking(promise -> {
+            SubTask.run(entry.getKey(), entry.getValue()).onComplete(event -> {
+                if (event.succeeded()) {
+                    promise.complete();
+                } else {
+                    promise.fail(event.cause());
+                }
             });
-        }
+        })).collect(Collectors.toList()));
     }
 
 

@@ -34,8 +34,8 @@ public class Task extends Unit implements Root {
 
     public static void longTimeNotice() {
         String s = Arrays.stream(new Character[10]).map(character -> "-").collect(Collectors.joining("-"));
-        vertx.setPeriodic(1000, event -> {
-            System.out.println(String.format("%s%s%s", s, LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), s));
+        vertx.setPeriodic(10000, event -> {
+            System.out.println(String.format("%s%s%s", s, LocalDateTime.now().format(DateTimeFormatter.ISO_ZONED_DATE_TIME), s));
         });
     }
 
