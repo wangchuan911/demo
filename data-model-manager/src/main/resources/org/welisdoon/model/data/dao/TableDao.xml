@@ -11,8 +11,8 @@
         <!--<association property="primary" column="PRIMARY_COLUMN_ID"
                      select="org.welisdoon.model.data.dao.ColumnDao.get"></association>-->
         <result property="primaryId" column="PRIMARY_COLUMN_ID"></result>
-        <association property="columns" column="{entity.table.id=ID}"
-                     select="org.welisdoon.model.data.dao.ColumnDao.list"></association>
+        <!--<association property="columns" column="{entity.table.id=ID}"
+                     select="org.welisdoon.model.data.dao.ColumnDao.list"></association>-->
 
     </resultMap>
     <select id="get" parameterType="long"
@@ -25,17 +25,25 @@
             resultMap="rm_TableEntity">
         select * from DM_TABLE a
         <where>
-            <if test="id!=null">
-                and a.id=#{value}
+            <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(data.code)">
+                and instr(a.code,#{data.code})>0
             </if>
-            <if test="code!=null">
-                and a.code=#{value}
-            </if>
-            <if test="name!=null">
-                and a.name=#{value}
+            <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(data.name)">
+                and instr(a.name,#{data.name})>0
             </if>
         </where>
-
+    </select>
+    <select id="page" parameterType="org.welisdoon.model.data.condition.TableCondition"
+            resultMap="rm_TableEntity">
+        select * from DM_TABLE a
+        <where>
+            <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(data.code)">
+                and instr(a.code,#{data.code})>0
+            </if>
+            <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(data.name)">
+                and instr(a.name,#{data.name})>0
+            </if>
+        </where>
     </select>
 
     <insert id="add" parameterType="org.welisdoon.model.data.entity.database.TableEntity"

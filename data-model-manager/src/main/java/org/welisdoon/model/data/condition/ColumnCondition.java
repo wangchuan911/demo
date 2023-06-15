@@ -6,8 +6,9 @@ import org.welisdoon.model.data.entity.database.TableEntity;
 public class ColumnCondition  {
     ColumnEntity entity;
 
-    public void setEntity(ColumnEntity entity) {
+    public ColumnCondition setEntity(ColumnEntity entity) {
         this.entity = entity;
+        return this;
     }
 
     public ColumnEntity getEntity() {

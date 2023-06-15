@@ -61,6 +61,7 @@
             <if test="entity.length!=null ">and LENGTH=#{entity.length}</if>
             <if test="entity.name!=null ">and NAME=#{entity.name}</if>
             <if test="entity.table!=null">and TABLE_ID=#{entity.table.id}</if>
+            <if test="entity.tableId!=null">and TABLE_ID=#{entity.tableId}</if>
         </where>
         ORDER BY A.ID DESC
 

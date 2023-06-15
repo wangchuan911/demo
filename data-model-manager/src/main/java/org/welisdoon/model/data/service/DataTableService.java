@@ -7,6 +7,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.model.data.components.foreign.IForeignKeyOperator;
+import org.welisdoon.model.data.condition.ColumnCondition;
 import org.welisdoon.model.data.dao.ColumnDao;
 import org.welisdoon.model.data.dao.DataObjectDao;
 import org.welisdoon.model.data.dao.FieldDao;
@@ -30,27 +31,15 @@ import java.util.stream.Collectors;
  * @Date 17:18
  */
 @Service
-public class DataBaseService {
+public class DataTableService {
 
     TableDao tableDao;
     ColumnDao columnDao;
-    FieldDao fieldDao;
-    DataObjectDao dataObjectDao;
     Reflections reflections;
 
     @Autowired
     public void setColumnDao(ColumnDao columnDao) {
         this.columnDao = columnDao;
-    }
-
-    @Autowired
-    public void setDataObjectDao(DataObjectDao dataObjectDao) {
-        this.dataObjectDao = dataObjectDao;
-    }
-
-    @Autowired
-    public void setFieldDao(FieldDao fieldDao) {
-        this.fieldDao = fieldDao;
     }
 
     @Autowired
@@ -84,6 +73,7 @@ public class DataBaseService {
 
     public TableEntity getTable(Long id) {
         TableEntity entity = tableDao.get(id);
+        entity.setColumns(columnDao.list(new ColumnCondition().setEntity(new ColumnEntity().setTableId(entity.getId()))).stream().toArray(ColumnEntity[]::new));
         for (ColumnEntity column : entity.getColumns()) {
             column.setTable(entity);
             if (Objects.equals(column.getId(), entity.getPrimaryId())) {
@@ -111,19 +101,5 @@ public class DataBaseService {
         return Arrays.stream(getTable(entity.getTableId()).getColumns()).filter(columnEntity -> columnEntity.equals(entity)).findFirst().get();
     }
 
-    public DataObjectEntity getDataObject(Long id) {
-        DataObjectEntity entity = dataObjectDao.get(id);
-        entity.setTable(getTable(entity.getTableId()));
-        Map<Long, ColumnEntity> map = Arrays.stream(entity.getTable().getColumns()).collect(Collectors.toMap(ColumnEntity::getId, columnEntity -> columnEntity));
-        for (FieldEntity field : entity.getFields()) {
-            field.setColumns(Arrays.stream(field.getColumnIds()).map(aLong -> map.get(aLong)).toArray(ColumnEntity[]::new));
-        }
-        return entity;
-    }
 
-    public FieldEntity getField(Long id) {
-        FieldEntity entity = fieldDao.get(id);
-        DataObjectEntity dataObjectEntity = getDataObject(entity.getObjectId());
-        return Arrays.stream(dataObjectEntity.getFields()).filter(fieldEntity -> Objects.equals(entity, fieldEntity)).findFirst().get();
-    }
 }

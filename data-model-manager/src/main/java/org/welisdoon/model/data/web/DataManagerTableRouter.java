@@ -2,20 +2,21 @@ package org.welisdoon.model.data.web;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.welisdoon.model.data.condition.TableCondition;
 import org.welisdoon.model.data.dao.ColumnDao;
 import org.welisdoon.model.data.dao.DataObjectDao;
-import org.welisdoon.model.data.dao.FieldDao;
 import org.welisdoon.model.data.dao.TableDao;
 import org.welisdoon.model.data.entity.database.AbstractDataEntity;
 import org.welisdoon.model.data.entity.database.ColumnEntity;
 import org.welisdoon.model.data.entity.database.IColumnDataFormat;
 import org.welisdoon.model.data.entity.database.TableEntity;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
-import org.welisdoon.model.data.entity.object.FieldEntity;
-import org.welisdoon.model.data.service.DataBaseService;
+import org.welisdoon.model.data.service.DataTableService;
 import org.welisdoon.model.data.utils.TableResultUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -24,8 +25,6 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,16 +36,22 @@ import java.util.Map;
 
 @Component
 @VertxConfiguration
-@VertxRoutePath(prefix = "/dm/database", requestBodyEnable = true)
-public class DataManagerRouter {
-    DataBaseService baseService;
+@VertxRoutePath(prefix = "/dm/database/table", requestBodyEnable = true)
+public class DataManagerTableRouter {
+    DataTableService baseService;
+    TableDao tableDao;
 
     @Autowired
-    void setValue(DataBaseService baseService) {
+    public void setTableDao(TableDao tableDao) {
+        this.tableDao = tableDao;
+    }
+
+    @Autowired
+    void setValue(DataTableService baseService) {
         this.baseService = baseService;
     }
 
-    @VertxRouter(path = "\\/table\\/(?<id>\\d+)(\\/(?<tid>\\d+))?",
+    @VertxRouter(path = "\\/(?<id>\\d+)(\\/(?<tid>\\d+))?",
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void table(RoutingContextChain chain) {
@@ -59,36 +64,16 @@ public class DataManagerRouter {
         });
     }
 
-    @VertxRouter(path = "\\/object\\/(?<id>\\d+)(\\/(?<oid>\\d+))?",
-            method = "GET",
-            mode = VertxRouteType.PathRegex)
-    public void object(RoutingContextChain chain) {
+    @VertxRouter(path = "/query",
+            method = "POST")
+    public void queryTable(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            DataObjectEntity entity = this.baseService.getDataObject(Long.valueOf(routingContext.pathParam("id")));
-            if (StringUtils.isNotEmpty(routingContext.pathParam("oid"))) {
-                List<ColumnEntity> entities = new LinkedList<>();
-                try {
-                    /*Map<String, Object> result = TableResultUtils.queryForMap(Long.valueOf(routingContext.pathParam("oid")), entity.getTable().getColumns());
-                    for (FieldEntity field : entity.getFields()) {
-                        for (ColumnEntity column : field.getColumns()) {
-                            if (column.getTable().equals(entity.getTable())) {
-                                entities.add(column);
-                            }
-                        }
-                    }
-                    IColumnDataFormat.setFormatValue(result, entities.toArray(new ColumnEntity[0]));*/
-                    TableResultUtils.query(Long.valueOf(routingContext.pathParam("oid")), entity);
-                } finally {
-                    entities.clear();
-                }
-            }
-            routingContext.end(JSONObject.toJSONString(entity));
+            TableCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), TableCondition.class);
+            PageHelper.startPage(condition.getPage().getPage(), condition.getPage().getPageSize());
+            routingContext.end(JSONObject.toJSONString(PageInfo.of(tableDao.page(condition))));
         });
     }
 
-    protected void setValue(Long id, Map<String, Object> result, ColumnEntity entity) {
-
-    }
 
     @VertxRouter(path = "\\/value\\/(?<type>\\w+)\\/(?<id>\\d+)",
             method = "GET",
