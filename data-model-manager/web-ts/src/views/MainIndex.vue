@@ -13,9 +13,9 @@
               @tab-remove="removeTab"
           >
             <el-tab-pane nane="index" label="index" class="tab-container">
-<!--              <el-button size="small" @click="addTab((++tempTabIndex) % 2 == 0 ? '/index/about' : '/index/detail')">
-                add tab
-              </el-button>-->
+              <!--              <el-button size="small" @click="addTab((++tempTabIndex) % 2 == 0 ? '/index/about' : '/index/detail')">
+                              add tab
+                            </el-button>-->
               Index
             </el-tab-pane>
             <el-tab-pane class="tab-container"
@@ -96,6 +96,9 @@ const removeTab = (targetName: string) => {
     if (tabs[i].id == targetName) {
       excludes.push(...tabs[i].path.map(value => value.name))
       tabs.splice(i, 1)
+      if (tabs.length == 0) {
+        editableTabsValue.value = '0'
+      }
       return;
     }
   }

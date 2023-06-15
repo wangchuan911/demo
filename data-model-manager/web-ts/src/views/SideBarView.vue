@@ -17,16 +17,17 @@
         </template>
         <template v-for="sub1 in menu.sub" :key="sub1.id+''">
           <el-menu-item-group v-if="sub1.group!=null" :title="sub1.name">
-            <el-menu-item v-for="group1 in sub1.group" :key="group1.id+''" :index="group1.id+''">{{ group1.name }}
+            <el-menu-item v-for="group1 in sub1.group" :key="group1.id+''" :index="group1.id+''" @click="group1.click">
+              {{ group1.name }}
             </el-menu-item>
           </el-menu-item-group>
           <el-sub-menu v-else-if="sub1.sub!=null" :index="sub1.id+''">
             <template #title>{{ sub1.name }}</template>
             <template v-for="sub2 in sub1.sub" :key="sub2.id+''">
-              <el-menu-item :index="sub2.id+''">{{ sub2.name }}</el-menu-item>
+              <el-menu-item :index="sub2.id+''" @click="sub2.click">{{ sub2.name }}</el-menu-item>
             </template>
           </el-sub-menu>
-          <el-menu-item v-else :index="menu.id+''"></el-menu-item>
+          <el-menu-item v-else :index="sub1.id+''" @click="sub1.click">{{ sub1.name }}</el-menu-item>
         </template>
       </el-sub-menu>
       <el-menu-item v-else :index="menu.id+''" @click="menu.click">
@@ -60,20 +61,24 @@ export declare interface Menu {
 
 const _menus = new Array<Menu>({
   id: 1,
-  name: "Navigator One",
+  name: "定义",
   icon: 'Location',
   sub: [
     {
       id: 5,
-      name: "Group One",
-      group: [
-        {id: 6, name: "item one"},
-        {id: 7, name: "item two"}
-      ]
+      name: "表", click: () => {
+        router.push("/index/table-define-query")
+      }
     },
     {
       id: 8,
-      name: "Group Two",
+      name: "对象", click: () => {
+        router.push("/index/table-define-query")
+      }
+    },
+    {
+      id: 8,
+      name: "item two",
       group: [
         {id: 9, name: "item three"}
       ]
