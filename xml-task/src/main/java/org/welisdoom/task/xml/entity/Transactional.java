@@ -44,9 +44,9 @@ public class Transactional extends Unit implements Executable {
                     else
                         return entry.getValue().rollback();
                 }).collect(Collectors.toList()));
-            }).onComplete(event -> {
+            }).transform(event -> {
                 Map.Entry<SqlConnection, Transaction> entry = data.clearCache(this);
-                entry.getKey().close();
+                return entry.getKey().close();
             });
         }).onComplete(event -> {
             if (event.succeeded()) {

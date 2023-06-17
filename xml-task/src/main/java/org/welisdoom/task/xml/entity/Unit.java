@@ -105,7 +105,6 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     protected Future<Void> hook(TaskRequest taskRequest) {
-        log("销毁");
         this.destroy(taskRequest);
         if (taskRequest.getChildrenRequest() == null) {
             return (Future) CompositeFuture.all(Arrays.stream(taskRequest.getChildrenRequest()).map(taskRequest1 -> this.hook(taskRequest)).collect(Collectors.toList()));

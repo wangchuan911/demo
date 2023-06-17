@@ -56,21 +56,33 @@ public class Task extends Unit implements Root {
                             log("fail");
                             throwable.printStackTrace();
                         })
-                .onComplete(objectAsyncResult -> {
+                .transform(objectAsyncResult -> {
                     tasks.remove(data);
+                    Promise promise1 = Promise.promise();
                     CompositeFuture
                             .all(data.cache.entrySet()
                                     .stream()
-                                    .map(unitObjectEntry -> unitObjectEntry
-                                            .getKey()
-                                            .destroy(data))
+                                    .map(unitObjectEntry -> {
+                                        unitObjectEntry.getKey().log("开始释放");
+                                        return unitObjectEntry.getKey()
+                                                .destroy(data).onComplete(event -> {
+                                                    if (event.succeeded()) {
+                                                        unitObjectEntry.getKey().log("释放完成");
+                                                    } else {
+                                                        unitObjectEntry.getKey().log("释放失败:");
+                                                        event.cause().printStackTrace();
+                                                    }
+                                                });
+                                    })
                                     .collect(Collectors.toList()))
-                            .onComplete(event -> {
-                                if (tasks.size() == 0)
-                                    vertx.close();
-                            });
-
+                            .onComplete(event -> complete(objectAsyncResult, promise1));
+                    return promise1.future();
                 });
+    }
+
+    public static Future<Void> closeVertx() {
+        if (vertx == null) return Future.failedFuture("vertx is null");
+        return vertx.close();
     }
 
     static {
@@ -80,8 +92,18 @@ public class Task extends Unit implements Root {
                 CompositeFuture
                         .all(tasks.stream()
                                 .map(taskRequest -> CompositeFuture.all(taskRequest.cache.entrySet().stream()
-                                        .map(unitObjectEntry -> unitObjectEntry.getKey()
-                                                .hook(taskRequest))
+                                        .map(unitObjectEntry -> {
+                                            unitObjectEntry.getKey().log("开始销毁");
+                                            return unitObjectEntry.getKey()
+                                                    .hook(taskRequest).onComplete(event -> {
+                                                        if (event.succeeded()) {
+                                                            unitObjectEntry.getKey().log("销毁完成");
+                                                        } else {
+                                                            unitObjectEntry.getKey().log("销毁失败:");
+                                                            event.cause().printStackTrace();
+                                                        }
+                                                    });
+                                        })
                                         .collect(Collectors.toList())))
                                 .collect(Collectors.toList())).onComplete(event -> {
                     if (Task.getVertx() != null)

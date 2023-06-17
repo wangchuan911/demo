@@ -100,7 +100,7 @@ public class XmlTaskApplication {
                     promise.fail(event.cause());
                 }
             });
-        })).collect(Collectors.toList()));
+        })).collect(Collectors.toList())).onComplete(event -> Task.closeVertx());
     }
 
 
