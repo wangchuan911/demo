@@ -90,21 +90,24 @@ public class Task extends Unit implements Root {
             @Override
             public void run() {
                 CompositeFuture
-                        .all(tasks.stream()
-                                .map(taskRequest -> CompositeFuture.all(taskRequest.cache.entrySet().stream()
-                                        .map(unitObjectEntry -> {
-                                            unitObjectEntry.getKey().log("开始销毁");
-                                            return unitObjectEntry.getKey()
-                                                    .hook(taskRequest).onComplete(event -> {
-                                                        if (event.succeeded()) {
-                                                            unitObjectEntry.getKey().log("销毁完成");
-                                                        } else {
-                                                            unitObjectEntry.getKey().log("销毁失败:");
-                                                            event.cause().printStackTrace();
-                                                        }
-                                                    });
-                                        })
-                                        .collect(Collectors.toList())))
+                        .all(new HashSet<>(tasks).stream()
+                                .map(taskRequest -> {
+                                    tasks.remove(taskRequest);
+                                    return CompositeFuture.all(taskRequest.cache.entrySet().stream()
+                                            .map(unitObjectEntry -> {
+                                                unitObjectEntry.getKey().log("开始销毁");
+                                                return unitObjectEntry.getKey()
+                                                        .hook(taskRequest).onComplete(event -> {
+                                                            if (event.succeeded()) {
+                                                                unitObjectEntry.getKey().log("销毁完成");
+                                                            } else {
+                                                                unitObjectEntry.getKey().log("销毁失败:");
+                                                                event.cause().printStackTrace();
+                                                            }
+                                                        });
+                                            })
+                                            .collect(Collectors.toList()));
+                                })
                                 .collect(Collectors.toList())).onComplete(event -> {
                     if (Task.getVertx() != null)
                         Task.getVertx().close().onSuccess(unused -> {

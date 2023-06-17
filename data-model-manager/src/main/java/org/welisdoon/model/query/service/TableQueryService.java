@@ -6,7 +6,7 @@ import org.welisdoon.model.query.dao.HeaderLinkDao;
 import org.welisdoon.model.query.entity.condition.HeaderLinkCondition;
 import org.welisdoon.model.query.entity.condition.QueryHeaderCondition;
 import org.welisdoon.model.query.entity.header.SimpleHeaderEntity;
-import org.welisdoon.model.query.entity.query.HeaderLinkEntity;
+import org.welisdoon.model.query.entity.header.HeaderLinkEntity;
 
 import java.util.*;
 

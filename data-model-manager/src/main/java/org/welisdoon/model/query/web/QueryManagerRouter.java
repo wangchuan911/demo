@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoon.model.data.dao.TableDao;
-import org.welisdoon.model.data.service.DataBaseService;
+import org.welisdoon.model.data.service.DataTableService;
 import org.welisdoon.model.query.dao.HeaderDao;
 import org.welisdoon.model.query.dao.HeaderLinkDao;
 import org.welisdoon.model.query.entity.condition.QueryHeaderCondition;
@@ -26,11 +26,11 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 public class QueryManagerRouter {
     HeaderDao headerDao;
     HeaderLinkDao headerLinkDao;
-    DataBaseService baseService;
+    DataTableService baseService;
     TableDao tableDao;
 
     @Autowired
-    void setValue(HeaderDao headerDao, HeaderLinkDao headerLinkDao, DataBaseService baseService, TableDao tableDao) {
+    void setValue(HeaderDao headerDao, HeaderLinkDao headerLinkDao, DataTableService baseService, TableDao tableDao) {
         this.headerDao = headerDao;
         this.headerLinkDao = headerLinkDao;
         this.baseService = baseService;

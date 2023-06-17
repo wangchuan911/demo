@@ -6,7 +6,7 @@ import org.welisdoon.model.data.entity.database.ForeignEntity;
 import org.welisdoon.model.data.entity.database.IForeignTarget;
 import org.welisdoon.model.data.entity.database.TableEntity;
 import org.welisdoon.model.data.entity.object.DataObjectEntity;
-import org.welisdoon.model.data.service.DataBaseService;
+import org.welisdoon.model.data.service.DataObjectService;
 
 /**
  * @Classname DateObjectForeignKey
@@ -17,16 +17,16 @@ import org.welisdoon.model.data.service.DataBaseService;
 
 @Component
 public class DataObjectForeignKey implements IForeignKeyOperator<DataObjectEntity> {
-    DataBaseService baseService;
+    DataObjectService dataObjectService;
 
     @Autowired
-    public void setBaseService(DataBaseService baseService) {
-        this.baseService = baseService;
+    public void setDataObjectService(DataObjectService dataObjectService) {
+        this.dataObjectService = dataObjectService;
     }
 
     @Override
     public IForeignTarget getTarget(ForeignEntity entity) {
-        return baseService.getDataObject(entity.getTargetId());
+        return dataObjectService.getDataObject(entity.getTargetId());
     }
 
     @Override

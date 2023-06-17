@@ -1,5 +1,7 @@
 package org.welisdoon.web.common.dao;
 
+import com.github.pagehelper.Page;
+
 import java.util.List;
 
 public interface ITemplateDao<K, E, C> {
@@ -18,4 +20,6 @@ public interface ITemplateDao<K, E, C> {
     int delete(K key);
 
     int clear(C condition);
+
+    Page<E> page(C condition);
 }

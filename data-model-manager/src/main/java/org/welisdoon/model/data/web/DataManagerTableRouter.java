@@ -103,35 +103,6 @@ public class DataManagerTableRouter {
         });
     }
 
-    @VertxRouter(path = "\\/(?<type>\\w+)\\/(?<id>\\d+)(\\/(?<tid>\\d+))?",
-            method = "PUT",
-            mode = VertxRouteType.PathRegex)
-    public void addValue(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
-            long id = Long.valueOf(routingContext.pathParam("id"));
-            JSONObject result = JSON.parseObject(routingContext.getBodyAsString());
-            switch (routingContext.pathParam("type")) {
-                case "object": {
-                    DataObjectEntity entity = this.baseService.getDataObject(Long.valueOf(routingContext.pathParam("id")));
-                    if (StringUtils.isNotEmpty(routingContext.pathParam("tid"))) {
-                        IColumnDataFormat.setValue(Long.valueOf(routingContext.pathParam("tid")), result, entity);
-                    } else {
-                        IColumnDataFormat.setValue(result, entity);
-                    }
-                    result = (JSONObject) JSON.toJSON(entity);
-                }
-                break;
-                case "table":
-                    TableEntity entity = ApplicationContextProvider.getApplicationContext().getBean(TableDao.class).get(id);
-                    IColumnDataFormat.setValue(result, entity.getColumns());
-                    break;
-                default:
-            }
-            System.out.println(result.toJSONString());
-            System.out.println(result.getDate("F13"));
-            routingContext.end(JSONObject.toJSONString(result));
-        });
-    }
 
     @VertxRouter(path = "\\/value\\/(?<type>\\w+)\\/(?<id>\\d+)",
             method = "POST",
