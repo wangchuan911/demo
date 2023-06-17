@@ -159,6 +159,6 @@ onMounted(() => {
   height: calc(100vh - 185px);
   top: 15px;
   overflow-y: scroll;
-  overflow-x: hidden
+  overflow-x: hidden;
 }
 </style>

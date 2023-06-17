@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="loading">
+  <div v-loading="loading" style="position: absolute">
     <el-form ref="formRef" :inline="true" :model="formModel">
       <el-form-item label="table name" prop="name">
         <el-input v-model="formModel.name"/>
@@ -13,6 +13,11 @@
       <el-table-column prop="id" label="ID" width="180"/>
       <el-table-column prop="code" label="表名"/>
       <el-table-column prop="name" label="描述"/>
+      <el-table-column fixed="right" label="操作">
+        <template #default="scope">
+          <el-button link type="primary" size="small" @click="tableEdit(scope.row)">Edit</el-button>
+        </template>
+      </el-table-column>
     </el-table>
     <div style="width: 100%;position: relative">
       <div style="position: absolute;right: 0">
@@ -33,12 +38,14 @@
 </template>
 
 <script lang="ts" setup>
+
+import {useRouter, onBeforeRouteUpdate, useRoute, RouteLocationNormalizedLoaded} from "vue-router";
 import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInternalInstance} from 'vue'
 
 import type {FormInstance} from 'element-plus';
 import {ElMessage} from 'element-plus';
 
-const datas = reactive(new Array<{ id: string, name: string, desc?: string }>()),
+const router = useRouter(), datas = reactive(new Array<{ id: string, name: string, desc?: string }>()),
     page = reactive({page: 1, total: 0, size: 100})
 const {proxy} = getCurrentInstance() as ComponentInternalInstance
 const loading = ref(false), formRef = ref<FormInstance>(), formModel = reactive({name: ""})
@@ -75,7 +82,8 @@ const resetForm = (formEl: FormInstance | undefined) => {
     })
     loading.value = false;
   })
-
+}, tableEdit = (row: any) => {
+  router.push({path: `/index/table-config/${row.id}`})
 }
 </script>
 
