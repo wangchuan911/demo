@@ -155,7 +155,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     public Future<Void> destroy() {
         return (Future) CompositeFuture.join(cache.entrySet().stream().map(entry -> entry.getKey().destroy(this)).collect(Collectors.toList())).transform(event -> {
             bus.clear();
-            return CompositeFuture.join(childrenRequest.stream().map(taskRequest -> taskRequest.destroy()).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
+            return CompositeFuture.join(childrenRequest.stream().map(TaskRequest::destroy).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
         });
     }
 }
