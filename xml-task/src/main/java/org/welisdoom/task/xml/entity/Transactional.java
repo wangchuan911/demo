@@ -38,7 +38,7 @@ public class Transactional extends Unit implements Executable {
                     return entry.getValue().commit();
                 else
                     return entry.getValue().rollback();*/
-                return CompositeFuture.all(this.allTransaction(data).stream().map(entry -> {
+                return CompositeFuture.join(this.allTransaction(data).stream().map(entry -> {
                     if (event.succeeded())
                         return entry.getValue().commit();
                     else
@@ -139,8 +139,8 @@ public class Transactional extends Unit implements Executable {
 
     @Override
     protected Future<Void> hook(TaskRequest taskRequest) {
-        return CompositeFuture.all(allTransaction(taskRequest).stream().map(entry ->
-                CompositeFuture.all(Arrays.asList(
+        return CompositeFuture.join(allTransaction(taskRequest).stream().map(entry ->
+                CompositeFuture.join(Arrays.asList(
                         entry
                                 .getValue()
                                 .rollback()

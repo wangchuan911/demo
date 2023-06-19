@@ -105,11 +105,9 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     protected Future<Void> hook(TaskRequest taskRequest) {
-        this.destroy(taskRequest);
-        if (taskRequest.getChildrenRequest() == null) {
-            return (Future) CompositeFuture.all(Arrays.stream(taskRequest.getChildrenRequest()).map(taskRequest1 -> this.hook(taskRequest)).collect(Collectors.toList()));
-        }
-        return Future.succeededFuture();
+        return this.destroy(taskRequest).transform(event ->
+                taskRequest.getChildrenRequest() == null ? (Future) CompositeFuture.join(Arrays.stream(taskRequest.getChildrenRequest()).map(taskRequest1 -> this.hook(taskRequest)).collect(Collectors.toList())) : Future.succeededFuture()
+        );
     }
 
     public <T extends Unit> List<T> getChild(Class<T> tClass) {

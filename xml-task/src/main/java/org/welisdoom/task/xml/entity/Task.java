@@ -93,7 +93,7 @@ public class Task extends Unit implements Root {
                         .all(new HashSet<>(tasks).stream()
                                 .map(taskRequest -> {
                                     tasks.remove(taskRequest);
-                                    return CompositeFuture.all(taskRequest.cache.entrySet().stream()
+                                    return CompositeFuture.join(taskRequest.cache.entrySet().stream()
                                             .map(unitObjectEntry -> {
                                                 unitObjectEntry.getKey().log("开始销毁");
                                                 return unitObjectEntry.getKey()

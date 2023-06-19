@@ -69,6 +69,6 @@ public class Commit extends Unit implements Executable {
         }
         if (root == null)
             list.add(transactional.commit(request));
-        return (Future) CompositeFuture.all(list);
+        return (Future) CompositeFuture.join(list);
     }
 }

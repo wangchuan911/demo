@@ -103,7 +103,10 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                     Collection<Map<String, Object>> results = rowToMaps((RowSet<Row>) rows);
                     Database.releaseConnect(this, data).onComplete(event -> {
                         future.apply(results).onComplete(event1 -> {
-                            complete(event1, promise);
+                            if (event1.succeeded())
+                                complete(event1, promise);
+                            else
+                                promise.fail((event.failed() && event1.failed()) ? event.cause() : event1.cause());
                         });
                     });
                     return compose(promise.future(), o -> results.size() < page.getPageSize() ?

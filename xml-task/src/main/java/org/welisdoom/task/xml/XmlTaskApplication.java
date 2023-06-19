@@ -92,15 +92,19 @@ public class XmlTaskApplication {
         options.setMaxWorkerExecuteTime(10);
         options.setMaxWorkerExecuteTimeUnit(TimeUnit.DAYS);
         Task.setVertxOption(options);
-        CompositeFuture.all(taskList.entrySet().stream().map(entry -> Task.getVertx().executeBlocking(promise -> {
+        CompositeFuture.join(taskList.entrySet().stream().map(entry -> Task.getVertx().executeBlocking(promise -> {
             SubTask.run(entry.getKey(), entry.getValue()).onComplete(event -> {
                 if (event.succeeded()) {
+                    System.out.println("成功：" + entry.getKey());
                     promise.complete();
                 } else {
+                    System.out.println("失败：" + entry.getKey());
                     promise.fail(event.cause());
                 }
             });
-        })).collect(Collectors.toList())).onComplete(event -> Task.closeVertx());
+        })).collect(Collectors.toList())).onComplete(event -> {
+            Task.closeVertx();
+        });
     }
 
 

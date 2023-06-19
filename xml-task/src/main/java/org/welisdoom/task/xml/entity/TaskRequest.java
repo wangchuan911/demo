@@ -1,6 +1,8 @@
 package org.welisdoom.task.xml.entity;
 
 import com.sun.istack.NotNull;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang3.SerializationUtils;
@@ -11,6 +13,7 @@ import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Classname TastRequst
@@ -28,11 +31,11 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
 
 //    Object lastUnitResult;
 
-    public void cache(Unit unit, Object o) {
+    public synchronized void cache(Unit unit, Object o) {
         cache.put(unit, o);
     }
 
-    public <T> T cache(Unit unit) {
+    public synchronized <T> T cache(Unit unit) {
         return (T) cache.get(unit);
     }
 
@@ -40,7 +43,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         return (T) ObjectUtils.getMapValueOrNewSafe(cache, unit, (ObjectUtils.IfNull) function);
     }
 
-    public <T> T clearCache(Unit unit) {
+    public synchronized <T> T clearCache(Unit unit) {
         return (T) cache.remove(unit);
     }
 
@@ -48,7 +51,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         this.id = id;
     }
 
-    public void setBus(Unit unit, String key, Object value) {
+    public synchronized void setBus(Unit unit, String key, Object value) {
         String name;
         while (StringUtils.isEmpty(name = unit.id)) {
             unit = unit.parent;
@@ -65,7 +68,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         return bus;
     }
 
-    public <T> T getBus(String key) {
+    public synchronized <T> T getBus(String key) {
         return (T) bus.get(key);
     }
 
@@ -75,7 +78,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     }
 
 
-    public void generateData(Unit unit) {
+    public synchronized void generateData(Unit unit) {
         if (StringUtils.isEmpty(unit.id)) return;
         bus.put(unit.id, new HashMap<>());
     }
@@ -125,7 +128,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     }
 
 
-    public TaskRequest copy(String subId) {
+    public synchronized TaskRequest copy(String subId) {
         TaskRequest taskRequest = new TaskRequest(String.format("%s-%s", this.id, subId));
         taskRequest.bus.putAll(SerializationUtils.clone((HashMap) this.bus));
         taskRequest.parentRequest = this;
@@ -149,13 +152,10 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         return childrenRequest.toArray(TaskRequest[]::new);
     }
 
-    public void destroy() {
-        for (Map.Entry<Unit, Object> entry : cache.entrySet().stream().toArray(Map.Entry[]::new)) {
-            entry.getKey().destroy(this);
-        }
-        bus.clear();
-        for (TaskRequest taskRequest : childrenRequest) {
-            taskRequest.destroy();
-        }
+    public synchronized Future<Void> destroy() {
+        return (Future) CompositeFuture.join(cache.entrySet().stream().map(entry -> entry.getKey().destroy(this)).collect(Collectors.toList())).transform(event -> {
+            bus.clear();
+            return CompositeFuture.join(childrenRequest.stream().map(taskRequest -> destroy()).collect(Collectors.toList()));
+        });
     }
 }
