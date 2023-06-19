@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.connect;
 
 import com.alibaba.fastjson.util.TypeUtils;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.VertxOptions;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @Classname ConnectPool
@@ -32,8 +34,9 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
     String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
-
     P getPool(String name);
+
+    Map<String, P> getPools();
 
     void setInstance(DatabaseLinkInfo config);
 
@@ -303,4 +306,11 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
     }
 
 
+    default Future<Void> closePools() {
+        return (Future) CompositeFuture.join(new HashSet<String>(getPools().keySet()).stream().map(s -> closePool(s)).collect(Collectors.toList()));
+    }
+
+    default Future<Void> closePool(String name) {
+        return getPools().remove(name).close();
+    }
 }

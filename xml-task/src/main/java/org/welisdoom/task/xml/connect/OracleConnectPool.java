@@ -2,10 +2,7 @@ package org.welisdoom.task.xml.connect;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.oracleclient.OracleConnection;
 import io.vertx.oracleclient.OraclePool;
@@ -27,12 +24,10 @@ import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import java.sql.JDBCType;
 import java.sql.SQLType;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @Classname OracleConnect
@@ -43,7 +38,7 @@ import java.util.regex.Pattern;
 @Component
 @Db("oracle")
 public class OracleConnectPool implements DataBaseConnectPool<OraclePool, OracleConnection> {
-    volatile static Map<String, OraclePool> pools = new HashMap<>();
+    volatile Map<String, OraclePool> pools;
 
     ConfigDao configDao;
 
@@ -59,16 +54,28 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
         PoolOptions poolOptions = getPoolOptions();
 
 // Create the pool from the data object
-        if (pools.containsKey(config.getName())) return;
-        pools.put(config.getName(), OraclePool.pool(Task.getVertx(), connectOptions, poolOptions));
+        if (getPools().containsKey(config.getName())) return;
+        getPools().put(config.getName(), OraclePool.pool(Task.getVertx(), connectOptions, poolOptions));
     }
 
     @Override
     public synchronized OraclePool getPool(String name) {
-        if (!pools.containsKey(name)) {
+        if (!getPools().containsKey(name)) {
             setInstance(this.configDao.getDatabase(name));
         }
-        return pools.get(name);
+        return getPools().get(name);
+    }
+
+    @Override
+    public Map<String, OraclePool> getPools() {
+        if (pools == null) {
+            synchronized (this) {
+                if (pools == null) {
+                    pools = new HashMap<>();
+                }
+            }
+        }
+        return pools;
     }
 
     /*public Future<OracleConnection> getConnect(String name) {
@@ -95,7 +102,7 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
 
     @Override
     public void removeInstance(String name) {
-        pools.remove(name);
+        getPools().remove(name);
     }
 
 }

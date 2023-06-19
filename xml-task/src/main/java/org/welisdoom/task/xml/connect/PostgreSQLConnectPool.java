@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.connect;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.oracleclient.OraclePool;
 import io.vertx.pgclient.PgConnectOptions;
@@ -18,8 +19,10 @@ import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
 import java.sql.SQLType;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Classname OracleConnect
@@ -30,7 +33,7 @@ import java.util.Map;
 @Component
 @Db("postgresql")
 public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConnection> {
-    volatile static Map<String, PgPool> pools = new HashMap<>();
+    volatile Map<String, PgPool> pools;
 
     ConfigDao configDao;
 
@@ -41,10 +44,22 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
 
     @Override
     public synchronized PgPool getPool(String name) {
-        if (!pools.containsKey(name)) {
+        if (!getPools().containsKey(name)) {
             setInstance(this.configDao.getDatabase(name));
         }
-        return pools.get(name);
+        return getPools().get(name);
+    }
+
+    @Override
+    public Map<String, PgPool> getPools() {
+        if (pools == null) {
+            synchronized (this) {
+                if (pools == null) {
+                    pools = new HashMap<>();
+                }
+            }
+        }
+        return pools;
     }
 
     @Override
@@ -55,8 +70,8 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
         PoolOptions poolOptions = getPoolOptions();
 
 // Create the client pool
-        if (pools.containsKey(config.getName())) return;
-        pools.put(config.getName(), PgPool.pool(Task.getVertx(), connectOptions, poolOptions));
+        if (getPools().containsKey(config.getName())) return;
+        getPools().put(config.getName(), PgPool.pool(Task.getVertx(), connectOptions, poolOptions));
     }
 
     /*public Future<PgConnection> getConnect(String name) {
@@ -84,6 +99,6 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
 
     @Override
     public void removeInstance(String name) {
-        pools.remove(name);
+        getPools().remove(name);
     }
 }
