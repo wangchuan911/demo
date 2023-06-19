@@ -152,10 +152,10 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         return childrenRequest.toArray(TaskRequest[]::new);
     }
 
-    public synchronized Future<Void> destroy() {
+    public Future<Void> destroy() {
         return (Future) CompositeFuture.join(cache.entrySet().stream().map(entry -> entry.getKey().destroy(this)).collect(Collectors.toList())).transform(event -> {
             bus.clear();
-            return CompositeFuture.join(childrenRequest.stream().map(taskRequest -> destroy()).collect(Collectors.toList()));
+            return CompositeFuture.join(childrenRequest.stream().map(taskRequest -> taskRequest.destroy()).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
         });
     }
 }

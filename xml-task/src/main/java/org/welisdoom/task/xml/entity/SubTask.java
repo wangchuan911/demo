@@ -57,7 +57,7 @@ public class SubTask extends Unit implements Executable {
                 taskRequest.getBus().put("$parent", parent.getBus());
             }
             task.run(taskRequest)
-                    .onSuccess(promise::complete).onFailure(promise::fail).onComplete(event -> taskRequest.destroy());
+                    .onSuccess(promise::complete).onFailure(promise::fail).transform(event -> taskRequest.destroy());
         } catch (Throwable e) {
             e.printStackTrace();
             promise.fail(e);
