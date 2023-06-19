@@ -1,6 +1,9 @@
 package org.welisdoom.task.xml.entity;
 
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import io.vertx.core.Promise;
 import ognl.Ognl;
 import ognl.OgnlContext;
@@ -37,7 +40,7 @@ public class If extends Unit implements Executable {
         try {
             boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
             log(String.format("表达式[%s]", attributes.get("test")));
-            log(String.format("参数[%s]", data.getBus().toString()));
+            log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));
             log(String.format("结果[%s]", test));
 
             if (test) {
