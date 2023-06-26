@@ -104,9 +104,9 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                     Database.releaseConnect(this, data).onComplete(event -> {
                         future.apply(results).onComplete(event1 -> {
                             if (event1.succeeded())
-                                complete(event1, promise);
+                                complete(event, promise);
                             else
-                                promise.fail((event.failed() && event1.failed()) ? event.cause() : event1.cause());
+                                promise.fail((event.failed()) ? event.cause() : event1.cause());
                         });
                     });
                     return compose(promise.future(), o -> results.size() < page.getPageSize() ?

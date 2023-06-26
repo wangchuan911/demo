@@ -55,7 +55,7 @@ public class Choice extends Unit {
                 test = false;
             }
             log(String.format("表达式[%s]", attributes.get("test")));
-            log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));
+            log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.IgnoreErrorGetter, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));
             log(String.format("结果[%s]", test));
             if (test) {
                 Promise<Object> promise = Promise.promise();

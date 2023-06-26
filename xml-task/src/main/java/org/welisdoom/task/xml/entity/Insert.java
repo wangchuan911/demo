@@ -77,7 +77,7 @@ public class Insert extends Unit implements Script, Copyable {
         });
         future.onComplete(event -> Database.releaseConnect(this, data).onComplete(event1 -> {
             if (event1.succeeded()) complete(event, toNext);
-            else toNext.fail((event.failed() && event1.failed()) ? event.cause() : event1.cause());
+            else toNext.fail((event.failed()) ? event.cause() : event1.cause());
         }));
     }
 
