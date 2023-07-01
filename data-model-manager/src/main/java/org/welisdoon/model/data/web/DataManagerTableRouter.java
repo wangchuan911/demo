@@ -74,6 +74,16 @@ public class DataManagerTableRouter {
         });
     }
 
+    @VertxRouter(path = "\\/(?<id>\\d+)",
+            method = "GET", mode = VertxRouteType.PathRegex)
+    public void getTable(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            TableCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), TableCondition.class);
+            PageHelper.startPage(condition.getPage().getPage(), condition.getPage().getPageSize());
+            routingContext.end(JSONObject.toJSONString(baseService.getTable(Long.valueOf(routingContext.pathParam("id")))));
+        });
+    }
+
 
     @VertxRouter(path = "\\/value\\/(?<type>\\w+)\\/(?<id>\\d+)",
             method = "GET",
