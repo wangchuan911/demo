@@ -42,6 +42,8 @@ mybatis:
     #开启驼峰映射
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  configuration-properties:
+    table-prefix:
 
 pagehelper:
   helperDialect: mysql                           #分页插件方言选择

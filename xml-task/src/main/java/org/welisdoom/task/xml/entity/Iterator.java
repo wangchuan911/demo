@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @Classname Sql
@@ -82,12 +83,19 @@ public class Iterator extends Unit implements Executable {
             }
         }
 
-        Future<Object> run(Function<TaskRequest, Future<Object>> function) {
+        synchronized Future<Object> run(Function<TaskRequest, Future<Object>> function) {
 
             TaskRequest taskRequest = idles.poll();
-            futures.add(function.apply(taskRequest).onComplete(event -> idles.add(taskRequest)));
+            Promise<Void> promise = Promise.promise();
+            function.apply(taskRequest).onComplete(event -> {
+                idles.add(taskRequest);
+                complete(event, promise);
+            });
+            futures.add(promise.future());
             if (futures.size() >= count)
-                return flush();
+                return (Future) CompositeFuture.any(futures).onComplete(event -> {
+                    futures.removeAll(futures.stream().filter(Future::isComplete).collect(Collectors.toList()));
+                });
             else
                 return Future.succeededFuture();
         }

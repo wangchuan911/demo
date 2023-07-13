@@ -17,12 +17,12 @@
     <select id="getDatabase" parameterType="string"
             resultMap="rm_DatabaseLinkInfo">
         select A.*
-        from XML_TASK_CONNECT A
+        from ${table-prefix}XML_TASK_CONNECT A
         where A.name = #{name}
     </select>
 
     <select id="getTaskXML" parameterType="long" resultType="string">
-        select content from XML_TASK_TEMPLATE where id=#{value}
+        select content from ${table-prefix}XML_TASK_TEMPLATE where id=#{value}
     </select>
 
     <resultMap id="rm_FtpLinkInfo" type="org.welisdoom.task.xml.connect.FtpConnectPool$FtpLinkInfo">
@@ -35,7 +35,7 @@
 </resultMap>
     <select id="getFtp" parameterType="string" resultMap="rm_FtpLinkInfo">
         select A.*
-        from XML_TASK_CONNECT A
+        from ${table-prefix}XML_TASK_CONNECT A
         where A.name = #{name}
     </select>
 
