@@ -1,28 +1,19 @@
 package org.welisdoom.task.xml.connect;
 
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.oracleclient.OraclePool;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgConnection;
 import io.vertx.pgclient.PgPool;
-import io.vertx.sqlclient.*;
-import org.apache.ibatis.type.JdbcType;
+import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.Task;
-import org.welisdoom.task.xml.entity.TaskRequest;
 import org.welisdoon.common.data.BaseCondition;
-import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
-import java.sql.SQLType;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @Classname OracleConnect
@@ -77,10 +68,11 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     /*public Future<PgConnection> getConnect(String name) {
         return (Future) getPool(name).getConnection();
     }*/
+    static String pageSql = " limit ? offset ?";
 
     @Override
     public String toPageSql(String body) {
-        return body + String.format(" limit ? offset ?");
+        return body + pageSql;
     }
 
     public void setPage(Tuple tuple, BaseCondition.Page page) {
@@ -90,8 +82,12 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
 
     @Override
     public String sqlFormat(String sql, List<Object> param) {
-        for (int i = 0; i < param.size(); i++) {
+        int i = 0;
+        for (; i < param.size(); i++) {
             sql = sql.replaceFirst(PATTERN_STRING, "\\$" + (i + 1));
+        }
+        if (sql.lastIndexOf(pageSql) >= 0) {
+            sql = sql.replaceFirst("\\?", "\\$" + (i + 1)).replaceFirst("\\?", "\\$" + (i + 2));
         }
         return sql;
     }
