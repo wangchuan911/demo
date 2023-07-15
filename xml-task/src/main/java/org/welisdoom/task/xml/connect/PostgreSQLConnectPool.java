@@ -68,11 +68,11 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     /*public Future<PgConnection> getConnect(String name) {
         return (Future) getPool(name).getConnection();
     }*/
-    static String pageSql = " limit ? offset ?";
+    final static String pageSqlSign = "/*@#END%&!/";
 
     @Override
     public String toPageSql(String body) {
-        return body + pageSql;
+        return body + pageSqlSign;
     }
 
     public void setPage(Tuple tuple, BaseCondition.Page page) {
@@ -86,8 +86,8 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
         for (; i < param.size(); i++) {
             sql = sql.replaceFirst(PATTERN_STRING, "\\$" + (i + 1));
         }
-        if (sql.lastIndexOf(pageSql) >= 0) {
-            sql = sql.replaceFirst("\\?", "\\$" + (i + 1)).replaceFirst("\\?", "\\$" + (i + 2));
+        if (sql.endsWith(pageSqlSign)) {
+            sql = sql.replace(pageSqlSign, " limit $" + (i + 1) + " offset $" + (i + 2));
         }
         return sql;
     }
