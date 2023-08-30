@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import com.jcraft.jsch.SftpProgressMonitor;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -7,14 +8,7 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.SFtpConnectPool;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoom.task.xml.intf.type.Stream;
-import org.welisdoom.task.xml.intf.type.UnitType;
-import org.welisdoon.common.ObjectUtils;
-import org.welisdoon.common.StreamUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
-import org.xml.sax.Attributes;
-
-import java.io.*;
 
 /**
  * @Classname Ftp
@@ -38,9 +32,11 @@ public class SFtp extends Ftp implements Executable, Copyable {
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("get", data);
                 log(String.format("%s=====>%s", remote, file));
-                client.get(remote, new FileOutputStream(file));
+                client.get(remote, file, new MySftpProgressMonitor(this));
+                client.disconnect();
                 toNext.complete(file);
             } catch (Throwable throwable) {
+                client.disconnect();
                 toNext.fail(throwable);
             }
         }).onFailure(toNext::fail);
@@ -54,10 +50,11 @@ public class SFtp extends Ftp implements Executable, Copyable {
         ApplicationContextProvider.getBean(SFtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
-                log(String.format("%s=====>%s", file, remote));
-                client.put(new FileInputStream(file), remote);
+                client.put(file, remote, new MySftpProgressMonitor(this));
+                client.disconnect();
                 toNext.complete(file);
             } catch (Throwable throwable) {
+                client.disconnect();
                 toNext.fail(throwable);
             }
         }).onFailure(toNext::fail);
@@ -126,6 +123,35 @@ public class SFtp extends Ftp implements Executable, Copyable {
 
     @Override
     protected Future<Void> destroy(TaskRequest data) {
-        return ApplicationContextProvider.getBean(SFtpConnectPool.class).close(getId(), data).transform(v -> super.destroy(data));
+        return ApplicationContextProvider.getBean(SFtpConnectPool.class).close(data).transform(v -> super.destroy(data));
+    }
+
+    static class MySftpProgressMonitor implements SftpProgressMonitor {
+        long max, current;
+        SFtp sFtp;
+
+        MySftpProgressMonitor(SFtp sFtp) {
+            this.sFtp = sFtp;
+        }
+
+        @Override
+        public void init(int i, String s, String s1, long l) {
+            max = l;
+            sFtp.log(String.format("begin $s : from [%s] to [%s]", SftpProgressMonitor.PUT == i ? "upload" : "download", s, s1));
+        }
+
+        @Override
+        public boolean count(long l) {
+            current += l;
+            sFtp.logInline(String.format("\r\ntransfer:%6,3f %s ======> [%019d/%019d]", (100f * current / max), "%", current, max));
+            return l > 0;
+        }
+
+        @Override
+        public void end() {
+            System.out.println();
+            sFtp.log(String.format("success!!!"));
+            sFtp = null;
+        }
     }
 }

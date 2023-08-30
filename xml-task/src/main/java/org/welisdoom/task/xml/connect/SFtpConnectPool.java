@@ -5,8 +5,6 @@ import io.vertx.core.Future;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoom.task.xml.dao.ConfigDao;
-import org.welisdoom.task.xml.entity.TaskRequest;
-import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.ObjectUtils;
 
 import java.util.*;
@@ -19,16 +17,20 @@ import java.util.*;
  */
 @Component
 public class SFtpConnectPool implements ConnectPool<ChannelSftp> {
-    Map<IToken, Map<String, ChannelSftp>> client = new HashMap<>();
     ConfigDao configDao;
-    static Set<SFtpLinkInfo> SESSIONS = new HashSet<>();
+    static Map<String, SFtpLinkInfo> SESSIONS = new HashMap<>();
 
-    public static class SFtpLinkInfo {
-        int port;
-        String host;
-        String user;
-        Session session;
-        static JSch jSch = new JSch();
+    static class SFtpLinkInfo {
+        final int port;
+        final String host;
+        final String user;
+        private Session session;
+        final static JSch jSch = new JSch();
+        final Set<IToken> iTokens = new HashSet<>();
+
+        public SFtpLinkInfo(FtpConnectPool.FtpLinkInfo ftpLinkInfo) {
+            this(ftpLinkInfo.host, ftpLinkInfo.port, ftpLinkInfo.user);
+        }
 
         public SFtpLinkInfo(String host, int port, String user) {
             this.host = host;
@@ -36,7 +38,8 @@ public class SFtpConnectPool implements ConnectPool<ChannelSftp> {
             this.user = user;
         }
 
-        ChannelSftp getClient(String pw) throws JSchException {
+        synchronized ChannelSftp getClient(IToken iToken, String pw) throws JSchException {
+            iTokens.add(iToken);
             if (session == null) {
                 session = jSch.getSession(user, host, port);
                 session.setPassword(pw);
@@ -60,6 +63,30 @@ public class SFtpConnectPool implements ConnectPool<ChannelSftp> {
         public int hashCode() {
             return Objects.hash(port, host, user);
         }
+
+        synchronized void disconnect(IToken token) {
+            if (token == null) return;
+            iTokens.remove(token);
+            if (iTokens.size() == 0) {
+                disconnect();
+            }
+        }
+
+        synchronized void disconnect() {
+            if (session != null) {
+                try {
+                    session.disconnect();
+                    session = null;
+                } finally {
+                    String key = generalKey(user, host, port);
+                    SESSIONS.remove(key);
+                }
+            }
+        }
+
+        static String generalKey(String user, String host, int port) {
+            return String.format("%s@%s:%s", user, host, port);
+        }
     }
 
     @Autowired
@@ -69,40 +96,19 @@ public class SFtpConnectPool implements ConnectPool<ChannelSftp> {
 
     public Future<ChannelSftp> getConnect(String name, IToken token) {
         try {
-            return Future.succeededFuture(ObjectUtils.getMapValueOrNewSafe(ObjectUtils.getMapValueOrNewSafe(client, token, HashMap::new), name,
-                    () -> {
-                        FtpConnectPool.FtpLinkInfo ftpLinkInfo = configDao.getFtp(name);
-                        SFtpLinkInfo sftpLinkInfo = new SFtpLinkInfo(ftpLinkInfo.host, ftpLinkInfo.port, ftpLinkInfo.user);
-                        if (SESSIONS.contains(sftpLinkInfo)) {
-                            for (SFtpLinkInfo session : SESSIONS) {
-                                if (session.equals(sftpLinkInfo)) {
-                                    sftpLinkInfo = session;
-                                    break;
-                                }
-                            }
-                        } else {
-                            SESSIONS.add(sftpLinkInfo);
-                        }
-                        return sftpLinkInfo.getClient(ftpLinkInfo.pw);
-                    }));
+            FtpConnectPool.FtpLinkInfo ftpLinkInfo = configDao.getFtp(name);
+            String key = SFtpLinkInfo.generalKey(ftpLinkInfo.user, ftpLinkInfo.host, ftpLinkInfo.port);
+            SFtpLinkInfo sftpLinkInfo = ObjectUtils.getMapValueOrNewSafe(SESSIONS, key, () -> new SFtpLinkInfo(ftpLinkInfo));
+            return Future.succeededFuture(sftpLinkInfo.getClient(token, ftpLinkInfo.pw));
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
         }
     }
 
-    public Future<Void> close(String name, IToken token) {
-        try {
-            client.get(token).remove(name).disconnect();
-            return Future.succeededFuture();
-        } catch (Throwable e) {
-            return Future.failedFuture(e);
-        }
-    }
-
     public Future<Void> close(IToken token) {
-        for (Map.Entry<String, ChannelSftp> stringFTPClientEntry : client.remove(token).entrySet()) {
+        for (Map.Entry<String, SFtpLinkInfo> stringFTPClientEntry : new LinkedList<>(SESSIONS.entrySet())) {
             try {
-                stringFTPClientEntry.getValue().disconnect();
+                stringFTPClientEntry.getValue().disconnect(token);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -120,10 +126,11 @@ public class SFtpConnectPool implements ConnectPool<ChannelSftp> {
 
         @Override
         public void run() {
-            for (SFtpLinkInfo session : SESSIONS) {
+            for (SFtpLinkInfo session : SESSIONS.values()) {
                 try {
-                    session.session.disconnect();
+                    session.disconnect();
                 } catch (Throwable e) {
+                    e.printStackTrace();
                 }
             }
         }

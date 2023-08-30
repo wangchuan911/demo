@@ -5,19 +5,18 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
-import org.xml.sax.Attributes;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
 import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -133,14 +132,11 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 
     @Override
     public Future<Void> destroy(TaskRequest taskRequest) {
-        Map<String, CSVWriter> writerMap = taskRequest.clearCache(this);
-        for (Map.Entry<String, CSVWriter> writerEntry : writerMap.entrySet()) {
-            Closeable closeable = writerEntry.getValue();
-            try (closeable) {
+        CSVWriter csvWriter = taskRequest.clearCache(this);
+        try (csvWriter) {
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return super.destroy(taskRequest);
     }
