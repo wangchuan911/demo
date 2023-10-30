@@ -6,12 +6,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import org.apache.commons.collections4.MapUtils;
-import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
-import org.welisdoom.task.xml.intf.type.Script;
-import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
 import org.xml.sax.Attributes;
@@ -60,15 +57,17 @@ public class Iterator extends Unit implements Executable {
         item.destroy();
         item = GCUtils.release(item);
         Promise<Object> promise = Promise.promise();
-        Future<Object> future = promise.future()
-                .onComplete(objectAsyncResult -> {
-                    map.remove(itemName);
-                    map.remove(itemIndex);
-                });
         super.start(data, null, promise);
-        return future.transform(objectAsyncResult ->
-                (objectAsyncResult.succeeded() || (objectAsyncResult.cause() instanceof Break.SkipOneLoopThrowable)) ? Future.succeededFuture() : Future.failedFuture(objectAsyncResult.cause())
-        );
+        return promise.future()
+                .transform(objectAsyncResult ->
+                        (objectAsyncResult.succeeded() || (objectAsyncResult.cause() instanceof Break.SkipOneLoopThrowable)) ? Future.succeededFuture() : Future.failedFuture(objectAsyncResult.cause())
+                )
+                .onComplete(event -> {
+                    synchronized (map) {
+                        map.remove(itemName);
+                        map.remove(itemIndex);
+                    }
+                });
     }
 
     public static class ThreadInfo {
@@ -121,7 +120,7 @@ public class Iterator extends Unit implements Executable {
             default:
                 try {
                     ThreadInfo threadInfo = data.cache(this, () -> new ThreadInfo(data, threadCount()));
-                    log("线程中");
+                    log("并发-线程中");
                     return threadInfo.run(taskRequest ->
                             Task.getVertx().executeBlocking(event -> {
                                 execute(taskRequest, o).onComplete(event1 -> {

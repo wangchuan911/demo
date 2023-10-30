@@ -2,26 +2,17 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.FtpConnectPool;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
-import org.welisdoom.task.xml.intf.type.UnitType;
-import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.StreamUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
-import org.xml.sax.Attributes;
 
-import java.io.*;
-import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 /**
  * @Classname Ftp
@@ -35,7 +26,7 @@ import java.util.Set;
 @Attr(name = "put", desc = "写入文件", require = true, options = {"get", "put"})
 @Attr(name = "local", desc = "本地文件位置", require = true, options = {"get", "put"})
 
-public class Ftp extends StreamUnit<StreamUnit.WriteLine> implements Executable, Copyable {
+public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyable {
 //    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
     @Override
@@ -72,6 +63,11 @@ public class Ftp extends StreamUnit<StreamUnit.WriteLine> implements Executable,
             }
         }).onFailure(toNext::fail);
         return toNext.future();
+    }
+
+    @Override
+    public Future<Object> write(TaskRequest request, Writer writer) {
+        return Future.failedFuture("无效的操作");
     }
 
     @Override

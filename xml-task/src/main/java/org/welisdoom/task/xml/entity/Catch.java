@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import com.google.common.base.Throwables;
 import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -21,7 +22,7 @@ public class Catch extends Unit implements Executable {
             error = getChild(Error.class).stream().findFirst().orElse((Error) new Error().setParent(this));
         startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error)).onSuccess(toNext::complete).onFailure(event -> {
             event.printStackTrace();
-            startChildUnit(data, event, error).onSuccess(toNext::complete).onFailure(toNext::fail);
+            startChildUnit(data, Throwables.getStackTraceAsString(event), error).onSuccess(toNext::complete).onFailure(toNext::fail);
         });
     }
 

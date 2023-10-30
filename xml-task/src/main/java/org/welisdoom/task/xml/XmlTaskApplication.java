@@ -1,9 +1,7 @@
 package org.welisdoom.task.xml;
 
 import io.vertx.core.CompositeFuture;
-import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.WorkerExecutor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -12,18 +10,15 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Repository;
-import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.SubTask;
 import org.welisdoom.task.xml.entity.Task;
-import org.welisdoom.task.xml.entity.TaskRequest;
-import org.welisdoom.task.xml.handler.SAXParserHandler;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.WebserverApplication;
-import org.welisdoon.web.common.ApplicationContextProvider;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
