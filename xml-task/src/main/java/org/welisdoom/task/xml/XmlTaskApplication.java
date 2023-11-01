@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import org.welisdoom.task.xml.entity.SubTask;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.web.MySpringApplication;
 import org.welisdoon.web.WebserverApplication;
 
 import java.util.LinkedHashMap;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 //@EnableTransactionManagement(proxyTargetClass = true)
 @MapperScan(basePackageClasses = XmlTaskApplication.class, annotationClass = Repository.class)
 @ComponentScan(basePackageClasses = {WebserverApplication.class, XmlTaskApplication.class})
-public class XmlTaskApplication {
+public class XmlTaskApplication extends MySpringApplication {
     static Map<String, SubTask.Config> taskList = new LinkedHashMap<>();
     final static Pattern pattern = Pattern.compile("\\@task\\-(.+?)\\=(.+)"), pattern1 = Pattern.compile("\\@task\\-(.+?)\\-params\\-(.+?)\\=.+"), pattern2 = Pattern.compile("(\\w+):(.+)");
     static VertxOptions options = new VertxOptions();
@@ -67,7 +68,7 @@ public class XmlTaskApplication {
             } else
                 newArgs.add(arg);
         }
-        SpringApplication.run(XmlTaskApplication.class, newArgs.toArray(String[]::new));
+        MySpringApplication.run(XmlTaskApplication.class, newArgs.toArray(String[]::new));
     }
 
     static List<String> getValue(Matcher matcher) {

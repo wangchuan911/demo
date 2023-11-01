@@ -2,32 +2,32 @@ package org.welisdoon.web.config;
 
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
-import io.vertx.core.*;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.impl.NoStackTraceThrowable;
 import io.vertx.core.spi.VerticleFactory;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.util.StringUtils;
-import org.welisdoon.web.WebserverApplication;
+import org.welisdoon.web.MySpringApplication;
 import org.welisdoon.web.cluster.ICluster;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.Verticle;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.verticle.AbstractMyVerticle;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
 
 import java.net.URL;
 import java.util.*;
@@ -144,7 +144,7 @@ public class VertxInSpringConfiguration {
             Arrays.stream(extraScanPath).forEach(path -> {
                 CollectUrl.addAll(ClasspathHelper.forPackage(path));
             });
-            addPathToReflections(CollectUrl, WebserverApplication.class);
+            addPathToReflections(CollectUrl, MySpringApplication.class);
             logger.warn(CollectUrl.toString());
             configurationBuilder.setUrls(CollectUrl);
             configurationBuilder.setInputsFilter(s -> s.toLowerCase().endsWith(".class") || s.toLowerCase().endsWith(".java"));
