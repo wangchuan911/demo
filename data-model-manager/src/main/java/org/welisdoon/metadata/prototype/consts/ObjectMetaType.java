@@ -12,10 +12,9 @@ import java.lang.annotation.Target;
  * @Date 10:11
  */
 public enum ObjectMetaType implements IMetaType {
-    Table(100, "表"),
-    Object(200, "对象"),
-    Search(300, "搜索"),
-    Instance(400, "实例化数据");
+    Table(1000, "表"),
+    Object(1001, "对象"),
+    Search(1002, "搜索");
 
     long id;
     String name;

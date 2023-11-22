@@ -24,7 +24,7 @@ public class DataBaseTable extends MetaObject {
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Column)
-    public static class Column extends MetaAttribute {
+    public static class Column extends MetaAttribute<DataBaseTable> {
         boolean primary;
 
         public boolean isPrimary() {

@@ -7,8 +7,8 @@ package org.welisdoon.metadata.prototype.consts;
  * @Date 10:38
  */
 public enum FunctionMetaType implements IMetaType {
-    Trigger(103, "触发器"),
-    Function(104, "函数");
+    Trigger(4000, "触发器"),
+    Function(4001, "函数");
 
     long id;
     String name;

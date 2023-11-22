@@ -6,124 +6,175 @@ package org.welisdoon.metadata.prototype.define;
  * @Author Septem
  * @Date 11:41
  */
-public class MetaLink extends MetaPrototype implements ISequneceEntity {
-    Long superMetaObjectId, superObjectTypeId;
-    MetaPrototype superMetaObject;
+public class MetaLink extends MetaPrototype implements ISequenceEntity {
+    Long superObjectId, objectId;
+    MetaObject superObject, object;
 
-    Long superObjectAttrId, superObjectAttrTypeId;
-    MetaPrototype superObjectAttr;
+    Long superAttributeId, attributeId;
+    MetaAttribute superAttribute, attribute;
 
-    Long metaObjectId, objectTypeId;
-    MetaPrototype metaObject;
+    Long parentLinkId;
+    MetaLink parentLink;
 
-    Long objectAttrId, objectAttrTypeId;
-    MetaPrototype objectAttr;
+    Long instanceId, superInstanceId;
+    MetaInstance instance, superInstance;
 
-    int sequnece;
+    Long valueId, superValueId;
+    MetaKeyValue value, superValue;
 
-    public Long getSuperMetaObjectId() {
-        return superMetaObjectId;
-    }
+    int sequence;
 
-    public void setSuperMetaObjectId(Long superMetaObjectId) {
-        this.superMetaObjectId = superMetaObjectId;
-    }
-
-    public Long getSuperObjectTypeId() {
-        return superObjectTypeId;
-    }
-
-    public void setSuperObjectTypeId(Long superObjectTypeId) {
-        this.superObjectTypeId = superObjectTypeId;
-    }
-
-    public MetaPrototype getSuperMetaObject() {
-        return superMetaObject;
-    }
-
-    public void setSuperMetaObject(MetaPrototype superMetaObject) {
-        this.superMetaObject = superMetaObject;
-    }
-
-    public Long getSuperObjectAttrId() {
-        return superObjectAttrId;
-    }
-
-    public void setSuperObjectAttrId(Long superObjectAttrId) {
-        this.superObjectAttrId = superObjectAttrId;
-    }
-
-    public Long getSuperObjectAttrTypeId() {
-        return superObjectAttrTypeId;
-    }
-
-    public void setSuperObjectAttrTypeId(Long superObjectAttrTypeId) {
-        this.superObjectAttrTypeId = superObjectAttrTypeId;
-    }
-
-    public MetaPrototype getSuperObjectAttr() {
-        return superObjectAttr;
-    }
-
-    public void setSuperObjectAttr(MetaPrototype superObjectAttr) {
-        this.superObjectAttr = superObjectAttr;
-    }
-
-    public Long getMetaObjectId() {
-        return metaObjectId;
-    }
-
-    public void setMetaObjectId(Long metaObjectId) {
-        this.metaObjectId = metaObjectId;
-    }
-
-    public Long getObjectTypeId() {
-        return objectTypeId;
-    }
-
-    public void setObjectTypeId(Long objectTypeId) {
-        this.objectTypeId = objectTypeId;
-    }
-
-    public MetaPrototype getMetaObject() {
-        return metaObject;
-    }
-
-    public void setMetaObject(MetaPrototype metaObject) {
-        this.metaObject = metaObject;
-    }
-
-    public Long getObjectAttrId() {
-        return objectAttrId;
-    }
-
-    public void setObjectAttrId(Long objectAttrId) {
-        this.objectAttrId = objectAttrId;
-    }
-
-    public Long getObjectAttrTypeId() {
-        return objectAttrTypeId;
-    }
-
-    public void setObjectAttrTypeId(Long objectAttrTypeId) {
-        this.objectAttrTypeId = objectAttrTypeId;
-    }
-
-    public MetaPrototype getObjectAttr() {
-        return objectAttr;
-    }
-
-    public void setObjectAttr(MetaPrototype objectAttr) {
-        this.objectAttr = objectAttr;
+    @Override
+    public int getSequence() {
+        return this.sequence;
     }
 
     @Override
-    public int getSequnece() {
-        return this.sequnece;
+    public void setSequence(int i) {
+        this.sequence = i;
     }
 
-    @Override
-    public void setSequnece(int i) {
-        this.sequnece = i;
+    public Long getSuperObjectId() {
+        return superObjectId;
+    }
+
+    public void setSuperObjectId(Long superObjectId) {
+        this.superObjectId = superObjectId;
+    }
+
+    public Long getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(Long objectId) {
+        this.objectId = objectId;
+    }
+
+    public MetaObject getSuperObject() {
+        return superObject;
+    }
+
+    public void setSuperObject(MetaObject superObject) {
+        this.superObject = superObject;
+    }
+
+    public MetaObject getObject() {
+        return object;
+    }
+
+    public void setObject(MetaObject object) {
+        this.object = object;
+    }
+
+    public Long getSuperAttributeId() {
+        return superAttributeId;
+    }
+
+    public void setSuperAttributeId(Long superAttributeId) {
+        this.superAttributeId = superAttributeId;
+    }
+
+    public Long getAttributeId() {
+        return attributeId;
+    }
+
+    public void setAttributeId(Long attributeId) {
+        this.attributeId = attributeId;
+    }
+
+    public MetaAttribute getSuperAttribute() {
+        return superAttribute;
+    }
+
+    public void setSuperAttribute(MetaAttribute superAttribute) {
+        this.superAttribute = superAttribute;
+    }
+
+    public MetaAttribute getAttribute() {
+        return attribute;
+    }
+
+    public void setAttribute(MetaAttribute attribute) {
+        this.attribute = attribute;
+    }
+
+    public Long getParentLinkId() {
+        return parentLinkId;
+    }
+
+    public void setParentLinkId(Long parentLinkId) {
+        this.parentLinkId = parentLinkId;
+    }
+
+    public MetaLink getParentLink() {
+        return parentLink;
+    }
+
+    public void setParentLink(MetaLink parentLink) {
+        this.parentLink = parentLink;
+    }
+
+    public Long getInstanceId() {
+        return instanceId;
+    }
+
+    public void setInstanceId(Long instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    public Long getSuperInstanceId() {
+        return superInstanceId;
+    }
+
+    public void setSuperInstanceId(Long superInstanceId) {
+        this.superInstanceId = superInstanceId;
+    }
+
+    public MetaInstance getInstance() {
+        return instance;
+    }
+
+    public void setInstance(MetaInstance instance) {
+        this.instance = instance;
+    }
+
+    public MetaInstance getSuperInstance() {
+        return superInstance;
+    }
+
+    public void setSuperInstance(MetaInstance superInstance) {
+        this.superInstance = superInstance;
+    }
+
+    public Long getValueId() {
+        return valueId;
+    }
+
+    public void setValueId(Long valueId) {
+        this.valueId = valueId;
+    }
+
+    public Long getSuperValueId() {
+        return superValueId;
+    }
+
+    public void setSuperValueId(Long superValueId) {
+        this.superValueId = superValueId;
+    }
+
+    public MetaKeyValue getValue() {
+        return value;
+    }
+
+    public void setValue(MetaKeyValue value) {
+        this.value = value;
+    }
+
+    public MetaKeyValue getSuperValue() {
+        return superValue;
+    }
+
+    public void setSuperValue(MetaKeyValue superValue) {
+        this.superValue = superValue;
     }
 }

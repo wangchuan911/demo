@@ -6,8 +6,8 @@ package org.welisdoon.metadata.prototype.define;
  * @Author Septem
  * @Date 11:59
  */
-public interface ISequneceEntity {
-    int getSequnece();
+public interface ISequenceEntity {
+    int getSequence();
 
-    void setSequnece(int i);
+    void setSequence(int i);
 }

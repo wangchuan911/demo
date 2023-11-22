@@ -24,7 +24,15 @@ public class DataObject extends MetaObject {
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Attributes)
-    public static class Attributes extends MetaAttribute {
+    public static class Attributes extends MetaAttribute<DataObject> {
+        DataBaseTable.Column[] columns;
 
+        public DataBaseTable.Column[] getColumns() {
+            return columns;
+        }
+
+        public void setColumns(DataBaseTable.Column[] columns) {
+            this.columns = columns;
+        }
     }
 }

@@ -1,13 +1,23 @@
 package org.welisdoon.metadata.prototype.consts;
 
+import com.alibaba.fastjson.util.TypeUtils;
 import org.apache.commons.collections4.KeyValue;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
+import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
+import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
+import org.welisdoon.metadata.prototype.define.MetaAttribute;
 import org.welisdoon.metadata.prototype.define.MetaObject;
+import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.lang.annotation.Annotation;
@@ -24,11 +34,18 @@ import java.util.Objects;
 
 @Component
 public class MetaUtils {
-    static Map<Long, KeyValue<Class<? extends MetaObject>, IMetaType>> LONG_KEY_VALUE_MAP = new HashMap<>();
+    final static Logger logger = LoggerFactory.getLogger(MetaUtils.class);
 
-    static KeyValue<Class<? extends MetaObject>, IMetaType> get(long id) {
+    static Map<Long, KeyValue<Class<? extends MetaPrototype>, IMetaType>> LONG_KEY_VALUE_MAP = new HashMap<>();
+
+    static KeyValue<Class<? extends MetaPrototype>, IMetaType> get(long id) {
         return LONG_KEY_VALUE_MAP.get(id);
     }
+
+    static MetaAttributeDao metaAttributeDao;
+    static MetaObjectDao metaObjectDao;
+    static MetaLinkDao metaLinkDao;
+
 
     @EventListener
     void init(ApplicationReadyEvent event) {
@@ -47,6 +64,33 @@ public class MetaUtils {
                                 }
                             });
                 });
-        System.out.println(LONG_KEY_VALUE_MAP);
+        logger.info(LONG_KEY_VALUE_MAP.toString());
+
+        metaAttributeDao = ApplicationContextProvider.getBean(MetaAttributeDao.class);
+        metaObjectDao = ApplicationContextProvider.getBean(MetaObjectDao.class);
+        metaLinkDao = ApplicationContextProvider.getBean(MetaLinkDao.class);
+    }
+
+    public static MetaPrototype getType(@NonNull MetaPrototype o) {
+        return TypeUtils.castToJavaBean(o, LONG_KEY_VALUE_MAP.get(o.getTypeId()).getKey());
+    }
+
+    public static MetaPrototype getType(@NonNull Long typeId) {
+        return TypeUtils.castToJavaBean(MapUtils.EMPTY_SORTED_MAP, LONG_KEY_VALUE_MAP.get(typeId).getKey());
+    }
+
+    public static MetaPrototype getType(@NonNull IMetaType iMetaType) {
+        return getType(iMetaType.getId());
+    }
+
+    public static MetaObject getObject(@NonNull Long id) {
+
+        MetaObject metaObject = metaObjectDao.get(id);
+        return Objects.isNull(metaObject) ? null : (MetaObject) getType(metaObject);
+    }
+
+    public static MetaAttribute getAttribute(@NonNull Long id) {
+        MetaAttribute metaAttribute = metaAttributeDao.get(id);
+        return Objects.isNull(metaAttribute) ? null : (MetaAttribute) getType(metaAttribute);
     }
 }

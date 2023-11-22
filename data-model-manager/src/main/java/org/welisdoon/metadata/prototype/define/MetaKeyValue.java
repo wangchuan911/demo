@@ -6,10 +6,10 @@ package org.welisdoon.metadata.prototype.define;
  * @Author Septem
  * @Date 11:54
  */
-public class MetaKeyValue extends MetaPrototype implements ISequneceEntity {
+public class MetaKeyValue extends MetaPrototype implements ISequenceEntity {
     Long targetObjectId, targetObjectAttrId;
 
-    int sequnece;
+    int sequence;
 
     public void setId(Long id) {
         this.id = id;
@@ -32,12 +32,12 @@ public class MetaKeyValue extends MetaPrototype implements ISequneceEntity {
     }
 
     @Override
-    public int getSequnece() {
-        return sequnece;
+    public int getSequence() {
+        return sequence;
     }
 
     @Override
-    public void setSequnece(int sequnece) {
-        this.sequnece = sequnece;
+    public void setSequence(int sequence) {
+        this.sequence = sequence;
     }
 }

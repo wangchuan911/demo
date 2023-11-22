@@ -12,11 +12,10 @@ import java.lang.annotation.Target;
  * @Date 10:11
  */
 public enum AttributeMetaType implements IMetaType {
-    Column(101, "表字段", ObjectMetaType.Table),
-    Attributes(201, "对象属性", ObjectMetaType.Object),
-    Header(301, "搜索结果标题", ObjectMetaType.Search),
-    Condition(302, "搜索条件", ObjectMetaType.Search),
-    Field(401, "实例属性", ObjectMetaType.Instance);
+    Column(2000, "表字段", ObjectMetaType.Table),
+    Attributes(2001, "对象属性", ObjectMetaType.Object),
+    Header(2002, "搜索结果标题", ObjectMetaType.Search),
+    Condition(2003, "搜索条件", ObjectMetaType.Search);
     long id;
     String name;
     ObjectMetaType objectMetaType;
