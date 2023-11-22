@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.welisdoon.metadata.prototype.dao.MetaObjectDao">
+
+    <resultMap id="rm_ColumnEntity" type="org.welisdoon.model.data.entity.database.ColumnEntity">
+        <id column="ID" property="id"></id>
+        <result column="CODE" property="code"></result>
+        <result column="NAME" property="name"></result>
+        <result column="DEFAULT_VALUE" property="defaultValue"></result>
+        <result column="jdbc_type" property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler"></result>
+        <result column="LENGTH" property="length"></result>
+        <!--<association property="foreign" select="getForeign" column="ID" javaType="org.welisdoon.model.data.entity.database.IForeignTarget"></association>
+        <association column="TABLE_ID" property="table"
+                     select="org.welisdoon.model.data.dao.TableDao.get"></association>-->
+        <result column="TABLE_ID" property="tableId"></result>
+        <association property="foreign" select="getForeign" column="ID"
+                     javaType="org.welisdoon.model.data.entity.database.ForeignEntity"></association>
+
+    </resultMap>
+    <resultMap id="rm_ForeignEntity" type="org.welisdoon.model.data.entity.database.ForeignEntity">
+        <id column="ID" property="id"></id>
+        <!--<discriminator javaType="int" column="ASSIGN_TYPE_ID">
+            <case value="1100">
+                <association property="assign" column="ASSIGN_ID"
+                             select="org.welisdoon.model.data.dao.TableDao.get"></association>
+            </case>
+            <case value="1101">
+                <association property="assign" column="ASSIGN_ID"
+                             select="org.welisdoon.model.data.dao.DataObjectDao.get"></association>
+            </case>
+            <case value="1102">
+                <association property="assign" column="ASSIGN_ID"
+                             select="org.welisdoon.model.data.dao.ColumnDao.get"></association>
+            </case>
+        </discriminator>-->
+        <result column="TARGET_ID" property="targetId"></result>
+        <result column="TARGET_TYPE_ID" property="targetTypeId"></result>
+    </resultMap>
+
+    <select id="getForeign" resultMap="rm_ForeignEntity" parameterType="long">
+        select *
+        from DM_TABLE_COLUMN_FOREIGN_KEY A
+        WHERE A.COLUMN_ID = #{value}
+    </select>
+    <select id="get" parameterType="long"
+            resultMap="rm_ColumnEntity">
+        select *
+        from DM_TABLE_COLUMN a
+        where a.id = #{value}
+    </select>
+
+    <select id="list" parameterType="org.welisdoon.model.data.condition.ColumnCondition"
+            resultMap="rm_ColumnEntity">
+        SELECT * FROM DM_TABLE_COLUMN A
+        <where>
+            <if test="entity.code!=null ">and CODE=#{entity.code}</if>
+            <if test="entity.id!=null ">and ID=#{entity.id}</if>
+            <if test="entity.type!=null and entity.type.name()!='UNDEFINED'">and JDBC_TYPE=#{entity.type}</if>
+            <if test="entity.length!=null ">and LENGTH=#{entity.length}</if>
+            <if test="entity.name!=null ">and NAME=#{entity.name}</if>
+            <if test="entity.table!=null">and TABLE_ID=#{entity.table.id}</if>
+            <if test="entity.tableId!=null">and TABLE_ID=#{entity.tableId}</if>
+        </where>
+        ORDER BY A.ID DESC
+
+    </select>
+
+    <insert id="add" parameterType="org.welisdoon.model.data.entity.database.ColumnEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO DM_TABLE_COLUMN(CODE,
+                                    ID,
+                                    JDBC_TYPE,
+                                    LENGTH,
+                                    NAME,
+                                    TABLE_ID)
+        VALUES (#{code},
+                #{id},
+                #{jdbc_type},
+                #{length},
+                #{name},
+                #{table.id})
+    </insert>
+
+    <insert id="update" parameterType="org.welisdoon.model.data.entity.database.ColumnEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        UPDATE DM_TABLE_COLUMN
+        <set>
+            CODE=#{code},
+            JDBC_TYPE=#{type.name},
+            LENGTH=#{length},
+            NAME=#{name},
+        </set>
+        WHERE ID = #{id}
+    </insert>
+
+
+</mapper>
