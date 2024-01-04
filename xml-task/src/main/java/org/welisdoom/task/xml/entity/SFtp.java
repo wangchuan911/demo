@@ -33,11 +33,11 @@ public class SFtp extends Ftp implements Executable, Copyable {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("get", data);
                 log(String.format("%s=====>%s", remote, file));
                 client.get(remote, file, new MySftpProgressMonitor(this));
-                client.disconnect();
                 toNext.complete(file);
             } catch (Throwable throwable) {
-                client.disconnect();
                 toNext.fail(throwable);
+            } finally {
+                client.disconnect();
             }
         }).onFailure(toNext::fail);
         return toNext.future();
@@ -51,11 +51,11 @@ public class SFtp extends Ftp implements Executable, Copyable {
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
                 client.put(file, remote, new MySftpProgressMonitor(this));
-                client.disconnect();
                 toNext.complete(file);
             } catch (Throwable throwable) {
-                client.disconnect();
                 toNext.fail(throwable);
+            } finally {
+                client.disconnect();
             }
         }).onFailure(toNext::fail);
         return toNext.future();
