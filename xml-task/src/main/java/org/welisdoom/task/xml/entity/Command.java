@@ -72,11 +72,18 @@ public class Command extends Unit implements Executable {
 
     @Override
     protected Future<Void> destroy(TaskRequest taskRequest) {
-        try {
-            Process process = taskRequest.cache(this);
-            process.destroyForcibly();
-        } catch (Throwable e) {
-
+        Process process = taskRequest.cache(this);
+        if (Objects.nonNull(process)) {
+            long pId = process.pid();
+            try {
+                process.destroyForcibly();
+            } catch (Throwable e) {
+                try {
+                    Runtime.getRuntime().exec("kill -9 " + pId);
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
         }
         return super.destroy(taskRequest);
     }

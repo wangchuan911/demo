@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 //@EnableTransactionManagement(proxyTargetClass = true)
 @MapperScan(basePackageClasses = XmlTaskApplication.class, annotationClass = Repository.class)
 @ComponentScan(basePackageClasses = {WebserverApplication.class, XmlTaskApplication.class}, excludeFilters = {
-        @org.springframework.context.annotation.ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE, classes = {org.welisdoon.web.WebserverApplication.class,ConfigDao.class})
+        @org.springframework.context.annotation.ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE, classes = {org.welisdoon.web.WebserverApplication.class})
 })
 public class XmlTaskApplication extends MySpringApplication {
     static Map<String, SubTask.Config> taskList = new LinkedHashMap<>();

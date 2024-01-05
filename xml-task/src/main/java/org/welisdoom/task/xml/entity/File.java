@@ -30,11 +30,15 @@ public class File extends StreamUnit<Stream.Writer> implements Executable, Copya
     public Future<Object> read(TaskRequest request) {
         String fileName = getAttrFormatValue("read", request);
         java.io.File file = StringUtils.isEmpty(fileName) ? null : new java.io.File(fileName);
+        String style = Optional.ofNullable(attributes.get("style")).orElseGet(() -> "byte");
         if (file == null || !file.exists())
-            return Future.failedFuture(new FileNotFoundException("file[" + fileName) + "]");
+            return "exists".equals(style) ? Future.succeededFuture(false) : Future.failedFuture(new FileNotFoundException("file[" + fileName) + "]");
         Future<Object> future;
         try {
-            switch (Optional.ofNullable(attributes.get("style")).orElseGet(() -> "byte")) {
+            switch (style) {
+                case "exists":
+                    future = Future.succeededFuture(true);
+                    break;
                 case "text":
                     future = Future.succeededFuture(StreamUtils.copyToString(new FileInputStream(file), getCharset(request)));
                     break;
