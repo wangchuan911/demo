@@ -22,4 +22,6 @@ public @interface Tag {
     Class<? extends UnitType>[] parentTagTypes();
 
     String desc() default "";
+
+    String nameSpace() default "";
 }

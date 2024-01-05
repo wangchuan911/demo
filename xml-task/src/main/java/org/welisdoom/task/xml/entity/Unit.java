@@ -270,7 +270,7 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     protected synchronized void log(Object o) {
-        logInline(0);
+        logInline(o);
         System.out.println();
     }
 

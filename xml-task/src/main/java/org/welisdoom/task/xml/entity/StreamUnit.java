@@ -78,7 +78,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
     }
 
     Charset getCharset(TaskRequest data) {
-        return Charset.forName(textFormat(data, attributes.getOrDefault("charset", "utf-")));
+        return Charset.forName(textFormat(data, attributes.getOrDefault("charset", "utf-8")));
     }
 
     protected Future<Object> listeningBreak(Future<Object> listFuture, Closeable reader, AtomicLong index) {
