@@ -12,10 +12,8 @@ import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoon.common.data.BaseCondition;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.sql.Timestamp;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -158,6 +156,9 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                         break;
                     case TIMESTAMP:
                         value = TypeUtils.castToTimestamp(value);
+                        if (Objects.nonNull(value) && value instanceof Timestamp) {
+                            value = ((Timestamp) value).toLocalDateTime();
+                        }
                         break;
                     case DATE:
                         value = TypeUtils.castToDate(value);
