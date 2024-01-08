@@ -1,11 +1,12 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Promise;
+import ognl.Ognl;
+import ognl.OgnlException;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoom.task.xml.intf.type.Initialize;
 import org.welisdoon.common.ObjectUtils;
 
 import java.util.HashMap;
@@ -35,9 +36,23 @@ public class SetValue extends Unit {
         if (attributes.containsKey("value")) {
             value = textFormat(data, attributes.get("value"));
         } else if (getChild(Content.class).stream().filter(content -> !StringUtils.isBlank(content.getContent())).count() > 0) {
-            value = textFormat(data,getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" ")));
+            value = textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" ")));
         } else
             value = preUnitResult;
+        String style = textFormat(data, attributes.get("style"));
+        switch (style) {
+            case "object":
+                if (value instanceof String)
+                    try {
+                        value = Ognl.getValue(value.toString(), data.getOgnlContext(), data.getBus(), Object.class);
+                    } catch (OgnlException e) {
+                        toNext.fail(e);
+                        return;
+                    }
+                break;
+            default:
+                break;
+        }
         map.put(attributes.get("name"), value);
         super.start(data, preUnitResult, toNext);
     }
