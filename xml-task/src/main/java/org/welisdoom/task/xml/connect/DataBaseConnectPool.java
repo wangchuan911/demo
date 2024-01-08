@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.connect;
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.sqlclient.*;
@@ -11,15 +10,13 @@ import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
-import org.welisdoom.task.xml.entity.Task;
-import org.welisdoom.task.xml.entity.TaskRequest;
-import org.welisdoom.task.xml.intf.type.Iterable;
-import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.BaseCondition;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -158,6 +155,9 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                         break;
                     case FLOAT:
                         value = TypeUtils.castToFloat(value);
+                        break;
+                    case TIMESTAMP:
+                        value = TypeUtils.castToTimestamp(value);
                         break;
                     case DATE:
                         value = TypeUtils.castToDate(value);
