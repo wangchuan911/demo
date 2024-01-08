@@ -263,6 +263,10 @@ public class Unit implements UnitType, IData<String, Model> {
         });
     }
 
+    protected synchronized void logNoTag(Object o) {
+        System.out.print(o);
+    }
+
     protected synchronized void logInline(Object o) {
         printTag(true);
         System.out.print(":");

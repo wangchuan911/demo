@@ -58,14 +58,14 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpClient> 
         }
 
         public void disconnect() {
-            if (channelSftp != null)
-                try {
+            try {
+                if (channelSftp != null)
                     channelSftp.disconnect();
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                } finally {
-                    triggerEvent(SFtpEvent.Disconnect);
-                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+            } finally {
+                triggerEvent(SFtpEvent.Disconnect);
+            }
             channelSftp = null;
             getEventListMap().clear();
         }
@@ -131,12 +131,11 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpClient> 
         }
 
         synchronized void disconnect() {
-            if (getSession() != null) {
-                try {
+            try {
+                if (getSession() != null)
                     getSession().disconnect();
-                } finally {
-                    SESSIONS.remove(this);
-                }
+            } finally {
+                SESSIONS.remove(this);
             }
         }
 
@@ -170,6 +169,7 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpClient> 
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println(SFtpLinkInfo.SESSIONS);
             for (SFtpLinkInfo entry : new LinkedList<>(SFtpLinkInfo.SESSIONS.keySet())) {
                 try {
                     entry.disconnect();

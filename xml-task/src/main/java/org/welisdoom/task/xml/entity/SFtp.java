@@ -28,7 +28,8 @@ public class SFtp extends Ftp implements Executable, Copyable {
     @Override
     public Future<Object> read(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
-        ApplicationContextProvider.getBean(SFtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
+        SFtpConnectPool sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectPool.class);
+        sFtpConnectPool.getConnect(getId(), data).onSuccess(client -> {
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("get", data);
                 log(String.format("%s=====>%s", remote, file));
@@ -36,6 +37,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
                 toNext.complete(file);
             } catch (Throwable throwable) {
                 toNext.fail(throwable);
+                sFtpConnectPool.close(data);
             } finally {
                 client.disconnect();
             }
@@ -47,7 +49,8 @@ public class SFtp extends Ftp implements Executable, Copyable {
     @Override
     public Future<Object> write(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
-        ApplicationContextProvider.getBean(SFtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
+        SFtpConnectPool sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectPool.class);
+        sFtpConnectPool.getConnect(getId(), data).onSuccess(client -> {
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
                 client.put(file, remote, new MySftpProgressMonitor(this));
@@ -56,6 +59,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
                 toNext.fail(throwable);
             } finally {
                 client.disconnect();
+                sFtpConnectPool.close(data);
             }
         }).onFailure(toNext::fail);
         return toNext.future();
@@ -121,10 +125,10 @@ public class SFtp extends Ftp implements Executable, Copyable {
         }
     }*/
 
-    @Override
+   /* @Override
     protected Future<Void> destroy(TaskRequest data) {
         return ApplicationContextProvider.getBean(SFtpConnectPool.class).close(data).transform(v -> super.destroy(data));
-    }
+    }*/
 
     static class MySftpProgressMonitor implements SftpProgressMonitor {
         long max, current;
@@ -143,7 +147,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
         @Override
         public boolean count(long l) {
             current += l;
-            sFtp.logInline(String.format("\r\ntransfer:%6.3f %s ======> [%019d/%019d]", (100f * current / max), "%", current, max));
+            sFtp.logNoTag(String.format("\rtransfer:%6.3f %s ======> [%019d/%019d]", (100f * current / max), "%", current, max));
             return l > 0;
         }
 
