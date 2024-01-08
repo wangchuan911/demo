@@ -137,13 +137,13 @@ public class SFtp extends Ftp implements Executable, Copyable {
         @Override
         public void init(int i, String s, String s1, long l) {
             max = l;
-            sFtp.log(String.format("begin $s : from [%s] to [%s]", SftpProgressMonitor.PUT == i ? "upload" : "download", s, s1));
+            sFtp.log(String.format("begin %s : from [%s] to [%s]", SftpProgressMonitor.PUT == i ? "upload" : "download", s, s1));
         }
 
         @Override
         public boolean count(long l) {
             current += l;
-            sFtp.logInline(String.format("\r\ntransfer:%6,3f %s ======> [%019d/%019d]", (100f * current / max), "%", current, max));
+            sFtp.logInline(String.format("\r\ntransfer:%6.3f %s ======> [%019d/%019d]", (100f * current / max), "%", current, max));
             return l > 0;
         }
 
