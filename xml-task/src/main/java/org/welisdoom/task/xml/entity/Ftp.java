@@ -2,6 +2,7 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.FtpConnectPool;
@@ -13,6 +14,8 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Optional;
 
 /**
  * @Classname Ftp
@@ -33,6 +36,7 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
     public Future<Object> read(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
         ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
+            data.cache(this, client);
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("get", data);
                 log(String.format("%s=====>%s", remote, file));
@@ -53,6 +57,7 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
     public Future<Object> write(TaskRequest data) {
         Promise<Object> toNext = Promise.promise();
         ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
+            data.cache(this, client);
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
                 log(String.format("%s=====>%s", file, remote));
@@ -137,16 +142,20 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
                 throw new RuntimeException("错误的操作");
         }
     }*/
+    protected Future<Void> disconnectFtp(TaskRequest data) {
+        Optional<FTPClient> optional = Optional.ofNullable(data.cache(this));
+        if (optional.isPresent()) {
+            try {
+                optional.get().disconnect();
+            } catch (IOException e) {
+                return Future.failedFuture(e);
+            }
+        }
+        return Future.succeededFuture();
+    }
 
     @Override
     protected Future<Void> destroy(TaskRequest data) {
-        return ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).compose(event -> {
-            try {
-                event.disconnect();
-            } catch (Throwable e) {
-                return Future.failedFuture(e);
-            }
-            return Future.succeededFuture();
-        }).transform(objectAsyncResult -> super.destroy(data));
+        return disconnectFtp(data).transform(objectAsyncResult -> super.destroy(data));
     }
 }

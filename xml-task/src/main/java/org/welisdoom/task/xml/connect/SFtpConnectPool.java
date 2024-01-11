@@ -8,6 +8,7 @@ import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoon.common.data.Event;
 import org.welisdoon.common.data.EventObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -18,7 +19,7 @@ import java.util.function.Consumer;
  * @Date 14:52
  */
 @Component
-public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpClient> {
+public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpSession> {
     ConfigDao configDao;
     ;
 
@@ -71,38 +72,41 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpClient> 
         }
     }
 
-    static class SFtpLinkInfo {
-        final static Map<SFtpLinkInfo, SFtpLinkInfo> SESSIONS = new HashMap<>();
+    public static class SFtpSession {
+        final static Set<SFtpSession> SESSIONS = new HashSet<>();
         final static JSch jSch = new JSch();
 
         Session session;
         final int port;
         final String host;
         final String user;
+        byte[] kw;
         List<SFtpClient> connectingClients = new LinkedList<>();
 
         protected Session getSession() {
-            return this.session != null ? this.session : SESSIONS.get(this).session;
+            return Optional.ofNullable(this.session).orElseGet(() -> SESSIONS.stream().filter(sFtpLinkInfo -> Objects.equals(sFtpLinkInfo, this)).findFirst().get().session);
         }
 
-        public SFtpLinkInfo(FtpConnectPool.FtpLinkInfo ftpLinkInfo) {
-            this(ftpLinkInfo.host, ftpLinkInfo.port, ftpLinkInfo.user);
+        public SFtpSession(FtpConnectPool.FtpLinkInfo ftpLinkInfo) {
+            this(ftpLinkInfo.host, ftpLinkInfo.port, ftpLinkInfo.user, ftpLinkInfo.pw.getBytes(StandardCharsets.UTF_8));
         }
 
-        public SFtpLinkInfo(String host, int port, String user) {
+        public SFtpSession(String host, int port, String user, byte[] pw) {
             this.host = host;
             this.port = port;
             this.user = user;
+            this.kw = pw;
         }
 
-        synchronized SFtpClient getClient(IToken iToken, String pw) throws Throwable {
-            if (!SESSIONS.containsKey(this)) {
+        public synchronized SFtpClient getClient(IToken iToken) throws Throwable {
+            if (!SESSIONS.contains(this)) {
                 this.session = jSch.getSession(user, host, port);
-                this.session.setPassword(pw);
+                this.session.setPassword(new String(kw));
                 this.session.setConfig("StrictHostKeyChecking", "no");
                 this.session.connect();
-                SESSIONS.put(this, this);
+                SESSIONS.add(this);
             }
+            this.kw = null;
 
             SFtpClient sFtpClient = new SFtpClient();
             sFtpClient.addEvent(SFtpClient.SFtpEvent.Connect, connectingClients::add);
@@ -115,7 +119,7 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpClient> 
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            SFtpLinkInfo that = (SFtpLinkInfo) o;
+            SFtpSession that = (SFtpSession) o;
             return port == that.port && Objects.equals(host, that.host) && Objects.equals(user, that.user);
         }
 
@@ -130,7 +134,7 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpClient> 
             disconnect();
         }
 
-        synchronized void disconnect() {
+        public synchronized void disconnect() {
             try {
                 if (getSession() != null)
                     getSession().disconnect();
@@ -146,39 +150,12 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpClient> 
         this.configDao = configDao;
     }
 
-    public Future<SFtpClient> getConnect(String name, IToken token) {
+    public Future<SFtpSession> getConnect(String name, IToken token) {
         try {
             FtpConnectPool.FtpLinkInfo ftpLinkInfo = configDao.getFtp(name);
-            return Future.succeededFuture(new SFtpLinkInfo(ftpLinkInfo).getClient(token, ftpLinkInfo.pw));
+            return Future.succeededFuture(new SFtpSession(ftpLinkInfo));
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
         }
-    }
-
-    public Future<Void> close(IToken token) {
-        for (SFtpLinkInfo entry : new LinkedList<>(SFtpLinkInfo.SESSIONS.keySet())) {
-            try {
-                entry.disconnect(token);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-        return Future.succeededFuture();
-    }
-
-
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println(SFtpLinkInfo.SESSIONS);
-            for (SFtpLinkInfo entry : new LinkedList<>(SFtpLinkInfo.SESSIONS.keySet())) {
-                try {
-                    entry.disconnect();
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                } finally {
-                    SFtpLinkInfo.SESSIONS.remove(entry);
-                }
-            }
-        }));
     }
 }
