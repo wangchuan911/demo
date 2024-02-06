@@ -2,7 +2,6 @@ package org.welisdoon.metadata.prototype.entity;
 
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
-import org.welisdoon.metadata.prototype.define.MetaObjectAttribute;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 
 /**
@@ -24,7 +23,7 @@ public class DataBaseTable extends MetaObject {
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Column)
-    public static class Column extends MetaObjectAttribute<DataBaseTable> {
+    public static class Column extends Attribute<DataBaseTable> {
         boolean primary;
 
         public boolean isPrimary() {

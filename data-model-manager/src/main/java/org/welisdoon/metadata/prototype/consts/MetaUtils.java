@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
-import org.welisdoon.metadata.prototype.define.MetaObjectAttribute;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -90,8 +89,8 @@ public class MetaUtils {
         return Objects.isNull(metaObject) ? null : (MetaObject) getType(metaObject);
     }
 
-    public static MetaObjectAttribute getAttribute(@NonNull Long id) {
-        MetaObjectAttribute metaAttribute = metaAttributeDao.get(id);
-        return Objects.isNull(metaAttribute) ? null : (MetaObjectAttribute) getType(metaAttribute);
+    public static MetaObject.Attribute getAttribute(@NonNull Long id) {
+        MetaObject.Attribute metaAttribute = metaAttributeDao.get(id);
+        return Objects.isNull(metaAttribute) ? null : (MetaObject.Attribute) getType(metaAttribute);
     }
 }

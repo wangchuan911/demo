@@ -7,4 +7,5 @@ package org.welisdoon.metadata.prototype.define;
  * @Date 15:09
  */
 public class MetaInstance extends MetaPrototype {
+
 }

@@ -1,5 +1,6 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
+import org.springframework.stereotype.Component;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.handle.HandleContext;
@@ -13,8 +14,9 @@ import java.util.function.Function;
  * @Author Septem
  * @Date 23:56
  */
-@LinkMetaType.LinkHandle(LinkMetaType.ObjFromSourceDataToConstructor)
-public class DataSourceConstructorHandler implements LinkHandle {
+@LinkMetaType.LinkHandle(LinkMetaType.SQLToJoin)
+@Component
+public class SqlBuilderHandler implements LinkHandle {
 
 
     @Override

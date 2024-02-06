@@ -11,12 +11,13 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
     MetaObject relObject, object;
 
     Long relAttributeId, attributeId;
-    MetaObjectAttribute relAttribute, attribute;
+    MetaObject.Attribute relAttribute, attribute;
+
 
     Long instanceId, relInstanceId;
     MetaInstance instance, relInstance;
 
-    Long valueId, superValueId;
+    Long valueId, relValueId;
     MetaKeyValue value, relValue;
 
     int sequence;
@@ -82,19 +83,19 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.attributeId = attributeId;
     }
 
-    public MetaObjectAttribute getRelAttribute() {
+    public MetaObject.Attribute getRelAttribute() {
         return relAttribute;
     }
 
-    public void setRelAttribute(MetaObjectAttribute relAttribute) {
+    public void setRelAttribute(MetaObject.Attribute relAttribute) {
         this.relAttribute = relAttribute;
     }
 
-    public MetaObjectAttribute getAttribute() {
+    public MetaObject.Attribute getAttribute() {
         return attribute;
     }
 
-    public void setAttribute(MetaObjectAttribute attribute) {
+    public void setAttribute(MetaObject.Attribute attribute) {
         this.attribute = attribute;
     }
 
@@ -138,12 +139,12 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.valueId = valueId;
     }
 
-    public Long getSuperValueId() {
-        return superValueId;
+    public Long getRelValueId() {
+        return relValueId;
     }
 
-    public void setSuperValueId(Long superValueId) {
-        this.superValueId = superValueId;
+    public void setRelValueId(Long relValueId) {
+        this.relValueId = relValueId;
     }
 
     public MetaKeyValue getValue() {
@@ -177,4 +178,6 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
     public void setRelLink(MetaLink relLink) {
         this.relLink = relLink;
     }
+
+
 }
