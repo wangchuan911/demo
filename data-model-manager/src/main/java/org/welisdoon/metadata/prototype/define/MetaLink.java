@@ -7,22 +7,22 @@ package org.welisdoon.metadata.prototype.define;
  * @Date 11:41
  */
 public class MetaLink extends MetaPrototype implements ISequenceEntity {
-    Long superObjectId, objectId;
-    MetaObject superObject, object;
+    Long relObjectId, objectId;
+    MetaObject relObject, object;
 
-    Long superAttributeId, attributeId;
-    MetaAttribute superAttribute, attribute;
+    Long relAttributeId, attributeId;
+    MetaObjectAttribute relAttribute, attribute;
 
-    Long parentLinkId;
-    MetaLink parentLink;
-
-    Long instanceId, superInstanceId;
-    MetaInstance instance, superInstance;
+    Long instanceId, relInstanceId;
+    MetaInstance instance, relInstance;
 
     Long valueId, superValueId;
-    MetaKeyValue value, superValue;
+    MetaKeyValue value, relValue;
 
     int sequence;
+
+    Long relLinkId;
+    MetaLink relLink;
 
     @Override
     public int getSequence() {
@@ -34,12 +34,12 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.sequence = i;
     }
 
-    public Long getSuperObjectId() {
-        return superObjectId;
+    public Long getRelObjectId() {
+        return relObjectId;
     }
 
-    public void setSuperObjectId(Long superObjectId) {
-        this.superObjectId = superObjectId;
+    public void setRelObjectId(Long relObjectId) {
+        this.relObjectId = relObjectId;
     }
 
     public Long getObjectId() {
@@ -50,12 +50,12 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.objectId = objectId;
     }
 
-    public MetaObject getSuperObject() {
-        return superObject;
+    public MetaObject getRelObject() {
+        return relObject;
     }
 
-    public void setSuperObject(MetaObject superObject) {
-        this.superObject = superObject;
+    public void setRelObject(MetaObject relObject) {
+        this.relObject = relObject;
     }
 
     public MetaObject getObject() {
@@ -66,12 +66,12 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.object = object;
     }
 
-    public Long getSuperAttributeId() {
-        return superAttributeId;
+    public Long getRelAttributeId() {
+        return relAttributeId;
     }
 
-    public void setSuperAttributeId(Long superAttributeId) {
-        this.superAttributeId = superAttributeId;
+    public void setRelAttributeId(Long relAttributeId) {
+        this.relAttributeId = relAttributeId;
     }
 
     public Long getAttributeId() {
@@ -82,36 +82,20 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.attributeId = attributeId;
     }
 
-    public MetaAttribute getSuperAttribute() {
-        return superAttribute;
+    public MetaObjectAttribute getRelAttribute() {
+        return relAttribute;
     }
 
-    public void setSuperAttribute(MetaAttribute superAttribute) {
-        this.superAttribute = superAttribute;
+    public void setRelAttribute(MetaObjectAttribute relAttribute) {
+        this.relAttribute = relAttribute;
     }
 
-    public MetaAttribute getAttribute() {
+    public MetaObjectAttribute getAttribute() {
         return attribute;
     }
 
-    public void setAttribute(MetaAttribute attribute) {
+    public void setAttribute(MetaObjectAttribute attribute) {
         this.attribute = attribute;
-    }
-
-    public Long getParentLinkId() {
-        return parentLinkId;
-    }
-
-    public void setParentLinkId(Long parentLinkId) {
-        this.parentLinkId = parentLinkId;
-    }
-
-    public MetaLink getParentLink() {
-        return parentLink;
-    }
-
-    public void setParentLink(MetaLink parentLink) {
-        this.parentLink = parentLink;
     }
 
     public Long getInstanceId() {
@@ -122,12 +106,12 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.instanceId = instanceId;
     }
 
-    public Long getSuperInstanceId() {
-        return superInstanceId;
+    public Long getRelInstanceId() {
+        return relInstanceId;
     }
 
-    public void setSuperInstanceId(Long superInstanceId) {
-        this.superInstanceId = superInstanceId;
+    public void setRelInstanceId(Long relInstanceId) {
+        this.relInstanceId = relInstanceId;
     }
 
     public MetaInstance getInstance() {
@@ -138,12 +122,12 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.instance = instance;
     }
 
-    public MetaInstance getSuperInstance() {
-        return superInstance;
+    public MetaInstance getRelInstance() {
+        return relInstance;
     }
 
-    public void setSuperInstance(MetaInstance superInstance) {
-        this.superInstance = superInstance;
+    public void setRelInstance(MetaInstance relInstance) {
+        this.relInstance = relInstance;
     }
 
     public Long getValueId() {
@@ -170,11 +154,27 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity {
         this.value = value;
     }
 
-    public MetaKeyValue getSuperValue() {
-        return superValue;
+    public MetaKeyValue getRelValue() {
+        return relValue;
     }
 
-    public void setSuperValue(MetaKeyValue superValue) {
-        this.superValue = superValue;
+    public void setRelValue(MetaKeyValue relValue) {
+        this.relValue = relValue;
+    }
+
+    public Long getRelLinkId() {
+        return relLinkId;
+    }
+
+    public void setRelLinkId(Long relLinkId) {
+        this.relLinkId = relLinkId;
+    }
+
+    public MetaLink getRelLink() {
+        return relLink;
+    }
+
+    public void setRelLink(MetaLink relLink) {
+        this.relLink = relLink;
     }
 }

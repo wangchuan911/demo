@@ -4,65 +4,23 @@
 
 <mapper namespace="org.welisdoon.metadata.prototype.dao.MetaAttributeDao">
 
-    <resultMap id="MetaAttribute" type="org.welisdoon.metadata.prototype.define.MetaAttribute">
-        <id column="ID" property="id"></id>
-        <result column="CODE" property="code"></result>
-        <result column="NAME" property="name"></result>
-        <result column="TYPE_ID" property="typeId"></result>
-        <result column="PARENT_ID" property="parentId"></result>
-        <result column="OBJECT_ID" property="objectId"></result>
+    <resultMap id="MetaAttribute" type="org.welisdoon.metadata.prototype.define.MetaObjectAttribute">
+        <id column="id" property="id"></id>
+        <result column="type_id" property="typeId"></result>
+        <result column="name" property="name"></result>
+        <result column="code" property="code"></result>
+        <result column="object_id" property="objectId"></result>
     </resultMap>
-
-    <select id="get" parameterType="long"
+    <select id="list"
+            parameterType="org.welisdoon.metadata.prototype.condition.MetaAttributeCondition"
             resultMap="MetaAttribute">
-        select *
-        from DM_ a
-        where a.id = #{value}
-    </select>
-
-    <select id="list" parameterType="org.welisdoon.model.data.condition.ColumnCondition"
-            resultMap="rm_ColumnEntity">
-        SELECT * FROM DM_TABLE_COLUMN A
+        select * from md_attr
         <where>
-            <if test="entity.code!=null ">and CODE=#{entity.code}</if>
-            <if test="entity.id!=null ">and ID=#{entity.id}</if>
-            <if test="entity.type!=null and entity.type.name()!='UNDEFINED'">and JDBC_TYPE=#{entity.type}</if>
-            <if test="entity.length!=null ">and LENGTH=#{entity.length}</if>
-            <if test="entity.name!=null ">and NAME=#{entity.name}</if>
-            <if test="entity.table!=null">and TABLE_ID=#{entity.table.id}</if>
-            <if test="entity.tableId!=null">and TABLE_ID=#{entity.tableId}</if>
+            <if test="parentId!=null ">and parent_id = #{parentId}</if>
+            <if test="objectId!=null ">and object_id = #{objectId}</if>
         </where>
-        ORDER BY A.ID DESC
 
     </select>
-
-    <insert id="add" parameterType="org.welisdoon.model.data.entity.database.ColumnEntity"
-            useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO DM_TABLE_COLUMN(CODE,
-                                    ID,
-                                    JDBC_TYPE,
-                                    LENGTH,
-                                    NAME,
-                                    TABLE_ID)
-        VALUES (#{code},
-                #{id},
-                #{jdbc_type},
-                #{length},
-                #{name},
-                #{table.id})
-    </insert>
-
-    <insert id="update" parameterType="org.welisdoon.model.data.entity.database.ColumnEntity"
-            useGeneratedKeys="true" keyProperty="id">
-        UPDATE DM_TABLE_COLUMN
-        <set>
-            CODE=#{code},
-            JDBC_TYPE=#{type.name},
-            LENGTH=#{length},
-            NAME=#{name},
-        </set>
-        WHERE ID = #{id}
-    </insert>
 
 
 </mapper>

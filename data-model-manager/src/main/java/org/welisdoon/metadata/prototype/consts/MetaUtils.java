@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
-import org.welisdoon.metadata.prototype.define.MetaAttribute;
+import org.welisdoon.metadata.prototype.define.MetaObjectAttribute;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -59,7 +59,8 @@ public class MetaUtils {
                             .filter(aClass1 -> MetaObject.class.isAssignableFrom(aClass1))
                             .forEach(aClass1 -> {
                                 IMetaType iMetaType = ((IMetaType) AnnotationUtils.getValue(aClass1.getAnnotation(aClass)));
-                                if (Objects.nonNull(iMetaType)) {
+                                if (Objects.nonNull(iMetaType)
+                                        && (!LONG_KEY_VALUE_MAP.containsKey(iMetaType.getId()) || aClass1.isAssignableFrom(LONG_KEY_VALUE_MAP.get(iMetaType.getId()).getKey()))) {
                                     LONG_KEY_VALUE_MAP.put(iMetaType.getId(), new DefaultKeyValue(aClass1, iMetaType));
                                 }
                             });
@@ -89,8 +90,8 @@ public class MetaUtils {
         return Objects.isNull(metaObject) ? null : (MetaObject) getType(metaObject);
     }
 
-    public static MetaAttribute getAttribute(@NonNull Long id) {
-        MetaAttribute metaAttribute = metaAttributeDao.get(id);
-        return Objects.isNull(metaAttribute) ? null : (MetaAttribute) getType(metaAttribute);
+    public static MetaObjectAttribute getAttribute(@NonNull Long id) {
+        MetaObjectAttribute metaAttribute = metaAttributeDao.get(id);
+        return Objects.isNull(metaAttribute) ? null : (MetaObjectAttribute) getType(metaAttribute);
     }
 }

@@ -19,13 +19,15 @@ public enum LinkMetaType implements IMetaType {
     ObjectLinkSingleLineTable(3002, "对象与单行表的关系"),
     ObjectLinkMultiLineTable(3004, "对象与多行表的关系"),
     HeaderLinkAttributes(3005, "数据标题与属性的关系"),
-    ObjToConstruction(3006, "对象构造定义"),
-    Equal(3007, "等于"),
-    NotEqual(3008, "不等于"),
-    GreatThan(3009, "大于"),
-    LessThan(3010, "小于"),
-    OR(3011, "或"),
-    AND(3011, "与");
+    ObjToConstructor(3006, "对象构造定义"),
+    ObjFromSourceDataToConstructor(3007, "对象构造定义(数据库)"),
+    ObjFromTextDataToConstructor(3008, "对象构造定义(文本数据)"),
+    Equal(3200, "等于"),
+    NotEqual(3201, "不等于"),
+    GreatThan(3202, "大于"),
+    LessThan(3203, "小于"),
+    OR(3204, "或"),
+    AND(3205, "与");
 
     long id;
     String name;
@@ -61,6 +63,6 @@ public enum LinkMetaType implements IMetaType {
     @Retention(RetentionPolicy.RUNTIME)
     @Meta
     public @interface LinkHandle {
-        LinkMetaType[] value();
+        LinkMetaType value();
     }
 }

@@ -1,17 +1,12 @@
 package org.welisdoon.metadata.prototype.handle.link;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
-import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.define.MetaLink;
-import org.welisdoon.metadata.prototype.define.MetaPrototype;
-import org.welisdoon.metadata.prototype.handle.HandleParameter;
+import org.welisdoon.metadata.prototype.handle.HandleContext;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 /**
  * @Classname LinkHandle
@@ -19,28 +14,23 @@ import java.util.Optional;
  * @Author Septem
  * @Date 18:14
  */
+@FunctionalInterface
 public interface LinkHandle {
 
-    void handler(HandleParameter handleParameter, MetaLink... metaLinks);
+    void handler(HandleContext handleContext, MetaLink metaLink);
 
-    default void handlerToLowerLink(MetaLink metaLink, HandleParameter handleParameter) {
-        List<MetaLink> list = ApplicationContextProvider.getBean(MetaLinkDao.class).list(new MetaLinkCondition().setParentId(metaLink.getId()));
-        long[] typeId = list.stream().map(MetaPrototype::getTypeId).mapToLong(Long::longValue).toArray();
-        Optional optional = ApplicationContextProvider
-                .getApplicationContext()
-                .getBeansWithAnnotation(LinkMetaType.LinkHandle.class)
-                .values().stream().filter(o -> {
-                    if (!(o instanceof LinkHandle)) {
-                        return false;
-                    }
-                    long[] linkMetaTypes = Arrays.stream(ApplicationContextProvider.getRealClass(o.getClass()).getAnnotation(LinkMetaType.LinkHandle.class).value()).mapToLong(value -> value.getId()).toArray();
-                    return Arrays.stream(linkMetaTypes).filter(metaType -> !ArrayUtils.contains(typeId, metaType)).count() == 0;
-                })
-                .findFirst();
-        if (optional.isEmpty()) {
-            return;
-        }
-        ((LinkHandle) optional.get()).handler(handleParameter, list.toArray(MetaLink[]::new));
+    default void execute(HandleContext handleContext, MetaLink metaLink) {
+        execute(handleContext, metaLink, this);
     }
 
+    default void execute(HandleContext handleContext, MetaLink metaLink, LinkHandle linkHandle) {
+        MetaLinkDao metaObjectDao = ApplicationContextProvider.getBean(MetaLinkDao.class);
+        if (Objects.isNull(metaLink) || Objects.isNull(metaLink.getId())) {
+            return;
+        }
+        for (MetaLink link : metaObjectDao.list(new MetaLinkCondition().setParentId(metaLink.getId()))) {
+            link.setParent(link);
+            linkHandle.handler(handleContext, metaLink);
+        }
+    }
 }

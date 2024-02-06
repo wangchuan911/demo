@@ -8,6 +8,7 @@ package org.welisdoon.metadata.prototype.condition;
  */
 public class MetaAttributeCondition {
     Long parentId;
+    Long objectId;
 
     public MetaAttributeCondition setParentId(Long parentId) {
         this.parentId = parentId;
@@ -16,5 +17,14 @@ public class MetaAttributeCondition {
 
     public Long getParentId() {
         return parentId;
+    }
+
+    public Long getObjectId() {
+        return objectId;
+    }
+
+    public MetaAttributeCondition setObjectId(Long objectId) {
+        this.objectId = objectId;
+        return this;
     }
 }

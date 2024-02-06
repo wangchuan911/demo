@@ -3,63 +3,28 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="org.welisdoon.metadata.prototype.dao.MetaLinkDao">
-
-    <resultMap id="rm_ColumnEntity" type="org.welisdoon.metadata.prototype.define.MetaLink">
-        <id column="ID" property="id"></id>
-        <result column="CODE" property="code"></result>
-        <result column="NAME" property="name"></result>
+    <resultMap id="MetaLink" type="org.welisdoon.metadata.prototype.define.MetaLink">
+        <id column="id" property="id"></id>
+        <result column="type_id" property="typeId"></result>
+        <result column="rel_object_id" property="relObjectId"></result>
+        <result column="object_id" property="objectId"></result>
+        <result column="rel_value_id" property="relValueId"></result>
+        <result column="value_id" property="valueId"></result>
+        <result column="rel_attribute_id" property="relAttributeId"></result>
+        <result column="attribute_id" property="attributeId"></result>
+        <result column="rel_instance_id" property="relInstanceId"></result>
+        <result column="instance_id" property="instanceId"></result>
+        <result column="rel_link_id" property="relLinkId"></result>
     </resultMap>
-    
-    <select id="get" parameterType="long"
-            resultMap="rm_ColumnEntity">
-        select *
-        from DM_TABLE_COLUMN a
-        where a.id = #{value}
-    </select>
-
-    <select id="list" parameterType="org.welisdoon.model.data.condition.ColumnCondition"
-            resultMap="rm_ColumnEntity">
-        SELECT * FROM DM_TABLE_COLUMN A
+    <select id="list"
+            parameterType="org.welisdoon.metadata.prototype.condition.MetaLinkCondition"
+            resultMap="MetaLink">
+        select * from MD_LINK
         <where>
-            <if test="entity.code!=null ">and CODE=#{entity.code}</if>
-            <if test="entity.id!=null ">and ID=#{entity.id}</if>
-            <if test="entity.type!=null and entity.type.name()!='UNDEFINED'">and JDBC_TYPE=#{entity.type}</if>
-            <if test="entity.length!=null ">and LENGTH=#{entity.length}</if>
-            <if test="entity.name!=null ">and NAME=#{entity.name}</if>
-            <if test="entity.table!=null">and TABLE_ID=#{entity.table.id}</if>
-            <if test="entity.tableId!=null">and TABLE_ID=#{entity.tableId}</if>
+            <if test="parentId!=null ">and parent_id = #{parentId}</if>
         </where>
-        ORDER BY A.ID DESC
 
     </select>
-
-    <insert id="add" parameterType="org.welisdoon.model.data.entity.database.ColumnEntity"
-            useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO DM_TABLE_COLUMN(CODE,
-                                    ID,
-                                    JDBC_TYPE,
-                                    LENGTH,
-                                    NAME,
-                                    TABLE_ID)
-        VALUES (#{code},
-                #{id},
-                #{jdbc_type},
-                #{length},
-                #{name},
-                #{table.id})
-    </insert>
-
-    <insert id="update" parameterType="org.welisdoon.model.data.entity.database.ColumnEntity"
-            useGeneratedKeys="true" keyProperty="id">
-        UPDATE DM_TABLE_COLUMN
-        <set>
-            CODE=#{code},
-            JDBC_TYPE=#{type.name},
-            LENGTH=#{length},
-            NAME=#{name},
-        </set>
-        WHERE ID = #{id}
-    </insert>
 
 
 </mapper>

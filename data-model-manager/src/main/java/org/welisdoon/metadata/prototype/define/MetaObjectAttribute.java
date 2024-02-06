@@ -8,7 +8,7 @@ import org.welisdoon.metadata.prototype.consts.MetaUtils;
  * @Author Septem
  * @Date 11:41
  */
-public class MetaAttribute<T extends MetaObject> extends MetaPrototype {
+public class MetaObjectAttribute<T extends MetaObject> extends MetaPrototype {
     Long objectId;
 
     public Long getObjectId() {

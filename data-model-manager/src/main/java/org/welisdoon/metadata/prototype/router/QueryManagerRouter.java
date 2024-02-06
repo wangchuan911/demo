@@ -34,7 +34,7 @@ public class QueryManagerRouter {
             long qid = Long.valueOf(routingContext.pathParam("qid"));
             switch (routingContext.pathParam("type")) {
                 case "header": {
-                    routingContext.end(JSONObject.toJSONString(headerDao.list(new QueryHeaderCondition().setQueryId(qid))));
+//                    routingContext.end(JSONObject.toJSONString(headerDao.list(new QueryHeaderCondition().setQueryId(qid))));
                     return;
                 }
                 case "query": {
