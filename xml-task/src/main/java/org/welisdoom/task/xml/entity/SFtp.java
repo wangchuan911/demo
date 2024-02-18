@@ -6,9 +6,9 @@ import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.SFtpConnectPool;
+import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.Optional;
 

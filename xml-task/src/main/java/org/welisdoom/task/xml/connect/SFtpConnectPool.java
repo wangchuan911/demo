@@ -145,7 +145,7 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpSession>
 
     }
 
-    @Autowired
+    @Autowired(required = false)
     public void setConfigDao(ConfigDao configDao) {
         this.configDao = configDao;
     }

@@ -28,7 +28,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
 
     ConfigDao configDao;
 
-    @Autowired
+    @Autowired(required = false)
     public void setConfigDao(ConfigDao configDao) {
         this.configDao = configDao;
     }

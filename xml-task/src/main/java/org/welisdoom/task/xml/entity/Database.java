@@ -10,11 +10,8 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.connect.Db;
 import org.welisdoom.task.xml.dao.ConfigDao;
-import org.welisdoom.task.xml.intf.Copyable;
-import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoom.task.xml.intf.type.Stream;
+import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoon.common.ObjectUtils;
-import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.HashMap;
 import java.util.Map;

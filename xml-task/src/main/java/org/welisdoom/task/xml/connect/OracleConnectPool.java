@@ -1,33 +1,19 @@
 package org.welisdoom.task.xml.connect;
 
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.util.TypeUtils;
-import io.vertx.core.*;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.oracleclient.OracleConnection;
 import io.vertx.oracleclient.OraclePool;
-import io.vertx.pgclient.PgPool;
-import io.vertx.sqlclient.*;
-import ognl.Ognl;
-import ognl.OgnlException;
-import org.apache.ibatis.type.JdbcType;
+import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoom.task.xml.dao.ConfigDao;
-import org.welisdoom.task.xml.entity.If;
 import org.welisdoom.task.xml.entity.Task;
-import org.welisdoom.task.xml.entity.TaskRequest;
-import org.welisdoom.task.xml.entity.Value;
 import org.welisdoon.common.data.BaseCondition;
-import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 
-import java.sql.JDBCType;
-import java.sql.SQLType;
-import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Classname OracleConnect
@@ -42,7 +28,7 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
 
     ConfigDao configDao;
 
-    @Autowired
+    @Autowired(required = false)
     public void setConfigDao(ConfigDao configDao) {
         this.configDao = configDao;
     }

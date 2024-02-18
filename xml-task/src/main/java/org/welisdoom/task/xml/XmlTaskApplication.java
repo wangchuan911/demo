@@ -4,18 +4,17 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.VertxOptions;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Repository;
-import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.SubTask;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoon.common.ObjectUtils;
-import org.welisdoon.web.MySpringApplication;
-import org.welisdoon.web.WebserverApplication;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -35,11 +34,10 @@ import java.util.stream.Collectors;
 
 @SpringBootApplication
 //@EnableTransactionManagement(proxyTargetClass = true)
-@MapperScan(basePackageClasses = XmlTaskApplication.class, annotationClass = Repository.class)
-@ComponentScan(basePackageClasses = {WebserverApplication.class, XmlTaskApplication.class}, excludeFilters = {
-        @org.springframework.context.annotation.ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE, classes = {org.welisdoon.web.WebserverApplication.class})
+@ComponentScan(basePackageClasses = {XmlTaskApplication.class}, excludeFilters = {
+        @org.springframework.context.annotation.ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE, classes = {})
 })
-public class XmlTaskApplication extends MySpringApplication {
+public class XmlTaskApplication {
     static Map<String, SubTask.Config> taskList = new LinkedHashMap<>();
     final static Pattern pattern = Pattern.compile("\\@task\\-(.+?)\\=(.+)"), pattern1 = Pattern.compile("\\@task\\-(.+?)\\-params\\-(.+?)\\=.+"), pattern2 = Pattern.compile("(\\w+):(.+)");
     static VertxOptions options = new VertxOptions();
@@ -71,7 +69,7 @@ public class XmlTaskApplication extends MySpringApplication {
             } else
                 newArgs.add(arg);
         }
-        MySpringApplication.run(XmlTaskApplication.class, newArgs.toArray(String[]::new));
+        SpringApplication.run(XmlTaskApplication.class, newArgs.toArray(String[]::new));
     }
 
     static List<String> getValue(Matcher matcher) {
@@ -106,5 +104,10 @@ public class XmlTaskApplication extends MySpringApplication {
         });
     }
 
+    @Configuration
+    @MapperScan(basePackageClasses = XmlTaskApplication.class, annotationClass = Repository.class)
+    @ConditionalOnProperty(prefix = "spring.datasource", name = "enabled", havingValue = "true")
+    public static class DbConfig {
 
+    }
 }

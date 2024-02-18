@@ -6,11 +6,11 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.FtpConnectPool;
+import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoon.common.StreamUtils;
-import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

@@ -24,7 +24,7 @@ public class FtpConnectPool implements ConnectPool<FTPClient> {
     Map<IToken, Map<String, FTPClient>> client = new HashMap<>();
     ConfigDao configDao;
 
-    @Autowired
+    @Autowired(required = false)
     public void setConfigDao(ConfigDao configDao) {
         this.configDao = configDao;
     }
