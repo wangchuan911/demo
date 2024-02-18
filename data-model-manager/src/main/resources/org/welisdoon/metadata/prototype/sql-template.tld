@@ -1,0 +1,60 @@
+<builder>
+    <select alias="t1" column="co1"></select>
+    <select alias="t1" column="co1"></select>
+    <select alias="t1" column="co1"></select>
+    <select alias="t1" column="co1"></select>
+    <select alias="t1" column="co1"></select>
+    <!--
+       from table1 t1 where t1.col1=1
+        -->
+    <joiner alias="t1" tablaname="table1">
+        <and>
+            <equal alias="t1" colums="co1">
+                <equal value="1" valuetype="int"></equal>
+            </equal>
+        </and>
+    </joiner>
+    <!--
+      join table2 t2 on
+       -->
+    <joiner alias="t2" tablaname="table2">
+        <and>
+            <equal alias="t2" colums="co1">
+                <equal alias="t1" colums="col2"></equal>
+            </equal>
+        </and>
+    </joiner>
+    <!--
+      join table3 t3 on
+       -->
+    <joiner alias="t3" tablaname="table3">
+        <!--
+       and  ( t3.co1 = t1.col3 or t3.co1 = t2.col2 )
+        -->
+        <or>
+            <equal alias="t3" colums="co1">
+                <equal alias="t2" colums="col2"></equal>
+            </equal>
+            <equal alias="t3" colums="co1">
+                <equal alias="t1" colums="col3"></equal>
+            </equal>
+        </or>
+        <!--
+       and t3.co1 in (t1.col3,t2.col2)
+        -->
+        <contain alias="t3" colums="co1">
+            <equal alias="t1" colums="col3"></equal>
+            <equal alias="t2" colums="col2"></equal>
+        </contain>
+    </joiner>
+    <!--
+       exists (select 1 from table4 t4 where t4.co1 in (t1.col4,t2.col4))
+        -->
+    <joiner alias="t4" tablaname="table4" multi="true">
+        <contain alias="t4" colums="co1">
+            <equal alias="t1" colums="col4"></equal>
+            <equal alias="t2" colums="col4"></equal>
+        </contain>
+    </joiner>
+
+</builder>

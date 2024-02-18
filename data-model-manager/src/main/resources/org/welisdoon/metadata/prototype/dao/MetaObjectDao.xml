@@ -19,4 +19,15 @@
         </where>
 
     </select>
+
+
+    <select id="get"
+            parameterType="long"
+            resultMap="MetaObject">
+        select * from md_object
+        <where>
+            and id=#{value}
+        </where>
+
+    </select>
 </mapper>

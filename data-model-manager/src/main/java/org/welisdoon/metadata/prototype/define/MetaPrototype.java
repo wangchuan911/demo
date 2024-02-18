@@ -2,6 +2,7 @@ package org.welisdoon.metadata.prototype.define;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,12 +14,11 @@ import java.util.Objects;
  * @Author Septem
  * @Date 11:48
  */
-public abstract class MetaPrototype {
-    Long id,
-            typeId, parentId;
+public abstract class MetaPrototype<T extends MetaPrototype> {
+    Long id, typeId, parentId;
     String code, name;
-    MetaPrototype parent;
-    List<MetaPrototype> children;
+    T parent;
+    List<T> children;
 
     public Long getId() {
         return id;
@@ -60,7 +60,7 @@ public abstract class MetaPrototype {
         this.name = name;
     }
 
-    public void setParent(MetaPrototype parent) {
+    public void setParent(T parent) {
         this.parent = parent;
         if (Objects.isNull(this.parent.children)) {
             synchronized (this.parent) {
@@ -74,21 +74,43 @@ public abstract class MetaPrototype {
 
     @JsonIgnore
     @JSONField(deserialize = false)
-    public <T extends MetaPrototype> T getParent() {
-        return (T) parent;
+    public T getParent() {
+        return parent;
     }
 
-    public void setChildren(List<MetaPrototype> children) {
+    public void setChildren(List<T> children) {
         this.children = children;
+        if (CollectionUtils.isEmpty(children)) return;
+        this.children.forEach(t -> t.setParent(this));
     }
 
-    public void addChildren(MetaPrototype... children) {
-        for (MetaPrototype child : children) {
+    public void addChildren(T... children) {
+        if (Objects.isNull(this.children))
+            synchronized (this) {
+                if (Objects.isNull(this.children))
+                    this.children = new LinkedList<>();
+            }
+
+        for (T child : children) {
             child.setParent(this);
+            this.children.add(child);
         }
     }
 
-    public <T extends MetaPrototype> List<T> getChildren() {
-        return (List) children;
+    public List<T> getChildren() {
+        return children;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MetaPrototype<?> that = (MetaPrototype<?>) o;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getTypeId(), that.getTypeId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getTypeId());
     }
 }

@@ -1,0 +1,24 @@
+package org.welisdoon.metadata.prototype.handle.link.construction.sql.operator;
+
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.define.MetaLink;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
+
+/**
+ * @Classname SqlAndHandler
+ * @Description TODO
+ * @Author Septem
+ * @Date 16:49
+ */
+@Component
+@LinkMetaType.LinkHandle(LinkMetaType.OR)
+@Order(0)
+public class SqlORHandler extends SqlAndHandler {
+
+    @Override
+    public String toSql(MetaLink parentML, SqlContent parentSB) {
+        return "(" + super.toSql(parentML, parentSB) + ")";
+    }
+}

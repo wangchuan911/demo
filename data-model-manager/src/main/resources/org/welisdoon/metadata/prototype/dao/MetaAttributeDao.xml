@@ -14,13 +14,22 @@
     <select id="list"
             parameterType="org.welisdoon.metadata.prototype.condition.MetaAttributeCondition"
             resultMap="MetaAttribute">
-        select * from md_attr
+        select * from md_object_attr
         <where>
             <if test="parentId!=null ">and parent_id = #{parentId}</if>
             <if test="objectId!=null ">and object_id = #{objectId}</if>
         </where>
 
     </select>
+    <select id="get"
+            parameterType="long"
+            resultMap="MetaAttribute">
+        select * from md_object_attr
+        <where>
+            and id=#{value}
+        </where>
 
+    </select>
 
 </mapper>
+

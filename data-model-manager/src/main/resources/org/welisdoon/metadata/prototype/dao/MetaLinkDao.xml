@@ -25,6 +25,14 @@
         </where>
 
     </select>
+    <select id="get"
+            parameterType="long"
+            resultMap="MetaLink">
+        select * from MD_LINK
+        <where>
+            and id=#{value}
+        </where>
 
+    </select>
 
 </mapper>

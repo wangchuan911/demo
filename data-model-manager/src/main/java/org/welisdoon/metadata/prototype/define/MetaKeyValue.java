@@ -6,29 +6,26 @@ package org.welisdoon.metadata.prototype.define;
  * @Author Septem
  * @Date 11:54
  */
-public class MetaKeyValue extends MetaPrototype implements ISequenceEntity {
-    Long targetObjectId, targetObjectAttrId;
+public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequenceEntity {
+    String value;
+    Long valueTypeId;
 
     int sequence;
 
-    public void setId(Long id) {
-        this.id = id;
+    public String getValue() {
+        return value;
     }
 
-    public Long getTargetObjectId() {
-        return targetObjectId;
+    public void setValue(String value) {
+        this.value = value;
     }
 
-    public void setTargetObjectId(Long targetObjectId) {
-        this.targetObjectId = targetObjectId;
+    public Long getValueTypeId() {
+        return valueTypeId;
     }
 
-    public Long getTargetObjectAttrId() {
-        return targetObjectAttrId;
-    }
-
-    public void setTargetObjectAttrId(Long targetObjectAttrId) {
-        this.targetObjectAttrId = targetObjectAttrId;
+    public void setValueTypeId(Long valueTypeId) {
+        this.valueTypeId = valueTypeId;
     }
 
     @Override

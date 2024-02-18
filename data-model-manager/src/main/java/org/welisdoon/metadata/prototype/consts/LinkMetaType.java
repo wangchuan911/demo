@@ -29,7 +29,9 @@ public enum LinkMetaType implements IMetaType {
     ObjExtendObj(3009, "对象构造定义(对象继承)", ObjConstructor),
     SqlToFrom(3010, "对象对象关联数据库的表", ObjToDataBase),
     SqlToSelect(3011, "对象关联的数据库字段", ObjToDataBase),
-    SQLToJoin(3012, "对象关联数据库的数据关系", ObjToDataBase),
+    SqlToFromOfMultiDataRel(3012, "对象对象关联数据库的表(多对一)", SqlToFrom),
+    SqlToFromOfWeakRel(3013, "对象对象关联数据库的表(非强制关联)", SqlToFrom),
+    SqlToFromOfStrongRel(3014, "对象对象关联数据库的表(强制关联)", SqlToFrom),
     Equal(3200, "等于"),
     NotEqual(3201, "不等于"),
     GreatThan(3202, "大于"),
@@ -39,7 +41,8 @@ public enum LinkMetaType implements IMetaType {
     Contain(3206, "包含"),
     NotContain(3207, "包含"),
     Exists(3208, "存在"),
-    NotExists(3209, "不存在");
+    NotExists(3209, "不存在"),
+    ItemOfParent(3210, "由上级LINK决定处理方式");
 
     long id;
     String name;
@@ -74,6 +77,9 @@ public enum LinkMetaType implements IMetaType {
         return name;
     }
 
+    public LinkMetaType getParent() {
+        return parent;
+    }
 
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.RUNTIME)
@@ -86,6 +92,6 @@ public enum LinkMetaType implements IMetaType {
     @Retention(RetentionPolicy.RUNTIME)
     @Meta
     public @interface LinkHandle {
-        LinkMetaType value();
+        LinkMetaType[] value();
     }
 }

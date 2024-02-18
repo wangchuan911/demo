@@ -12,17 +12,19 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
+import org.welisdoon.metadata.prototype.dao.MetaKeyValueDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
+import org.welisdoon.metadata.prototype.define.MetaKeyValue;
+import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.lang.annotation.Annotation;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @Classname MetaUtils
@@ -33,6 +35,7 @@ import java.util.Objects;
 
 @Component
 public class MetaUtils {
+
     final static Logger logger = LoggerFactory.getLogger(MetaUtils.class);
 
     static Map<Long, KeyValue<Class<? extends MetaPrototype>, IMetaType>> LONG_KEY_VALUE_MAP = new HashMap<>();
@@ -41,10 +44,28 @@ public class MetaUtils {
         return LONG_KEY_VALUE_MAP.get(id);
     }
 
-    static MetaAttributeDao metaAttributeDao;
-    static MetaObjectDao metaObjectDao;
-    static MetaLinkDao metaLinkDao;
 
+    MetaAttributeDao metaAttributeDao;
+    MetaObjectDao metaObjectDao;
+    MetaLinkDao metaLinkDao;
+    MetaKeyValueDao metaKeyValueDao;
+    static MetaUtils instance;
+
+    public void setMetaObjectDao(MetaObjectDao metaObjectDao) {
+        this.metaObjectDao = metaObjectDao;
+    }
+
+    public void setMetaAttributeDao(MetaAttributeDao metaAttributeDao) {
+        this.metaAttributeDao = metaAttributeDao;
+    }
+
+    public void setMetaLinkDao(MetaLinkDao metaLinkDao) {
+        this.metaLinkDao = metaLinkDao;
+    }
+
+    public void setMetaKeyValueDao(MetaKeyValueDao metaKeyValueDao) {
+        this.metaKeyValueDao = metaKeyValueDao;
+    }
 
     @EventListener
     void init(ApplicationReadyEvent event) {
@@ -71,26 +92,42 @@ public class MetaUtils {
         metaLinkDao = ApplicationContextProvider.getBean(MetaLinkDao.class);
     }
 
-    public static MetaPrototype getType(@NonNull MetaPrototype o) {
+    public MetaPrototype getType(@NonNull MetaPrototype o) {
         return TypeUtils.castToJavaBean(o, LONG_KEY_VALUE_MAP.get(o.getTypeId()).getKey());
     }
 
-    public static MetaPrototype getType(@NonNull Long typeId) {
+    public MetaPrototype getType(@NonNull Long typeId) {
         return TypeUtils.castToJavaBean(MapUtils.EMPTY_SORTED_MAP, LONG_KEY_VALUE_MAP.get(typeId).getKey());
     }
 
-    public static MetaPrototype getType(@NonNull IMetaType iMetaType) {
+    public MetaPrototype getType(@NonNull IMetaType iMetaType) {
         return getType(iMetaType.getId());
     }
 
-    public static MetaObject getObject(@NonNull Long id) {
+    public MetaObject getObject(@NonNull Long id) {
 
         MetaObject metaObject = metaObjectDao.get(id);
         return Objects.isNull(metaObject) ? null : (MetaObject) getType(metaObject);
     }
 
-    public static MetaObject.Attribute getAttribute(@NonNull Long id) {
+    public MetaObject.Attribute getAttribute(@NonNull Long id) {
         MetaObject.Attribute metaAttribute = metaAttributeDao.get(id);
         return Objects.isNull(metaAttribute) ? null : (MetaObject.Attribute) getType(metaAttribute);
+    }
+
+    public MetaKeyValue getValue(@NonNull Long id) {
+        MetaKeyValue keyValue = metaKeyValueDao.get(id);
+        return Objects.isNull(keyValue) ? null : keyValue;
+    }
+
+    public List<MetaLink> getChildrenLinks(@NonNull Long parentId) {
+        return metaLinkDao.list(new MetaLinkCondition().setParentId(parentId));
+    }
+
+
+    public static MetaUtils getInstance() {
+        return Optional.ofNullable(instance).orElseGet(() -> {
+            return instance = ApplicationContextProvider.getBean(MetaUtils.class);
+        });
     }
 }
