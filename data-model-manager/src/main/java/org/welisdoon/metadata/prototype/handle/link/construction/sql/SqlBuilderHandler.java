@@ -6,6 +6,8 @@ import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.handle.HandleContext;
 import org.welisdoon.metadata.prototype.handle.link.LinkHandle;
 
+import java.util.Optional;
+
 /**
  * @Classname ObjectConstructorHandler
  * @Description TODO
@@ -31,12 +33,10 @@ public class SqlBuilderHandler implements LinkHandle {
                     return;
                 }
                 default:
-                    if (child.getType() != null) {
-                        switch (child.getType().getParent()) {
-                            case SqlToFrom:
-                                content.getJoins().add(child);
-                                return;
-                        }
+                    switch (Optional.ofNullable(child.getType().getParent()).orElse(LinkMetaType.UNKNOWN)) {
+                        case SqlToFrom:
+                            content.getJoins().add(child);
+                            return;
                     }
             }
         });

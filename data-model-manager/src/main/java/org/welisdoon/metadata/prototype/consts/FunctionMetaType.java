@@ -1,5 +1,7 @@
 package org.welisdoon.metadata.prototype.consts;
 
+import java.util.Arrays;
+
 /**
  * @Classname FunctionMetaType
  * @Description TODO
@@ -7,6 +9,7 @@ package org.welisdoon.metadata.prototype.consts;
  * @Date 10:38
  */
 public enum FunctionMetaType implements IMetaType {
+    UNKNOWN(Long.MIN_VALUE, "未知"),
     Trigger(4000, "触发器"),
     Function(4001, "函数");
 
@@ -26,5 +29,9 @@ public enum FunctionMetaType implements IMetaType {
     @Override
     public String getDesc() {
         return name;
+    }
+
+    public static FunctionMetaType getInstance(long id) {
+        return Arrays.stream(values()).filter(linkMetaType -> linkMetaType.id == id).findFirst().orElse(UNKNOWN);
     }
 }

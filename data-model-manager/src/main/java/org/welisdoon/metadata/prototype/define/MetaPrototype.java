@@ -32,16 +32,18 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
         return typeId;
     }
 
-    public void setTypeId(Long typeId) {
+    public T setTypeId(Long typeId) {
         this.typeId = typeId;
+        return (T) this;
     }
 
     public Long getParentId() {
         return parentId;
     }
 
-    public void setParentId(Long parentId) {
+    public T setParentId(Long parentId) {
         this.parentId = parentId;
+        return (T) this;
     }
 
     public String getCode() {

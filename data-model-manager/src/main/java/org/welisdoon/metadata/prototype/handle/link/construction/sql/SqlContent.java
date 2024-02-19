@@ -1,8 +1,14 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
+import com.alibaba.fastjson.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
+import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,8 +20,10 @@ import java.util.stream.Collectors;
  * @Date 16:47
  */
 public class SqlContent {
+    final static Logger logger = LoggerFactory.getLogger(SqlContent.class);
     protected List<MetaLink> selects = new LinkedList<>();
     protected List<MetaLink> joins = new LinkedList<>();
+    protected volatile static Class<? extends SqlContent> type;
 
     public void setJoins(List<MetaLink> joins) {
         this.joins = joins;
@@ -34,7 +42,19 @@ public class SqlContent {
     }
 
     public static SqlContent getInstance() {
-        return new SqlContent();
+        Class<? extends SqlContent> type = ObjectUtils.synchronizedGet(SqlContent.class, sqlContentClass -> SqlContent.type, sqlContentClass -> {
+            Environment environment = ApplicationContextProvider.getBean(Environment.class);
+            try {
+                Class<?> aType = Class.forName(environment.getProperty("metadata.link.sqlContent.type"));
+                Assert.isTrue(SqlContent.class.isAssignableFrom(aType), String.format("type：%s must be extend org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent", SqlContent.type));
+                SqlContent.type = (Class<? extends SqlContent>) aType;
+            } catch (ClassNotFoundException e) {
+                logger.error(e.getMessage());
+                SqlContent.type = SqlContent.class;
+            }
+            return SqlContent.type;
+        });
+        return JSONObject.parseObject("{}", type);
     }
 
     protected String toSql(String joinOpr, String condOpr, MetaLink metaLink) {
@@ -44,7 +64,7 @@ public class SqlContent {
     }
 
 
-    public void toSql(StringBuilder fromBlock, StringBuilder whereBlock, LinkMetaType type, List<MetaLink> list) {
+    protected void toSql(StringBuilder fromBlock, StringBuilder whereBlock, LinkMetaType type, List<MetaLink> list) {
         switch (type) {
             case SqlToFromOfStrongRel:
                 list.stream().forEach(metaLink -> {

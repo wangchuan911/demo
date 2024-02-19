@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 
 /**
  * @Classname TableMetaType
@@ -12,6 +13,7 @@ import java.lang.annotation.Target;
  * @Date 10:11
  */
 public enum AttributeMetaType implements IMetaType {
+    UNKNOWN(Long.MIN_VALUE, "未知", null),
     Column(2000, "表字段", ObjectMetaType.Table),
     Attributes(2001, "对象属性", ObjectMetaType.Object),
     Header(2002, "搜索结果标题", ObjectMetaType.Search),
@@ -24,6 +26,10 @@ public enum AttributeMetaType implements IMetaType {
         this.id = id;
         this.name = name;
         this.objectMetaType = objectMetaType;
+    }
+
+    public static AttributeMetaType getInstance(long id) {
+        return Arrays.stream(values()).filter(linkMetaType -> linkMetaType.id == id).findFirst().orElse(UNKNOWN);
     }
 
     @Override

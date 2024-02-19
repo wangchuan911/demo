@@ -2,6 +2,7 @@ package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
 import org.springframework.util.Assert;
 import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -44,8 +45,16 @@ public interface ISqlBuilderHandler {
     default String linkToSql(MetaLink metaLink) {
         if (Objects.isNull(metaLink))
             return "null";
+        if (Objects.nonNull(metaLink.getInstance())) {
+            if (Objects.nonNull(metaLink.getAttributeId())) {
+                return String.format("T%s.%s", metaLink.getInstanceId(),
+                        metaLink.getAttribute().getType() == AttributeMetaType.Column ?
+                                metaLink.getAttribute() : metaLink.getAttribute().getParent(AttributeMetaType.Column).getCode());
+            }
+        } else if (Objects.nonNull(metaLink.getValueId())) {
 
-        return String.format("T%s.%s", metaLink.getInstanceId(), metaLink.getCode());
+        }
+        throw new IllegalStateException("data error");
     }
 
     default String operator(LinkMetaType type) {
