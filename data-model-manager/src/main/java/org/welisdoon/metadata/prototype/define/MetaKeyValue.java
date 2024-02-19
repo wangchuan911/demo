@@ -2,6 +2,7 @@ package org.welisdoon.metadata.prototype.define;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.springframework.util.Assert;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.KeyValueMetaType;
 import org.welisdoon.metadata.prototype.consts.KeyValueType;
@@ -45,21 +46,21 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
         }
         if (length > 4000) {
             bigFile = true;
-            valueType = getValueType();
+            Assert.notNull(getValueTypeId(), "请先初始化值类型");
+            KeyValueType valueType = getValueType();
+            valueType = KeyValueType.Bigfile;
             int size = length / 4000;
             byte[] bytes = value.getBytes();
             for (int i = 0; i < size; i++) {
-                if (i > getChildren().size()) {
+                if (i >= getChildren().size()) {
                     MetaKeyValue keyValue = new MetaKeyValue();
                     keyValue.setParentId(this.getId());
                     keyValue.setSequence(i);
                     keyValue.setValueTypeId(valueType.getId());
                     getChildren().add(keyValue);
                 }
-                if (i < getChildren().size()) {
-                    getChildren().get(i).setValueTypeId(valueType.getId());
-                    getChildren().get(i).setValue(new String(ArrayUtils.subarray(bytes, i * LENGTH, (1 + i) * LENGTH)));
-                }
+                getChildren().get(i).setValueTypeId(valueType.getId());
+                getChildren().get(i).setValue(new String(ArrayUtils.subarray(bytes, i * LENGTH, (1 + i) * LENGTH)));
             }
             if (getChildren().size() > size) {
                 getChildren().stream().skip(size).forEach(metaKeyValue -> {
@@ -76,7 +77,15 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
     }
 
     public void setValueTypeId(Long valueTypeId) {
-        this.valueTypeId = valueTypeId;
+        try {
+            this.valueTypeId = valueTypeId;
+        } finally {
+            Optional.ofNullable(valueType).orElseGet(() -> {
+                valueType = KeyValueType.getInstance(valueTypeId);
+                return valueType;
+            });
+            bigFile = valueType == KeyValueType.Bigfile;
+        }
     }
 
     @Override
@@ -91,15 +100,7 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
 
     @Override
     public MetaKeyValue setTypeId(Long typeId) {
-        try {
-            return super.setTypeId(typeId);
-        } finally {
-            Optional.ofNullable(valueType).orElseGet(() -> {
-                valueType = KeyValueType.getInstance(valueTypeId);
-                return valueType;
-            });
-            bigFile = valueType == KeyValueType.Bigfile;
-        }
+        return super.setTypeId(typeId);
     }
 
     public KeyValueMetaType getType() {
