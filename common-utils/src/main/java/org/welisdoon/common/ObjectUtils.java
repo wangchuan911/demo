@@ -5,8 +5,9 @@ import java.lang.annotation.Repeatable;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -25,17 +26,32 @@ public class ObjectUtils {
 
     public static <K, V> V getMapValueOrNewSafe(Map<K, V> map, K key, IfNull<V> function) throws Throwable {
         if (!map.containsKey(key)) {
-            REENTRANT_LOCK.lock();
-            try {
+            synchronized (map) {
                 if (!map.containsKey(key)) {
                     V v = function.get();
                     map.put(key, v);
                 }
-            } finally {
-                REENTRANT_LOCK.unlock();
             }
         }
         return map.get(key);
+    }
+
+    public static <T, K> K synchronizedGet(final T lockObject, final Function<T, K> get, final Function<T, K> create) {
+        K k;
+        if (Objects.isNull(k = get.apply(lockObject)))
+            synchronized (lockObject) {
+                if (Objects.isNull(k = get.apply(lockObject)))
+                    return create.apply(lockObject);
+            }
+        return k;
+    }
+
+    public static <T> void synchronizedInitial(final T lockObject, final Predicate<T> get, final Consumer<T> create) {
+        if (!Objects.isNull(get.test(lockObject)))
+            synchronized (lockObject) {
+                if (!Objects.isNull(get.test(lockObject)))
+                    create.accept(lockObject);
+            }
     }
 
     public static Class<?> getGenericTypes(Class<?> type, Class<?> targetClass, int index) {
