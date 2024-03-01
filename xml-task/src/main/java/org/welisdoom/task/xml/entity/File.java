@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 
 @Tag(value = "file", parentTagTypes = Executable.class, desc = "文件读取")
-@Attr(name = "id", desc = "唯一标识")
-@Attr(name = "db", desc = "数据库类型")
+@Attr(name = "read", desc = "读文件", require = true, options = {"write", "read"})
+@Attr(name = "write", desc = "写文件", require = true, options = {"write", "read"})
 public class File extends StreamUnit<Stream.Writer> implements Executable, Copyable, Iterable<String> {
     @Override
     public Future<Object> read(TaskRequest request) {
