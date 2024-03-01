@@ -3,15 +3,11 @@ package org.welisdoom.task.xml;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.VertxOptions;
 import org.apache.commons.collections4.CollectionUtils;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Repository;
 import org.welisdoom.task.xml.entity.SubTask;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoon.common.ObjectUtils;
@@ -102,12 +98,5 @@ public class XmlTaskApplication {
         })).collect(Collectors.toList())).onComplete(event -> {
             Task.closeVertx();
         });
-    }
-
-    @Configuration
-    @MapperScan(basePackageClasses = XmlTaskApplication.class, annotationClass = Repository.class)
-    @ConditionalOnProperty(prefix = "spring.datasource", name = "enabled", havingValue = "true")
-    public static class DbConfig {
-
     }
 }
