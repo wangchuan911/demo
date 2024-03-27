@@ -17,8 +17,8 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 public class SqEqualHandler implements ISqlBuilderHandler {
 
     @Override
-    public String toSql(MetaLink metaLink, SqlContent parentSB) {
-        return linkToSql(metaLink.getChildren().get(0)) + operator(metaLink.getType()) + linkToSql(metaLink.getChildren().get(1));
+    public String toSql(MetaLink metaLink, SqlContent content) {
+        return toChildSql(metaLink.getChildren().get(0), content) + operator(metaLink.getType()) + toChildSql(metaLink.getChildren().get(1), content);
     }
 
     @Override

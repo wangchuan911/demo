@@ -19,7 +19,7 @@ import java.util.Objects;
 @LinkMetaType.LinkHandle({LinkMetaType.Value})
 public class SqlValueHandler implements ISqlBuilderHandler {
     @Override
-    public String toSql(MetaLink metaLink, SqlContent sqlContent) {
+    public String toSql(MetaLink metaLink, SqlContent content) {
         if (Objects.nonNull(metaLink.getValueId())) {
             return metaLink.getValue().toSql();
         }

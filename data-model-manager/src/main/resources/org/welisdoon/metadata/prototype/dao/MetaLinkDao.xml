@@ -6,15 +6,10 @@
     <resultMap id="MetaLink" type="org.welisdoon.metadata.prototype.define.MetaLink">
         <id column="id" property="id"></id>
         <result column="type_id" property="typeId"></result>
-        <result column="rel_object_id" property="relObjectId"></result>
         <result column="object_id" property="objectId"></result>
-        <result column="rel_value_id" property="relValueId"></result>
         <result column="value_id" property="valueId"></result>
-        <result column="rel_attribute_id" property="relAttributeId"></result>
         <result column="attribute_id" property="attributeId"></result>
-        <result column="rel_instance_id" property="relInstanceId"></result>
         <result column="instance_id" property="instanceId"></result>
-        <result column="rel_link_id" property="relLinkId"></result>
     </resultMap>
     <select id="list"
             parameterType="org.welisdoon.metadata.prototype.condition.MetaLinkCondition"

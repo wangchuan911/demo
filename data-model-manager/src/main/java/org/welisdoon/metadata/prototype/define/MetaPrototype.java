@@ -115,4 +115,14 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
     public int hashCode() {
         return Objects.hash(getId(), getTypeId());
     }
+
+    public void copyTo(MetaPrototype metaPrototype) {
+        this.id = metaPrototype.id;
+        this.code = metaPrototype.code;
+        this.name = metaPrototype.name;
+        this.parent = (T) metaPrototype.parent;
+        this.typeId = metaPrototype.typeId;
+        this.parentId = metaPrototype.parentId;
+        this.children = metaPrototype.children;
+    }
 }

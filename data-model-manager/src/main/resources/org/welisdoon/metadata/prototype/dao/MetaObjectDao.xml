@@ -13,7 +13,7 @@
     <select id="list"
             parameterType="org.welisdoon.metadata.prototype.condition.MetaObjectCondition"
             resultMap="MetaObject">
-        select * from md_object
+        select * from MD_OBJECT
         <where>
             <if test="parentId!=null ">and parent_id = #{parentId}</if>
         </where>
@@ -24,7 +24,7 @@
     <select id="get"
             parameterType="long"
             resultMap="MetaObject">
-        select * from md_object
+        select * from MD_OBJECT
         <where>
             and id=#{value}
         </where>

@@ -14,7 +14,7 @@
     <select id="list"
             parameterType="org.welisdoon.metadata.prototype.condition.MetaAttributeCondition"
             resultMap="MetaAttribute">
-        select * from md_object_attr
+        select * from MD_OBJECT_ATTR
         <where>
             <if test="parentId!=null ">and parent_id = #{parentId}</if>
             <if test="objectId!=null ">and object_id = #{objectId}</if>
@@ -24,7 +24,7 @@
     <select id="get"
             parameterType="long"
             resultMap="MetaAttribute">
-        select * from md_object_attr
+        select * from MD_OBJECT_ATTR
         <where>
             and id=#{value}
         </where>

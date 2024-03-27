@@ -45,7 +45,7 @@ public class SqlContent {
         Class<? extends SqlContent> type = ObjectUtils.synchronizedGet(SqlContent.class, sqlContentClass -> SqlContent.type, sqlContentClass -> {
             Environment environment = ApplicationContextProvider.getBean(Environment.class);
             try {
-                Class<?> aType = Class.forName(environment.getProperty("metadata.link.sqlContent.type"));
+                Class<?> aType = Class.forName(Optional.ofNullable(environment.getProperty("metadata.link.sqlContent.type")).orElse(SqlContent.class.getName()));
                 Assert.isTrue(SqlContent.class.isAssignableFrom(aType), String.format("type：%s must be extend org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent", SqlContent.type));
                 SqlContent.type = (Class<? extends SqlContent>) aType;
             } catch (ClassNotFoundException e) {
@@ -93,7 +93,7 @@ public class SqlContent {
                         linkTableOpr = " join ";
                         LinkCondOpr = " on ";
                     }
-                    _sql.append(linkTableOpr).append(metaLink.getObject().getCode()).append(this.toTableAlias(metaLink));
+                    _sql.append(linkTableOpr).append(metaLink.getObject().getCode()).append(toTableAlias(metaLink));
                     _sql2.append(LinkCondOpr);
                     metaLink.getChildren().forEach(child -> {
                         _sql2.append(ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this));
@@ -120,9 +120,9 @@ public class SqlContent {
         return new StringBuilder().append("select ")
                 .append(Arrays
                         .stream(mainTable.getObject().getAttributes())
-                        .map(attribute -> this.toTableAlias(mainTable) + "." + attribute.getCode())
+                        .map(attribute -> toTableAlias(mainTable) + "." + attribute.getCode())
                         .collect(Collectors.joining(",")))
-                .append(" from ").append(mainTable.getObject().getCode()).append(this.toTableAlias(mainTable))
+                .append(" from ").append(mainTable.getObject().getCode()).append(toTableAlias(mainTable))
                 .append(fromBlock)
                 .append(" where ")
                 .append(mainTable.getChildren().stream().map(child -> {
@@ -131,7 +131,7 @@ public class SqlContent {
                 .append(whereBlock).toString();
     }
 
-    public String toTableAlias(MetaLink metaLink) {
+    public static String toTableAlias(MetaLink metaLink) {
         return "T" + metaLink.getInstanceId();
     }
 }

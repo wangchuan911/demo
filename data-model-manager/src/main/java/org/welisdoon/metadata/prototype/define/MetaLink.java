@@ -25,7 +25,7 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     MetaInstance instance;
 
     Long valueId;
-    MetaKeyValue value;
+    MetaValue value;
 
     int sequence;
 
@@ -105,13 +105,13 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     }
 
 
-    public MetaKeyValue getValue() {
+    public MetaValue getValue() {
         if (Objects.nonNull(valueId))
             ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(valueId), metaLink -> value = MetaUtils.getInstance().getValue(getValueId()));
         return value;
     }
 
-    public void setValue(MetaKeyValue value) {
+    public void setValue(MetaValue value) {
         this.value = value;
     }
 

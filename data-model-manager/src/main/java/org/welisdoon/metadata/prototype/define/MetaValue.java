@@ -6,7 +6,7 @@ import org.springframework.util.Assert;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.KeyValueMetaType;
 import org.welisdoon.metadata.prototype.consts.KeyValueType;
-import org.welisdoon.metadata.prototype.dao.MetaKeyValueDao;
+import org.welisdoon.metadata.prototype.dao.MetaValueDao;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 11:54
  */
-public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequenceEntity {
+public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEntity {
     final int LENGTH = 4000;
     String value;
     Long valueTypeId;
@@ -31,7 +31,7 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
 
     public String getValue() {
         if (bigFile) {
-            return getChildren().stream().filter(metaKeyValue -> !Objects.equals(metaKeyValue.getValueType(), KeyValueType.UNKNOWN)).map(MetaKeyValue::getValue).collect(Collectors.joining());
+            return getChildren().stream().filter(metaValue -> !Objects.equals(metaValue.getValueType(), KeyValueType.UNKNOWN)).map(MetaValue::getValue).collect(Collectors.joining());
         }
         return value;
     }
@@ -53,7 +53,7 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
             byte[] bytes = value.getBytes();
             for (int i = 0; i < size; i++) {
                 if (i >= getChildren().size()) {
-                    MetaKeyValue keyValue = new MetaKeyValue();
+                    MetaValue keyValue = new MetaValue();
                     keyValue.setParentId(this.getId());
                     keyValue.setSequence(i);
                     keyValue.setValueTypeId(valueType.getId());
@@ -63,8 +63,8 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
                 getChildren().get(i).setValue(new String(ArrayUtils.subarray(bytes, i * LENGTH, (1 + i) * LENGTH)));
             }
             if (getChildren().size() > size) {
-                getChildren().stream().skip(size).forEach(metaKeyValue -> {
-                    metaKeyValue.setValueTypeId(KeyValueMetaType.UNKNOWN.getId());
+                getChildren().stream().skip(size).forEach(metaValue -> {
+                    metaValue.setValueTypeId(KeyValueMetaType.UNKNOWN.getId());
                 });
             }
             return;
@@ -99,7 +99,7 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
     }
 
     @Override
-    public MetaKeyValue setTypeId(Long typeId) {
+    public MetaValue setTypeId(Long typeId) {
         return super.setTypeId(typeId);
     }
 
@@ -120,7 +120,7 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
     }
 
     public String toSql() {
-        switch (valueType) {
+        switch (getValueType()) {
             case String:
             case Char:
                 return String.format("'%s'", value);
@@ -132,9 +132,9 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
     }
 
     @Override
-    public List<MetaKeyValue> getChildren() {
-        ObjectUtils.synchronizedInitial(this, metaKeyValue -> Objects.nonNull(children), metaKeyValue -> {
-            children = ApplicationContextProvider.getBean(MetaKeyValueDao.class).list(new MetaKeyValue().setParentId(this.getId()));
+    public List<MetaValue> getChildren() {
+        ObjectUtils.synchronizedInitial(this, metaValue -> Objects.nonNull(children), metaValue -> {
+            children = ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
         });
         return super.getChildren();
     }

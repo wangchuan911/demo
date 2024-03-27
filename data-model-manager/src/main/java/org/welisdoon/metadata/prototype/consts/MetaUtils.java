@@ -7,22 +7,22 @@ import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
-import org.welisdoon.metadata.prototype.dao.MetaKeyValueDao;
+import org.welisdoon.metadata.prototype.dao.MetaValueDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
-import org.welisdoon.metadata.prototype.define.MetaKeyValue;
+import org.welisdoon.metadata.prototype.define.MetaValue;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
+import javax.annotation.PostConstruct;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
@@ -48,28 +48,34 @@ public class MetaUtils {
     MetaAttributeDao metaAttributeDao;
     MetaObjectDao metaObjectDao;
     MetaLinkDao metaLinkDao;
-    MetaKeyValueDao metaKeyValueDao;
+    MetaValueDao metaValueDao;
     static MetaUtils instance;
 
+    @Autowired
     public void setMetaObjectDao(MetaObjectDao metaObjectDao) {
         this.metaObjectDao = metaObjectDao;
     }
 
+    @Autowired
     public void setMetaAttributeDao(MetaAttributeDao metaAttributeDao) {
         this.metaAttributeDao = metaAttributeDao;
     }
 
+    @Autowired
     public void setMetaLinkDao(MetaLinkDao metaLinkDao) {
         this.metaLinkDao = metaLinkDao;
     }
 
-    public void setMetaKeyValueDao(MetaKeyValueDao metaKeyValueDao) {
-        this.metaKeyValueDao = metaKeyValueDao;
+    @Autowired
+    public void setMetaKeyValueDao(MetaValueDao metaValueDao) {
+        this.metaValueDao = metaValueDao;
     }
 
-    @EventListener
-    void init(ApplicationReadyEvent event) {
-        Reflections reflections = ApplicationContextProvider.getApplicationContext().getBean(Reflections.class);
+    @Autowired
+    Reflections reflections;
+
+    @PostConstruct
+    void init() {
         reflections.getTypesAnnotatedWith(Meta.class).stream()
                 .filter(aClass -> Annotation.class.isAssignableFrom(aClass))
                 .map(aClass -> (Class<? extends Annotation>) aClass)
@@ -86,18 +92,21 @@ public class MetaUtils {
                             });
                 });
         logger.info(LONG_KEY_VALUE_MAP.toString());
-
-        metaAttributeDao = ApplicationContextProvider.getBean(MetaAttributeDao.class);
-        metaObjectDao = ApplicationContextProvider.getBean(MetaObjectDao.class);
-        metaLinkDao = ApplicationContextProvider.getBean(MetaLinkDao.class);
     }
 
     public MetaPrototype getType(@NonNull MetaPrototype o) {
-        return TypeUtils.castToJavaBean(o, LONG_KEY_VALUE_MAP.get(o.getTypeId()).getKey());
+        MetaPrototype metaPrototype = getType(o.getTypeId());
+        if (Objects.isNull(metaPrototype)) {
+            return o;
+        }
+        metaPrototype.copyTo(o);
+        return metaPrototype;
     }
 
     public MetaPrototype getType(@NonNull Long typeId) {
-        return TypeUtils.castToJavaBean(MapUtils.EMPTY_SORTED_MAP, LONG_KEY_VALUE_MAP.get(typeId).getKey());
+        if (LONG_KEY_VALUE_MAP.containsKey(typeId))
+            return TypeUtils.castToJavaBean(MapUtils.EMPTY_SORTED_MAP, LONG_KEY_VALUE_MAP.get(typeId).getKey());
+        return null;
     }
 
     public MetaPrototype getType(@NonNull IMetaType iMetaType) {
@@ -115,8 +124,8 @@ public class MetaUtils {
         return Objects.isNull(metaAttribute) ? null : (MetaObject.Attribute) getType(metaAttribute);
     }
 
-    public MetaKeyValue getValue(@NonNull Long id) {
-        MetaKeyValue keyValue = metaKeyValueDao.get(id);
+    public MetaValue getValue(@NonNull Long id) {
+        MetaValue keyValue = metaValueDao.get(id);
         return Objects.isNull(keyValue) ? null : keyValue;
     }
 

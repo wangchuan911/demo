@@ -1,8 +1,6 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
-import org.springframework.util.Assert;
 import org.welisdoon.common.ObjectUtils;
-import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -20,7 +18,7 @@ import java.util.Objects;
 public interface ISqlBuilderHandler {
     Map<LinkMetaType, ISqlBuilderHandler> handlerMap = new HashMap<>();
 
-    String toSql(MetaLink metaLink, SqlContent sqlContent);
+    String toSql(MetaLink metaLink, SqlContent content);
 
     static ISqlBuilderHandler getHandler(LinkMetaType type) {
         ObjectUtils.synchronizedInitial(handlerMap, handlerMap -> handlerMap.size() > 0, handlerMap -> {
@@ -36,19 +34,8 @@ public interface ISqlBuilderHandler {
         return handlerMap.get(type);
     }
 
-    default String linkToSql(MetaLink metaLink) {
-        if (Objects.isNull(metaLink))
-            return "null";
-        if (Objects.nonNull(metaLink.getInstance())) {
-            if (Objects.nonNull(metaLink.getAttributeId())) {
-                return String.format("T%s.%s", metaLink.getInstanceId(),
-                        metaLink.getAttribute().getType() == AttributeMetaType.Column ?
-                                metaLink.getAttribute() : metaLink.getAttribute().getParent(AttributeMetaType.Column).getCode());
-            }
-        } else if (Objects.nonNull(metaLink.getValueId())) {
-
-        }
-        throw new IllegalStateException("data error");
+    default String toChildSql(MetaLink metaLink, SqlContent sqlContent) {
+        return getHandler(metaLink.getType()).toSql(metaLink, sqlContent);
     }
 
     default String operator(LinkMetaType type) {
