@@ -20,13 +20,7 @@ import java.util.Objects;
 public interface ISqlBuilderHandler {
     Map<LinkMetaType, ISqlBuilderHandler> handlerMap = new HashMap<>();
 
-    String toSql(MetaLink parentML, SqlContent sqlContent);
-
-    default String toChildSql(MetaLink child, SqlContent sqlContent) {
-        ISqlBuilderHandler iSqlBuilderHandler = getHandler(child.getType());
-        Assert.notNull(iSqlBuilderHandler, "未定义iSqlBuilderHandler的linkType:" + child.getType());
-        return iSqlBuilderHandler.toSql(child, sqlContent);
-    }
+    String toSql(MetaLink metaLink, SqlContent sqlContent);
 
     static ISqlBuilderHandler getHandler(LinkMetaType type) {
         ObjectUtils.synchronizedInitial(handlerMap, handlerMap -> handlerMap.size() > 0, handlerMap -> {
