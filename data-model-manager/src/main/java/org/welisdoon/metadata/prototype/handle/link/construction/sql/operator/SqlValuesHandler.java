@@ -9,17 +9,16 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 import java.util.stream.Collectors;
 
 /**
- * @Classname SqlAndHandler
+ * @Classname SqlJoinHandler
  * @Description TODO
  * @Author Septem
- * @Date 16:49
+ * @Date 21:48
  */
 @Component
-@LinkMetaType.LinkHandle(LinkMetaType.AND)
-public class SqlAndHandler implements ISqlBuilderHandler {
-
+@LinkMetaType.LinkHandle({LinkMetaType.Values})
+public class SqlValuesHandler implements ISqlBuilderHandler {
     @Override
-    public String toSql(MetaLink parentML, SqlContent parentSB) {
-        return parentML.getChildren().stream().map(this::linkToSql).collect(Collectors.joining(" " + operator(parentML.getType()) + " "));
+    public String toSql(MetaLink metaLink, SqlContent sqlContent) {
+        return String.format("(%s)", metaLink.getChildren().stream().map(this::linkToSql).collect(Collectors.joining(",")));
     }
 }

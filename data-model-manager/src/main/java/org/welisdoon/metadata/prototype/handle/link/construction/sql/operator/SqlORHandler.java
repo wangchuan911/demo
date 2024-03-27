@@ -4,7 +4,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.ISqlBuilderHandler;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
+
+import java.util.stream.Collectors;
 
 /**
  * @Classname SqlAndHandler
@@ -15,10 +18,10 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 @Component
 @LinkMetaType.LinkHandle(LinkMetaType.OR)
 @Order(0)
-public class SqlORHandler extends SqlAndHandler {
+public class SqlORHandler implements ISqlBuilderHandler {
 
     @Override
-    public String toSql(MetaLink parentML, SqlContent parentSB) {
-        return "(" + super.toSql(parentML, parentSB) + ")";
+    public String toSql(MetaLink metaLink, SqlContent parentSB) {
+        return metaLink.getChildren().stream().map(this::linkToSql).collect(Collectors.joining(String.format(" %s ", operator(metaLink.getType()))));
     }
 }

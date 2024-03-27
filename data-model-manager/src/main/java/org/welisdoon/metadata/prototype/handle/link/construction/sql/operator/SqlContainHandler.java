@@ -7,31 +7,26 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.ISqlBuilder
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 
 /**
- * @Classname SqlAndHandler
+ * @Classname SqlContainHandler
  * @Description TODO
  * @Author Septem
- * @Date 16:49
+ * @Date 21:53
  */
 @Component
-@LinkMetaType.LinkHandle({LinkMetaType.Equal, LinkMetaType.NotEqual, LinkMetaType.GreatThan, LinkMetaType.LessThan})
-public class SqEqualHandler implements ISqlBuilderHandler {
-
+@LinkMetaType.LinkHandle({LinkMetaType.NotContain, LinkMetaType.Contain})
+public class SqlContainHandler implements ISqlBuilderHandler {
     @Override
-    public String toSql(MetaLink metaLink, SqlContent parentSB) {
+    public String toSql(MetaLink metaLink, SqlContent sqlContent) {
         return linkToSql(metaLink.getChildren().get(0)) + operator(metaLink.getType()) + linkToSql(metaLink.getChildren().get(1));
     }
 
     @Override
     public String operator(LinkMetaType type) {
         switch (type) {
-            case NotEqual:
-                return "!=";
-            case GreatThan:
-                return ">";
-            case LessThan:
-                return "<";
-            case Equal:
-                return "=";
+            case NotContain:
+                return " not in ";
+            case Contain:
+                return " in ";
             default:
                 throw new IllegalArgumentException("error operator!");
         }
