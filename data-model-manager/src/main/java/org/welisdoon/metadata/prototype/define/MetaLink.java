@@ -29,8 +29,6 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
 
     int sequence;
 
-    String alias;
-
     LinkMetaType type;
 
     @Override

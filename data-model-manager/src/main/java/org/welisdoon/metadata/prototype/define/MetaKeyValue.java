@@ -119,6 +119,18 @@ public class MetaKeyValue extends MetaPrototype<MetaKeyValue> implements ISequen
         return valueType;
     }
 
+    public String toSql() {
+        switch (valueType) {
+            case String:
+            case Char:
+                return String.format("'%s'", value);
+            case Numeric:
+                return value;
+            default:
+                throw new IllegalStateException(String.format("错误的类型%s", valueType));
+        }
+    }
+
     @Override
     public List<MetaKeyValue> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaKeyValue -> Objects.nonNull(children), metaKeyValue -> {
