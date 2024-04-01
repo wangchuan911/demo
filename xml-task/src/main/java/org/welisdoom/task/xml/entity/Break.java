@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Attr(name = "deep", desc = "中断深度")
 public class Break extends Unit implements Executable {
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         toNext.fail(new BreakLoopThrowable(MapUtils.getInteger(attributes, "deep", 1)));
     }
 
@@ -60,7 +60,7 @@ public class Break extends Unit implements Executable {
     @Tag(value = "continue", parentTagTypes = Executable.class, desc = "跳过循环")
     public static class Continue extends Unit implements Executable {
         @Override
-        protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+        protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
             toNext.fail(new SkipOneLoopThrowable());
         }
     }

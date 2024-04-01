@@ -33,7 +33,7 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
 //    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
     @Override
-    public Future<Object> read(TaskRequest data) {
+    public Future<Object> read(TaskInstance data) {
         Promise<Object> toNext = Promise.promise();
         ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
             data.cache(this, client);
@@ -49,12 +49,12 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
         return toNext.future();
     }
 
-    public Future<Object> write(TaskRequest data, StreamUnit.WriteLine unit) {
+    public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
         return Future.failedFuture("不支持的操作");
     }
 
     @Override
-    public Future<Object> write(TaskRequest data) {
+    public Future<Object> write(TaskInstance data) {
         Promise<Object> toNext = Promise.promise();
         ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
             data.cache(this, client);
@@ -71,7 +71,7 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
     }
 
     @Override
-    public Future<Object> write(TaskRequest request, Writer writer) {
+    public Future<Object> write(TaskInstance request, Writer writer) {
         return Future.failedFuture("无效的操作");
     }
 
@@ -142,7 +142,7 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
                 throw new RuntimeException("错误的操作");
         }
     }*/
-    protected Future<Void> disconnectFtp(TaskRequest data) {
+    protected Future<Void> disconnectFtp(TaskInstance data) {
         Optional<FTPClient> optional = Optional.ofNullable(data.cache(this));
         if (optional.isPresent()) {
             try {
@@ -155,7 +155,7 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
     }
 
     @Override
-    protected Future<Void> destroy(TaskRequest data) {
+    protected Future<Void> destroy(TaskInstance data) {
         return disconnectFtp(data).transform(objectAsyncResult -> super.destroy(data));
     }
 }

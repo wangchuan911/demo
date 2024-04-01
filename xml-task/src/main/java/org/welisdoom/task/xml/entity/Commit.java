@@ -7,15 +7,12 @@ import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoom.task.xml.intf.type.Iterable;
-import org.welisdoom.task.xml.intf.type.Stream;
 import org.xml.sax.Attributes;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 /**
  * @Classname Commit
@@ -38,7 +35,7 @@ public class Commit extends Unit implements Executable {
     }
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         log(String.format("batch:%d,count:%d", batch, count.incrementAndGet()));
         if (batch == count.get()) {
             count.set(0);
@@ -57,14 +54,14 @@ public class Commit extends Unit implements Executable {
         toNext.complete();
     }
 
-    protected Future<Object> commit(Transactional transactional, TaskRequest request) {
-        TaskRequest root = request;
+    protected Future<Object> commit(Transactional transactional, TaskInstance request) {
+        TaskInstance root = request;
         List<Future> list = new LinkedList<>();
         while (root.parentRequest != null) {
             root = root.parentRequest;
-            for (TaskRequest taskRequest : root.childrenRequest) {
-                if (taskRequest.cache(transactional) == null) continue;
-                list.add(transactional.commit(taskRequest));
+            for (TaskInstance taskInstance : root.childrenRequest) {
+                if (taskInstance.cache(transactional) == null) continue;
+                list.add(transactional.commit(taskInstance));
             }
         }
         if (root == null)

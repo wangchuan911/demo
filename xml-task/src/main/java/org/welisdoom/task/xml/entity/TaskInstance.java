@@ -3,10 +3,11 @@ package org.welisdoom.task.xml.entity;
 import com.sun.istack.NotNull;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import ognl.Ognl;
-import ognl.OgnlContext;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.ognl.Ognl;
+import org.apache.ibatis.ognl.OgnlContext;
+import org.apache.ibatis.scripting.xmltags.OgnlClassResolver;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoon.common.ObjectUtils;
@@ -21,13 +22,12 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 15:46
  */
-public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IToken {
-    boolean isDebugger = false;
+public class TaskInstance implements IData<String, Model>, DataBaseConnectPool.IToken {
     Map<String, Object> bus = new HashMap<>();
-    OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
+    OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new OgnlClassResolver(), new HashMap());
     Map<Unit, Object> cache = new LinkedHashMap<>();
-    List<TaskRequest> childrenRequest = new LinkedList<>();
-    TaskRequest parentRequest;
+    List<TaskInstance> childrenRequest = new LinkedList<>();
+    TaskInstance parentRequest;
 
 //    Object lastUnitResult;
 
@@ -47,7 +47,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         return (T) cache.remove(unit);
     }
 
-    public TaskRequest(@NotNull String id) {
+    public TaskInstance(@NotNull String id) {
         this.id = id;
     }
 
@@ -72,7 +72,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
         return (T) bus.get(key);
     }
 
-    public TaskRequest(@NotNull String id, Object o) {
+    public TaskInstance(@NotNull String id, Object o) {
         this.id = id;
         bus.put("$inputs", o);
     }
@@ -118,7 +118,7 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TaskRequest that = (TaskRequest) o;
+        TaskInstance that = (TaskInstance) o;
         return Objects.equals(id, that.id);
     }
 
@@ -128,34 +128,34 @@ public class TaskRequest implements IData<String, Model>, DataBaseConnectPool.IT
     }
 
 
-    public synchronized TaskRequest copy(String subId) {
-        TaskRequest taskRequest = new TaskRequest(String.format("%s-%s", this.id, subId));
-        taskRequest.bus.putAll(SerializationUtils.clone((HashMap) this.bus));
-        taskRequest.parentRequest = this;
-        this.childrenRequest.add(taskRequest);
-        return taskRequest;
+    public synchronized TaskInstance copy(String subId) {
+        TaskInstance taskInstance = new TaskInstance(String.format("%s-%s", this.id, subId));
+        taskInstance.bus.putAll(SerializationUtils.clone((HashMap) this.bus));
+        taskInstance.parentRequest = this;
+        this.childrenRequest.add(taskInstance);
+        return taskInstance;
     }
 
-    public TaskRequest getParentRequest() {
+    public TaskInstance getParentRequest() {
         return parentRequest;
     }
 
-    public TaskRequest getRootRequest() {
-        TaskRequest root = parentRequest;
+    public TaskInstance getRootRequest() {
+        TaskInstance root = parentRequest;
         while (root.getParentRequest() != null) {
             root = root.getParentRequest();
         }
         return root;
     }
 
-    public TaskRequest[] getChildrenRequest() {
-        return childrenRequest.toArray(TaskRequest[]::new);
+    public TaskInstance[] getChildrenRequest() {
+        return childrenRequest.toArray(TaskInstance[]::new);
     }
 
     public Future<Void> destroy() {
         return (Future) CompositeFuture.join(cache.entrySet().stream().map(entry -> entry.getKey().destroy(this)).collect(Collectors.toList())).transform(event -> {
             bus.clear();
-            return CompositeFuture.join(childrenRequest.stream().map(TaskRequest::destroy).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
+            return CompositeFuture.join(childrenRequest.stream().map(TaskInstance::destroy).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
         });
     }
 }

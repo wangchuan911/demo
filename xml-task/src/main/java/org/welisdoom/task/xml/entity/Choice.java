@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import ognl.OgnlException;
+import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 
@@ -20,7 +20,7 @@ import java.util.List;
 public class Choice extends Unit {
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         Future<Object> future = Future.succeededFuture();
         List<Unit> list = (List) getChild(When.class);
         list.add(getChild(Otherwise.class).stream().findFirst().orElse((Otherwise) new Otherwise().setParent(this)));
@@ -47,7 +47,7 @@ public class Choice extends Unit {
     @Tag(value = "when", parentTagTypes = Choice.class, desc = "if else")
     public static class When extends Unit implements Executable {
         @Override
-        protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+        protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
             boolean test;
             try {
                 test = If.test(attributes.get("test"), data.getOgnlContext(), data.getBus());

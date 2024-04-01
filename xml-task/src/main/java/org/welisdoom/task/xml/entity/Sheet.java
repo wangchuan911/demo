@@ -67,7 +67,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
     }
 
     @Override
-    public Future<Object> read(TaskRequest data) {
+    public Future<Object> read(TaskInstance data) {
 
         StringBuilder builder = new StringBuilder("");
         try {
@@ -113,12 +113,12 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
         }
     }
 
-    protected Closeable initWriter(TaskRequest request) throws Throwable {
+    protected Closeable initWriter(TaskInstance request) throws Throwable {
         return getWriter(request);
     }
 
     @Override
-    public Future<Object> write(TaskRequest request) {
+    public Future<Object> write(TaskInstance request) {
         try {
             request.cache(this, () -> initWriter(request));
         } catch (Throwable throwable) {
@@ -139,7 +139,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
     }
 
     @Override
-    public Future<Object> write(TaskRequest data, StreamUnit.WriteLine unit) {
+    public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
         Promise<Object> promise = Promise.promise();
 
         try {
@@ -161,9 +161,9 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
     }
 
     @Override
-    public Future<Void> destroy(TaskRequest taskRequest) {
-        java.io.Writer writer = taskRequest.clearCache(this);
-        return super.destroy(taskRequest).onComplete(voidAsyncResult -> {
+    public Future<Void> destroy(TaskInstance taskInstance) {
+        java.io.Writer writer = taskInstance.clearCache(this);
+        return super.destroy(taskInstance).onComplete(voidAsyncResult -> {
             try (writer) {
 
             } catch (IOException e) {

@@ -28,7 +28,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
 //    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
     @Override
-    public Future<Object> read(TaskRequest data) {
+    public Future<Object> read(TaskInstance data) {
         Promise<Object> toNext = Promise.promise();
         SFtpConnectPool sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectPool.class);
         sFtpConnectPool.getConnect(getId(), data).onSuccess(session -> {
@@ -52,7 +52,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
 
 
     @Override
-    public Future<Object> write(TaskRequest data) {
+    public Future<Object> write(TaskInstance data) {
         Promise<Object> toNext = Promise.promise();
         SFtpConnectPool sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectPool.class);
         sFtpConnectPool.getConnect(getId(), data).onSuccess(session -> {
@@ -139,7 +139,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
     }*/
 
     @Override
-    protected Future<Void> disconnectFtp(TaskRequest data) {
+    protected Future<Void> disconnectFtp(TaskInstance data) {
         Optional<SFtpConnectPool.SFtpSession> optional = Optional.ofNullable(data.cache(this));
         if (optional.isPresent()) {
             try {

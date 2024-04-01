@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Attr(name = "name", desc = "设置的变量名", require = true)
 public class SetValue extends Unit {
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         Map<String, Object> map;
         try {
             map = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$values", () -> new HashMap<>());

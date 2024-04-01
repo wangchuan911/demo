@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Attr(name = "write", desc = "写文件", require = true, options = {"write", "read"})
 public class File extends StreamUnit<Stream.Writer> implements Executable, Copyable, Iterable<String> {
     @Override
-    public Future<Object> read(TaskRequest request) {
+    public Future<Object> read(TaskInstance request) {
         String fileName = getAttrFormatValue("read", request);
         java.io.File file = StringUtils.isEmpty(fileName) ? null : new java.io.File(fileName);
         String style = Optional.ofNullable(attributes.get("style")).orElseGet(() -> "byte");
@@ -64,7 +64,7 @@ public class File extends StreamUnit<Stream.Writer> implements Executable, Copya
     }
 
     @Override
-    public Future<Object> write(TaskRequest request, Writer writer) {
+    public Future<Object> write(TaskInstance request, Writer writer) {
         return null;
     }
 }

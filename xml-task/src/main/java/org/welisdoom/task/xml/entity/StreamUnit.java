@@ -36,12 +36,12 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
     }
 
     @Override
-    public Future<Object> write(TaskRequest data) {
+    public Future<Object> write(TaskInstance data) {
         return startChildUnit(data, null, unit -> unit instanceof Executable);
     }
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         try {
             /*data.cache(this, preUnitResult);*/
             this.cols = getChild(Col.class).stream().toArray(Col[]::new);
@@ -58,7 +58,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         }
     }
 
-    BufferedReader getReader(TaskRequest data) throws FileNotFoundException {
+    BufferedReader getReader(TaskInstance data) throws FileNotFoundException {
         String mode = getRead();
         return new BufferedReader(
                 new InputStreamReader(
@@ -67,7 +67,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         );
     }
 
-    java.io.Writer getWriter(TaskRequest data) throws IOException {
+    java.io.Writer getWriter(TaskInstance data) throws IOException {
         String path = textFormat(data, getWrite());
         switch (path) {
             case "@stream":
@@ -77,7 +77,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         }
     }
 
-    Charset getCharset(TaskRequest data) {
+    Charset getCharset(TaskInstance data) {
         return Charset.forName(textFormat(data, attributes.getOrDefault("charset", "utf-8")));
     }
 
@@ -103,7 +103,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         StreamUnit stream;
 
         @Override
-        protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+        protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
             if (stream == null) {
                 synchronized (this) {
                     if (stream == null)

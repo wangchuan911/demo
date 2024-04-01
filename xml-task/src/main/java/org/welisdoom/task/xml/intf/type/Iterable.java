@@ -3,7 +3,7 @@ package org.welisdoom.task.xml.intf.type;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.welisdoom.task.xml.entity.Iterator;
-import org.welisdoom.task.xml.entity.TaskRequest;
+import org.welisdoom.task.xml.entity.TaskInstance;
 import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
 
@@ -19,7 +19,7 @@ import java.util.function.Function;
  */
 public interface Iterable<T> extends UnitType {
 
-    default Future<Object> iterator(TaskRequest data, Item<T> item) {
+    default Future<Object> iterator(TaskInstance data, Item<T> item) {
         return Iterator.iterator((Unit) this, data, item);
     }
 
@@ -49,12 +49,12 @@ public interface Iterable<T> extends UnitType {
         }
     }
 
-    default Future<Object> futureLoop(Item<T> item, Future<Object> preFuture, TaskRequest data) {
+    default Future<Object> futureLoop(Item<T> item, Future<Object> preFuture, TaskInstance data) {
         /*return preFuture.compose(o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));*/
         return compose(preFuture, o -> this.iterator(data, item));
     }
 
-    default Future<Object> loopEnd(TaskRequest data) {
+    default Future<Object> loopEnd(TaskInstance data) {
         Optional<Unit> iterator = ((Unit) this).getChild(Unit.typeMatched(Iterator.class)).stream().findFirst();
         if (iterator.isPresent())
             return ((Iterator) iterator.get()).iterateFinish(data);
@@ -77,7 +77,7 @@ public interface Iterable<T> extends UnitType {
         return promise.future().compose(loop, failureMapper);
     }
 
-    default Future<Object> bigFutureLoop(Item<T> item, long triggerCount, Future<?> preFuture, TaskRequest data) {
+    default Future<Object> bigFutureLoop(Item<T> item, long triggerCount, Future<?> preFuture, TaskInstance data) {
         return bigFutureLoop(item.index, triggerCount, preFuture,
                 o -> this.iterator(data, item));
 

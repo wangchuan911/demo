@@ -1,12 +1,9 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.util.IOUtils;
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.impl.NoStackTraceThrowable;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -16,7 +13,6 @@ import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.ObjectUtils;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -80,12 +76,12 @@ public class Http extends Unit implements Executable, Copyable {
             }
         }
     }*/
-    protected String getUrl(TaskRequest data) {
+    protected String getUrl(TaskInstance data) {
         return textFormat(data, attributes.get("url"));
     }
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim(),
                 outputBody = "empty data";
         log(LogUtils.styleString("params:", 42, 2, inputBody));
@@ -154,7 +150,7 @@ public class Http extends Unit implements Executable, Copyable {
         }
     }
 
-    protected void log(TaskRequest data, String input, Throwable e) {
+    protected void log(TaskInstance data, String input, Throwable e) {
         if ("true".equals(attributes.get("is-log"))) {
             try {
                 ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
@@ -165,7 +161,7 @@ public class Http extends Unit implements Executable, Copyable {
         }
     }
 
-    protected void log(TaskRequest data, String input, String output) {
+    protected void log(TaskInstance data, String input, String output) {
         if ("true".equals(attributes.get("is-log"))) {
             try {
                 Map log = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
@@ -187,7 +183,7 @@ public class Http extends Unit implements Executable, Copyable {
     @Tag(value = "body", parentTagTypes = {Http.class, Initialization.class}, desc = "post请求内容")
     public static class Body extends Unit implements Script, Copyable {
 
-        public String getScript(TaskRequest request, String split) {
+        public String getScript(TaskInstance request, String split) {
             return textFormat(request, children.stream()
                     .filter(unit -> unit instanceof Script)
                     .map(unit -> ((Script) unit).getScript(request, split).trim()).collect(Collectors.joining(split)));

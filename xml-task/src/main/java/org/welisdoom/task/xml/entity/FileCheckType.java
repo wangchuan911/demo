@@ -30,7 +30,7 @@ public class FileCheckType extends Unit implements Executable {
 
     @ConfigurationProperties("xml-task.file.check")
     @Configuration
-    public class FileCheckTypeConfiguration {
+    public static class FileCheckTypeConfiguration {
         Map<String, Object> magic;
 
         public void setMagic(Map<String, Object> magic) {
@@ -103,7 +103,7 @@ public class FileCheckType extends Unit implements Executable {
     }
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         String fileName = getAttrFormatValue("name", data);
 
         java.io.File file = new java.io.File(fileName);

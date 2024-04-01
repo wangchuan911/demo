@@ -22,7 +22,7 @@ import java.util.Map;
 @Tag(value = "sub-task", parentTagTypes = Executable.class, desc = "任务子执行")
 public class SubTask extends Unit implements Executable {
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
 
         super.start(data, preUnitResult, toNext);
     }
@@ -31,7 +31,7 @@ public class SubTask extends Unit implements Executable {
         return run(name, config, null);
     }
 
-    public static Future<Object> run(String name, SubTask.Config config, TaskRequest parent) {
+    public static Future<Object> run(String name, SubTask.Config config, TaskInstance parent) {
         Promise<Object> promise = Promise.promise();
         Task task;
         try {
@@ -51,11 +51,11 @@ public class SubTask extends Unit implements Executable {
             if (parent != null) {
                 name = String.format("%s#%s", parent.id, name);
             }
-            TaskRequest taskRequest = new TaskRequest(name, config.getParams());
+            TaskInstance taskInstance = new TaskInstance(name, config.getParams());
             if (parent != null) {
-                taskRequest.getBus().put("$parent", parent.getBus());
+                taskInstance.getBus().put("$parent", parent.getBus());
             }
-            task.run(taskRequest).onComplete(event -> taskRequest.destroy().onComplete(event1 -> complete(event, promise)));
+            task.run(taskInstance).onComplete(event -> taskInstance.destroy().onComplete(event1 -> complete(event, promise)));
         } catch (Throwable e) {
             e.printStackTrace();
             promise.fail(e);

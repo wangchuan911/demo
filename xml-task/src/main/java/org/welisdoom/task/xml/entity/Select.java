@@ -9,7 +9,6 @@ import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoon.common.data.BaseCondition;
-import org.xml.sax.Attributes;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-import java.util.regex.Matcher;
 
 /**
  * @Classname Select
@@ -31,7 +29,7 @@ import java.util.regex.Matcher;
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         data.generateData(this);
 
         Database.findConnect(this, data).onSuccess(connection -> {
@@ -85,12 +83,12 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         return list;
     }
 
-    protected String getScript(TaskRequest data) {
+    protected String getScript(TaskInstance data) {
         return getChild(Sql.class).get(0).getScript(data, " ").trim();
     }
 
 
-    Future<Object> pageScroll(DataBaseConnectPool pool, String sql, List<Object> list, TaskRequest data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> future) {
+    Future<Object> pageScroll(DataBaseConnectPool pool, String sql, List<Object> list, TaskInstance data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> future) {
         Tuple tuple = Tuple.tuple(list);
         pool.setPage(tuple, page);
         pool.log("sql", sql);

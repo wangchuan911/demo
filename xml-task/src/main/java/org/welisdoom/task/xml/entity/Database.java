@@ -55,7 +55,7 @@ public class Database extends Unit {
     }*/
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         try {
             ObjectUtils.getMapValueOrNewSafe(MAP, attributes.get("id"), () -> Database
                     .getDataBaseConnectPool(attributes.get("id")));
@@ -83,7 +83,7 @@ public class Database extends Unit {
     }
 
 
-    protected static Future<SqlConnection> findConnect(Unit unit, TaskRequest data) {
+    protected static Future<SqlConnection> findConnect(Unit unit, TaskInstance data) {
         /*String link = unit.attributes.get("link");
         Optional<Transactional> optional;
         if (StringUtils.isEmpty(link)) {
@@ -122,7 +122,7 @@ public class Database extends Unit {
 
     static volatile Map<SqlConnection, AtomicInteger> sqlConnectionCounter = new ConcurrentHashMap<>();
 
-    protected static Optional<Transactional> getTransactional(Unit unit, TaskRequest data) {
+    protected static Optional<Transactional> getTransactional(Unit unit, TaskInstance data) {
         String link = unit.attributes.get("link");
         Optional<Transactional> optional;
         if (StringUtils.isEmpty(link)) {
@@ -133,7 +133,7 @@ public class Database extends Unit {
         return optional;
     }
 
-    protected static Future<Object> releaseConnect(Unit unit, TaskRequest data) {
+    protected static Future<Object> releaseConnect(Unit unit, TaskInstance data) {
         Optional<Transactional> optional = getTransactional(unit, data);
         if (optional.isPresent()) {
             return Future.succeededFuture();

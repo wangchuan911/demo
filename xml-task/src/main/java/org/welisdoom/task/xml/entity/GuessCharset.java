@@ -6,12 +6,10 @@ import org.mozilla.intl.chardet.nsDetector;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoon.common.ObjectUtils;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,7 +27,7 @@ import java.util.stream.Collectors;
 @Attr(name = "read", desc = "读文件", require = true)
 public class GuessCharset extends Unit implements Executable {
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
 
         String guess = getAttrFormatValue("guess", data);
         log(guess);

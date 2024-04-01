@@ -1,6 +1,5 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Promise;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -9,7 +8,6 @@ import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -30,7 +28,7 @@ public class ForEach extends Unit implements Script {
     static String itemName = "item";
 
     @Override
-    public String getScript(TaskRequest request, String split) {
+    public String getScript(TaskInstance request, String split) {
         String collectionName = attributes.get("collection");
         String itemName = (attributes.containsKey("item")) ? attributes.get("item") : ForEach.itemName;
         try {

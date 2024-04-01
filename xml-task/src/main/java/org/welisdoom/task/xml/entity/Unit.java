@@ -98,15 +98,15 @@ public class Unit implements UnitType, IData<String, Model> {
         this.attributes = null;
     }
 
-    protected Future<Void> destroy(TaskRequest taskRequest) {
+    protected Future<Void> destroy(TaskInstance taskInstance) {
         log("释放");
-        taskRequest.clearCache(this);
+        taskInstance.clearCache(this);
         return Future.succeededFuture();
     }
 
-    protected Future<Void> hook(TaskRequest taskRequest) {
-        return this.destroy(taskRequest).transform(event ->
-                taskRequest.getChildrenRequest() == null ? (Future) CompositeFuture.join(Arrays.stream(taskRequest.getChildrenRequest()).map(taskRequest1 -> this.hook(taskRequest)).collect(Collectors.toList())) : Future.succeededFuture()
+    protected Future<Void> hook(TaskInstance taskInstance) {
+        return this.destroy(taskInstance).transform(event ->
+                taskInstance.getChildrenRequest() == null ? (Future) CompositeFuture.join(Arrays.stream(taskInstance.getChildrenRequest()).map(taskRequest1 -> this.hook(taskInstance)).collect(Collectors.toList())) : Future.succeededFuture()
         );
     }
 
@@ -185,7 +185,7 @@ public class Unit implements UnitType, IData<String, Model> {
         execute(data, Future.succeededFuture(), aClass);
     }*/
 
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         startChildUnit(data, /*data.lastUnitResult*/preUnitResult, Objects::nonNull).onSuccess(toNext::complete).onFailure(toNext::fail);
     }
 
@@ -193,7 +193,7 @@ public class Unit implements UnitType, IData<String, Model> {
         return unit -> Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(unit.getClass())).findFirst().isPresent();
     }
 
-    Future<Object> startChildUnit(TaskRequest data, Object value, Predicate<Unit> predicate) {
+    Future<Object> startChildUnit(TaskInstance data, Object value, Predicate<Unit> predicate) {
         Future<Object> f = Future.succeededFuture(value);
         for (Unit child : children) {
             if (!predicate.test(child))
@@ -209,7 +209,7 @@ public class Unit implements UnitType, IData<String, Model> {
         return f;
     }
 
-    Future<Object> startChildUnit(Unit child, TaskRequest data, Future<Object> future) {
+    Future<Object> startChildUnit(Unit child, TaskInstance data, Future<Object> future) {
         /*Promise<Object> promise = Promise.promise();
         future.onComplete(event -> {
             if (event.failed()) {
@@ -222,7 +222,7 @@ public class Unit implements UnitType, IData<String, Model> {
         return Iterable.compose(future, o -> startChildUnit(data, o, child));
     }
 
-    protected Future<Object> startChildUnit(TaskRequest data, Object value, Unit unit) {
+    protected Future<Object> startChildUnit(TaskInstance data, Object value, Unit unit) {
         /*final long[] cost = new long[1];
         return Future.future(promise -> {
             cost[0] = System.currentTimeMillis();
@@ -309,7 +309,7 @@ public class Unit implements UnitType, IData<String, Model> {
     final static Pattern PATTERN = Pattern.compile(DEFAULT_VALUE_SIGN);
     final static String sign = "%@#VALUE#@%";
 
-    protected static String textFormat(TaskRequest request, String text) {
+    protected static String textFormat(TaskInstance request, String text) {
         if (StringUtils.isEmpty(text)) return "";
         if (text.indexOf("{{") == -1) return text;
         List<Map.Entry<String, Object>> list = new LinkedList<>();
@@ -343,7 +343,7 @@ public class Unit implements UnitType, IData<String, Model> {
         return text;
     }
 
-    protected String getAttrFormatValue(String name, TaskRequest data) {
+    protected String getAttrFormatValue(String name, TaskInstance data) {
         return textFormat(data, attributes.get(name));
     }
 

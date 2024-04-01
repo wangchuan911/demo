@@ -27,7 +27,7 @@ public class Transactional extends Unit implements Executable {
 //    Map<TaskRequest, Map.Entry<SqlConnection, Transaction>> MAP = new HashMap<>();
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         compose(getSqlConnection(data), connection -> {
             Promise<Object> promise = Promise.promise();
             super.start(data, preUnitResult, promise);
@@ -109,7 +109,7 @@ public class Transactional extends Unit implements Executable {
     }
 
 
-    public Future<SqlConnection> getSqlConnection(TaskRequest data) {
+    public Future<SqlConnection> getSqlConnection(TaskInstance data) {
         Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
         if (cache != null)
             return Future.succeededFuture(cache.getKey());
@@ -125,11 +125,11 @@ public class Transactional extends Unit implements Executable {
     }
 
     @Override
-    public Future<Void> destroy(TaskRequest taskRequest) {
-        return super.destroy(taskRequest);
+    public Future<Void> destroy(TaskInstance taskInstance) {
+        return super.destroy(taskInstance);
     }
 
-    public Future<?> commit(TaskRequest data) {
+    public Future<?> commit(TaskInstance data) {
         /*log("提交");
         log(MAP.get(data));*/
         return compose(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().commit(), voidAsyncResult ->
@@ -138,8 +138,8 @@ public class Transactional extends Unit implements Executable {
     }
 
     @Override
-    protected Future<Void> hook(TaskRequest taskRequest) {
-        return CompositeFuture.join(allTransaction(taskRequest).stream().map(entry ->
+    protected Future<Void> hook(TaskInstance taskInstance) {
+        return CompositeFuture.join(allTransaction(taskInstance).stream().map(entry ->
                 CompositeFuture.join(Arrays.asList(
                         entry
                                 .getValue()
@@ -162,23 +162,23 @@ public class Transactional extends Unit implements Executable {
                                 })
                 ))
         ).collect(Collectors.toList())).transform(compositeFutureAsyncResult -> {
-            clearCache(taskRequest);
-            return super.hook(taskRequest);
+            clearCache(taskInstance);
+            return super.hook(taskInstance);
         });
     }
 
-    protected List<Map.Entry<SqlConnection, Transaction>> allTransaction(TaskRequest data) {
+    protected List<Map.Entry<SqlConnection, Transaction>> allTransaction(TaskInstance data) {
         List<Map.Entry<SqlConnection, Transaction>> list = new LinkedList<>();
         Map.Entry<SqlConnection, Transaction> map = data.cache(this);
         if (map != null)
             list.add(map);
-        for (TaskRequest taskRequest : data.childrenRequest) {
-            list.addAll(allTransaction(taskRequest));
+        for (TaskInstance taskInstance : data.childrenRequest) {
+            list.addAll(allTransaction(taskInstance));
         }
         return list;
     }
 
-    public Future<?> rollback(TaskRequest data) {
+    public Future<?> rollback(TaskInstance data) {
         /*log("回滚");
         log(MAP1.get(data));*/
         return
@@ -187,7 +187,7 @@ public class Transactional extends Unit implements Executable {
                 );
     }
 
-    protected Future<Transaction> newTransaction(TaskRequest data) {
+    protected Future<Transaction> newTransaction(TaskInstance data) {
         Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
         Future<SqlConnection> future = compose((Future) cache.getKey().close(),
                 o -> Database.getDatabase(attributes.get("link")).getConnect(attributes.get("link"), data));
@@ -198,10 +198,10 @@ public class Transactional extends Unit implements Executable {
                 }));
     }
 
-    protected void clearCache(TaskRequest data) {
+    protected void clearCache(TaskInstance data) {
         data.clearCache(this);
-        for (TaskRequest taskRequest : data.childrenRequest) {
-            taskRequest.clearCache(this);
+        for (TaskInstance taskInstance : data.childrenRequest) {
+            taskInstance.clearCache(this);
         }
     }
 }

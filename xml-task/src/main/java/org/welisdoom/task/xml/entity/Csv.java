@@ -48,7 +48,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 
 
     @Override
-    public Future<Object> read(TaskRequest data) {
+    public Future<Object> read(TaskInstance data) {
         CSVReader csvReader;
         try {
             csvReader = new CSVReaderBuilder(
@@ -99,11 +99,11 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
     }
 
     @Override
-    Charset getCharset(TaskRequest data) {
+    Charset getCharset(TaskInstance data) {
         return Charset.forName("gbk");
     }
 
-    protected Closeable initWriter(TaskRequest request) throws Throwable {
+    protected Closeable initWriter(TaskInstance request) throws Throwable {
         CSVWriter writer = new CSVWriter(getWriter(request));
         if ("true".equals(attributes.get("header"))) {
             writer.writeNext(Arrays.stream(this.cols).map(Col::getName).toArray(String[]::new));
@@ -114,7 +114,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 
 
     @Override
-    public Future<Object> write(TaskRequest data, StreamUnit.WriteLine unit) {
+    public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
         Promise<Object> promise = Promise.promise();
         try {
             CSVWriter csvWriter = data.cache(this);
@@ -131,14 +131,14 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 
 
     @Override
-    public Future<Void> destroy(TaskRequest taskRequest) {
-        CSVWriter csvWriter = taskRequest.clearCache(this);
+    public Future<Void> destroy(TaskInstance taskInstance) {
+        CSVWriter csvWriter = taskInstance.clearCache(this);
         try (csvWriter) {
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return super.destroy(taskRequest);
+        return super.destroy(taskInstance);
     }
 
     @Override

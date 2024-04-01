@@ -13,8 +13,6 @@ import org.welisdoon.common.ObjectUtils;
 import org.xml.sax.Attributes;
 
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * @Classname Values
@@ -46,7 +44,7 @@ public class Value extends Unit implements Initialize {
     }*/
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         try {
             HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$values", HashMap::new);
             String value = textFormat(data, getValue());

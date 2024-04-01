@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Tag(value = "task", parentTagTypes = Root.class, desc = "根节点")
 public class Task extends Unit implements Root {
     private static Vertx vertx;
-    static Set<TaskRequest> tasks = new HashSet<>();
+    static Set<TaskInstance> tasks = new HashSet<>();
 
     public static Vertx getVertx() {
         return vertx;
@@ -39,7 +39,7 @@ public class Task extends Unit implements Root {
         });
     }
 
-    public synchronized Future<Object> run(TaskRequest data) {
+    public synchronized Future<Object> run(TaskInstance data) {
         tasks.add(data);
         Promise<Object> promise = Promise.promise();
         try {

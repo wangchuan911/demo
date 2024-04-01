@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.intf.type;
 
 import io.vertx.core.Future;
-import org.welisdoom.task.xml.entity.TaskRequest;
+import org.welisdoom.task.xml.entity.TaskInstance;
 
 
 /**
@@ -12,13 +12,13 @@ import org.welisdoom.task.xml.entity.TaskRequest;
  */
 public interface Stream<WRITER extends Stream.Writer> extends UnitType {
 
-    Future<Object> read(TaskRequest request);
+    Future<Object> read(TaskInstance request);
 
-    default Future<Object> write(TaskRequest request){
+    default Future<Object> write(TaskInstance request){
         return Future.succeededFuture();
     }
 
-    Future<Object> write(TaskRequest request, WRITER writer);
+    Future<Object> write(TaskInstance request, WRITER writer);
 
     interface Writer extends UnitType {
 

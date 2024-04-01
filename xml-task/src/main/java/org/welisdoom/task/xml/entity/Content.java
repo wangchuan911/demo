@@ -4,10 +4,7 @@ import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Script;
-import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoom.task.xml.intf.type.UnitType;
-
-import java.util.Map;
 
 /**
  * @Classname Content
@@ -31,7 +28,7 @@ public class Content extends Unit implements Script, Copyable {
     }
 
     @Override
-    public String getScript(TaskRequest request, String s) {
+    public String getScript(TaskInstance request, String s) {
         return content + s;
     }
 

@@ -2,17 +2,14 @@ package org.welisdoom.task.xml.entity;
 
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import io.vertx.core.Promise;
-import ognl.Ognl;
-import ognl.OgnlContext;
-import ognl.OgnlException;
+import org.apache.ibatis.ognl.Ognl;
+import org.apache.ibatis.ognl.OgnlContext;
+import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
-
-import java.util.HashMap;
 
 /**
  * @Classname If
@@ -36,7 +33,7 @@ public class If extends Unit implements Executable {
     }*/
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         try {
             boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
             log(String.format("表达式[%s]", attributes.get("test")));

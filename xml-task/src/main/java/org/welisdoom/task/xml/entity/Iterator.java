@@ -39,7 +39,7 @@ public class Iterator extends Unit implements Executable {
     }*/
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         thread(data, (Iterable.Item) preUnitResult).onComplete(event -> {
             if (event.succeeded()) {
                 toNext.complete();
@@ -49,7 +49,7 @@ public class Iterator extends Unit implements Executable {
         });
     }
 
-    protected Future<Object> execute(TaskRequest data, Iterable.Item item) {
+    protected Future<Object> execute(TaskInstance data, Iterable.Item item) {
         Map map = data.getBus(parent.id);
         log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
         map.put(itemIndex, item.getIndex());
@@ -71,23 +71,23 @@ public class Iterator extends Unit implements Executable {
     }
 
     public static class ThreadInfo {
-        Queue<TaskRequest> idles = new LinkedList<>();
+        Queue<TaskInstance> idles = new LinkedList<>();
         List<Future> futures = new LinkedList<>();
         final int count;
 
-        ThreadInfo(TaskRequest taskRequest, int threadCount) {
+        ThreadInfo(TaskInstance taskInstance, int threadCount) {
             count = threadCount;
             for (int i = 0; i < threadCount; i++) {
-                idles.add(taskRequest.copy("thread-" + (i + 1)));
+                idles.add(taskInstance.copy("thread-" + (i + 1)));
             }
         }
 
-        synchronized Future<Object> run(Function<TaskRequest, Future<Object>> function) {
+        synchronized Future<Object> run(Function<TaskInstance, Future<Object>> function) {
 
-            TaskRequest taskRequest = idles.poll();
+            TaskInstance taskInstance = idles.poll();
             Promise<Void> promise = Promise.promise();
-            function.apply(taskRequest).onComplete(event -> {
-                idles.add(taskRequest);
+            function.apply(taskInstance).onComplete(event -> {
+                idles.add(taskInstance);
                 complete(event, promise);
             });
             futures.add(promise.future());
@@ -113,7 +113,7 @@ public class Iterator extends Unit implements Executable {
         System.out.print(highLight ? LogUtils.styleString("", ((hashCode() + 1) % 5) + 31, 1, str) : str);
     }
 
-    protected Future<Object> thread(TaskRequest data, Iterable.Item o) {
+    protected Future<Object> thread(TaskInstance data, Iterable.Item o) {
         switch (threadCount()) {
             case 1:
                 return execute(data, o);
@@ -151,16 +151,16 @@ public class Iterator extends Unit implements Executable {
         return this;
     }
 
-    public static Future<Object> iterator(Unit unit, TaskRequest data, Object item) {
+    public static Future<Object> iterator(Unit unit, TaskInstance data, Object item) {
         return unit.startChildUnit(data, item, typeMatched(Iterator.class));
     }
 
     @Override
-    protected Future<Void> destroy(TaskRequest taskRequest) {
-        return super.destroy(taskRequest).onComplete(event -> taskRequest.clearCache(this));
+    protected Future<Void> destroy(TaskInstance taskInstance) {
+        return super.destroy(taskInstance).onComplete(event -> taskInstance.clearCache(this));
     }
 
-    public Future<Object> iterateFinish(TaskRequest data) {
+    public Future<Object> iterateFinish(TaskInstance data) {
         ThreadInfo threadInfo = data.cache(this);
         if (threadInfo == null) {
             return Future.succeededFuture();

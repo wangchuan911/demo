@@ -4,22 +4,18 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
 import org.apache.ibatis.type.JdbcType;
-import org.apache.poi.ss.formula.functions.Rows;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
-import org.welisdoon.common.data.BaseCondition;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +36,7 @@ public class Insert extends Unit implements Script, Copyable {
     DataBaseConnectPool.StaticSql sql;
 
     @Override
-    protected void start(TaskRequest data, Object preUnitResult, Promise<Object> toNext) {
+    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
         if (isStaticContent == null) {
             isStaticContent = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).isStaticContent()).reduce(Boolean.TRUE, (aBoolean, aBoolean2) -> aBoolean && aBoolean2);
         }
@@ -82,11 +78,11 @@ public class Insert extends Unit implements Script, Copyable {
     }
 
     @Override
-    public String getScript(TaskRequest request, String split) {
+    public String getScript(TaskInstance request, String split) {
         return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split)).trim();
     }
 
-    public String getScript(TaskRequest request) {
+    public String getScript(TaskInstance request) {
         return getScript(request, " ");
     }
 

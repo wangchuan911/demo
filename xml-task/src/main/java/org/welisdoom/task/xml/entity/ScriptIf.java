@@ -1,19 +1,15 @@
 package org.welisdoom.task.xml.entity;
 
 
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import ognl.OgnlException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
-import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -26,7 +22,7 @@ import java.util.stream.Collectors;
 @Attr(name = "test", require = true, desc = "表达式")
 public class ScriptIf extends Unit implements Script, Copyable {
     @Override
-    public String getScript(TaskRequest request, String s) {
+    public String getScript(TaskInstance request, String s) {
         try {
             if (If.test(attributes.get("test"), request.getOgnlContext(), request.getBus())) {
                 return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, s).trim()).collect(Collectors.joining(s));
@@ -37,7 +33,6 @@ public class ScriptIf extends Unit implements Script, Copyable {
         return " ";
     }
 
-
     @Override
     public Copyable copy() {
         return copyableUnit(this);
@@ -47,7 +42,7 @@ public class ScriptIf extends Unit implements Script, Copyable {
     public static class Choice extends Unit implements Script {
 
         @Override
-        public String getScript(TaskRequest request, String split) {
+        public String getScript(TaskInstance request, String split) {
             List<String> list = new LinkedList<>();
             boolean isMatched = false;
             for (Unit child : children) {
@@ -67,7 +62,7 @@ public class ScriptIf extends Unit implements Script, Copyable {
         @Tag(value = "when", parentTagTypes = Choice.class, desc = "if else")
         public static class When extends Unit implements Script {
             @Override
-            public String getScript(TaskRequest request, String split) {
+            public String getScript(TaskInstance request, String split) {
                 try {
                     if (If.test(attributes.get("test"), request.getOgnlContext(), request.getBus())) {
                         return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split));
@@ -82,7 +77,7 @@ public class ScriptIf extends Unit implements Script, Copyable {
         @Tag(value = "otherwise", parentTagTypes = Choice.class, desc = "if else")
         public static class Otherwise extends Unit implements Script {
             @Override
-            public String getScript(TaskRequest request, String split) {
+            public String getScript(TaskInstance request, String split) {
                 return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split));
             }
         }
