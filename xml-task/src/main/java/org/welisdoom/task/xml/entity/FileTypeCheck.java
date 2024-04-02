@@ -25,8 +25,8 @@ import java.util.stream.Stream;
  * @Author Septem
  * @Date 12:41
  */
-@Tag(value = "check-type", parentTagTypes = Executable.class, desc = "文件类型校验")
-public class FileCheckType extends Unit implements Executable {
+@Tag(value = "file-type-check", parentTagTypes = Executable.class, desc = "文件类型校验")
+public class FileTypeCheck extends Unit implements Executable {
 
     @ConfigurationProperties("xml-task.file.check")
     @Configuration
@@ -152,7 +152,7 @@ public class FileCheckType extends Unit implements Executable {
                         fileInputStream.read(b);
                         StringBuilder bd = new StringBuilder("原始:");
                         for (byte b1 : b) {
-                            bd.append(Integer.toHexString(b1 + 128)).append(",");
+                            bd.append(toHexString(b1)).append(",");
                         }
                         System.out.println(bd.toString());
                         return b;
@@ -197,9 +197,13 @@ public class FileCheckType extends Unit implements Executable {
             }
             if (!flag)
                 break;
-            builder.append(Integer.toHexString(b + 128)).append(",");
+            builder.append(toHexString(b)).append(",");
         }
         return builder.substring(0, Math.max(builder.length() - 1, 0));
+    }
+
+    public static String toHexString(byte b) {
+        return Integer.toHexString(Byte.toUnsignedInt(b));
     }
 
     public static void checkGroup(String... magicCode) {
@@ -212,7 +216,8 @@ public class FileCheckType extends Unit implements Executable {
                 check("d:\\Users\\Septem\\Downloads\\教育部学历证书电子注册备案表_王芝栋.pdf"
                         , "d:\\Users\\Septem\\Downloads\\中国高等教育学位在线验证报告_王芝栋.pdf"
                         , "d:\\Users\\Septem\\Downloads\\住房调查证明模板.pdf"
-                        //, "d:\\Users\\Septem\\Downloads\\T236号18GX002284006（ZR2018-GZ-092）第二批工程容县松山镇新光村大坡脚队、松山村枇杷队、罗江镇岑冲村井田队、黎村镇珊萃村山心队、杨村镇平贯村半岭队等FTTH光缆线路单位工2 (1).pdf"
+                        , "d:\\Users\\Septem\\Downloads\\(15-N-GC-00225-F-001)-2015年中国电信广西LTE（4.1期）工程建设玉林本地网光缆项目兴业交通局、新公安局、六联基站光缆线路单位工程光缆线路单位工程（图纸）-2.pdf"
+//                        , "d:\\Users\\Septem\\Downloads\\T236号18GX002284006（ZR2018-GZ-092）第二批工程容县松山镇新光村大坡脚队、松山村枇杷队、罗江镇岑冲村井田队、黎村镇珊萃村山心队、杨村镇平贯村半岭队等FTTH光缆线路单位工2 (1).pdf"
                 ),
                 check(
                         "d:\\Users\\Septem\\Downloads\\重庆电信PF与资源系统接口规范v8.5(20231120)  (2).doc"

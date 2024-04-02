@@ -2,7 +2,7 @@ package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.*;
-import ognl.Ognl;
+import org.apache.ibatis.ognl.Ognl;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.consts.Model;

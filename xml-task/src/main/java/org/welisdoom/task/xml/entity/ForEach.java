@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
-import ognl.Ognl;
-import ognl.OgnlException;
+import org.apache.ibatis.ognl.Ognl;
+import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;

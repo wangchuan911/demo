@@ -6,9 +6,9 @@ import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.sqlclient.*;
-import ognl.Ognl;
-import ognl.OgnlException;
+import org.apache.ibatis.ognl.Ognl;
 import org.apache.ibatis.ognl.OgnlContext;
+import org.apache.ibatis.ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoon.common.data.BaseCondition;
 
