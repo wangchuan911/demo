@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.intf.type;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.welisdoom.task.xml.entity.Iterator;
 import org.welisdoom.task.xml.entity.TaskInstance;
 import org.welisdoom.task.xml.entity.Unit;
@@ -51,7 +50,7 @@ public interface Iterable<T> extends UnitType {
 
     default Future<Object> futureLoop(Item<T> item, Future<Object> preFuture, TaskInstance data) {
         /*return preFuture.compose(o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));*/
-        return compose(preFuture, o -> this.iterator(data, item));
+        return preFuture.compose(o -> this.iterator(data, item));
     }
 
     default Future<Object> loopEnd(TaskInstance data) {
@@ -62,20 +61,15 @@ public interface Iterable<T> extends UnitType {
     }
 
 
-    static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
+    /*static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
         return compose(preFuture, loop, Future::failedFuture);
     }
 
     static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop, Function<Throwable, Future<T>> failureMapper) {
         Promise<K> promise = Promise.promise();
-        preFuture.onComplete(event -> {
-            if (event.failed())
-                promise.fail(event.cause());
-            else
-                promise.complete(event.result());
-        });
-        return promise.future().compose(loop, failureMapper);
-    }
+        preFuture.onComplete(promise);
+        return preFuture.compose(loop, failureMapper);
+    }*/
 
     default Future<Object> bigFutureLoop(Item<T> item, long triggerCount, Future<?> preFuture, TaskInstance data) {
         return bigFutureLoop(item.index, triggerCount, preFuture,
@@ -89,7 +83,7 @@ public interface Iterable<T> extends UnitType {
             /*Promise<K> promise = Promise.promise();
             preFuture.onComplete(compose(promise));
             return promise.future().compose(loop);*/
-            return compose(preFuture, loop);
+//            return compose(preFuture, loop);
         }
         return preFuture.compose(loop);
     }
@@ -103,10 +97,10 @@ public interface Iterable<T> extends UnitType {
         });
     }*/
 
-    static long countReset(AtomicLong aLong, long triggerCount, long reset) {
+    /*static long countReset(AtomicLong aLong, long triggerCount, long reset) {
         if (aLong.incrementAndGet() > triggerCount) {
             aLong.set(reset);
         }
         return aLong.get();
-    }
+    }*/
 }

@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import com.google.common.base.Throwables;
-import io.vertx.core.Promise;
+import io.vertx.core.Future;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -17,21 +17,18 @@ public class Catch extends Unit implements Executable {
     Error error;
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         if (error == null)
             error = getChild(Error.class).stream().findFirst().orElse((Error) new Error().setParent(this));
-        startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error)).onSuccess(toNext::complete).onFailure(event -> {
+        return startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error)).compose(Future::succeededFuture, event -> {
             event.printStackTrace();
-            startChildUnit(data, Throwables.getStackTraceAsString(event), error).onSuccess(toNext::complete).onFailure(toNext::fail);
+            return startChildUnit(data, Throwables.getStackTraceAsString(event), error);
         });
     }
 
     @Tag(value = "error", parentTagTypes = Catch.class, desc = "异常处理")
     @Attr(name = "throw", desc = "是否抛出")
     public static class Error extends Unit implements Executable {
-        @Override
-        protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
-            super.start(data, preUnitResult, toNext);
-        }
+
     }
 }

@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.JSON;
-import io.vertx.core.Promise;
+import io.vertx.core.Future;
 import io.vertx.core.impl.NoStackTraceThrowable;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
@@ -81,7 +81,7 @@ public class Http extends Unit implements Executable, Copyable {
     }
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim(),
                 outputBody = "empty data";
         log(LogUtils.styleString("params:", 42, 2, inputBody));
@@ -131,14 +131,14 @@ public class Http extends Unit implements Executable, Copyable {
                         break;
                 }
                 log(data, inputBody, outputBody);
-                toNext.complete(result);
+                return Future.succeededFuture(result);
             } else {
                 InputStream input = httpConnection.getErrorStream();
                 throw new NoStackTraceThrowable(StreamUtils.copyToString(input, Charset.forName("utf-8")));
             }
         } catch (Throwable e) {
             log(data, inputBody, e);
-            toNext.fail(e);
+            return Future.failedFuture(e);
         } finally {
             if (httpConnection != null) {
                 try {

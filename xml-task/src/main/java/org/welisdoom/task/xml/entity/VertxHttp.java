@@ -2,7 +2,6 @@ package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -26,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 public class VertxHttp extends Http {
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future start(TaskInstance data, Object preUnitResult) {
         String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
         log(LogUtils.styleString("params:", 42, 2, inputBody));
         log(data, "不记录", "不记录");
@@ -34,7 +33,7 @@ public class VertxHttp extends Http {
 
         try {
             HttpClient client = data.cache(this, () -> Task.getVertx().createHttpClient());
-            client.request(HttpMethod.valueOf(attributes.getOrDefault("method", "POST")), getUrl(data)).compose(httpClientRequest -> {
+            return  client.request(HttpMethod.valueOf(attributes.getOrDefault("method", "POST")), getUrl(data)).compose(httpClientRequest -> {
                 for (Header header : getChild(Header.class)) {
                     httpClientRequest.putHeader(header.getName(), header.getContent());
                     log(String.format("header: %s = %s", header.getName(), header.getContent()));
@@ -62,10 +61,10 @@ public class VertxHttp extends Http {
                             return httpClientResponse.end().onComplete(ev -> Future.failedFuture(outputBody));
                         }
                     })
-            ).onComplete(event -> complete(event, toNext));
+            );
         } catch (Throwable e) {
             log(data, inputBody, e);
-            toNext.fail(e);
+            return Future.failedFuture(e);
         }
     }
 

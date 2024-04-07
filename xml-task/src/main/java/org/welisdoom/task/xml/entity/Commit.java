@@ -2,7 +2,6 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -35,7 +34,7 @@ public class Commit extends Unit implements Executable {
     }
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         log(String.format("batch:%d,count:%d", batch, count.incrementAndGet()));
         if (batch == count.get()) {
             count.set(0);
@@ -46,12 +45,11 @@ public class Commit extends Unit implements Executable {
                 optional = Optional.ofNullable(getParent(Transactional.class));
             }
             if (optional.isPresent()) {
-                commit(optional.get(), data).onSuccess(toNext::complete).onFailure(toNext::fail);
                 log("提交");
-                return;
+                return commit(optional.get(), data);
             }
         }
-        toNext.complete();
+        return Future.succeededFuture();
     }
 
     protected Future<Object> commit(Transactional transactional, TaskInstance request) {

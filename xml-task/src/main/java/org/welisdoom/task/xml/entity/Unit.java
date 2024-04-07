@@ -1,13 +1,15 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.TypeUtils;
-import io.vertx.core.*;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import org.apache.ibatis.ognl.Ognl;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoom.task.xml.intf.Copyable;
-import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.data.IData;
@@ -17,7 +19,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -185,8 +186,8 @@ public class Unit implements UnitType, IData<String, Model> {
         execute(data, Future.succeededFuture(), aClass);
     }*/
 
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
-        startChildUnit(data, /*data.lastUnitResult*/preUnitResult, Objects::nonNull).onSuccess(toNext::complete).onFailure(toNext::fail);
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+        return startChildUnit(data, /*data.lastUnitResult*/preUnitResult, Objects::nonNull);
     }
 
     public static Predicate<Unit> typeMatched(Class<?>... classes) {
@@ -219,42 +220,15 @@ public class Unit implements UnitType, IData<String, Model> {
             }
         });
         return promise.future().compose(o -> prepareNextUnit(data, o, child));*/
-        return Iterable.compose(future, o -> startChildUnit(data, o, child));
+        return future.compose(o -> startChildUnit(data, o, child));
     }
 
     protected Future<Object> startChildUnit(TaskInstance data, Object value, Unit unit) {
-        /*final long[] cost = new long[1];
-        return Future.future(promise -> {
-            cost[0] = System.currentTimeMillis();
-//            data.lastUnitResult = value;
-            System.out.println();
-            unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-            unit.start(data, value, promise);
-        }).onComplete(objectAsyncResult -> {
-            if (objectAsyncResult.failed())
-                unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
-            unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost[0]) / 1000.0d));
-            System.out.println();
-        });*/
-        /*Promise<Object> promise = Promise.promise();
-        long cost = System.currentTimeMillis();
-        System.out.println();
-        unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-        unit.start(data, value, promise);
-
-        return promise.future().onComplete(objectAsyncResult -> {
-            if (objectAsyncResult.failed()) {
-                objectAsyncResult.cause().printStackTrace();
-                unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
-            }
-            unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
-            System.out.println();
-        });*/
         long cost = System.currentTimeMillis();
         return executeBlocking(promise -> {
             System.out.println();
             unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-            unit.start(data, value, promise);
+            unit.start(data, value).onComplete(promise);
         }).onComplete(objectAsyncResult -> {
             if (objectAsyncResult.failed())
                 unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
@@ -354,21 +328,21 @@ public class Unit implements UnitType, IData<String, Model> {
         return aLong.get();
     }
 
-    static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
+    /*static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
         return Iterable.compose(preFuture, loop);
     }
 
     static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop, Function<Throwable, Future<T>> failureMapper) {
         return Iterable.compose(preFuture, loop, failureMapper);
-    }
+    }*/
 
-    static void complete(AsyncResult asyncResult, Promise promise) {
+    /*static void complete(AsyncResult asyncResult, Promise promise) {
         if (asyncResult.succeeded()) {
             promise.complete(asyncResult.result());
         } else {
             promise.fail(asyncResult.cause());
         }
-    }
+    }*/
 
     protected static <T> Future<T> executeBlocking(Handler<Promise<T>> blockingCodeHandler) {
         return Task.getVertx().executeBlocking(blockingCodeHandler);

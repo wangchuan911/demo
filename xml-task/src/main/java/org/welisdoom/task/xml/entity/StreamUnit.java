@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -41,20 +40,20 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
     }
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         try {
             /*data.cache(this, preUnitResult);*/
             this.cols = getChild(Col.class).stream().toArray(Col[]::new);
             data.generateData(this);
             if (getRead() != null) {
-                read(data).onSuccess(toNext::complete).onFailure(toNext::fail);
+                return read(data);
             } else if (getWrite() != null) {
-                write(data).onSuccess(toNext::complete).onFailure(toNext::fail);
+                return write(data);
             } else {
-                toNext.fail("未知的操作");
+                return Future.failedFuture("未知的操作");
             }
         } catch (Throwable throwable) {
-            toNext.fail(throwable);
+            return Future.failedFuture(throwable);
         }
     }
 
@@ -82,12 +81,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
     }
 
     protected Future<Object> listeningBreak(Future<Object> listFuture, Closeable reader, AtomicLong index) {
-        Promise<Object> promise = Promise.promise();
-        listFuture
-                .onSuccess(promise::complete)
-                .onFailure(throwable -> {
-                    Break.onBreak(throwable, promise, index.get());
-                })
+        return listFuture.compose(Future::succeededFuture, throwable -> Break.onBreak(throwable, index.get()))
                 .onComplete(objectAsyncResult -> {
                     try (reader) {
 //                        reader.close();
@@ -95,7 +89,6 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
                         log(e.getMessage());
                     }
                 });
-        return promise.future();
     }
 
     @Tag(value = "write-line", parentTagTypes = {Executable.class}, desc = "写入单行数据")
@@ -103,7 +96,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         StreamUnit stream;
 
         @Override
-        protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
             if (stream == null) {
                 synchronized (this) {
                     if (stream == null)
@@ -113,7 +106,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
                             stream = getParent(aClass -> StreamUnit.class.isAssignableFrom(aClass));
                 }
             }
-            ((Future<Object>) stream.write(data, this)).onSuccess(toNext::complete).onFailure(toNext::fail);
+            return stream.write(data, this);
         }
     }
 }

@@ -1,14 +1,19 @@
 package org.welisdoom.task.xml.entity;
 
 
-import io.vertx.core.*;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import org.springframework.util.Assert;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Root;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -39,45 +44,40 @@ public class Task extends Unit implements Root {
         });
     }
 
-    public synchronized Future<Object> run(TaskInstance data) {
+    public synchronized Future run(TaskInstance data) {
         tasks.add(data);
-        Promise<Object> promise = Promise.promise();
         try {
-            start(data, null, promise);
+            return start(data, null)
+                    .onSuccess(o -> {
+                        log("success");
+                    })
+                    .onFailure(
+                            throwable -> {
+                                log("fail");
+                                throwable.printStackTrace();
+                            })
+                    .transform(objectAsyncResult -> {
+                        tasks.remove(data);
+                        return CompositeFuture
+                                .all(data.cache.entrySet()
+                                        .stream()
+                                        .map(unitObjectEntry -> {
+                                            unitObjectEntry.getKey().log("开始释放");
+                                            return unitObjectEntry.getKey()
+                                                    .destroy(data).onComplete(event -> {
+                                                        if (event.succeeded()) {
+                                                            unitObjectEntry.getKey().log("释放完成");
+                                                        } else {
+                                                            unitObjectEntry.getKey().log("释放失败:");
+                                                            event.cause().printStackTrace();
+                                                        }
+                                                    });
+                                        })
+                                        .collect(Collectors.toList()));
+                    });
         } catch (Throwable e) {
-            promise.fail(e);
+            return Future.failedFuture(e);
         }
-        return promise.future()
-                .onSuccess(o -> {
-                    log("success");
-                })
-                .onFailure(
-                        throwable -> {
-                            log("fail");
-                            throwable.printStackTrace();
-                        })
-                .transform(objectAsyncResult -> {
-                    tasks.remove(data);
-                    Promise promise1 = Promise.promise();
-                    CompositeFuture
-                            .all(data.cache.entrySet()
-                                    .stream()
-                                    .map(unitObjectEntry -> {
-                                        unitObjectEntry.getKey().log("开始释放");
-                                        return unitObjectEntry.getKey()
-                                                .destroy(data).onComplete(event -> {
-                                                    if (event.succeeded()) {
-                                                        unitObjectEntry.getKey().log("释放完成");
-                                                    } else {
-                                                        unitObjectEntry.getKey().log("释放失败:");
-                                                        event.cause().printStackTrace();
-                                                    }
-                                                });
-                                    })
-                                    .collect(Collectors.toList()))
-                            .onComplete(event -> complete(objectAsyncResult, promise1));
-                    return promise1.future();
-                });
     }
 
     public static Future<Void> closeVertx() {

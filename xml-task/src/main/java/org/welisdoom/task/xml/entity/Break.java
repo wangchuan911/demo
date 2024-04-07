@@ -1,6 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Promise;
+import io.vertx.core.Future;
 import io.vertx.core.impl.NoStackTraceThrowable;
 import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -19,8 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Attr(name = "deep", desc = "中断深度")
 public class Break extends Unit implements Executable {
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
-        toNext.fail(new BreakLoopThrowable(MapUtils.getInteger(attributes, "deep", 1)));
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+        return Future.failedFuture(new BreakLoopThrowable(MapUtils.getInteger(attributes, "deep", 1)));
     }
 
     public static class BreakLoopThrowable extends NoStackTraceThrowable {
@@ -47,21 +47,20 @@ public class Break extends Unit implements Executable {
         }
     }
 
-    public static void onBreak(Throwable throwable, Promise<Object> toNext, Object result) {
+    public static Future<Object> onBreak(Throwable throwable, Object result) {
         if (throwable instanceof Break.BreakLoopThrowable) {
             if (((Break.BreakLoopThrowable) throwable).decrementAndGetDeep() == 0) {
-                toNext.complete(result);
-                return;
+                return Future.succeededFuture(result);
             }
         }
-        toNext.fail(throwable);
+        return Future.failedFuture(throwable);
     }
 
     @Tag(value = "continue", parentTagTypes = Executable.class, desc = "跳过循环")
     public static class Continue extends Unit implements Executable {
         @Override
-        protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
-            toNext.fail(new SkipOneLoopThrowable());
+        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+            return Future.failedFuture(new SkipOneLoopThrowable());
         }
     }
 

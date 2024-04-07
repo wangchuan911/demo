@@ -21,11 +21,6 @@ import java.util.Map;
  */
 @Tag(value = "sub-task", parentTagTypes = Executable.class, desc = "任务子执行")
 public class SubTask extends Unit implements Executable {
-    @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
-
-        super.start(data, preUnitResult, toNext);
-    }
 
     public static Future<Object> run(String name, SubTask.Config config) {
         return run(name, config, null);
@@ -55,7 +50,10 @@ public class SubTask extends Unit implements Executable {
             if (parent != null) {
                 taskInstance.getBus().put("$parent", parent.getBus());
             }
-            task.run(taskInstance).onComplete(event -> taskInstance.destroy().onComplete(event1 -> complete(event, promise)));
+            return task.run(taskInstance).compose(event -> {
+                taskInstance.destroy();
+                return Future.succeededFuture(event);
+            });
         } catch (Throwable e) {
             e.printStackTrace();
             promise.fail(e);

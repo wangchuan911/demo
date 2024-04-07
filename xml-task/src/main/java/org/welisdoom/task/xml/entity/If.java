@@ -3,7 +3,7 @@ package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import io.vertx.core.Promise;
+import io.vertx.core.Future;
 import org.apache.ibatis.ognl.Ognl;
 import org.apache.ibatis.ognl.OgnlContext;
 import org.apache.ibatis.ognl.OgnlException;
@@ -33,7 +33,7 @@ public class If extends Unit implements Executable {
     }*/
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         try {
             boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
             log(String.format("表达式[%s]", attributes.get("test")));
@@ -41,12 +41,12 @@ public class If extends Unit implements Executable {
             log(String.format("结果[%s]", test));
 
             if (test) {
-                super.start(data, true, toNext);
+                return super.start(data, true);
             } else {
-                toNext.complete(false);
+                return Future.succeededFuture(false);
             }
         } catch (OgnlException e) {
-            toNext.fail(e);
+            return Future.failedFuture(e);
         }
     }
     /*public static void main(String[] args) throws Throwable {

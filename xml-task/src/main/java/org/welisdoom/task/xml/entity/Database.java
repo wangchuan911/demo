@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnection;
 import org.apache.commons.lang3.StringUtils;
 import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
@@ -17,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
  * @Classname Database
@@ -55,14 +55,14 @@ public class Database extends Unit {
     }*/
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         try {
             ObjectUtils.getMapValueOrNewSafe(MAP, attributes.get("id"), () -> Database
                     .getDataBaseConnectPool(attributes.get("id")));
-            super.start(data, preUnitResult, toNext);
+            return super.start(data, preUnitResult);
 
         } catch (Throwable throwable) {
-            toNext.fail(throwable);
+            return Future.failedFuture(throwable);
         }
     }
 
@@ -82,6 +82,14 @@ public class Database extends Unit {
         return pool;
     }
 
+    protected static <T> Future<T> doConnect(Unit unit, TaskInstance data, Function<SqlConnection, Future<T>> function) {
+        return findConnect(unit, data).compose(function).compose(t -> {
+            return Database.releaseConnect(unit, data).compose(o -> Future.succeededFuture(t));
+        }, throwable -> {
+            Future<T> future = Future.failedFuture(throwable);
+            return Database.releaseConnect(unit, data).compose(o -> future, throwable1 -> future);
+        });
+    }
 
     protected static Future<SqlConnection> findConnect(Unit unit, TaskInstance data) {
         /*String link = unit.attributes.get("link");

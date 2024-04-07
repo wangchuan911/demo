@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -11,7 +10,10 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoon.common.LogUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -27,12 +29,9 @@ public class Transactional extends Unit implements Executable {
 //    Map<TaskRequest, Map.Entry<SqlConnection, Transaction>> MAP = new HashMap<>();
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
-        compose(getSqlConnection(data), connection -> {
-            Promise<Object> promise = Promise.promise();
-            super.start(data, preUnitResult, promise);
-
-            return promise.future().transform(event -> {
+    protected Future start(TaskInstance data, Object preUnitResult) {
+        return getSqlConnection(data).compose(connection -> {
+            return super.start(data, preUnitResult).transform(event -> {
                 /*Map.Entry<SqlConnection, Transaction> entry = data.cache(this);
                 if (event.succeeded())
                     return entry.getValue().commit();
@@ -48,12 +47,6 @@ public class Transactional extends Unit implements Executable {
                 Map.Entry<SqlConnection, Transaction> entry = data.clearCache(this);
                 return entry.getKey().close();
             });
-        }).onComplete(event -> {
-            if (event.succeeded()) {
-                toNext.complete();
-            } else {
-                toNext.fail(event.cause());
-            }
         });
         /*compose(this.getDatabase(data), connection ->
                 compose(connection.begin(), transaction -> {
@@ -114,10 +107,10 @@ public class Transactional extends Unit implements Executable {
         if (cache != null)
             return Future.succeededFuture(cache.getKey());
         Future<SqlConnection> future = Database.getDatabase(attributes.get("link")).getConnect(attributes.get("link"), data);
-        return compose(future, connection -> {
+        return future.compose(connection -> {
             /*log(data.id);
             log(connection);*/
-            return compose(connection.begin(), transaction -> {
+            return connection.begin().compose(transaction -> {
                 data.cache(this, Map.entry(connection, transaction));
                 return Future.succeededFuture(connection);
             });
@@ -132,7 +125,7 @@ public class Transactional extends Unit implements Executable {
     public Future<?> commit(TaskInstance data) {
         /*log("提交");
         log(MAP.get(data));*/
-        return compose(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().commit(), voidAsyncResult ->
+        return ((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().commit().compose(voidAsyncResult ->
                 newTransaction(data)
         );
     }
@@ -182,16 +175,16 @@ public class Transactional extends Unit implements Executable {
         /*log("回滚");
         log(MAP1.get(data));*/
         return
-                compose(((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().rollback(), voidAsyncResult ->
+                ((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().rollback().compose(voidAsyncResult ->
                         newTransaction(data)
                 );
     }
 
     protected Future<Transaction> newTransaction(TaskInstance data) {
         Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
-        Future<SqlConnection> future = compose((Future) cache.getKey().close(),
+        Future<SqlConnection> future = (Future) cache.getKey().close().compose(
                 o -> Database.getDatabase(attributes.get("link")).getConnect(attributes.get("link"), data));
-        return compose(future, connection ->
+        return future.compose(connection ->
                 connection.begin().onSuccess(transaction -> {
                     /*MAP.put(data, Map.entry(connection, transaction));*/
                     data.cache(this, Map.entry(connection, transaction));

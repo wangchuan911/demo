@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -34,19 +33,17 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
 
     @Override
     public Future<Object> read(TaskInstance data) {
-        Promise<Object> toNext = Promise.promise();
-        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
+        return ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).compose(client -> {
             data.cache(this, client);
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("get", data);
                 log(String.format("%s=====>%s", remote, file));
                 StreamUtils.write(client.retrieveFileStream(remote), new FileOutputStream(file));
-                toNext.complete(file);
+                return Future.succeededFuture(file);
             } catch (Throwable throwable) {
-                toNext.fail(throwable);
+                return Future.failedFuture(throwable);
             }
-        }).onFailure(toNext::fail);
-        return toNext.future();
+        });
     }
 
     public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
@@ -55,19 +52,17 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
 
     @Override
     public Future<Object> write(TaskInstance data) {
-        Promise<Object> toNext = Promise.promise();
-        ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).onSuccess(client -> {
+        return ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).compose(client -> {
             data.cache(this, client);
             try {
                 String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
                 log(String.format("%s=====>%s", file, remote));
                 StreamUtils.write(new FileInputStream(file), client.storeFileStream(remote));
-                toNext.complete(file);
+                return Future.succeededFuture(file);
             } catch (Throwable throwable) {
-                toNext.fail(throwable);
+                return Future.failedFuture(throwable);
             }
-        }).onFailure(toNext::fail);
-        return toNext.future();
+        });
     }
 
     @Override

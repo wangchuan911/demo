@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.entity;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -20,15 +19,13 @@ import java.util.List;
 public class Choice extends Unit {
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         Future<Object> future = Future.succeededFuture();
         List<Unit> list = (List) getChild(When.class);
         list.add(getChild(Otherwise.class).stream().findFirst().orElse((Otherwise) new Otherwise().setParent(this)));
         for (Unit when : list) {
-            future = compose(future,
-                    o ->
-                            startChildUnit(data, preUnitResult, when)
-                    ,
+            future = future.compose(
+                    o -> startChildUnit(data, preUnitResult, when),
                     throwable -> {
                         if (throwable instanceof Break.SkipOneLoopThrowable) {
                             return startChildUnit(data, preUnitResult, when);
@@ -36,39 +33,34 @@ public class Choice extends Unit {
                             return Future.failedFuture(throwable);
                     });
         }
-        future.onSuccess(toNext::complete).onFailure(event -> {
+        return future.otherwise(event -> {
             if (event instanceof Break.BreakLoopThrowable) {
-                toNext.complete();
+                return Future.succeededFuture();
             } else
-                toNext.fail(event);
+                return Future.failedFuture(event);
         });
     }
 
     @Tag(value = "when", parentTagTypes = Choice.class, desc = "if else")
     public static class When extends Unit implements Executable {
         @Override
-        protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
             boolean test;
             try {
                 test = If.test(attributes.get("test"), data.getOgnlContext(), data.getBus());
             } catch (OgnlException e) {
+                e.printStackTrace();
                 test = false;
             }
             log(String.format("表达式[%s]", attributes.get("test")));
             log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.IgnoreErrorGetter, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));
             log(String.format("结果[%s]", test));
             if (test) {
-                Promise<Object> promise = Promise.promise();
-                promise.future().onComplete(event -> {
-                    if (event.failed()) {
-                        toNext.fail(event.cause());
-                    } else {
-                        toNext.fail(new Break.BreakLoopThrowable(0));
-                    }
-                });
-                super.start(data, preUnitResult, promise);
+                return super.start(data, preUnitResult).compose(o -> {
+                    return Future.failedFuture(new Break.BreakLoopThrowable(0));
+                }, Future::failedFuture);
             } else
-                toNext.fail(new Break.SkipOneLoopThrowable());
+                return Future.failedFuture(new Break.SkipOneLoopThrowable());
         }
     }
 

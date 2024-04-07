@@ -1,6 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Promise;
+import io.vertx.core.Future;
 import org.apache.commons.collections4.MapUtils;
 import org.mozilla.intl.chardet.nsDetector;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Attr(name = "read", desc = "读文件", require = true)
 public class GuessCharset extends Unit implements Executable {
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
 
         String guess = getAttrFormatValue("guess", data);
         log(guess);
@@ -43,9 +43,9 @@ public class GuessCharset extends Unit implements Executable {
             map.put("charsets", list);
             log("选择的字符集：" + charset);
             map.put("charset", charset);
-            toNext.complete();
+            return Future.succeededFuture();
         } catch (Throwable e) {
-            toNext.fail(e);
+            return Future.failedFuture(e);
         }
         //super.start(data, toNext);
     }

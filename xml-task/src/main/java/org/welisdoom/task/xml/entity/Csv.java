@@ -4,7 +4,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -115,18 +114,16 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 
     @Override
     public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
-        Promise<Object> promise = Promise.promise();
         try {
             CSVWriter csvWriter = data.cache(this);
             String[] value = unit.getChild(Col.class).stream().map(col -> textFormat(data, col.getValue())).toArray(String[]::new);
             log(Arrays.toString(value));
             csvWriter.writeNext(value);
             csvWriter.flush();
-            promise.complete();
+            return Future.succeededFuture();
         } catch (Throwable e) {
-            promise.fail(e);
+            return Future.failedFuture(e);
         }
-        return promise.future();
     }
 
 

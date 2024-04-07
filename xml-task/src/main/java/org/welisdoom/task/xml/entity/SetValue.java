@@ -1,6 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.Promise;
+import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.ognl.Ognl;
 import org.apache.ibatis.ognl.OgnlException;
@@ -24,13 +24,12 @@ import java.util.stream.Collectors;
 @Attr(name = "name", desc = "设置的变量名", require = true)
 public class SetValue extends Unit {
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         Map<String, Object> map;
         try {
             map = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$values", () -> new HashMap<>());
         } catch (Throwable e) {
-            toNext.fail(e);
-            return;
+            return Future.failedFuture(e);
         }
         Object value;
         if (attributes.containsKey("value")) {
@@ -46,14 +45,13 @@ public class SetValue extends Unit {
                     try {
                         value = Ognl.getValue(value.toString(), data.getOgnlContext(), data.getBus(), Object.class);
                     } catch (OgnlException e) {
-                        toNext.fail(e);
-                        return;
+                        return Future.failedFuture(e);
                     }
                 break;
             default:
                 break;
         }
         map.put(attributes.get("name"), value);
-        super.start(data, preUnitResult, toNext);
+        return super.start(data, preUnitResult);
     }
 }

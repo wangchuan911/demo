@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -39,14 +38,8 @@ public class Iterator extends Unit implements Executable {
     }*/
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
-        thread(data, (Iterable.Item) preUnitResult).onComplete(event -> {
-            if (event.succeeded()) {
-                toNext.complete();
-            } else {
-                toNext.fail(event.cause());
-            }
-        });
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+        return thread(data, (Iterable.Item) preUnitResult);
     }
 
     protected Future<Object> execute(TaskInstance data, Iterable.Item item) {
@@ -56,9 +49,7 @@ public class Iterator extends Unit implements Executable {
         map.put(itemName, item.getItem());
         item.destroy();
         item = GCUtils.release(item);
-        Promise<Object> promise = Promise.promise();
-        super.start(data, null, promise);
-        return promise.future()
+        return super.start(data, null)
                 .transform(objectAsyncResult ->
                         (objectAsyncResult.succeeded() || (objectAsyncResult.cause() instanceof Break.SkipOneLoopThrowable)) ? Future.succeededFuture() : Future.failedFuture(objectAsyncResult.cause())
                 )
@@ -85,12 +76,10 @@ public class Iterator extends Unit implements Executable {
         synchronized Future<Object> run(Function<TaskInstance, Future<Object>> function) {
 
             TaskInstance taskInstance = idles.poll();
-            Promise<Void> promise = Promise.promise();
-            function.apply(taskInstance).onComplete(event -> {
+            futures.add(function.apply(taskInstance).transform(event -> {
                 idles.add(taskInstance);
-                complete(event, promise);
-            });
-            futures.add(promise.future());
+                return event.succeeded() ? Future.succeededFuture(event.result()) : Future.failedFuture(event.cause());
+            }));
             if (futures.size() >= count)
                 return (Future) CompositeFuture.any(futures).onComplete(event -> {
                     futures.removeAll(futures.stream().filter(Future::isComplete).collect(Collectors.toList()));

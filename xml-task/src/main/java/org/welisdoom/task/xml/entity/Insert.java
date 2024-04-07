@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
@@ -36,12 +35,12 @@ public class Insert extends Unit implements Script, Copyable {
     DataBaseConnectPool.StaticSql sql;
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         if (isStaticContent == null) {
             isStaticContent = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).isStaticContent()).reduce(Boolean.TRUE, (aBoolean, aBoolean2) -> aBoolean && aBoolean2);
         }
 //        System.out.println(data.getBus());
-        Future<Object> future = Database.findConnect(this, data).compose(connection -> {
+        return Database.doConnect(this, data, connection -> {
 //            System.out.println(data.getBus());
             DataBaseConnectPool pool = Database.getDataBase(Insert.this);
             if (!isStaticContent) {
@@ -52,7 +51,7 @@ public class Insert extends Unit implements Script, Copyable {
                 Tuple tuple = Tuple.tuple(params);
                 pool.log("sql", sql);
                 pool.log("params", tuple);
-                return pool.execute(connection, sql, tuple).compose(rows -> Future.succeededFuture(((RowSet<Row>) rows).rowCount()));
+                return pool.execute(connection, sql, tuple);
             } else {
 
                 List<Object> params = new LinkedList<>();
@@ -68,13 +67,9 @@ public class Insert extends Unit implements Script, Copyable {
                 }
                 Tuple tuple = Tuple.tuple(params);
                 pool.log("params", tuple);
-                return connection.preparedQuery(this.sql.getSql()).execute(tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
+                return connection.preparedQuery(this.sql.getSql()).execute(tuple);
             }
-        });
-        future.onComplete(event -> Database.releaseConnect(this, data).onComplete(event1 -> {
-            if (event1.succeeded()) complete(event, toNext);
-            else toNext.fail((event.failed()) ? event.cause() : event1.cause());
-        }));
+        }).compose(rows -> Future.succeededFuture(((RowSet<Row>) rows).rowCount()));
     }
 
     @Override

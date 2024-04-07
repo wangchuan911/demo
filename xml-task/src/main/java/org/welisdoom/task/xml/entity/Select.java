@@ -1,8 +1,9 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.sqlclient.*;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -29,38 +30,29 @@ import java.util.function.Function;
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         data.generateData(this);
-
-        Database.findConnect(this, data).onSuccess(connection -> {
-            BaseCondition.Page page = new BaseCondition.Page(1, 100);
-            AtomicLong index = new AtomicLong(0);
-            DataBaseConnectPool pool = Database.getDataBase(this);
-            String sql = getScript(data);
-            List<Object> params = new LinkedList<>();
-            pool.setValueToSql(params, pool.getSqlParamTypes(sql = pool.toPageSql(sql)), data.getOgnlContext(), data.getBus());
-            sql = pool.sqlFormat(sql, params);
-            Future<Object> future = pageScroll(pool, sql, params, data, page, rows -> {
-                Future<Object> listFuture = Future.succeededFuture();
-                for (Map<String, Object> row : rows) {
-                    listFuture = futureLoop(Item.of(index.incrementAndGet(), row), listFuture, data);
+        BaseCondition.Page page = new BaseCondition.Page(1, 100);
+        AtomicLong index = new AtomicLong(0);
+        DataBaseConnectPool pool = Database.getDataBase(this);
+        String sql = getScript(data);
+        List<Object> params = new LinkedList<>();
+        pool.setValueToSql(params, pool.getSqlParamTypes(sql = pool.toPageSql(sql)), data.getOgnlContext(), data.getBus());
+        sql = pool.sqlFormat(sql, params);
+        return pageScroll(
+                pool, sql, params, data, page,
+                rows -> {
+                    Future<Object> listFuture = Future.succeededFuture();
+                    for (Map<String, Object> row : rows) {
+                        listFuture = futureLoop(Item.of(index.incrementAndGet(), row), listFuture, data);
+                    }
+                    return listFuture;
                 }
-                return listFuture;
-            });
+        )
+                .compose(o -> loopEnd(data))
+                .compose(event -> Future.succeededFuture(index.get()),
+                        throwable -> Break.onBreak(throwable, index.get()));
 
-            future.compose(o -> loopEnd(data)).onComplete(event -> {
-                if (event.succeeded()) {
-                    toNext.complete(index.get());
-                } else {
-                    Break.onBreak(event.cause(), toNext, index.get());
-                }
-            })/*.onSuccess(o -> {
-                    toNext.complete(index.get());
-                }).onFailure(throwable -> {
-                    Break.onBreak(throwable, toNext, index.get());
-                })*/;
-
-        }).onFailure(toNext::fail);
 
     }
 
@@ -95,21 +87,13 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         pool.log("params", tuple);
         int nextPageNum = page.getPage() + ("tetris".equals(attributes.get("mode")) ? 0 : 1);
         log(String.format("第%d页", nextPageNum));
-        return compose(Database.findConnect(this, data), connection ->
-                compose(pool.execute(connection, sql, tuple), rows -> {
-                    Promise<Object> promise = Promise.promise();
-                    Collection<Map<String, Object>> results = rowToMaps((RowSet<Row>) rows);
-                    Database.releaseConnect(this, data).onComplete(event -> {
-                        future.apply(results).onComplete(event1 -> {
-                            if (event1.succeeded())
-                                complete(event, promise);
-                            else
-                                promise.fail((event.failed()) ? event.cause() : event1.cause());
-                        });
-                    });
-                    return compose(promise.future(), o -> results.size() < page.getPageSize() ?
-                            Future.succeededFuture() :
-                            pageScroll(pool, sql, list, data, page.setPage(nextPageNum), future));
-                }));
+        return Database.doConnect(this, data, connection -> {
+            return ((Future<RowSet<Row>>) pool.execute(connection, sql, tuple)).compose(rows -> {
+                return Future.succeededFuture(rowToMaps(rows));
+            }).compose(rows -> {
+                future.apply(rows);
+                return rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(pool, sql, list, data, page.setPage(nextPageNum), future);
+            });
+        });
     }
 }

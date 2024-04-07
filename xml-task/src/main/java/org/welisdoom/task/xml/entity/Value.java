@@ -3,7 +3,7 @@ package org.welisdoom.task.xml.entity;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import io.vertx.core.Promise;
+import io.vertx.core.Future;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -44,15 +44,15 @@ public class Value extends Unit implements Initialize {
     }*/
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future start(TaskInstance data, Object preUnitResult) {
         try {
             HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$values", HashMap::new);
             String value = textFormat(data, getValue());
             log("value:" + value);
             map.put(this.id, value);
-            toNext.complete();
+            return Future.succeededFuture();
         } catch (Throwable throwable) {
-            toNext.fail(throwable);
+            return Future.failedFuture(throwable);
         }
     }
 

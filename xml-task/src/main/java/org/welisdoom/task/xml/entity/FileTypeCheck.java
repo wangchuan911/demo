@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.util.IOUtils;
-import io.vertx.core.Promise;
+import io.vertx.core.Future;
 import javassist.NotFoundException;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -103,14 +103,13 @@ public class FileTypeCheck extends Unit implements Executable {
     }
 
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         String fileName = getAttrFormatValue("name", data);
 
         java.io.File file = new java.io.File(fileName);
         if (!file.exists()) {
             log("文件[" + fileName + "]不存在");
-            toNext.complete(false);
-            return;
+            return Future.succeededFuture(false);
         }
         String fileType = fileName.substring(fileName.lastIndexOf(".") + 1);
         FileInputStream fileInputStream = null;
@@ -129,11 +128,10 @@ public class FileTypeCheck extends Unit implements Executable {
             } else {
                 fileCheckTypeConfiguration.matched(fileType, eigenvalue);
             }
-            toNext.complete(true);
+            return Future.succeededFuture(true);
         } catch (Throwable e) {
             e.printStackTrace();
-            toNext.complete(false);
-            return;
+            return Future.succeededFuture(false);
         } finally {
             IOUtils.close(fileInputStream);
         }

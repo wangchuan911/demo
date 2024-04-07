@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Attr(name = "db", desc = "数据库类型")
 public class Command extends Unit implements Executable {
     @Override
-    protected void start(TaskInstance data, Object preUnitResult, Promise<Object> toNext) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         try {
             Process process = Runtime.getRuntime().exec(textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" "))));
             /*TimeoutStream timerStream = Task.getVertx().timerStream(MapUtils.getLong(attributes, "timeout", 5 * 1000L));*/
@@ -61,11 +61,9 @@ public class Command extends Unit implements Executable {
                     log(result);
                     break;
             }
-            toNext.complete(result);
-                /*timerStream.cancel();
-            }*/
+            return Future.succeededFuture(result);
         } catch (IOException e) {
-            toNext.fail(e);
+            return Future.failedFuture(e);
         }
 //        super.start(data, preUnitResult, toNext);
     }
@@ -78,6 +76,7 @@ public class Command extends Unit implements Executable {
             try {
                 process.destroyForcibly();
             } catch (Throwable e) {
+                e.printStackTrace();
                 try {
                     Runtime.getRuntime().exec("kill -9 " + pId);
                 } catch (IOException ioException) {
