@@ -5,10 +5,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.ognl.Ognl;
-import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.xml.sax.Attributes;
@@ -151,8 +150,8 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
             java.io.Writer writer = data.cache(this, () -> getWriter(data));
             writer.append(unit.getChild(Col.class).stream().map(col -> {
                 try {
-                    return TypeUtils.castToString(Ognl.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class));
-                } catch (OgnlException e) {
+                    return TypeUtils.castToString(OgnlUtils.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class));
+                } catch (Throwable e) {
                     log(String.format("col[%s] parse fail %s", col.getCode(), e.getMessage()));
                     return "";
                 }

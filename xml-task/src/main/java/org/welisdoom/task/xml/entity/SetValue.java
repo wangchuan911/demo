@@ -2,10 +2,9 @@ package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.ognl.Ognl;
-import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoon.common.ObjectUtils;
 
@@ -42,11 +41,7 @@ public class SetValue extends Unit {
         switch (style) {
             case "object":
                 if (value instanceof String)
-                    try {
-                        value = Ognl.getValue(value.toString(), data.getOgnlContext(), data.getBus(), Object.class);
-                    } catch (OgnlException e) {
-                        return Future.failedFuture(e);
-                    }
+                    value = OgnlUtils.getValue(value.toString(), data.getOgnlContext(), data.getBus(), Object.class);
                 break;
             default:
                 break;

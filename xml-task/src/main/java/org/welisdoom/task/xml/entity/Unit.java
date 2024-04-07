@@ -5,10 +5,10 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import org.apache.ibatis.ognl.Ognl;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.consts.Model;
+import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.LogUtils;
@@ -303,7 +303,7 @@ public class Unit implements UnitType, IData<String, Model> {
                     continue;
             }
             try {
-                value = Map.entry(name, Ognl.getValue(name, request.getOgnlContext(), request.getBus(), Object.class));
+                value = Map.entry(name, OgnlUtils.getValue(name, request.getOgnlContext(), request.getBus(), Object.class));
             } catch (Throwable e) {/*
                 throw new RuntimeException(e.getMessage(), e);*/
                 System.err.println(text + "===>" + name + "==>" + e.getMessage());

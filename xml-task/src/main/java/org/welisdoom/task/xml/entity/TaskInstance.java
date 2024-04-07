@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.entity;
 import com.sun.istack.NotNull;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import ognl.AbstractMemberAccess;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang3.SerializationUtils;
@@ -12,6 +13,8 @@ import org.welisdoom.task.xml.consts.Model;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
 
+import java.lang.reflect.Member;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,7 +26,15 @@ import java.util.stream.Collectors;
  */
 public class TaskInstance implements IData<String, Model>, DataBaseConnectPool.IToken {
     Map<String, Object> bus = new HashMap<>();
-    OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
+    OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(
+            new HashMap<>(),
+            new AbstractMemberAccess() {
+                @Override
+                public boolean isAccessible(Map context, Object target, Member member, String propertyName) {
+                    int modifiers = member.getModifiers();
+                    return Modifier.isPublic(modifiers);
+                }
+            }, null, null, new HashMap());
     Map<Unit, Object> cache = new LinkedHashMap<>();
     List<TaskInstance> childrenRequest = new LinkedList<>();
     TaskInstance parentRequest;
