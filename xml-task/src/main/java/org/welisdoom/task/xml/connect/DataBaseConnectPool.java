@@ -6,10 +6,8 @@ import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.sqlclient.*;
-import org.apache.ibatis.ognl.Ognl;
-import org.apache.ibatis.ognl.OgnlContext;
-import org.apache.ibatis.ognl.OgnlException;
 import org.apache.ibatis.type.JdbcType;
+import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.sql.Timestamp;
@@ -118,61 +116,59 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
 
     String sqlFormat(String sql, List<Object> param);
 
-    default void setValueToSql(List<Object> params, List<Map.Entry<String, JdbcType>> jdbcTypes, OgnlContext context, Map data) {
+    default void setValueToSql(List<Object> params, List<Map.Entry<String, JdbcType>> jdbcTypes, Map context, Map data) {
         JdbcType jdbcType;
         Object value;
         for (Map.Entry<String, JdbcType> sqlParamType : jdbcTypes) {
             jdbcType = sqlParamType.getValue();
-            try {
-                value = Ognl.getValue(sqlParamType.getKey(), context, data, Object.class);
-            } catch (OgnlException e) {
-                throw new RuntimeException(e.getMessage(), e);
+            value = OgnlUtils.getValue(sqlParamType.getKey(), context, data, Object.class);
+            if (value == null) {
+                continue;
             }
-            if (value != null)
-                switch (jdbcType) {
-                    case INTEGER:
-                    case SMALLINT:
-                    case TINYINT:
-                        value = TypeUtils.castToInt(value);
-                        break;
-                    case NUMERIC:
-                    case BIGINT:
-                        value = TypeUtils.castToBigDecimal(value);
-                        break;
-                    case BLOB:
-                        value = TypeUtils.castToBytes(value);
-                        break;
-                    case BIT:
-                        value = TypeUtils.castToByte(value);
-                        break;
-                    case BOOLEAN:
-                        value = TypeUtils.castToBoolean(value);
-                        break;
-                    case DOUBLE:
-                        value = TypeUtils.castToDouble(value);
-                        break;
-                    case FLOAT:
-                        value = TypeUtils.castToFloat(value);
-                        break;
-                    case TIMESTAMP:
-                        value = TypeUtils.castToTimestamp(value);
-                        if (Objects.nonNull(value) && value instanceof Timestamp) {
-                            value = ((Timestamp) value).toLocalDateTime();
-                        }
-                        break;
-                    case DATE:
-                        value = TypeUtils.castToDate(value);
-                        break;
-                    case CLOB:
-                    case NCHAR:
-                    case NCLOB:
-                    case VARCHAR:
-                    default:
-                        value = TypeUtils.castToString(value);
-                        break;
+            switch (jdbcType) {
+                case INTEGER:
+                case SMALLINT:
+                case TINYINT:
+                    value = TypeUtils.castToInt(value);
+                    break;
+                case NUMERIC:
+                case BIGINT:
+                    value = TypeUtils.castToBigDecimal(value);
+                    break;
+                case BLOB:
+                    value = TypeUtils.castToBytes(value);
+                    break;
+                case BIT:
+                    value = TypeUtils.castToByte(value);
+                    break;
+                case BOOLEAN:
+                    value = TypeUtils.castToBoolean(value);
+                    break;
+                case DOUBLE:
+                    value = TypeUtils.castToDouble(value);
+                    break;
+                case FLOAT:
+                    value = TypeUtils.castToFloat(value);
+                    break;
+                case TIMESTAMP:
+                    value = TypeUtils.castToTimestamp(value);
+                    if (Objects.nonNull(value) && value instanceof Timestamp) {
+                        value = ((Timestamp) value).toLocalDateTime();
+                    }
+                    break;
+                case DATE:
+                    value = TypeUtils.castToDate(value);
+                    break;
+                case CLOB:
+                case NCHAR:
+                case NCLOB:
+                case VARCHAR:
+                default:
+                    value = TypeUtils.castToString(value);
+                    break;
 
 
-                }
+            }
             params.add(value);
         }
     }

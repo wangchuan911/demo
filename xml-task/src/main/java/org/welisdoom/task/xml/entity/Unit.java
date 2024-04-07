@@ -228,7 +228,11 @@ public class Unit implements UnitType, IData<String, Model> {
         return executeBlocking(promise -> {
             System.out.println();
             unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-            unit.start(data, value).onComplete(promise);
+            try {
+                unit.start(data, value).onComplete(promise);
+            } catch (Throwable e) {
+                promise.fail(e);
+            }
         }).onComplete(objectAsyncResult -> {
             if (objectAsyncResult.failed())
                 unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));

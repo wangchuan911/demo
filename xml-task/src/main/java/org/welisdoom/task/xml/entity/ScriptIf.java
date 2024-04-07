@@ -2,7 +2,6 @@ package org.welisdoom.task.xml.entity;
 
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
@@ -23,12 +22,8 @@ import java.util.stream.Collectors;
 public class ScriptIf extends Unit implements Script, Copyable {
     @Override
     public String getScript(TaskInstance request, String s) {
-        try {
-            if (If.test(attributes.get("test"), request.getOgnlContext(), request.getBus())) {
-                return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, s).trim()).collect(Collectors.joining(s));
-            }
-        } catch (OgnlException e) {
-            throw new RuntimeException(e.getMessage(), e);
+        if (If.test(attributes.get("test"), request.getOgnlContext(), request.getBus())) {
+            return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, s).trim()).collect(Collectors.joining(s));
         }
         return " ";
     }

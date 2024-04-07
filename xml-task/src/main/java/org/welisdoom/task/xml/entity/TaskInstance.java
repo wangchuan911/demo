@@ -3,11 +3,10 @@ package org.welisdoom.task.xml.entity;
 import com.sun.istack.NotNull;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import ognl.Ognl;
+import ognl.OgnlContext;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.ognl.Ognl;
-import org.apache.ibatis.ognl.OgnlContext;
-import org.apache.ibatis.scripting.xmltags.OgnlClassResolver;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoon.common.ObjectUtils;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
  */
 public class TaskInstance implements IData<String, Model>, DataBaseConnectPool.IToken {
     Map<String, Object> bus = new HashMap<>();
-    OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new OgnlClassResolver(), new HashMap());
+    OgnlContext ognlContext = (OgnlContext) Ognl.addDefaultContext(new HashMap<>(), new HashMap());
     Map<Unit, Object> cache = new LinkedHashMap<>();
     List<TaskInstance> childrenRequest = new LinkedList<>();
     TaskInstance parentRequest;

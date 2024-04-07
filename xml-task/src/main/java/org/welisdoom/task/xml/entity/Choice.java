@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.entity;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import io.vertx.core.Future;
-import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 
@@ -48,7 +47,7 @@ public class Choice extends Unit {
             boolean test;
             try {
                 test = If.test(attributes.get("test"), data.getOgnlContext(), data.getBus());
-            } catch (OgnlException e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
                 test = false;
             }

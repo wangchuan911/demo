@@ -4,12 +4,12 @@ package org.welisdoom.task.xml.entity;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import io.vertx.core.Future;
-import org.apache.ibatis.ognl.Ognl;
-import org.apache.ibatis.ognl.OgnlContext;
-import org.apache.ibatis.ognl.OgnlException;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
+
+import java.util.Map;
 
 /**
  * @Classname If
@@ -34,19 +34,15 @@ public class If extends Unit implements Executable {
 
     @Override
     protected Future<Object> start(TaskInstance data, Object preUnitResult) {
-        try {
-            boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
-            log(String.format("表达式[%s]", attributes.get("test")));
-            log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));
-            log(String.format("结果[%s]", test));
+        boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
+        log(String.format("表达式[%s]", attributes.get("test")));
+        log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));
+        log(String.format("结果[%s]", test));
 
-            if (test) {
-                return super.start(data, true);
-            } else {
-                return Future.succeededFuture(false);
-            }
-        } catch (OgnlException e) {
-            return Future.failedFuture(e);
+        if (test) {
+            return super.start(data, true);
+        } else {
+            return Future.succeededFuture(false);
         }
     }
     /*public static void main(String[] args) throws Throwable {
@@ -64,7 +60,7 @@ public class If extends Unit implements Executable {
     }*/
 
 
-    public static boolean test(String express, OgnlContext ognlContext, Object o) throws OgnlException {
-        return (boolean) Ognl.getValue(express, ognlContext, o, boolean.class);
+    public static boolean test(String express, Map ognlContext, Object o) {
+        return OgnlUtils.getValue(express, ognlContext, o, boolean.class);
     }
 }

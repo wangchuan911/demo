@@ -6,6 +6,8 @@ import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 
+import java.util.Optional;
+
 /**
  * @Classname Catch
  * @Description TODO
@@ -18,8 +20,9 @@ public class Catch extends Unit implements Executable {
 
     @Override
     protected Future<Object> start(TaskInstance data, Object preUnitResult) {
-        if (error == null)
-            error = getChild(Error.class).stream().findFirst().orElse((Error) new Error().setParent(this));
+        error = Optional.ofNullable(error).orElseGet(() -> {
+            return getChild(Error.class).stream().findFirst().orElseGet(() -> (Error) new Error().setParent(this));
+        });
         return startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error)).compose(Future::succeededFuture, event -> {
             event.printStackTrace();
             return startChildUnit(data, Throwables.getStackTraceAsString(event), error);
