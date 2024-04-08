@@ -8,6 +8,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.intf.type.Initialize;
 import org.welisdoon.common.ObjectUtils;
 import org.xml.sax.Attributes;
@@ -46,7 +47,7 @@ public class Value extends Unit implements Initialize {
     @Override
     protected Future start(TaskInstance data, Object preUnitResult) {
         try {
-            HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$values", HashMap::new);
+            HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), MagicKey.VALUES, HashMap::new);
             String value = textFormat(data, getValue());
             log("value:" + value);
             map.put(this.id, value);

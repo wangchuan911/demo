@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.entity;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.handler.SAXParserHandler;
 import org.welisdoom.task.xml.intf.ApplicationContextProvider;
@@ -48,7 +49,7 @@ public class SubTask extends Unit implements Executable {
             }
             TaskInstance taskInstance = new TaskInstance(name, config.getParams());
             if (parent != null) {
-                taskInstance.getBus().put("$parent", parent.getBus());
+                taskInstance.getBus().put(MagicKey.PARENT, parent.getBus());
             }
             return task.run(taskInstance).compose(event -> {
                 taskInstance.destroy();

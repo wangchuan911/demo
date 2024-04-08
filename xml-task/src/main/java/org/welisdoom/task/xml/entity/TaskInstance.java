@@ -9,6 +9,7 @@ import ognl.OgnlContext;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
+import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.consts.Model;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
@@ -84,7 +85,7 @@ public class TaskInstance implements IData<String, Model>, DataBaseConnectPool.I
 
     public TaskInstance(@NotNull String id, Object o) {
         this.id = id;
-        bus.put("$inputs", o);
+        bus.put(MagicKey.INPUTS, o);
     }
 
 
@@ -167,5 +168,20 @@ public class TaskInstance implements IData<String, Model>, DataBaseConnectPool.I
             bus.clear();
             return CompositeFuture.join(childrenRequest.stream().map(TaskInstance::destroy).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
         });
+    }
+
+
+    public <T> T getPrevUnitValue() {
+        return (T) bus.get(MagicKey.PREV_UNIT_RESULT);
+    }
+
+    public TaskInstance setPrevUnitValue(Object value) {
+        bus.put(MagicKey.PREV_UNIT_RESULT, value);
+        return this;
+    }
+
+    public TaskInstance delPrevUnitValue() {
+        bus.remove(MagicKey.PREV_UNIT_RESULT);
+        return this;
     }
 }

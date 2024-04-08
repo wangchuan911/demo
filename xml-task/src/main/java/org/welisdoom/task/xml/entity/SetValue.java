@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoon.common.ObjectUtils;
@@ -26,7 +27,7 @@ public class SetValue extends Unit {
     protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         Map<String, Object> map;
         try {
-            map = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), "$values", () -> new HashMap<>());
+            map = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), MagicKey.VALUES, () -> new HashMap<>());
         } catch (Throwable e) {
             return Future.failedFuture(e);
         }
@@ -48,5 +49,20 @@ public class SetValue extends Unit {
         }
         map.put(attributes.get("name"), value);
         return super.start(data, preUnitResult);
+    }
+
+    @Tag(value = "del-value", parentTagTypes = Catch.class, desc = "最终处理")
+    @Attr(name = "name", desc = "设置的变量名", require = true)
+    public static class DelValue extends Unit implements Executable {
+        @Override
+        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+            if (data.getBus().containsKey(MagicKey.VALUES)) {
+                Map<String, Object> map = (Map) data.getBus().get(MagicKey.VALUES);
+                map.remove(attributes.get("name"));
+            } else {
+                log(attributes.get("name") + ":没有数据！");
+            }
+            return super.start(data, preUnitResult);
+        }
     }
 }

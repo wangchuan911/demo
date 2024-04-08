@@ -187,7 +187,10 @@ public class Unit implements UnitType, IData<String, Model> {
     }*/
 
     protected Future<Object> start(TaskInstance data, Object preUnitResult) {
-        return startChildUnit(data, /*data.lastUnitResult*/preUnitResult, Objects::nonNull);
+        data.setPrevUnitValue(preUnitResult);
+        return startChildUnit(data, preUnitResult, Objects::nonNull).onComplete(event -> {
+            data.delPrevUnitValue();
+        });
     }
 
     public static Predicate<Unit> typeMatched(Class<?>... classes) {
@@ -199,28 +202,9 @@ public class Unit implements UnitType, IData<String, Model> {
         for (Unit child : children) {
             if (!predicate.test(child))
                 continue;
-            /*f = f.compose(o -> *//*{
-                return Future.future(promise -> {
-                    data.lastUnitResult = o;
-                    child.start(data, promise);
-                };
-            }*//*prepareNextUnit(data, o, child));*/
-            f = startChildUnit(child, data, f);
+            f = f.compose(o -> startChildUnit(data, o, child));
         }
         return f;
-    }
-
-    Future<Object> startChildUnit(Unit child, TaskInstance data, Future<Object> future) {
-        /*Promise<Object> promise = Promise.promise();
-        future.onComplete(event -> {
-            if (event.failed()) {
-                promise.fail(event.cause());
-            } else {
-                promise.complete(event.result());
-            }
-        });
-        return promise.future().compose(o -> prepareNextUnit(data, o, child));*/
-        return future.compose(o -> startChildUnit(data, o, child));
     }
 
     protected Future<Object> startChildUnit(TaskInstance data, Object value, Unit unit) {
