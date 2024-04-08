@@ -1,0 +1,8 @@
+xml-task:
+  connections:
+    rimdb_pg:
+      1:
+      2:
+  templates:
+    1: D:/Workspaces/WelisdoonProject/java/web-server/xml-task/src/main/resources/config/application-task-mapper.yml
+      
