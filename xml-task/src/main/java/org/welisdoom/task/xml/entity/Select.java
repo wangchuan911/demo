@@ -81,7 +81,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
 
 
     Future<Object> pageScroll(DataBaseConnectPool pool, String sql, List<Object> list, TaskInstance data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> future) {
-        Tuple tuple = Tuple.tuple(list);
+       /* Tuple tuple = Tuple.tuple(list);
         pool.setPage(tuple, page);
         pool.log("sql", sql);
         pool.log("params", tuple);
@@ -91,9 +91,28 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
             return ((Future<RowSet<Row>>) pool.execute(connection, sql, tuple)).compose(rows -> {
                 return Future.succeededFuture(rowToMaps(rows));
             }).compose(rows -> {
-                future.apply(rows);
+                return future.apply(rows).compose(o -> {
+                    return rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(pool, sql, list, data, page.setPage(nextPageNum), future);
+                });
+            });
+        });*/
+        int nextPageNum = page.getPage() + ("tetris".equals(attributes.get("mode")) ? 0 : 1);
+        log(String.format("第%d页", nextPageNum));
+        return page(pool, sql, Tuple.tuple(list), data, page, (rows) -> {
+            return future.apply(rows).compose(o -> {
                 return rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(pool, sql, list, data, page.setPage(nextPageNum), future);
             });
+        });
+    }
+
+    Future<Object> page(DataBaseConnectPool pool, String sql, Tuple tuple, TaskInstance data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> result) {
+        pool.setPage(tuple, page);
+        pool.log("sql", sql);
+        pool.log("params", tuple);
+        return Database.doConnect(this, data, connection -> {
+            return ((Future<RowSet<Row>>) pool.execute(connection, sql, tuple)).compose(rows -> {
+                return Future.succeededFuture(rowToMaps(rows));
+            }).compose(result::apply);
         });
     }
 }

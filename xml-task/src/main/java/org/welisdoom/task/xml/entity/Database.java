@@ -83,12 +83,14 @@ public class Database extends Unit {
     }
 
     protected static <T> Future<T> doConnect(Unit unit, TaskInstance data, Function<SqlConnection, Future<T>> function) {
-        return findConnect(unit, data).compose(function).compose(t -> {
-            return Database.releaseConnect(unit, data).compose(o -> Future.succeededFuture(t));
-        }, throwable -> {
-            Future<T> future = Future.failedFuture(throwable);
-            return Database.releaseConnect(unit, data).compose(o -> future, throwable1 -> future);
-        });
+        return findConnect(unit, data)
+                .compose(function)
+                .transform(result -> {
+                    return Database.releaseConnect(unit, data)
+                            .transform(o -> result.succeeded() ?
+                                    Future.succeededFuture(result.result()) :
+                                    Future.failedFuture(result.cause()));
+                });
     }
 
     protected static Future<SqlConnection> findConnect(Unit unit, TaskInstance data) {
@@ -112,16 +114,15 @@ public class Database extends Unit {
         } else {
             if (data.cache(unit) == null) {
                 return getDataBase(unit).getConnect(unit.attributes.get("link"), data).onSuccess(connection -> {
-                    AtomicInteger atomicInteger = sqlConnectionCounter.get(connection);
-                    if (atomicInteger == null) {
+                    if (!sqlConnectionCounter.containsKey(connection)) {
                         synchronized (sqlConnectionCounter) {
-                            if (atomicInteger == null) {
-                                sqlConnectionCounter.put((SqlConnection) connection, atomicInteger = new AtomicInteger(0));
+                            if (!sqlConnectionCounter.containsKey(connection)) {
+                                sqlConnectionCounter.put((SqlConnection) connection, new AtomicInteger(0));
                                 data.cache(unit, connection);
                             }
                         }
                     }
-                    atomicInteger.incrementAndGet();
+                    sqlConnectionCounter.get(connection).incrementAndGet();
                 });
             }
             return Future.succeededFuture(data.cache(unit));
@@ -141,19 +142,20 @@ public class Database extends Unit {
         return optional;
     }
 
-    protected static Future<Object> releaseConnect(Unit unit, TaskInstance data) {
+    protected static synchronized Future<Object> releaseConnect(Unit unit, TaskInstance data) {
         Optional<Transactional> optional = getTransactional(unit, data);
         if (optional.isPresent()) {
             return Future.succeededFuture();
         } else if (data.cache(unit) == null) {
             return Future.failedFuture("not connect");
         } else {
-            SqlConnection connection = data.clearCache(unit);
+            SqlConnection connection = data.cache(unit);
             AtomicInteger count = sqlConnectionCounter.get(connection);
             if (count != null) {
-                if (count.decrementAndGet() <= 0)
+                if (count.decrementAndGet() <= 0) {
                     sqlConnectionCounter.remove(connection);
-                else
+                    data.clearCache(unit);
+                } else
                     return Future.succeededFuture();
             }
             return (Future) connection.close();
