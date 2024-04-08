@@ -10,6 +10,7 @@ import org.welisdoon.common.ObjectUtils;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,7 +73,7 @@ public class GuessCharset extends Unit implements Executable {
                     } else {
                         detector.DoIt(buffer, hasRead, false);
                     }
-                    if ((maxLength = -4096) < 0) {
+                    if ((maxLength -= 4096) <= 0) {
                         break;
                     }
                 }
@@ -84,5 +85,12 @@ public class GuessCharset extends Unit implements Executable {
             e.printStackTrace();
         }
         return map;
+    }
+
+    public static String guessCharset(String file) throws FileNotFoundException {
+        Map<String, AtomicInteger> result = guessCharset(new FileInputStream(file), 65535);
+        List<String> list = result.entrySet().stream()
+                .sorted(Comparator.comparingInt(o -> o.getValue().get())).map(Map.Entry::getKey).collect(Collectors.toList());
+        return list.stream().findFirst().get();
     }
 }
