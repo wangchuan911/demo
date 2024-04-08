@@ -10,6 +10,7 @@ import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.intf.type.Initialize;
+import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.ObjectUtils;
 import org.xml.sax.Attributes;
 
@@ -48,7 +49,7 @@ public class Value extends Unit implements Initialize {
     protected Future start(TaskInstance data, Object preUnitResult) {
         try {
             HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), MagicKey.VALUES, HashMap::new);
-            String value = textFormat(data, getValue());
+            String value = UnitType.textFormat(data, getValue());
             log("value:" + value);
             map.put(this.id, value);
             return Future.succeededFuture();

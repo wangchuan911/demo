@@ -1,6 +1,5 @@
 package org.welisdoom.task.xml.entity;
 
-import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -8,7 +7,6 @@ import io.vertx.core.Promise;
 import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.consts.Model;
-import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.LogUtils;
@@ -18,10 +16,7 @@ import org.xml.sax.Attributes;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -120,25 +115,25 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
 
-    protected <T extends Unit> List<T> getChildren(Class<T> tClass) {
-        List<Unit> units = new LinkedList<>();
+    public <T extends Unit> List<T> getChildren(Class<T> tClass) {
+        List<T> units = new LinkedList<>();
         units.addAll(getChild(tClass));
         for (Unit child : children) {
             units.addAll(child.getChildren(tClass));
         }
-        return (List) units;
+        return units;
     }
 
-    protected <T extends Unit> T getParent(Class<T> tClass) {
+    public <T extends Unit> T getParent(Class<T> tClass) {
         return getParent(aClass -> aClass == tClass);
     }
 
-    protected <T extends Unit> List<T> getParents(Class<T> tClass) {
+    public <T extends Unit> List<T> getParents(Class<T> tClass) {
         return getParents(aClass -> aClass == tClass);
     }
 
-    protected <T extends Unit> T getParent(Predicate<Class<?>> predicate) {
-        Class<? extends Unit> pClass = null;
+    public <T extends Unit> T getParent(Predicate<Class<?>> predicate) {
+        Class<? extends Unit> pClass;
         Unit target = this;
         do {
             target = target.parent;
@@ -148,7 +143,7 @@ public class Unit implements UnitType, IData<String, Model> {
         return (T) target;
     }
 
-    protected <T extends Unit> List<T> getParents(Predicate<Class<?>> predicate) {
+    public <T extends Unit> List<T> getParents(Predicate<Class<?>> predicate) {
         List<T> list = new LinkedList<>();
         Unit t = this;
         while ((t = t.getParent(predicate)) != null) {
@@ -157,35 +152,6 @@ public class Unit implements UnitType, IData<String, Model> {
         return list;
     }
 
-    /*protected void execute(TaskRequest data) {
-        execute(data, Object.class);
-    }
-
-    protected final void execute(TaskRequest data, Future<?> future, Class<?>... aClass) {
-        Promise<Object> superPromise = data.promise;
-        for (Unit child : children) {
-            for (Class<?> aClass1 : aClass) {
-                if (aClass1.isAssignableFrom(data.getClass())) {
-                    future.compose(o -> Future.future(promise -> {
-                        data.lastUnitResult = o;
-                        data.setPromise(promise);
-                        try {
-                            child.execute(data);
-                        } catch (Throwable throwable) {
-                            promise.fail(throwable);
-                        }
-                    }));
-                }
-
-            }
-        }
-        future.onSuccess(superPromise::complete).onFailure(superPromise::fail);
-    }
-
-    protected final void execute(TaskRequest data, Class<?>... aClass) throws Throwable {
-        execute(data, Future.succeededFuture(), aClass);
-    }*/
-
     protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         data.setPrevUnitValue(preUnitResult);
         return startChildUnit(data, preUnitResult, Objects::nonNull).onComplete(event -> {
@@ -193,15 +159,9 @@ public class Unit implements UnitType, IData<String, Model> {
         });
     }
 
-    public static Predicate<Unit> typeMatched(Class<?>... classes) {
-        return unit -> Arrays.stream(classes).filter(aClass -> aClass.isAssignableFrom(unit.getClass())).findFirst().isPresent();
-    }
-
-    Future<Object> startChildUnit(TaskInstance data, Object value, Predicate<Unit> predicate) {
+    protected Future<Object> startChildUnit(TaskInstance data, Object value, Predicate<Unit> predicate) {
         Future<Object> f = Future.succeededFuture(value);
-        for (Unit child : children) {
-            if (!predicate.test(child))
-                continue;
+        for (Unit child : getChild(predicate)) {
             f = f.compose(o -> startChildUnit(data, o, child));
         }
         return f;
@@ -267,70 +227,11 @@ public class Unit implements UnitType, IData<String, Model> {
         }
     }
 
-    final static String DEFAULT_VALUE_SIGN = "\\{\\{(.+?)\\}\\}";
-    final static Pattern PATTERN = Pattern.compile(DEFAULT_VALUE_SIGN);
-    final static String sign = "%@#VALUE#@%";
-
-    protected static String textFormat(TaskInstance request, String text) {
-        if (StringUtils.isEmpty(text)) return "";
-        if (text.indexOf("{{") == -1) return text;
-        List<Map.Entry<String, Object>> list = new LinkedList<>();
-        Matcher matcher = PATTERN.matcher(text);
-        String name;
-        Map.Entry<String, Object> value;
-        while (matcher.find()) {
-            switch (matcher.groupCount()) {
-                case 1:
-                    name = matcher.group(1);
-                    break;
-                default:
-                    continue;
-            }
-            try {
-                value = Map.entry(name, OgnlUtils.getValue(name, request.getOgnlContext(), request.getBus(), Object.class));
-            } catch (Throwable e) {/*
-                throw new RuntimeException(e.getMessage(), e);*/
-                System.err.println(text + "===>" + name + "==>" + e.getMessage());
-                value = Map.entry(name, "");
-            }
-            list.add(value);
-        }
-        text = text.replaceAll(DEFAULT_VALUE_SIGN, sign);
-        int offset;
-        for (Map.Entry<String, Object> entry : list) {
-            offset = text.indexOf(sign);
-            text = text.substring(0, offset) + TypeUtils.castToString(entry.getValue()) + text.substring(offset + sign.length());
-//            text = text.replaceFirst(sign, TypeUtils.castToString(entry.getValue()));
-        }
-        return text;
-    }
 
     protected String getAttrFormatValue(String name, TaskInstance data) {
-        return textFormat(data, attributes.get(name));
+        return UnitType.textFormat(data, attributes.get(name));
     }
 
-    protected static int countReset(AtomicInteger aLong, int triggerCount, int reset) {
-        if (aLong.incrementAndGet() > triggerCount) {
-            aLong.set(reset);
-        }
-        return aLong.get();
-    }
-
-    /*static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop) {
-        return Iterable.compose(preFuture, loop);
-    }
-
-    static <T, K> Future<T> compose(Future<K> preFuture, Function<K, Future<T>> loop, Function<Throwable, Future<T>> failureMapper) {
-        return Iterable.compose(preFuture, loop, failureMapper);
-    }*/
-
-    /*static void complete(AsyncResult asyncResult, Promise promise) {
-        if (asyncResult.succeeded()) {
-            promise.complete(asyncResult.result());
-        } else {
-            promise.fail(asyncResult.cause());
-        }
-    }*/
 
     protected static <T> Future<T> executeBlocking(Handler<Promise<T>> blockingCodeHandler) {
         return Task.getVertx().executeBlocking(blockingCodeHandler);

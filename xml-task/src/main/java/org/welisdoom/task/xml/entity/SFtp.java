@@ -53,24 +53,23 @@ public class SFtp extends Ftp implements Executable, Copyable {
 
     @Override
     public Future<Object> write(TaskInstance data) {
-        Promise<Object> toNext = Promise.promise();
         SFtpConnectPool sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectPool.class);
-        sFtpConnectPool.getConnect(getId(), data).onSuccess(session -> {
+        return sFtpConnectPool.getConnect(getId(), data).compose(session -> {
             try {
                 SFtpConnectPool.SFtpClient client = session.getClient(data);
                 try {
                     data.cache(this, client);
                     String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
                     client.put(file, remote, new MySftpProgressMonitor(this));
-                    toNext.complete(file);
+                    return Future.succeededFuture(file);
                 } finally {
+                    data.clearCache(this);
                     client.disconnect();
                 }
             } catch (Throwable throwable) {
-                toNext.fail(throwable);
+                return Future.failedFuture(throwable);
             }
-        }).onFailure(toNext::fail);
-        return toNext.future();
+        });
     }
 
     @Override

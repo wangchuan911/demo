@@ -8,6 +8,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
+import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
 import org.xml.sax.Attributes;
@@ -141,7 +142,7 @@ public class Iterator extends Unit implements Executable {
     }
 
     public static Future<Object> iterator(Unit unit, TaskInstance data, Object item) {
-        return unit.startChildUnit(data, item, typeMatched(Iterator.class));
+        return unit.startChildUnit(data, item, UnitType.typeMatched(Iterator.class));
     }
 
     @Override

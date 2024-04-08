@@ -10,6 +10,7 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
+import org.welisdoom.task.xml.intf.type.UnitType;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -116,7 +117,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
     public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
         try {
             CSVWriter csvWriter = data.cache(this);
-            String[] value = unit.getChild(Col.class).stream().map(col -> textFormat(data, col.getValue())).toArray(String[]::new);
+            String[] value = unit.getChild(Col.class).stream().map(col -> UnitType.textFormat(data, col.getValue())).toArray(String[]::new);
             log(Arrays.toString(value));
             csvWriter.writeNext(value);
             csvWriter.flush();

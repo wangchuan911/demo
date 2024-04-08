@@ -5,6 +5,7 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Stream;
+import org.welisdoom.task.xml.intf.type.UnitType;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -61,13 +62,13 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         String mode = getRead();
         return new BufferedReader(
                 new InputStreamReader(
-                        Objects.equals(mode, "@stream") ? data.cache(this) : new FileInputStream(textFormat(data, mode)),
+                        Objects.equals(mode, "@stream") ? data.cache(this) : new FileInputStream(UnitType.textFormat(data, mode)),
                         attributes.containsKey("charset") ? Charset.forName(getAttrFormatValue("charset", data)) : Charset.defaultCharset())
         );
     }
 
     java.io.Writer getWriter(TaskInstance data) throws IOException {
-        String path = textFormat(data, getWrite());
+        String path = UnitType.textFormat(data, getWrite());
         switch (path) {
             case "@stream":
                 return new PrintWriter((OutputStream) data.cache(this));
@@ -77,7 +78,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
     }
 
     Charset getCharset(TaskInstance data) {
-        return Charset.forName(textFormat(data, attributes.getOrDefault("charset", "utf-8")));
+        return Charset.forName(UnitType.textFormat(data, attributes.getOrDefault("charset", "utf-8")));
     }
 
     protected Future<Object> listeningBreak(Future<Object> listFuture, Closeable reader, AtomicLong index) {

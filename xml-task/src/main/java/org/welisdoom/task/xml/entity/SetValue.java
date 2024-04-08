@@ -7,6 +7,7 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.ObjectUtils;
 
 import java.util.HashMap;
@@ -33,12 +34,12 @@ public class SetValue extends Unit {
         }
         Object value;
         if (attributes.containsKey("value")) {
-            value = textFormat(data, attributes.get("value"));
+            value = UnitType.textFormat(data, attributes.get("value"));
         } else if (getChild(Content.class).stream().filter(content -> !StringUtils.isBlank(content.getContent())).count() > 0) {
-            value = textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" ")));
+            value = UnitType.textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" ")));
         } else
             value = preUnitResult;
-        String style = textFormat(data, attributes.get("style"));
+        String style = UnitType.textFormat(data, attributes.get("style"));
         switch (style) {
             case "object":
                 if (value instanceof String)

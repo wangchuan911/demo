@@ -7,7 +7,6 @@ import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /**
@@ -54,7 +53,7 @@ public interface Iterable<T> extends UnitType {
     }
 
     default Future<Object> loopEnd(TaskInstance data) {
-        Optional<Unit> iterator = ((Unit) this).getChild(Unit.typeMatched(Iterator.class)).stream().findFirst();
+        Optional<Unit> iterator = this.getChild(UnitType.typeMatched(Iterator.class)).stream().findFirst();
         if (iterator.isPresent())
             return ((Iterator) iterator.get()).iterateFinish(data);
         return Future.succeededFuture();
