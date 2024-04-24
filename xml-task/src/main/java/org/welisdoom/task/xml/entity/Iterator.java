@@ -77,23 +77,22 @@ public class Iterator extends Unit implements Executable {
         synchronized Future<Object> run(Function<TaskInstance, Future<Object>> function) {
 
             TaskInstance taskInstance = idles.poll();
-            futures.add(function.apply(taskInstance).transform(event -> {
+            futures.removeAll(futures.stream().filter(Future::isComplete).collect(Collectors.toList()));
+            futures.add(function.apply(taskInstance).onComplete(event -> {
                 idles.add(taskInstance);
-                return event.succeeded() ? Future.succeededFuture(event.result()) : Future.failedFuture(event.cause());
             }));
             if (futures.size() >= count)
-                return (Future) CompositeFuture.any(futures).onComplete(event -> {
-                    futures.removeAll(futures.stream().filter(Future::isComplete).collect(Collectors.toList()));
-                });
+                return (Future) CompositeFuture.any(futures);
             else
                 return Future.succeededFuture();
         }
 
-        Future<Object> flush() {
+        synchronized Future<Object> flush() {
             Future future = CompositeFuture.all(futures);
             futures.clear();
             return future;
         }
+
     }
 
     @Override
