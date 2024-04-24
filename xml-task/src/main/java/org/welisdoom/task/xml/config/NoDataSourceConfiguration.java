@@ -11,10 +11,11 @@ import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.connect.FtpConnectPool;
 import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.GuessCharset;
+import org.welisdoon.common.ObjectUtils;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,6 +33,8 @@ public class NoDataSourceConfiguration {
     Map<String, Object> connections;
 
     Map<Long, String> templates;
+
+    Map<Long, String> templatesCache = new HashMap<>();
 
     public void setConnections(Map<String, Object> connections) {
         this.connections = connections;
@@ -57,9 +60,11 @@ public class NoDataSourceConfiguration {
             @Override
             public String getTaskXML(Long id) {
                 try {
-                    String path = templates.get(id);
-                    return StreamUtils.copyToString(new FileInputStream(path), Charset.forName(GuessCharset.guessCharset(path)));
-                } catch (IOException e) {
+                    return ObjectUtils.getMapValueOrNewSafe(templatesCache, id, () -> {
+                        String path = templates.get(id);
+                        return StreamUtils.copyToString(new FileInputStream(path), Charset.forName(GuessCharset.guessCharset(path)));
+                    });
+                } catch (Throwable e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
             }

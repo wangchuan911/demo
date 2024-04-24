@@ -61,11 +61,11 @@ public class Insert extends Unit implements Script, Copyable {
                     pool.setValueToSql(params, list, data.getOgnlContext(), data.getBus());
                     sql = pool.sqlFormat(sql, params);
                     this.sql = new DataBaseConnectPool.StaticSql(sql, list);
-                    pool.log("static sql", this.sql.getSql());
                 } else {
                     pool.setValueToSql(params, this.sql.getTypes(), data.getOgnlContext(), data.getBus());
                 }
                 Tuple tuple = Tuple.tuple(params);
+                pool.log("sql", this.sql.getSql());
                 pool.log("params", tuple);
                 return connection.preparedQuery(this.sql.getSql()).execute(tuple);
             }
@@ -88,4 +88,15 @@ public class Insert extends Unit implements Script, Copyable {
     }
 
 
+    @Tag(value = "update", parentTagTypes = Executable.class, desc = "sql更新")
+    @Attr(name = "id", desc = "唯一标识")
+    public static class Update extends Insert {
+
+    }
+
+    @Tag(value = "delete", parentTagTypes = Executable.class, desc = "sql删除")
+    @Attr(name = "id", desc = "唯一标识")
+    public static class Delete extends Insert {
+
+    }
 }

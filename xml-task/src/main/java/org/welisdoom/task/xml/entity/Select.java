@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -9,6 +10,8 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
+import org.welisdoom.task.xml.intf.type.Script;
+import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.util.Collection;
@@ -17,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @Classname Select
@@ -56,7 +60,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
 
     }
 
-    Map<String, Object> rowToMap(Row row) {
+    List<Map.Entry> rowToEntry(Row row) {
         List<Map.Entry> entries = new LinkedList<>();
         for (int i = 0; i < row.size(); i++) {
             if (row.getColumnName(i).equals("@RowNum")) continue;
@@ -64,7 +68,15 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                 continue;
             entries.add(Map.entry(row.getColumnName(i), row.getValue(i)));
         }
-        return Map.ofEntries(entries.toArray(Map.Entry[]::new));
+        return entries;
+    }
+
+    Map<String, Object> rowToMap(Row row) {
+        return entryToMap(rowToEntry(row));
+    }
+
+    Map<String, Object> entryToMap(List<Map.Entry> list) {
+        return Map.ofEntries(list.toArray(Map.Entry[]::new));
     }
 
     Collection<Map<String, Object>> rowToMaps(RowSet<Row> rows) {
@@ -111,8 +123,52 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         pool.log("params", tuple);
         return Database.doConnect(this, data, connection -> {
             return ((Future<RowSet<Row>>) pool.execute(connection, sql, tuple)).compose(rows -> {
-                return Future.succeededFuture(rowToMaps(rows));
+                Future<Object> future = Future.succeededFuture();
+                List<Map<String, Object>> mapList = new LinkedList<>();
+                for (Row row : rows) {
+                    List<Map.Entry> list = rowToEntry(row);
+                    future = future.compose(o ->
+                            CompositeFuture.all(
+                                    getChild(SubQuerySQL.class).stream()
+                                            .map(columnResultSet ->
+                                                    startChildUnit(data, entryToMap(list), columnResultSet)
+                                                            .onSuccess(event -> {
+                                                                list.add(Map.entry(columnResultSet.getId(), event));
+                                                            }))
+                                            .collect(Collectors.toList())))
+                            .compose(compositeFuture -> {
+                                mapList.add(entryToMap(list));
+                                return Future.succeededFuture();
+                            });
+                }
+                return future.compose(o -> Future.succeededFuture(mapList));
             }).compose(result::apply);
         });
+    }
+
+    @Tag(value = "sub-query-sql", parentTagTypes = {Executable.class}, desc = "sql查询")
+    public static class SubQuerySQL extends Select {
+        @Override
+        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+            DataBaseConnectPool pool = Database.getDataBase(this);
+            String sql = getScript(data, (Map<String, Object>) preUnitResult);
+            List<Object> params = new LinkedList<>();
+            pool.setValueToSql(params, pool.getSqlParamTypes(sql), data.getOgnlContext(), data.getBus());
+            sql = pool.sqlFormat(sql, params);
+            String finalSql = sql;
+            return Database.doConnect(this, data, connection -> {
+                return ((Future<RowSet<Row>>) pool.execute(connection, finalSql, Tuple.tuple(params))).compose(rows -> {
+                    for (Row row : rows) {
+                        return Future.succeededFuture(rowToMap(row));
+                    }
+                    return Future.succeededFuture(Map.of());
+                });
+            });
+        }
+
+        protected String getScript(TaskInstance data, Map<String, Object> map) {
+            Sql sqlNode = getChild(Sql.class).get(0);
+            return UnitType.textFormat(data, map, sqlNode.children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data, " ").trim()).collect(Collectors.joining(" ")));
+        }
     }
 }

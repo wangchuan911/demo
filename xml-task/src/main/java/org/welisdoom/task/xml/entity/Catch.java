@@ -28,9 +28,14 @@ public class Catch extends Unit implements Executable {
             return getChild(Final.class).stream().findFirst().orElseGet(() -> (Final) new Final().setParent(this));
         });
         return startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error)).compose(Future::succeededFuture, event -> {
+            if (event instanceof Break.SkipOneLoopThrowable || event instanceof Break.BreakLoopThrowable) {
+                return Future.failedFuture(event);
+            }
             event.printStackTrace();
             return startChildUnit(data, Throwables.getStackTraceAsString(event), error);
-        }).compose(o -> aFinal.start(data, o));
+        }).transform(o ->
+                aFinal.start(data, o).otherwise(throwable -> Future.failedFuture(o.failed() ? o.cause() : throwable))
+        );
     }
 
     @Tag(value = "error", parentTagTypes = Catch.class, desc = "异常处理")
