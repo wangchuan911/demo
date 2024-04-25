@@ -48,11 +48,8 @@ public interface UnitType {
     Pattern PATTERN = Pattern.compile(DEFAULT_VALUE_SIGN);
     String sign = "%@#VALUE#@%";
 
-    static String textFormat(TaskInstance request, String text) {
-        return textFormat(request, request.getBus(), text);
-    }
 
-    static String textFormat(TaskInstance request, Map params, String text) {
+    static String textFormat(TaskInstance request, String text) {
         if (StringUtils.isEmpty(text)) return "";
         if (text.indexOf("{{") == -1) return text;
         List<Map.Entry<String, Object>> list = new LinkedList<>();
@@ -68,7 +65,7 @@ public interface UnitType {
                     continue;
             }
             try {
-                value = Map.entry(name, OgnlUtils.getValue(name, request.getOgnlContext(), params, Object.class));
+                value = Map.entry(name, OgnlUtils.getValue(name, request.getOgnlContext(), request.getBus(), Object.class));
             } catch (Throwable e) {/*
                 throw new RuntimeException(e.getMessage(), e);*/
                 System.err.println(text + "===>" + name + "==>" + e.getMessage());
