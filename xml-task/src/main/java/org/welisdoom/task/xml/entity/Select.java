@@ -5,6 +5,7 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
+import org.apache.poi.ss.formula.functions.Rows;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -14,10 +15,7 @@ import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.data.BaseCondition;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -121,54 +119,54 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         pool.setPage(tuple, page);
         pool.log("sql", sql);
         pool.log("params", tuple);
-        return Database.doConnect(this, data, connection -> {
-            return ((Future<RowSet<Row>>) pool.execute(connection, sql, tuple)).compose(rows -> {
-                Future<Object> future = Future.succeededFuture();
-                List<Map<String, Object>> mapList = new LinkedList<>();
-                for (Row row : rows) {
-                    List<Map.Entry> list = rowToEntry(row);
-                    future = future.compose(o ->
-                            CompositeFuture.all(
-                                    getChild(SubQuerySQL.class).stream()
-                                            .map(columnResultSet ->
-                                                    startChildUnit(data, entryToMap(list), columnResultSet)
-                                                            .onSuccess(event -> {
-                                                                list.add(Map.entry(columnResultSet.getId(), event));
-                                                            }))
-                                            .collect(Collectors.toList())))
-                            .compose(compositeFuture -> {
-                                mapList.add(entryToMap(list));
-                                return Future.succeededFuture();
-                            });
-                }
-                return future.compose(o -> Future.succeededFuture(mapList));
-            }).compose(result::apply);
-        });
+        return Database.doConnect(this, data, connection -> ((Future<RowSet<Row>>) pool.execute(connection, sql, tuple)).compose(rows -> subQuery(data, rows)).compose(result::apply));
     }
 
-    @Tag(value = "sub-query-sql", parentTagTypes = {Executable.class}, desc = "sql查询")
-    public static class SubQuerySQL extends Select {
+    Future<List<Map<String, Object>>> subQuery(TaskInstance data, RowSet<Row> rows) {
+        Future<Object> future = Future.succeededFuture();
+        List<Map<String, Object>> mapList = new LinkedList<>();
+        for (Row row : rows) {
+            List<Map.Entry> list = rowToEntry(row);
+            future = future.compose(o ->
+                    CompositeFuture.all(
+                            getChild(SubQuery.class).stream()
+                                    .map(columnResultSet ->
+                                            startChildUnit(data, entryToMap(list), columnResultSet)
+                                                    .onSuccess(event -> {
+                                                        list.add(Map.entry(columnResultSet.getId(), event));
+                                                    }))
+                                    .collect(Collectors.toList())))
+                    .compose(compositeFuture -> {
+                        mapList.add(entryToMap(list));
+                        return Future.succeededFuture();
+                    });
+        }
+        return future.compose(o -> Future.succeededFuture(mapList));
+    }
+
+    @Tag(value = "sub-query", parentTagTypes = {Executable.class}, desc = "sql查询")
+    @Attr(name = "list", desc = "是否返回list")
+    public static class SubQuery extends Select {
         @Override
         protected Future<Object> start(TaskInstance data, Object preUnitResult) {
             DataBaseConnectPool pool = Database.getDataBase(this);
-            String sql = getScript(data, (Map<String, Object>) preUnitResult);
+            TaskInstance data1 = new TaskInstance(data.getId() + "-" + this.getParent(Unit.class).getId() + "-sub-query");
+            data1.getBus().putAll((Map<String, Object>) preUnitResult);
+            String sql = getScript(data);
             List<Object> params = new LinkedList<>();
             pool.setValueToSql(params, pool.getSqlParamTypes(sql), data.getOgnlContext(), data.getBus());
             sql = pool.sqlFormat(sql, params);
             String finalSql = sql;
-            return Database.doConnect(this, data, connection -> {
-                return ((Future<RowSet<Row>>) pool.execute(connection, finalSql, Tuple.tuple(params))).compose(rows -> {
-                    for (Row row : rows) {
-                        return Future.succeededFuture(rowToMap(row));
-                    }
-                    return Future.succeededFuture(Map.of());
-                });
-            });
+            return Database.doConnect(this, data, connection -> ((Future<RowSet<Row>>) pool.execute(connection, finalSql, Tuple.tuple(params))).compose(rows -> query(data, rows)));
         }
 
-        protected String getScript(TaskInstance data, Map<String, Object> map) {
-            Sql sqlNode = getChild(Sql.class).get(0);
-            return UnitType.textFormat(data, map, sqlNode.children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(data, " ").trim()).collect(Collectors.joining(" ")));
+        Future<Object> query(TaskInstance data, RowSet<Row> rows) {
+            if (Boolean.valueOf(attributes.getOrDefault("list", "false"))) {
+                return (Future) super.subQuery(data, rows);
+            }
+            return super.subQuery(data, rows).compose(maps -> Future.succeededFuture(maps.stream().findFirst().orElse(Collections.emptyMap())));
         }
     }
+
+
 }
