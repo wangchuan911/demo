@@ -42,10 +42,11 @@ public class MetaObject extends MetaPrototype<MetaObject> {
     public MetaObject getParent() {
         if (Objects.isNull(parentId))
             return null;
-        if (Objects.isNull(parent))
-            ObjectUtils.synchronizedInitial(this,
-                    tAttribute -> Objects.nonNull(parentId),
-                    tAttribute -> parent = ApplicationContextProvider.getBean(MetaObjectDao.class).get(parentId));
+        ObjectUtils.synchronizedInitial(this,
+                tAttribute -> Objects.nonNull(parent),
+                tAttribute ->
+                        parent = (MetaObject) ApplicationContextProvider.getBean(MetaUtils.class).getType(ApplicationContextProvider.getBean(MetaObjectDao.class).get(parentId))
+        );
         return super.getParent();
     }
 
@@ -83,10 +84,9 @@ public class MetaObject extends MetaPrototype<MetaObject> {
         public Attribute getParent() {
             if (Objects.isNull(parentId))
                 return null;
-            if (Objects.isNull(parent))
-                ObjectUtils.synchronizedInitial(this,
-                        tAttribute -> Objects.nonNull(parentId),
-                        tAttribute -> parent = ApplicationContextProvider.getBean(MetaAttributeDao.class).get(parentId));
+            ObjectUtils.synchronizedInitial(this,
+                    tAttribute -> Objects.nonNull(parent),
+                    tAttribute -> parent = ApplicationContextProvider.getBean(MetaAttributeDao.class).get(parentId));
             return super.getParent();
         }
 

@@ -57,26 +57,26 @@ public class SqlContent {
         return JSONObject.parseObject("{}", type);
     }
 
-    protected String toSql(String joinOpr, String condOpr, MetaLink metaLink) {
+    protected String toSqlJoin(String joinOpr, String condOpr, MetaLink metaLink) {
         return String.format(" %s %s %s %s %s", joinOpr, metaLink.getObject().getCode(), this.toTableAlias(metaLink), condOpr, metaLink.getChildren().stream().map(child -> {
             return ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this);
         }).collect(Collectors.joining(" and ")));
     }
 
 
-    protected void toSql(StringBuilder fromBlock, StringBuilder whereBlock, LinkMetaType type, List<MetaLink> list) {
+    protected void toSqlJoin(StringBuilder fromBlock, StringBuilder whereBlock, LinkMetaType type, List<MetaLink> list) {
         switch (type) {
-            case SqlToFromOfStrongRel:
+            case SqlToJoinOfStrongRel:
                 list.stream().forEach(metaLink -> {
-                    fromBlock.append(toSql("join", "on", metaLink));
+                    fromBlock.append(toSqlJoin("join", "on", metaLink));
                 });
                 break;
-            case SqlToFromOfWeakRel:
+            case SqlToJoinOfWeakRel:
                 list.stream().forEach(metaLink -> {
-                    fromBlock.append(toSql("left join", "on", metaLink));
+                    fromBlock.append(toSqlJoin("left join", "on", metaLink));
                 });
                 break;
-            case SqlToFromOfMultiDataRel:
+            case SqlToJoinOfMultiDataRel:
                 StringBuilder _fromBlock = new StringBuilder();
                 StringBuilder _whereBlock = new StringBuilder();
                 list.stream().forEach(metaLink -> {
@@ -99,36 +99,47 @@ public class SqlContent {
                         _sql2.append(ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this));
                     });
                 });
-                whereBlock.append(" and exist (select 1 ").append(_fromBlock).append(_whereBlock).append(")");
+                whereBlock.append(" exist (select 1 ").append(_fromBlock).append(_whereBlock).append(")");
                 break;
         }
     }
 
-    public String toSql() {
+    public String toSqlJoin() {
         StringBuilder fromBlock = new StringBuilder();
         StringBuilder whereBlock = new StringBuilder();
 
         Map<LinkMetaType, List<MetaLink>> map = joins.stream().collect(Collectors.groupingBy(MetaLink::getType));
-        Assert.isTrue(map.getOrDefault(LinkMetaType.SqlToFrom, Collections.emptyList()).size() > 0, "缺少主表");
-        MetaLink mainTable = map.get(LinkMetaType.SqlToFrom).get(0);
+        Assert.isTrue(map.getOrDefault(LinkMetaType.SqlToJoin, Collections.emptyList()).size() > 0, "缺少主表");
+        MetaLink mainTable = map.get(LinkMetaType.SqlToJoin).get(0);
 
 
-        map.entrySet().stream().filter(entry -> !Objects.equals(entry.getKey(), LinkMetaType.SqlToFrom)).forEach(entry -> {
-            toSql(fromBlock, whereBlock, entry.getKey(), map.get(entry.getKey()));
+        map.entrySet().stream().filter(entry -> !Objects.equals(entry.getKey(), LinkMetaType.SqlToJoin)).forEach(entry -> {
+            toSqlJoin(fromBlock, whereBlock, entry.getKey(), map.get(entry.getKey()));
         });
 
-        return new StringBuilder().append("select ")
-                .append(Arrays
-                        .stream(mainTable.getObject().getAttributes())
+        return String.format("select %s from %s %s %s %s",
+                Arrays.stream(mainTable.getObject().getAttributes())
                         .map(attribute -> toTableAlias(mainTable) + "." + attribute.getCode())
-                        .collect(Collectors.joining(",")))
-                .append(" from ").append(mainTable.getObject().getCode()).append(toTableAlias(mainTable))
-                .append(fromBlock)
-                .append(" where ")
-                .append(mainTable.getChildren().stream().map(child -> {
-                    return ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this);
-                }).collect(Collectors.joining(" and ")))
-                .append(whereBlock).toString();
+                        .collect(Collectors.joining(",")),
+                mainTable.getObject().getCode(),
+                toTableAlias(mainTable),
+                fromBlock,
+                getWhereBody(whereBlock, mainTable.getChildren()));
+    }
+
+    protected String getWhereBody(StringBuilder whereBlock, List<MetaLink> mainTableWhere) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(mainTableWhere.stream().map(child -> {
+            return ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this);
+        }).collect(Collectors.joining(" and ")));
+        if (builder.length() > 0) {
+            builder.append(" and ");
+        }
+        builder.append(whereBlock);
+        if (builder.length() > 0) {
+            builder.insert(0, " where ");
+        }
+        return builder.toString();
     }
 
     public static String toTableAlias(MetaLink metaLink) {

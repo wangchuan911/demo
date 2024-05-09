@@ -107,7 +107,7 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
 
     public MetaValue getValue() {
         if (Objects.nonNull(valueId))
-            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(valueId), metaLink -> value = MetaUtils.getInstance().getValue(getValueId()));
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(value), metaLink -> value = MetaUtils.getInstance().getValue(getValueId()));
         return value;
     }
 
