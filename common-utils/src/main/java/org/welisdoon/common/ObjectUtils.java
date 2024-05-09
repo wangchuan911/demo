@@ -47,9 +47,9 @@ public class ObjectUtils {
     }
 
     public static <T> void synchronizedInitial(final T lockObject, final Predicate<T> get, final Consumer<T> create) {
-        if (!Objects.isNull(get.test(lockObject)))
+        if (!get.test(lockObject))
             synchronized (lockObject) {
-                if (!Objects.isNull(get.test(lockObject)))
+                if (!get.test(lockObject))
                     create.accept(lockObject);
             }
     }
