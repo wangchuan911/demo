@@ -200,6 +200,14 @@ public class Unit implements UnitType, IData<String, Model> {
         System.out.println();
     }
 
+    protected void log(String str, Object... os) {
+        for (int i = 0; i < os.length; i++) {
+            if (os[i] == null)
+                os[i] = "null";
+        }
+        this.log(String.format(str.replaceAll("\\{\\}", "%s"), os));
+    }
+
     protected synchronized void printTag(boolean highLight) {
         if (this.parent != null) {
             this.parent.printTag(false);
@@ -235,5 +243,15 @@ public class Unit implements UnitType, IData<String, Model> {
 
     protected static <T> Future<T> executeBlocking(Handler<Promise<T>> blockingCodeHandler) {
         return Task.getVertx().executeBlocking(blockingCodeHandler);
+    }
+
+    protected String getAttrOptions(String name) {
+        return Optional.ofNullable(attributes.get(name)).orElseGet(() -> {
+            Attr attr = Arrays.stream(
+                    this.getClass().getAnnotations())
+                    .filter(annotation -> annotation instanceof Attr && ((Attr) annotation).name().equals(name)).map(annotation -> (Attr) annotation).
+                            findFirst().orElseThrow();
+            return attr.options()[attr.defaultOption()];
+        });
     }
 }

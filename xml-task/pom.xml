@@ -124,6 +124,28 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
         </dependency>
+        <!--uncompress-->
+        <dependency>
+            <groupId>com.github.axet</groupId>
+            <artifactId>java-unrar</artifactId>
+            <version>1.7.0-8</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.sevenzipjbinding</groupId>
+            <artifactId>sevenzipjbinding</artifactId>
+            <version>16.02-2.01</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.sevenzipjbinding</groupId>
+            <artifactId>sevenzipjbinding-all-platforms</artifactId>
+            <version>16.02-2.01</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.26.1</version>
+        </dependency>
     </dependencies>
 
     <properties>
