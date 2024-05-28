@@ -89,6 +89,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
             String[] values;
             Future<Object> listFuture = Future.succeededFuture();
             AtomicLong index = new AtomicLong(0);
+            AtomicLong complete = new AtomicLong(0);
             List<Map.Entry> entries = new LinkedList<>();
             while ((line = readLine(reader, builder)) != null) {
                 values = line;
@@ -102,11 +103,8 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
 //                            startChildUnit(data, Map.ofEntries(entries), Iterable.class)
                                     this.iterator(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries)))
                     );*/
-                listFuture = this.futureLoop(Item.of(index.incrementAndGet(), Map.ofEntries(entries.toArray(Map.Entry[]::new))), listFuture, data);
-                if (index.get() % 100 == 0) {
-                    Thread.sleep(0);
-                }
-
+                listFuture = this.futureLoop(Item.of(index.incrementAndGet(), Map.ofEntries(entries.toArray(Map.Entry[]::new))), listFuture, data).onComplete(event -> complete.incrementAndGet());
+                this.waitAMonuments(index, complete);
             }
             return listeningBreak(listFuture.compose(o -> loopEnd(data)), reader, index);
 

@@ -7,6 +7,7 @@ import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /**
@@ -50,6 +51,22 @@ public interface Iterable<T> extends UnitType {
     default Future<Object> futureLoop(Item<T> item, Future<Object> preFuture, TaskInstance data) {
         /*return preFuture.compose(o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));*/
         return preFuture.compose(o -> this.iterator(data, item));
+    }
+
+    default void waitAMonuments(AtomicLong index, AtomicLong complete) {
+        try {
+            if (index.get() - complete.get() > 100) {
+                wait(1000);
+                while (index.get() - complete.get() > 50) {
+                    wait(1000);
+                }
+            }
+            if (index.get() % 100 == 0) {
+                Thread.sleep(0);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     default Future<Object> loopEnd(TaskInstance data) {
