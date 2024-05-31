@@ -6,6 +6,7 @@ import org.welisdoom.task.xml.entity.TaskInstance;
 import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -54,19 +55,27 @@ public interface Iterable<T> extends UnitType {
     }
 
     default void waitAMonuments(AtomicLong index, AtomicLong complete) {
+        waitAMonuments(index.get(), complete.get());
+    }
+
+    default void waitAMonuments(long index, long complete) {
         try {
-            if (index.get() - complete.get() > 100) {
+            if (index - complete > 100) {
                 wait(1000);
-                while (index.get() - complete.get() > 50) {
+                while (index - complete > 50) {
                     wait(1000);
                 }
             }
-            if (index.get() % 100 == 0) {
+            if (index % 100 == 0) {
                 Thread.sleep(0);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    default void waitAMonuments(BigDecimal index, BigDecimal complete) {
+        waitAMonuments(Math.abs(index.longValue()), Math.abs(complete.longValue()));
     }
 
     default Future<Object> loopEnd(TaskInstance data) {
