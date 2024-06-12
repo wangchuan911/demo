@@ -4,6 +4,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 import io.vertx.core.Future;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -12,12 +13,13 @@ import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.UnitType;
 
-import java.io.Closeable;
-import java.io.IOException;
+import java.io.*;
+import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 /**
  * @Classname csv
@@ -27,12 +29,13 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Tag(value = "csv", parentTagTypes = Executable.class, desc = "csv文件读写")
 @Attr(name = "id", desc = "唯一标识")
-@Attr(name = "read", desc = "读文件", require = true, options = {"write", "read"})
-@Attr(name = "write", desc = "写文件", require = true, options = {"write", "read"})
+@Attr(name = "read", desc = "读文件", require = true, options = {"write", "read", "split"})
+@Attr(name = "write", desc = "写文件", require = true, options = {"write", "read", "split"})
+@Attr(name = "split", desc = "文件拆分", require = true, options = {"write", "read", "split"})
 @Attr(name = "header", desc = "文件是否有标题头")
 
 public class Csv extends Sheet implements Iterable<Map<String, Object>> {
-//    Map<TaskRequest, CSVWriter> map = new HashMap<>();
+    //    Map<TaskRequest, CSVWriter> map = new HashMap<>();
     /*@Override
     protected void start(TaskRequest data, Promise<Object> toNext) {
         data.generateData(this);
@@ -46,6 +49,75 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 
     }*/
 
+    @Override
+    protected Future<Object> operation(TaskInstance data, Object preUnitResult) {
+        if (attributes.containsKey("split")) {
+            return split(data);
+        }
+        return super.operation(data, preUnitResult);
+    }
+
+    public Future<Object> split(TaskInstance data) {
+        String targetPath = getAttrFormatValue("split", data);
+        String filePath = getAttrFormatValue("read", data);
+        File file = new File(filePath);
+        int maxLine = Integer.parseInt(attributes.get("max-lines"));
+        if (!file.exists()) {
+            return Future.failedFuture("file not found");
+        }
+        CSVReader source = null;
+        CSVWriter target = null;
+        try {
+            Charset charset = attributes.containsKey("charset") ? Charset.forName(getAttrFormatValue("charset", data)) : Charset.defaultCharset();
+            source = new CSVReaderBuilder(new BufferedReader(new InputStreamReader(new FileInputStream(filePath), charset))).build();
+
+            Iterator<String[]> iterator = source.iterator();
+            String[] headers;
+            AtomicLong index = new AtomicLong(0);
+            AtomicLong rowNum = new AtomicLong(0);
+            AtomicLong offset = new AtomicLong(maxLine);
+            if ("false".equals(attributes.get("header"))) {
+                if (iterator.hasNext()) {
+                    headers = iterator.next();
+                    rowNum.incrementAndGet();
+                } else {
+                    throw new RuntimeException("文件获取文件头失败");
+                }
+            } else {
+                headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
+            }
+            Supplier<CSVWriter> supplier = () -> {
+                String targetFileName = String.format("%s%s%s_%d%s", targetPath, File.separator, file.getName().substring(0, file.getName().lastIndexOf(".")), index.getAndIncrement(), file.getName().substring(file.getName().lastIndexOf(".")));
+                log("开始写入文件{}==>{} row:{}--{}", filePath, targetFileName, rowNum.get(), rowNum.get() + maxLine);
+                try {
+                    return new CSVWriter(new FileWriter(targetFileName, charset));
+                } catch (IOException e) {
+                    throw new IllegalStateException(e.getMessage(), e);
+                }
+            };
+            target = supplier.get();
+            target.writeNext(headers);
+            offset.decrementAndGet();
+            while (iterator.hasNext()) {
+                if (offset.getAndDecrement() <= 0) {
+                    if (target != null) {
+                        target.close();
+                    }
+                    target = supplier.get();
+                    target.writeNext(headers);
+                    offset.set(maxLine);
+                    offset.decrementAndGet();
+                }
+                target.writeNext(iterator.next());
+                rowNum.getAndIncrement();
+            }
+            return Future.succeededFuture(targetPath);
+        } catch (Throwable e) {
+            return Future.failedFuture(e);
+        } finally {
+            IOUtils.closeQuietly(source, target);
+        }
+    }
 
     @Override
     public Future<Object> read(TaskInstance data) {

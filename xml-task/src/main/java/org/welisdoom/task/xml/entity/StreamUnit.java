@@ -46,15 +46,20 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
             /*data.cache(this, preUnitResult);*/
             this.cols = getChild(Col.class).stream().toArray(Col[]::new);
             data.generateData(this);
-            if (getRead() != null) {
-                return read(data);
-            } else if (getWrite() != null) {
-                return write(data);
-            } else {
-                return Future.failedFuture("未知的操作");
-            }
+            return operation(data, preUnitResult);
+
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
+        }
+    }
+
+    protected Future<Object> operation(TaskInstance data, Object preUnitResult) {
+        if (getRead() != null) {
+            return read(data);
+        } else if (getWrite() != null) {
+            return write(data);
+        } else {
+            return Future.failedFuture("未知的操作");
         }
     }
 
