@@ -1,13 +1,21 @@
 package org.welisdoom.task.xml.entity;
 
+import io.vertx.core.Future;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Script;
+import org.welisdoon.common.GCUtils;
+import org.welisdoon.common.LogUtils;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Classname ForEach
@@ -23,43 +31,25 @@ import java.util.stream.Collectors;
 @Attr(name = "open")
 @Attr(name = "separator")
 @Attr(name = "close")
-public class ForEach extends Unit implements Script {
-    static String itemName = "item";
+public class ForEach extends Iterator {
 
     @Override
-    public String getScript(TaskInstance request, String split) {
+    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         String collectionName = attributes.get("collection");
-        String itemName = (attributes.containsKey("item")) ? attributes.get("item") : ForEach.itemName;
-        Object o = OgnlUtils.getValue(collectionName, request.ognlContext, request.getBus(), Object.class);
-        int size;
-        String express;
+        this.itemName = (attributes.containsKey("item")) ? attributes.get("item") : this.itemName;
+        this.itemIndex = (attributes.containsKey("index")) ? attributes.get("index") : this.itemIndex;
+        Object o = OgnlUtils.getValue(collectionName, data.ognlContext, data.getBus(), Object.class);
+        Stream<Object> stream;
+        AtomicLong index = new AtomicLong(0);
         if (o.getClass().isArray()) {
-            size = ((Object[]) o).length;
-            express = "[%d]";
+            stream = Arrays.stream((Object[]) o);
         } else {
-            size = ((List) o).size();
-            express = ".get(%d)";
+            stream = ((List) o).stream();
         }
-        StringBuilder sb = new StringBuilder();
-        String tmp;
-        if (attributes.containsKey("open")) {
-            sb.append(attributes.get("open"));
-            sb.append(split);
-        }
-        for (int i = 0; i < size; i++) {
-            tmp = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, " ")).collect(Collectors.joining(" ")).trim();
-            sb.append(tmp.replaceAll("\\$\\{" + itemName.replace(".", "\\.").replace("@", "\\@") + "\\,", "${" + collectionName + (String.format(express, i))));
-            sb.append(split);
-            if (attributes.containsKey("separator")) {
-                sb.append(attributes.get("separator"));
-                sb.append(split);
-            }
-        }
-        if (attributes.containsKey("close")) {
-            sb.append(attributes.get("close"));
-            sb.append(split);
-        }
-        return sb.toString();
-
+        return stream.map(o1 -> {
+            return ForEach.super.start(data, Iterable.Item.of(index.getAndIncrement(), o1));
+        }).reduce((objectFuture, objectFuture2) -> {
+            return objectFuture.compose(o1 -> objectFuture2);
+        }).orElse(Future.succeededFuture());
     }
 }

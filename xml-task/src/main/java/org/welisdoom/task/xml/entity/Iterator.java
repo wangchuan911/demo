@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "iterator", parentTagTypes = Iterable.class, desc = "遍历器，遍历查询结果，文件等")
 public class Iterator extends Unit implements Executable {
-    String itemName = "item", itemIndex = "index";
+    protected String itemName = "item", itemIndex = "index";
 
     /*protected void execute(TaskRequest data, Map<String, Object> item) throws Throwable {
         Map map = data.getBus(parent.id);
