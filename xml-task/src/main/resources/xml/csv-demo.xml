@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <task>
     <initialization>
-        <instance id="ftp1" tag="ftp"/>
+        <!--<instance id="ftp1" tag="ftp"/>
         <instance id="csv1" tag="csv"/>
         <instance id="http1" tag="http"/>
         <database id="rimdb" model="oracle"></database>
@@ -9,15 +9,16 @@
         <value id="val2"
                value="D:\Workspaces\WelisdoonProject\java\web-server\xml-task\src\main\resources\demo\demo.csv"></value>
         <value id="now"
-               value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
+               value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>-->
+        <value id="words"><![CDATA[
+            --range #$%()*@^! 1 1
+            --range abcdefghijklmmopqrstuvwsyz
+            --range ABCDEFGHIJKLMMOPQRSTUVWSYZ
+            --range 1234567890 2
+        ]]></value>
     </initialization>
     <start>
-        <insert>
-            insert asd
-            <choice>
-                <when>asd</when>
-                <otherwise>qwe</otherwise>
-            </choice>
-        </insert>
+        <random words='{{$values.words}}' length="15">
+        </random>
     </start>
 </task>

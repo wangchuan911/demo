@@ -121,6 +121,23 @@ public class Random extends Unit implements Executable, Iterable<String> {
         BigDecimal count = new BigDecimal("0");
         long time = System.currentTimeMillis();
         log("预计有{}种组合", combination);
+
+        if (times.equals(BigDecimal.ONE)) {
+            java.util.Random random = new java.util.Random();
+            List<String> list = new LinkedList<>();
+            for (int j = 0; j <= offset; j++) {
+                do {
+                    text.setLength(0);
+                    for (int i = 0; i < length + j; i++) {
+                        text.append(words[random.nextInt(words.length)]);
+                    }
+                } while (!check(wordGroup, text));
+                list.add(text.toString());
+            }
+            log(list.stream().collect(Collectors.joining("\n")));
+            return Future.succeededFuture(list.stream().collect(Collectors.joining("\n")));
+        }
+
         while (point < wordLength) {
             toText(text, index, words);
             for (int i = 0; i <= offset; i++) {

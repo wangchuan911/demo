@@ -6,7 +6,6 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
-import org.welisdoom.task.xml.intf.type.Script;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
 
@@ -14,7 +13,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -51,5 +49,24 @@ public class ForEach extends Iterator {
         }).reduce((objectFuture, objectFuture2) -> {
             return objectFuture.compose(o1 -> objectFuture2);
         }).orElse(Future.succeededFuture());
+    }
+
+    protected Future<Object> execute(TaskInstance data, Iterable.Item item) {
+        Map map = data.getBus(parent.id);
+        log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", getClass().getSimpleName(), getId(), item.getIndex())));
+        map.put(itemIndex, item.getIndex());
+        map.put(itemName, item.getItem());
+        item.destroy();
+        item = GCUtils.release(item);
+        return super.start(data, null)
+                .transform(objectAsyncResult ->
+                        (objectAsyncResult.succeeded() || (objectAsyncResult.cause() instanceof Break.SkipOneLoopThrowable)) ? Future.succeededFuture() : Future.failedFuture(objectAsyncResult.cause())
+                )
+                .onComplete(event -> {
+                    synchronized (map) {
+                        map.remove(itemName);
+                        map.remove(itemIndex);
+                    }
+                });
     }
 }

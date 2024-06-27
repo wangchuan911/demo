@@ -27,11 +27,11 @@ public class Catch extends Unit implements Executable {
         aFinal = Optional.ofNullable(aFinal).orElseGet(() -> {
             return getChild(Final.class).stream().findFirst().orElseGet(() -> (Final) new Final().setParent(this));
         });
-        return startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error)).compose(Future::succeededFuture, event -> {
+        return startChildUnit(data, preUnitResult, unit -> !(unit instanceof Error || unit instanceof Final)).compose(Future::succeededFuture, event -> {
             if (event instanceof Break.SkipOneLoopThrowable || event instanceof Break.BreakLoopThrowable) {
                 return Future.failedFuture(event);
             }
-            event.printStackTrace();
+            log(Throwables.getStackTraceAsString(event));
             return startChildUnit(data, Throwables.getStackTraceAsString(event), error);
         }).transform(o ->
                 aFinal.start(data, o).otherwise(throwable -> Future.failedFuture(o.failed() ? o.cause() : throwable))
