@@ -5,6 +5,7 @@ import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
+import org.welisdoom.task.xml.intf.type.Script;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -22,30 +23,31 @@ import java.util.stream.Collectors;
 public class Random extends Unit implements Executable, Iterable<String> {
 
     protected WordRange[] getWordGroup(TaskInstance data) {
-        final String key = "--range";
-        String words = getAttrFormatValue("words", data).trim();
-        if (words.contains(key)) {
-            List<WordRange> list = new LinkedList<>();
-            for (String s : words.split(key)) {
-                if (StringUtils.isEmpty(s)) continue;
-                String[] args = s.trim().split("\\s+");
-                switch (args.length) {
-                    case 3:
-                        list.add(new WordRange(args[0].toCharArray(), Integer.parseInt(args[1]), Integer.parseInt(args[1])));
-                        break;
-                    case 2:
-                        list.add(new WordRange(args[0].toCharArray(), Integer.parseInt(args[1]), -1));
-                        break;
-                    case 1:
-                        list.add(new WordRange(args[0].toCharArray()));
-                        break;
-                    default:
-                        continue;
-                }
-            }
-            return list.toArray(WordRange[]::new);
-        }
-        return new WordRange[]{new WordRange(words.toCharArray())};
+//        final String key = "--range";
+//        String words = getAttrFormatValue("words", data).trim();
+//        if (words.contains(key)) {
+//            List<WordRange> list = new LinkedList<>();
+//            for (String s : words.split(key)) {
+//                if (StringUtils.isEmpty(s)) continue;
+//                String[] args = s.trim().split("\\s+");
+//                switch (args.length) {
+//                    case 3:
+//                        list.add(new WordRange(args[0].toCharArray(), Integer.parseInt(args[1]), Integer.parseInt(args[1])));
+//                        break;
+//                    case 2:
+//                        list.add(new WordRange(args[0].toCharArray(), Integer.parseInt(args[1]), -1));
+//                        break;
+//                    case 1:
+//                        list.add(new WordRange(args[0].toCharArray()));
+//                        break;
+//                    default:
+//                        continue;
+//                }
+//            }
+//            return list.toArray(WordRange[]::new);
+//        }
+//        return new WordRange[]{new WordRange(words.toCharArray())};
+        return getChild(WordRange.class).stream().map(wordRange -> wordRange.range(data)).toArray(WordRange[]::new);
     }
 
     public static class AtomBigDecimal {
@@ -111,16 +113,6 @@ public class Random extends Unit implements Executable, Iterable<String> {
         final BigDecimal times = new BigDecimal(attributes.getOrDefault("times", "1"));
         final int wordLength = words.length;
         int offset = Integer.parseInt(attributes.getOrDefault("offset", "0"));
-        int[] index = new int[length + offset];
-        Arrays.fill(index, 0);
-        int point = 0;
-        AtomBigDecimal itemIndex = new AtomBigDecimal(0);
-        AtomBigDecimal itemComplete = new AtomBigDecimal(0);
-        Future future = Future.succeededFuture();
-        BigDecimal combination = new BigDecimal(words.length).pow(index.length);
-        BigDecimal count = new BigDecimal("0");
-        long time = System.currentTimeMillis();
-        log("预计有{}种组合", combination);
 
         if (times.equals(BigDecimal.ONE)) {
             java.util.Random random = new java.util.Random();
@@ -138,6 +130,16 @@ public class Random extends Unit implements Executable, Iterable<String> {
             return Future.succeededFuture(list.stream().collect(Collectors.joining("\n")));
         }
 
+        int[] index = new int[length + offset];
+        Arrays.fill(index, 0);
+        int point = 0;
+        AtomBigDecimal itemIndex = new AtomBigDecimal(0);
+        AtomBigDecimal itemComplete = new AtomBigDecimal(0);
+        Future future = Future.succeededFuture();
+        BigDecimal combination = new BigDecimal(words.length).pow(index.length);
+        BigDecimal count = new BigDecimal("0");
+        long time = System.currentTimeMillis();
+        log("预计有{}种组合", combination);
         while (point < wordLength) {
             toText(text, index, words);
             for (int i = 0; i <= offset; i++) {
@@ -189,20 +191,11 @@ public class Random extends Unit implements Executable, Iterable<String> {
         return Arrays.stream(wordGroup).allMatch(wordRange -> wordRange.isRange(text));
     }
 
-    static class WordRange {
-        final char[] words;
-        final int min;
-        final int max;
-
-        WordRange(char[] words, int min, int max) {
-            this.words = words;
-            this.min = min;
-            this.max = max;
-        }
-
-        WordRange(char[] words) {
-            this(words, 1, -1);
-        }
+    @Tag(value = "range", parentTagTypes = Random.class, desc = "范围限定")
+    public static class WordRange extends Unit implements Script {
+        char[] words;
+        int min;
+        int max;
 
         boolean isRange(StringBuilder text) {
             if (min == 1 && max < 0) {
@@ -219,6 +212,13 @@ public class Random extends Unit implements Executable, Iterable<String> {
                 }
             }
             return false;
+        }
+
+        public WordRange range(TaskInstance data) {
+            this.words = getAttrFormatValue("words", data).toCharArray();
+            this.min = Integer.parseInt(attributes.getOrDefault("min", "1"));
+            this.max = Integer.parseInt(attributes.getOrDefault("max", "-1"));
+            return this;
         }
     }
 }
