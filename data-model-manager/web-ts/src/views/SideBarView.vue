@@ -67,13 +67,7 @@ const _menus = new Array<Menu>({
     {
       id: 5,
       name: "表", click: () => {
-        router.push("/index/table-define-query")
-      }
-    },
-    {
-      id: 8,
-      name: "对象", click: () => {
-        router.push("/index/table-define-query")
+        router.push("/index/object-query")
       }
     },
     {

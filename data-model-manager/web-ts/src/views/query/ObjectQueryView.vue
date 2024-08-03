@@ -1,66 +1,90 @@
 <template>
-  <div style="width: 100%;height: 100%">
-    <el-table :data="datas" :border="true" style="width: 100%;height: calc(100% - 50px)" height="100%">
-      <template v-for="header0 in headers" :key="header0.id">
-        <el-table-column v-if="header0.children==null" :prop="`H${header0.id}`" :label="header0.name"/>
-        <el-table-column v-else-if="header0.children!=null" :label="header0.name">
-          <template v-for="header1 in header0.children" :key="header1.id">
-            <el-table-column v-if="header1.children==null" :prop="`H${header0.id}_H${header1.id}`"
-                             :label="header1.name"/>
-            <el-table-column v-else-if="header1.children!=null" :label="header1.name">
-              <template v-for="header2 in header1.children" :key="header2.id">
-                <el-table-column v-if="header2.children==null" :prop="`H${header0.id}_H${header1.id}_H${header2.id}`"
-                                 :label="header2.name"/>
-                <el-table-column v-else-if="header2.children!=null" :label="header2.name">
-                  <template v-for="header3 in header2.children!=null" :key="header3.id">
-                    <el-table-column v-if="header3.children==null"
-                                     :prop="`H${header0.id}_H${header1.id}_H${header2.id}_H${header3.id}`"
-                                     :label="header3.name"/>
-                  </template>
-                </el-table-column>
-              </template>
-            </el-table-column>
-          </template>
-        </el-table-column>
-      </template>
+  <div v-loading="loading" style="position: absolute">
+    <el-form ref="formRef" :inline="true" :model="formModel">
+      <el-form-item label="table name" prop="name">
+        <el-input v-model="formModel.name"/>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="submitForm(formRef)">Query</el-button>
+        <el-button @click="resetForm(formRef)">Reset</el-button>
+      </el-form-item>
+    </el-form>
+    <el-table :data="datas" style="width: 100%" height="calc(100vh - 300px)">
+      <el-table-column prop="id" label="ID" width="180"/>
+      <el-table-column prop="code" label="表名"/>
+      <el-table-column prop="name" label="描述"/>
+      <el-table-column fixed="right" label="操作">
+        <template #default="scope">
+          <el-button link type="primary" size="small" @click="tableEdit(scope.row)">Edit</el-button>
+        </template>
+      </el-table-column>
     </el-table>
-    <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :small="false"
-        :disabled="false"
-        :background="false"
-        layout="prev, pager, next, jumper"
-        :total="1000"
-        @size-change="handleSizeChange"
-        @current-change="nextPage"
-    />
+    <div style="width: 100%;position: relative">
+      <div style="position: absolute;right: 0">
+        <el-pagination
+            v-model:current-page="page.page"
+            v-model:page-size="page.size"
+            :small="small"
+            :disabled="disabled"
+            :background="background"
+            layout="prev, pager, next, jumper"
+            :total="page.total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, getCurrentInstance, ComponentInternalInstance} from 'vue'
 
-const datas = reactive(new Array<Record<any, any>>()), headers = reactive([] as Array<Record<any, any>>)
+import {useRouter, onBeforeRouteUpdate, useRoute, RouteLocationNormalizedLoaded} from "vue-router";
+import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInternalInstance} from 'vue'
+
+import type {FormInstance} from 'element-plus';
+import {ElMessage} from 'element-plus';
+
+const router = useRouter(), datas = reactive(new Array<{ id: string, name: string, desc?: string }>()),
+    page = reactive({page: 1, total: 0, size: 100})
 const {proxy} = getCurrentInstance() as ComponentInternalInstance
-const queryId = 1
-proxy?.$http.get(`query/header/${queryId}`).then(({data}) => {
-  console.log(data)
-  headers.push(...data)
+const loading = ref(false), formRef = ref<FormInstance>(), formModel = reactive({name: ""})
+onActivated(() => {
+  console.log("onActivated")
 })
-const pageSize = ref(50)
-const currentPage = ref(1)
+onMounted(() => {
+  console.log("onMounted")
+})
 
-
-const nextPage = (number: number) => {
-  console.log(number)
-  let i = 50;
-  datas.length = 0
-  while (i--) {
-    datas.push({H1: `XXXX-${(currentPage.value - 1) * 50 + (50 - i)}`, H2_: ""})
-  }
+const resetForm = (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  formEl.resetFields()
+}, submitForm = (formEl: FormInstance | undefined) => {
+  console.log(formEl)
+  handleCurrentChange(1);
+}, handleCurrentChange = (pageNumber: number) => {
+  loading.value = true;
+  proxy?.$http.post(`obj`, {
+    data: formModel,
+    page: {page: pageNumber, size: page.size}
+  }).then(value => {
+    loading.value = false;
+    console.log(value.data)
+    datas.length = 0;
+    page.page = pageNumber;
+    page.total = value.data.total;
+    datas.push(...value.data.list);
+  }, reason => {
+    ElMessage({
+      showClose: true,
+      message: reason.toString(),
+      type: 'error',
+    })
+    loading.value = false;
+  })
+}, tableEdit = (row: any) => {
+  router.push({path: `/index/table-config/${row.id}`})
 }
-nextPage(pageSize.value)
 </script>
 
 <style scoped>

@@ -52,20 +52,20 @@ const routes: Array<RouteRecordRaw> = [
                     standalone: true
                 }
             },
-            {
+            /*{
                 path: 'table-define-query',
-                component: () => import(/* webpackChunkName: "about" */ '../views/entity/table/TableQueryView.vue'),
+                component: () => import(/!* webpackChunkName: "about" *!/ '../views/entity/table/TableQueryView.vue'),
                 meta: {
                     standalone: true
                 }
             },
             {
                 path: 'table-config/:id(\\d+)',
-                component: () => import(/* webpackChunkName: "about" */ '../views/entity/table/TableConfigView.vue'),
+                component: () => import(/!* webpackChunkName: "about" *!/ '../views/entity/table/TableConfigView.vue'),
                 meta: {
                     standalone: true
                 }
-            },
+            },*/
         ]
     }
 ]

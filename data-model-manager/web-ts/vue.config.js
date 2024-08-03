@@ -11,7 +11,7 @@ module.exports = defineConfig({
             hot: true,
             proxy: {
                 "/dmm": {
-                    target: 'http://localhost:443/dm',
+                    target: 'http://localhost:8443/md',
                     pathRewrite: {'^/dev/dmm': ''},
                     changeOrigin: true,     // target是域名的话，需要这个参数，
                     secure: false,          // 设置支持https协议的代理
