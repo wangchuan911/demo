@@ -1,12 +1,15 @@
 package org.welisdoon.web.vertx.utils;
 
+import com.github.pagehelper.PageInfo;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.RoutingContext;
 import org.welisdoon.common.JsonUtils;
+import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.web.entity.User;
 
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -67,7 +70,13 @@ public class RoutingContextChain {
         return this;
     }
 
-    public static <T> T bodyAsBean(RoutingContext context, Class<T> type) {
-        return JsonUtils.toBean(context.body().asString(), type);
+    public static <T> Future<Void> simple(RoutingContext context, Class<T> type, Function<T, Object> function) {
+        return context.end(JsonUtils.asJsonString(function.apply(JsonUtils.toBean(context.body().asString(), type))));
+    }
+
+    public static <T extends BaseCondition> Future<Void> page(RoutingContext context, Class<T> type, Function<T, List> function) {
+        T condition = JsonUtils.toBean(context.body().asString(), type);
+        condition.startPage();
+        return context.end(JsonUtils.asJsonString(PageInfo.of(function.apply(condition))));
     }
 }

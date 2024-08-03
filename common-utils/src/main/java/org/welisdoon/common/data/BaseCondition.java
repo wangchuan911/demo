@@ -8,7 +8,7 @@ import java.util.Map;
  * @Author Septem
  * @Date 16:59
  */
-public abstract class BaseCondition<ID, D extends IData<ID, ?>> {
+public abstract class BaseCondition<ID, D> {
     ID id;
     D data;
     Map<String, Object> condition;
@@ -100,5 +100,9 @@ public abstract class BaseCondition<ID, D extends IData<ID, ?>> {
 
     public Map<String, Object> getCondition() {
         return condition;
+    }
+
+    public <T extends BaseCondition> T startPage() {
+        return (T) this;
     }
 }

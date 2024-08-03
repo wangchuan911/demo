@@ -28,6 +28,7 @@ public abstract class MySpringApplication {
 
     @PostConstruct
     void check() {
+        if (appClass == null) return;
         Class aClass = ApplicationContextProvider.getRealClass(getClass());
         Assert.isTrue(appClass == aClass, getNoticeMsg(aClass));
     }

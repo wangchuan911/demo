@@ -20,6 +20,4 @@ public interface ITemplateDao<K, E, C> {
     int delete(K key);
 
     int clear(C condition);
-
-    Page<E> page(C condition);
 }

@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 @ConfigurationProperties(prefix = "vertx.options")
 public class VertxInSpringConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(VertxInSpringConfiguration.class);
-    @Autowired
     Reflections reflections;
 
     VertxOptions vertxOptions;
@@ -149,7 +148,12 @@ public class VertxInSpringConfiguration {
             configurationBuilder.setUrls(CollectUrl);
             configurationBuilder.setInputsFilter(s -> s.toLowerCase().endsWith(".class") || s.toLowerCase().endsWith(".java"));
         }
-        return new Reflections(configurationBuilder);
+        setReflections(new Reflections(configurationBuilder));
+        return reflections;
+    }
+
+    public void setReflections(Reflections reflections) {
+        this.reflections = reflections;
     }
 
     protected void addPathToReflections(Collection<URL> CollectUrl, Class clz) {

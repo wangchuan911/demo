@@ -41,4 +41,8 @@ public interface JsonUtils {
     static <T> T toBean(@NotNull String json, Class<T> type) {
         return toBean((JSON) JSON.toJSON(json), type);
     }
+
+    static String asJsonString(@NotNull Object json) {
+        return JSON.toJSONString(json);
+    }
 }
