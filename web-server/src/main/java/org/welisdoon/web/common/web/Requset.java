@@ -1,5 +1,6 @@
 package org.welisdoon.web.common.web;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -125,6 +126,7 @@ public class Requset {
 
     public static final int SIMPLE_REQUEST = 2, UPLOAD_FILE = 3, UPLOAD_FILES = 4, WECHAT = 5;
 
+    @Deprecated
     public static Requset newInstance(RoutingContext context, RequsetOption option) {
         int mode;
         String type = context.request().getParam(option.getRequestType());
@@ -141,6 +143,7 @@ public class Requset {
         return newInstance(mode, context, option);
     }
 
+    @Deprecated
     public static Requset newInstance(int mode, RoutingContext context, RequsetOption option) {
 
         HttpServerRequest httpServerRequest = context.request();
@@ -157,7 +160,7 @@ public class Requset {
             }
             break;
             case UPLOAD_FILES: {
-                Set<FileUpload> fileUploads = context.fileUploads();
+                List<FileUpload> fileUploads = context.fileUploads();
                 method = "uploadFiles";
                 body = new JsonArray()
                         .add(fileUploads.stream().map(Requset::loadFileToJson).collect(Collectors.toList()))
@@ -165,7 +168,7 @@ public class Requset {
             }
             break;
             case UPLOAD_FILE: {
-                Set<FileUpload> fileUploads = context.fileUploads();
+                List<FileUpload> fileUploads = context.fileUploads();
                 FileUpload fileUpload = fileUploads.iterator().next();
                 method = "uploadFile";
                 body = (new JsonArray()

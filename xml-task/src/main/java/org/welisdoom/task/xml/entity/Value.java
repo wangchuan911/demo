@@ -1,16 +1,14 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Future;
 import org.apache.commons.collections4.MapUtils;
-import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.intf.type.Initialize;
 import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoon.common.JsonUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.xml.sax.Attributes;
 
@@ -62,18 +60,7 @@ public class Value extends Unit implements Initialize {
     public static Object get(Object val, String longKey) {
         if (val == null) return null;
         if (val instanceof JSON) {
-            for (String s : longKey.split("[\\.\\[\\]]+")) {
-                if (val == null) return null;
-                if (StringUtils.isEmpty(s)) continue;
-                if (val instanceof JSONObject) {
-                    val = ((JSONObject) val).get(s);
-                } else if (val instanceof JSONArray) {
-                    val = ((JSONArray) val).get(Integer.valueOf(s));
-                } else {
-                    val = null;
-                }
-            }
-            return val;
+            JsonUtils.getKeyValue((JSON) val, longKey);
         }
         if (val instanceof CharSequence) {
             return get(JSON.parse(val.toString()), longKey);

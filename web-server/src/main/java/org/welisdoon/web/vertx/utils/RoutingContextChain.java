@@ -4,7 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.RoutingContext;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.welisdoon.common.JsonUtils;
 import org.welisdoon.web.entity.User;
 
 import java.util.function.Function;
@@ -65,5 +65,9 @@ public class RoutingContextChain {
     public RoutingContextChain failureHandler(Handler<RoutingContext> handler) {
         route.failureHandler(handler);
         return this;
+    }
+
+    public static <T> T bodyAsBean(RoutingContext context, Class<T> type) {
+        return JsonUtils.toBean(context.body().asString(), type);
     }
 }
