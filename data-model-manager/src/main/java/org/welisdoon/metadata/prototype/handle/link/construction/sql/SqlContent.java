@@ -58,7 +58,7 @@ public class SqlContent {
     }
 
     protected String toSqlJoin(String joinOpr, String condOpr, MetaLink metaLink) {
-        return String.format(" %s %s %s %s %s", joinOpr, metaLink.getObject().getCode(), this.toTableAlias(metaLink), condOpr, metaLink.getChildren().stream().map(child -> {
+        return String.format(" %s %s %s %s %s", joinOpr, metaLink.getObject().getCode(), this.toTableAlias(metaLink), condOpr, metaLink.children().stream().map(child -> {
             return ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this);
         }).collect(Collectors.joining(" and ")));
     }
@@ -95,7 +95,7 @@ public class SqlContent {
                     }
                     _sql.append(linkTableOpr).append(metaLink.getObject().getCode()).append(toTableAlias(metaLink));
                     _sql2.append(LinkCondOpr);
-                    metaLink.getChildren().forEach(child -> {
+                    metaLink.children().forEach(child -> {
                         _sql2.append(ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this));
                     });
                 });
@@ -118,13 +118,13 @@ public class SqlContent {
         });
 
         return String.format("select %s from %s %s %s %s",
-                Arrays.stream(mainTable.getObject().getAttributes())
+                Arrays.stream(mainTable.getObject().attributes())
                         .map(attribute -> toTableAlias(mainTable) + "." + attribute.getCode())
                         .collect(Collectors.joining(",")),
                 mainTable.getObject().getCode(),
                 toTableAlias(mainTable),
                 fromBlock,
-                getWhereBody(whereBlock, mainTable.getChildren()));
+                getWhereBody(whereBlock, mainTable.children()));
     }
 
     protected String getWhereBody(StringBuilder whereBlock, List<MetaLink> mainTableWhere) {

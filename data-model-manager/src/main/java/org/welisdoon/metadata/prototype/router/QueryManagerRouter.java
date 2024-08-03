@@ -1,13 +1,10 @@
 package org.welisdoon.metadata.prototype.router;
 
-import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.welisdoon.model.data.dao.TableDao;
-import org.welisdoon.model.data.service.DataTableService;
-import org.welisdoon.model.query.dao.HeaderDao;
-import org.welisdoon.model.query.dao.HeaderLinkDao;
-import org.welisdoon.model.query.entity.condition.QueryHeaderCondition;
+import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
+import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -24,30 +21,24 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 @VertxConfiguration
 @VertxRoutePath(prefix = "/md", requestBodyEnable = true)
 public class QueryManagerRouter {
-
+    @Autowired
+    MetaObjectDao metaObjectDao;
 
     @VertxRouter(path = "\\/obj\\/(?<id>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
-    public void query(RoutingContextChain chain) {
+    public void find(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.valueOf(routingContext.pathParam("qid"));
-            switch (routingContext.pathParam("type")) {
-                case "header": {
-//                    routingContext.end(JSONObject.toJSONString(headerDao.list(new QueryHeaderCondition().setQueryId(qid))));
-                    return;
-                }
-                case "query": {
 
-                    return;
-                }
-                case "input": {
 
-                }
-                break;
-                default:
-            }
+        });
+    }
 
+    @VertxRouter(path = "/obj", method = "POST")
+    public void query(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            chain.page(routingContext, MetaObjectCondition.class,  metaObjectDao::list);
         });
     }
 

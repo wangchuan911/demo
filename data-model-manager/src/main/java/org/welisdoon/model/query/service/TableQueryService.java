@@ -3,12 +3,7 @@ package org.welisdoon.model.query.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.welisdoon.model.query.dao.HeaderLinkDao;
-import org.welisdoon.model.query.entity.condition.HeaderLinkCondition;
-import org.welisdoon.model.query.entity.condition.QueryHeaderCondition;
 import org.welisdoon.model.query.entity.header.SimpleHeaderEntity;
-import org.welisdoon.model.query.entity.header.HeaderLinkEntity;
-
-import java.util.*;
 
 /**
  * @Classname QueryService
@@ -26,6 +21,11 @@ public class TableQueryService extends AbstractQueryService {
     }
 
     @Override
+    public void query(Long queryId, SimpleHeaderEntity... inputs) {
+
+    }
+
+    /*@Override
     public void query(Long queryId, SimpleHeaderEntity... inputs) {
         SimpleHeaderEntity[] headers = this.headerDao.list(new QueryHeaderCondition().setQueryId(queryId)).stream().filter(abstractHeaderEntity -> abstractHeaderEntity instanceof SimpleHeaderEntity).map(abstractHeaderEntity -> (SimpleHeaderEntity) abstractHeaderEntity).toArray(SimpleHeaderEntity[]::new);
         List<HeaderLinkEntity> links = headerLinkDao.list(new HeaderLinkCondition().setQueryId(queryId));
@@ -52,6 +52,6 @@ public class TableQueryService extends AbstractQueryService {
                                         .findAny()
                                         .isPresent())
                         .toArray(SimpleHeaderEntity[]::new));
-    }
+    }*/
 
 }

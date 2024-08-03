@@ -2,9 +2,8 @@ package org.welisdoon.model.data.web;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoon.model.data.condition.TableCondition;
@@ -69,8 +68,9 @@ public class DataManagerTableRouter {
     public void queryTable(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             TableCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), TableCondition.class);
-            PageHelper.startPage(condition.getPage().getPage(), condition.getPage().getPageSize());
-            routingContext.end(JSONObject.toJSONString(PageInfo.of(tableDao.page(condition))));
+//            PageHelper.startPage(condition.getPage().getPage(), condition.getPage().getPageSize());
+            condition.startPage();
+            routingContext.end(JSONObject.toJSONString(PageInfo.of(tableDao.list(condition))));
         });
     }
 
@@ -79,7 +79,7 @@ public class DataManagerTableRouter {
     public void getTable(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             TableCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), TableCondition.class);
-            PageHelper.startPage(condition.getPage().getPage(), condition.getPage().getPageSize());
+//            PageHelper.startPage(condition.getPage().getPage(), condition.getPage().getPageSize());
             routingContext.end(JSONObject.toJSONString(baseService.getTable(Long.valueOf(routingContext.pathParam("id")))));
         });
     }

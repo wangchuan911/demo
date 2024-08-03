@@ -19,6 +19,6 @@ import java.util.stream.Collectors;
 public class SqlValuesHandler implements ISqlBuilderHandler {
     @Override
     public String toSql(MetaLink metaLink, SqlContent content) {
-        return String.format("(%s)", metaLink.getChildren().stream().map(metaLink1 -> toChildSql(metaLink1, content)).collect(Collectors.joining(",")));
+        return String.format("(%s)", metaLink.children().stream().map(metaLink1 -> toChildSql(metaLink1, content)).collect(Collectors.joining(",")));
     }
 }

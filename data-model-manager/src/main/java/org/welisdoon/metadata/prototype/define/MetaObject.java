@@ -25,21 +25,29 @@ public class MetaObject extends MetaPrototype<MetaObject> {
         this.attributes = attributes;
     }
 
-    public Attribute[] getAttributes() {
+    public Attribute[] attributes() {
         return Optional.ofNullable(attributes).orElseGet(() ->
                 attributes = ApplicationContextProvider.getBean(MetaAttributeDao.class).list(new Attribute().setObjectId(this.getId())).stream().toArray(Attribute[]::new)
         );
     }
 
-    public ObjectMetaType getType() {
+    public Attribute[] getAttributes() {
+        return attributes;
+    }
+
+    public ObjectMetaType type() {
         return Optional.ofNullable(type).orElseGet(() -> {
             type = ObjectMetaType.getInstance(typeId);
             return type;
         });
     }
 
+    public ObjectMetaType getType() {
+        return type;
+    }
+
     @Override
-    public MetaObject getParent() {
+    public MetaObject parent() {
         if (Objects.isNull(parentId))
             return null;
         ObjectUtils.synchronizedInitial(this,
@@ -47,7 +55,7 @@ public class MetaObject extends MetaPrototype<MetaObject> {
                 tAttribute ->
                         parent = (MetaObject) ApplicationContextProvider.getBean(MetaUtils.class).getType(ApplicationContextProvider.getBean(MetaObjectDao.class).get(parentId))
         );
-        return super.getParent();
+        return super.parent();
     }
 
     /**
@@ -73,27 +81,31 @@ public class MetaObject extends MetaPrototype<MetaObject> {
             return (T) MetaUtils.getInstance().getObject(id);
         }
 
-        public AttributeMetaType getType() {
+        public AttributeMetaType type() {
             return Optional.ofNullable(type).orElseGet(() -> {
                 type = AttributeMetaType.getInstance(typeId);
                 return type;
             });
         }
 
+        public AttributeMetaType getType() {
+            return type;
+        }
+
         @Override
-        public Attribute getParent() {
+        public Attribute parent() {
             if (Objects.isNull(parentId))
                 return null;
             ObjectUtils.synchronizedInitial(this,
                     tAttribute -> Objects.nonNull(parent),
                     tAttribute -> parent = ApplicationContextProvider.getBean(MetaAttributeDao.class).get(parentId));
-            return super.getParent();
+            return super.parent();
         }
 
-        public Attribute getParent(AttributeMetaType type) {
-            Attribute attribute = getParent();
-            while (Objects.nonNull(attribute) && attribute.getType() != type) {
-                attribute = attribute.getParent();
+        public Attribute parent(AttributeMetaType type) {
+            Attribute attribute = parent();
+            while (Objects.nonNull(attribute) && attribute.type() != type) {
+                attribute = attribute.parent();
             }
             return attribute;
         }

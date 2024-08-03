@@ -31,7 +31,7 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
 
     public String getValue() {
         if (bigFile) {
-            return getChildren().stream().filter(metaValue -> !Objects.equals(metaValue.getValueType(), KeyValueType.UNKNOWN)).map(MetaValue::getValue).collect(Collectors.joining());
+            return children().stream().filter(metaValue -> !Objects.equals(metaValue.valueType(), KeyValueType.UNKNOWN)).map(MetaValue::getValue).collect(Collectors.joining());
         }
         return value;
     }
@@ -39,7 +39,7 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
     public void setValue(String value) {
         int length = value.getBytes().length;
         if (bigFile && length <= 4000) {
-            valueType = getValueType();
+            valueType = valueType();
             bigFile = false;
             this.value = value;
             return;
@@ -47,23 +47,23 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
         if (length > 4000) {
             bigFile = true;
             Assert.notNull(getValueTypeId(), "请先初始化值类型");
-            KeyValueType valueType = getValueType();
+            KeyValueType valueType = valueType();
             valueType = KeyValueType.Bigfile;
             int size = length / 4000;
             byte[] bytes = value.getBytes();
             for (int i = 0; i < size; i++) {
-                if (i >= getChildren().size()) {
+                if (i >= children().size()) {
                     MetaValue keyValue = new MetaValue();
                     keyValue.setParentId(this.getId());
                     keyValue.setSequence(i);
                     keyValue.setValueTypeId(valueType.getId());
-                    getChildren().add(keyValue);
+                    children().add(keyValue);
                 }
-                getChildren().get(i).setValueTypeId(valueType.getId());
-                getChildren().get(i).setValue(new String(ArrayUtils.subarray(bytes, i * LENGTH, (1 + i) * LENGTH)));
+                children().get(i).setValueTypeId(valueType.getId());
+                children().get(i).setValue(new String(ArrayUtils.subarray(bytes, i * LENGTH, (1 + i) * LENGTH)));
             }
-            if (getChildren().size() > size) {
-                getChildren().stream().skip(size).forEach(metaValue -> {
+            if (children().size() > size) {
+                children().stream().skip(size).forEach(metaValue -> {
                     metaValue.setValueTypeId(KeyValueMetaType.UNKNOWN.getId());
                 });
             }
@@ -103,7 +103,7 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
         return super.setTypeId(typeId);
     }
 
-    public KeyValueMetaType getType() {
+    public KeyValueMetaType type() {
         Optional.ofNullable(type).orElseGet(() -> {
             type = KeyValueMetaType.getInstance(typeId);
             return type;
@@ -111,16 +111,24 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
         return type;
     }
 
+    public KeyValueMetaType getType() {
+        return type;
+    }
 
-    public KeyValueType getValueType() {
+    public KeyValueType valueType() {
         if (valueType == KeyValueType.Bigfile) {
-            return CollectionUtils.isEmpty(getChildren()) ? KeyValueType.UNKNOWN : getChildren().get(0).valueType;
+            return CollectionUtils.isEmpty(children()) ? KeyValueType.UNKNOWN : children().get(0).valueType;
         }
         return valueType;
     }
 
+    public KeyValueType getValueType() {
+        return valueType;
+    }
+
+
     public String toSql() {
-        switch (getValueType()) {
+        switch (valueType()) {
             case String:
             case Char:
                 return String.format("'%s'", value);
@@ -132,11 +140,11 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
     }
 
     @Override
-    public List<MetaValue> getChildren() {
+    public List<MetaValue> children() {
         ObjectUtils.synchronizedInitial(this, metaValue -> Objects.nonNull(children), metaValue -> {
             children = ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
         });
-        return super.getChildren();
+        return super.children();
     }
 
     public void setBigFile(boolean bigFile) {

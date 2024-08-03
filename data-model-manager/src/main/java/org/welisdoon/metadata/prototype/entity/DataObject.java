@@ -18,7 +18,7 @@ public class DataObject extends MetaObject {
 
     }
 
-    public Attributes[] getAttributes() {
+    public Attributes[] attributes() {
         return attributes;
     }
 

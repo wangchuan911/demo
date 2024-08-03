@@ -124,8 +124,8 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     }
 
     @Override
-    public List<MetaLink> getChildren() {
+    public List<MetaLink> children() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink -> children = MetaUtils.getInstance().getChildrenLinks(getId()));
-        return super.getChildren();
+        return super.children();
     }
 }
