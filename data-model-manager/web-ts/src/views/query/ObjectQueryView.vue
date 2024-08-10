@@ -13,6 +13,7 @@
       <el-table-column prop="id" label="ID" width="180"/>
       <el-table-column prop="code" label="表名"/>
       <el-table-column prop="name" label="描述"/>
+      <el-table-column prop="typeDesc" label="类型"/>
       <el-table-column fixed="right" label="操作">
         <template #default="scope">
           <el-button link type="primary" size="small" @click="tableEdit(scope.row)">Edit</el-button>
