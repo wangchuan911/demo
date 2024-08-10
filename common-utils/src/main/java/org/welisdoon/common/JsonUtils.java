@@ -39,7 +39,7 @@ public interface JsonUtils {
     }
 
     static <T> T toBean(@NotNull String json, Class<T> type) {
-        return toBean((JSON) JSON.toJSON(json), type);
+        return toBean((JSON) JSON.parse(json), type);
     }
 
     static String asJsonString(@NotNull Object json) {

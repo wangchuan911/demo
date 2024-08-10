@@ -28,7 +28,7 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
     }
 
     @JsonIgnore
-    @JSONField(deserialize = false)
+    @JSONField(deserialize = false, serialize = false)
     public Attribute[] getAttributes() {
         return Optional.ofNullable(attributes).orElseGet(() ->
                 attributes = ApplicationContextProvider.getBean(MetaAttributeDao.class).list(new Attribute().setObjectId(this.getId())).stream().toArray(Attribute[]::new)
@@ -44,7 +44,7 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
 
     @Override
     @JsonIgnore
-    @JSONField(deserialize = false)
+    @JSONField(deserialize = false, serialize = false)
     public MetaObject getParent() {
         if (Objects.isNull(parentId))
             return null;
@@ -88,7 +88,7 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
 
         @Override
         @JsonIgnore
-        @JSONField(deserialize = false)
+        @JSONField(deserialize = false, serialize = false)
         public Attribute getParent() {
             if (Objects.isNull(parentId))
                 return null;

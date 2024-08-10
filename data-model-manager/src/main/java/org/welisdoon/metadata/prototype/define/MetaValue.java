@@ -139,7 +139,7 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
 
     @Override
     @JsonIgnore
-    @JSONField(deserialize = false)
+    @JSONField(deserialize = false, serialize = false)
     public List<MetaValue> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaValue -> Objects.nonNull(children), metaValue -> {
             children = ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));

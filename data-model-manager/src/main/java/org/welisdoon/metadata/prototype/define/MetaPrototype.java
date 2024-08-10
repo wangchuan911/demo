@@ -75,7 +75,7 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
     }
 
     @JsonIgnore
-    @JSONField(deserialize = false)
+    @JSONField(deserialize = false, serialize = false)
     public T getParent() {
         return parent;
     }
