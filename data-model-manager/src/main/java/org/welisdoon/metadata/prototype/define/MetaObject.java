@@ -17,7 +17,7 @@ import java.util.Optional;
  * @Author Septem
  * @Date 11:41
  */
-public class MetaObject extends MetaPrototype<MetaObject> {
+public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity<ObjectMetaType> {
     Attribute[] attributes;
     ObjectMetaType type;
 
@@ -35,15 +35,11 @@ public class MetaObject extends MetaPrototype<MetaObject> {
         return attributes;
     }
 
-    public ObjectMetaType type() {
+    public ObjectMetaType getType() {
         return Optional.ofNullable(type).orElseGet(() -> {
             type = ObjectMetaType.getInstance(typeId);
             return type;
         });
-    }
-
-    public ObjectMetaType getType() {
-        return type;
     }
 
     @Override
@@ -64,7 +60,7 @@ public class MetaObject extends MetaPrototype<MetaObject> {
      * @Author Septem
      * @Date 11:41
      */
-    public static class Attribute<T extends MetaObject> extends MetaPrototype<Attribute> {
+    public static class Attribute<T extends MetaObject> extends MetaPrototype<Attribute> implements ITypeEntity<AttributeMetaType> {
         Long objectId;
         AttributeMetaType type;
 
@@ -81,15 +77,11 @@ public class MetaObject extends MetaPrototype<MetaObject> {
             return (T) MetaUtils.getInstance().getObject(id);
         }
 
-        public AttributeMetaType type() {
+        public AttributeMetaType getType() {
             return Optional.ofNullable(type).orElseGet(() -> {
                 type = AttributeMetaType.getInstance(typeId);
                 return type;
             });
-        }
-
-        public AttributeMetaType getType() {
-            return type;
         }
 
         @Override
@@ -104,7 +96,7 @@ public class MetaObject extends MetaPrototype<MetaObject> {
 
         public Attribute parent(AttributeMetaType type) {
             Attribute attribute = parent();
-            while (Objects.nonNull(attribute) && attribute.type() != type) {
+            while (Objects.nonNull(attribute) && attribute.getType() != type) {
                 attribute = attribute.parent();
             }
             return attribute;

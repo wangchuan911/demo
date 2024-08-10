@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 11:54
  */
-public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEntity {
+public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEntity, ITypeEntity<KeyValueMetaType> {
     final int LENGTH = 4000;
     String value;
     Long valueTypeId;
@@ -103,15 +103,11 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
         return super.setTypeId(typeId);
     }
 
-    public KeyValueMetaType type() {
+    public KeyValueMetaType getType() {
         Optional.ofNullable(type).orElseGet(() -> {
             type = KeyValueMetaType.getInstance(typeId);
             return type;
         });
-        return type;
-    }
-
-    public KeyValueMetaType getType() {
         return type;
     }
 
