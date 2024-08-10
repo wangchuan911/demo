@@ -76,7 +76,7 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
 
     @JsonIgnore
     @JSONField(deserialize = false)
-    public T parent() {
+    public T getParent() {
         return parent;
     }
 
@@ -99,11 +99,7 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
         }
     }
 
-    public List<T> children() {
-        return children;
-    }
-
-    public final List<T> getChildren() {
+    public List<T> getChildren() {
         return children;
     }
 

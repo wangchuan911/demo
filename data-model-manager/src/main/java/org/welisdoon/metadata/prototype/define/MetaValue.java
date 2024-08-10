@@ -1,5 +1,7 @@
 package org.welisdoon.metadata.prototype.define;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.util.Assert;
@@ -31,7 +33,7 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
 
     public String getValue() {
         if (bigFile) {
-            return children().stream().filter(metaValue -> !Objects.equals(metaValue.valueType(), KeyValueType.UNKNOWN)).map(MetaValue::getValue).collect(Collectors.joining());
+            return getChildren().stream().filter(metaValue -> !Objects.equals(metaValue.valueType(), KeyValueType.UNKNOWN)).map(MetaValue::getValue).collect(Collectors.joining());
         }
         return value;
     }
@@ -52,18 +54,18 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
             int size = length / 4000;
             byte[] bytes = value.getBytes();
             for (int i = 0; i < size; i++) {
-                if (i >= children().size()) {
+                if (i >= getChildren().size()) {
                     MetaValue keyValue = new MetaValue();
                     keyValue.setParentId(this.getId());
                     keyValue.setSequence(i);
                     keyValue.setValueTypeId(valueType.getId());
-                    children().add(keyValue);
+                    getChildren().add(keyValue);
                 }
-                children().get(i).setValueTypeId(valueType.getId());
-                children().get(i).setValue(new String(ArrayUtils.subarray(bytes, i * LENGTH, (1 + i) * LENGTH)));
+                getChildren().get(i).setValueTypeId(valueType.getId());
+                getChildren().get(i).setValue(new String(ArrayUtils.subarray(bytes, i * LENGTH, (1 + i) * LENGTH)));
             }
-            if (children().size() > size) {
-                children().stream().skip(size).forEach(metaValue -> {
+            if (getChildren().size() > size) {
+                getChildren().stream().skip(size).forEach(metaValue -> {
                     metaValue.setValueTypeId(KeyValueMetaType.UNKNOWN.getId());
                 });
             }
@@ -113,7 +115,7 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
 
     public KeyValueType valueType() {
         if (valueType == KeyValueType.Bigfile) {
-            return CollectionUtils.isEmpty(children()) ? KeyValueType.UNKNOWN : children().get(0).valueType;
+            return CollectionUtils.isEmpty(getChildren()) ? KeyValueType.UNKNOWN : getChildren().get(0).valueType;
         }
         return valueType;
     }
@@ -136,11 +138,13 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
     }
 
     @Override
-    public List<MetaValue> children() {
+    @JsonIgnore
+    @JSONField(deserialize = false)
+    public List<MetaValue> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaValue -> Objects.nonNull(children), metaValue -> {
             children = ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
         });
-        return super.children();
+        return super.getChildren();
     }
 
     public void setBigFile(boolean bigFile) {

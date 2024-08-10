@@ -22,6 +22,6 @@ public class SqlORHandler implements ISqlBuilderHandler {
 
     @Override
     public String toSql(MetaLink metaLink, SqlContent content) {
-        return metaLink.children().stream().map(metaLink1 -> toChildSql(metaLink1, content)).collect(Collectors.joining(String.format(" %s ", operator(metaLink.getType()))));
+        return metaLink.getChildren().stream().map(metaLink1 -> toChildSql(metaLink1, content)).collect(Collectors.joining(String.format(" %s ", operator(metaLink.getType()))));
     }
 }

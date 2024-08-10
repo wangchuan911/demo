@@ -26,7 +26,7 @@ public class SqlBuilderHandler implements LinkHandle {
     @Override
     public void handler(HandleContext handleContext, MetaLink metaLink) {
         final SqlContent content = handleContext.get(this, SqlContent::getInstance);
-        MetaObject parent = metaLink.getObject().parent();
+        MetaObject parent = metaLink.getObject().getParent();
         if (parent instanceof DataObject) {
             MetaLink parentLink = new MetaLink();
 //            parentLink.setId(Long.MIN_VALUE);
@@ -40,11 +40,11 @@ public class SqlBuilderHandler implements LinkHandle {
             mainTable.setObject(parent);
             mainTable.setInstanceId(1L);
             mainTable.setTypeId(LinkMetaType.SqlToJoin.getId());
-            mainTable.addChildren(metaLink.children().stream().filter(child -> Objects.equals(child.getType(), LinkMetaType.DataFuture)).toArray(MetaLink[]::new));
+            mainTable.addChildren(metaLink.getChildren().stream().filter(child -> Objects.equals(child.getType(), LinkMetaType.DataFuture)).toArray(MetaLink[]::new));
             content.getJoins().add(mainTable);
         }
 
-        metaLink.children().forEach(child -> {
+        metaLink.getChildren().forEach(child -> {
             switch (child.getType()) {
                 case SqlToSelect: {
                     content.getSelects().add(child);

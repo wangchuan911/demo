@@ -1,5 +1,7 @@
 package org.welisdoon.metadata.prototype.define;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.MetaUtils;
@@ -124,8 +126,10 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     }
 
     @Override
-    public List<MetaLink> children() {
+    @JsonIgnore
+    @JSONField(deserialize = false)
+    public List<MetaLink> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink -> children = MetaUtils.getInstance().getChildrenLinks(getId()));
-        return super.children();
+        return super.getChildren();
     }
 }

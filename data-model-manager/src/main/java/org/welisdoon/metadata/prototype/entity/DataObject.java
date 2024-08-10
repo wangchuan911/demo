@@ -18,10 +18,6 @@ public class DataObject extends MetaObject {
 
     }
 
-    public Attributes[] attributes() {
-        return attributes;
-    }
-
     @AttributeMetaType.MetaType(AttributeMetaType.Attributes)
     public static class Attributes extends Attribute<DataObject> {
         DataBaseTable.Column[] columns;

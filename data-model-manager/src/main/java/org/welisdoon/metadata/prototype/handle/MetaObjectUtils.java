@@ -27,10 +27,10 @@ public class MetaObjectUtils {
     public static MetaObject getParent(MetaObject metaObject) {
         if (Objects.isNull(metaObject.getParentId()))
             return null;
-        if (Objects.isNull(metaObject.parent()))
+        if (Objects.isNull(metaObject.getParent()))
             metaObject.setParent(metaObjectDao.get(metaObject.getParentId()));
 
-        return metaObject.parent();
+        return metaObject.getParent();
     }
 
     public static MetaObject getParent(MetaObject metaObject, ObjectMetaType metaType) {

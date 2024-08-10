@@ -17,7 +17,7 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 public class SqlContainHandler implements ISqlBuilderHandler {
     @Override
     public String toSql(MetaLink metaLink, SqlContent content) {
-        return toChildSql(metaLink.children().get(0), content) + operator(metaLink.getType()) + toChildSql(metaLink.children().get(1), content);
+        return toChildSql(metaLink.getChildren().get(0), content) + operator(metaLink.getType()) + toChildSql(metaLink.getChildren().get(1), content);
     }
 
     @Override
