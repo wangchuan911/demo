@@ -24,7 +24,7 @@ const routes: Array<RouteRecordRaw> = [
         // route level code-splitting
         // this generates a separate chunk (about.[hash].js) for this route
         // which is lazy-loaded when the route is visited.
-        component: () => import(/!* webpackChunkName: "about" *!/ '../views/detail/ObjectView.vue'),
+        component: () => import(/!* webpackChunkName: "about" *!/ '../views/detail/ObjectDetailView.vue'),
     },*/
     {
         path: '/index',
@@ -39,15 +39,15 @@ const routes: Array<RouteRecordRaw> = [
                 }
             },
             {
-                path: 'detail',
-                component: () => import(/* webpackChunkName: "about" */ '../views/entity/object/ObjectView.vue'),
+                path: 'object-detail/:id(\\d+)',
+                component: () => import(/* webpackChunkName: "about" */ '../views/entity/object/ObjectDetailView.vue'),
                 meta: {
                     standalone: true
                 }
             },
             {
                 path: 'object-query',
-                component: () => import(/* webpackChunkName: "about" */ '../views/query/ObjectQueryView.vue'),
+                component: () => import(/* webpackChunkName: "about" */ '../views/entity/object/ObjectQueryView.vue'),
                 meta: {
                     standalone: true
                 }
