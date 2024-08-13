@@ -1,71 +1,13 @@
 <template>
-  <el-form :model="form" label-width="120px" v-loading="loading">
-    <!--    <el-form-item label="Activity name">
-          <el-input v-model="form.name"/>
-        </el-form-item>
+  <el-tabs v-model="activeTab" @tab-click="onChangeTab">
+    <el-tab-pane label="属性管理" name="attr">
+      <object-attribute-view :id="objId"></object-attribute-view>
+    </el-tab-pane>
+    <el-tab-pane label="对象管理" name="second">配置管理</el-tab-pane>
+    <el-tab-pane label="角色管理" name="third">角色管理</el-tab-pane>
+    <el-tab-pane label="定时任务补偿" name="fourth">定时任务补偿</el-tab-pane>
+  </el-tabs>
 
-
-        <el-form-item label="Activity zone">
-          <el-select v-model="form.region" placeholder="please select your zone">
-            <el-option label="Zone one" value="shanghai"/>
-            <el-option label="Zone two" value="beijing"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="Activity time">
-          <el-col :span="11">
-            <el-date-picker
-                v-model="form.date1"
-                type="date"
-                placeholder="Pick a date"
-                style="width: 100%"
-            />
-          </el-col>
-          <el-col :span="2" class="text-center">
-            <span class="text-gray-500">-</span>
-          </el-col>
-          <el-col :span="11">
-            <el-time-picker
-                v-model="form.date2"
-                placeholder="Pick a time"
-                style="width: 100%"
-            />
-          </el-col>
-        </el-form-item>
-        <el-form-item label="Instant delivery">
-          <el-switch v-model="form.delivery"/>
-        </el-form-item>
-        <el-form-item label="Activity type">
-          <el-checkbox-group v-model="form.type">
-            <el-checkbox label="Online activities" name="type"/>
-            <el-checkbox label="Promotion activities" name="type"/>
-            <el-checkbox label="Offline activities" name="type"/>
-            <el-checkbox label="Simple brand exposure" name="type"/>
-          </el-checkbox-group>
-        </el-form-item>
-        <el-form-item label="Resources">
-          <el-radio-group v-model="form.resource">
-            <el-radio label="Sponsor"/>
-            <el-radio label="Venue"/>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="Activity form">
-          <el-input v-model="form.desc" type="textarea"/>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="onSubmit">Create</el-button>
-          <el-button>Cancel</el-button>
-        </el-form-item>-->
-
-    <template v-for="attr in attrs" :key="attr.id">
-      <el-form-item :label="attr.name">
-
-      </el-form-item>
-    </template>
-    <el-form-item>
-      <el-button type="primary" @click="onSubmit">Create</el-button>
-      <el-button>Cancel</el-button>
-    </el-form-item>
-  </el-form>
 
 </template>
 
@@ -73,19 +15,24 @@
 import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInternalInstance} from 'vue'
 import FormItem from "@/components/form/FormItem.vue";
 import {FormItemDefine} from "@/components/form/config";
+import ObjectAttributeView from '@/components/entity/object/ObjectAttributeView';
 import {useRoute} from "vue-router";
+import {TabsPaneContext} from "element-plus";
 
+const activeTab = ref("attr"), onChangeTab = (tab: TabsPaneContext, event: Event) => {
+  console.log(tab, event);
+}
 const attrs = reactive(new Array<Record<any, any>>());
 const {proxy} = getCurrentInstance() as ComponentInternalInstance, route = useRoute();
-const objectTypeId = "1", objectId = "1";
 const loading = ref(true)
+const objId = ref(-1)
 onActivated(() => {
   console.log("onActivated")
   console.log(route.params)
-  load(parseInt(route.params.id as string))
+  objId.value = route.params.id as unknown as number;
 })
-const load = (id: number) => {
-  proxy?.$http.get(`obj/${id}`)
+const load = () => {
+  proxy?.$http.get(`obj/${objId.value}`)
       .then(({data}) => {
         attrs.length = 0;
         attrs.push(...data.attributes as Array<Record<any, any>>)
@@ -175,7 +122,7 @@ const onSubmit = () => {
   loading.value = true;
   console.log('submit!')
   console.log(form)
-  proxy?.$http.put(`database/object/${objectTypeId}/${objectId}`, form).then(value => {
+  proxy?.$http.put(`database/object/${objId.value}`, form).then(value => {
     loading.value = false
   })
 }
