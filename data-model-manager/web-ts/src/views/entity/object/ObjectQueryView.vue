@@ -1,5 +1,5 @@
 <template>
-  <div v-loading="loading" style="position: absolute">
+  <div v-loading="loading">
     <el-form ref="formRef" :inline="true" :model="formModel">
       <el-form-item label="table name" prop="name">
         <el-input v-model="formModel.name"/>

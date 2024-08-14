@@ -1,11 +1,9 @@
 <template>
   <el-tabs v-model="activeTab" @tab-click="onChangeTab">
-    <el-tab-pane label="属性管理" name="attr">
+    <el-tab-pane label="属性管理" name="attr" >
       <object-attribute-view :id="objId"></object-attribute-view>
     </el-tab-pane>
-    <el-tab-pane label="对象管理" name="second">配置管理</el-tab-pane>
-    <el-tab-pane label="角色管理" name="third">角色管理</el-tab-pane>
-    <el-tab-pane label="定时任务补偿" name="fourth">定时任务补偿</el-tab-pane>
+    <el-tab-pane label="对象管理" name="obj">配置管理</el-tab-pane>
   </el-tabs>
 
 

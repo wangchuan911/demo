@@ -1,16 +1,8 @@
 <template>
-  <el-form :model="form" label-width="120px" v-loading="loading">
-    <template v-for="attr in attrs" :key="attr.id">
-      <el-form-item :label="attr.name">
-
-      </el-form-item>
-    </template>
-    <el-form-item>
-      <el-button type="primary" @click="onSubmit">Create</el-button>
-      <el-button>Cancel</el-button>
-    </el-form-item>
-  </el-form>
-
+  <el-table :data="attrs" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 239px)">
+    <el-table-column prop="name" label="属性描述"/>
+    <el-table-column prop="code" label="属性标识"/>
+  </el-table>
 </template>
 
 <script lang="ts" setup>

@@ -27,11 +27,13 @@
             >
             </el-tab-pane>
 
-            <router-view v-slot="{ Component }" :max="10" class="router-container">
-              <keep-alive :exclude="excludes">
-                <component :is="Component"/>
-              </keep-alive>
-            </router-view>
+            <el-scrollbar heigth="calc(100vh - 185px)" class="router-container">
+              <router-view v-slot="{ Component }" :max="10" >
+                <keep-alive :exclude="excludes">
+                  <component :is="Component"/>
+                </keep-alive>
+              </router-view>
+            </el-scrollbar>
           </el-tabs>
         </div>
       </el-main>
@@ -156,9 +158,9 @@ onMounted(() => {
 .router-container {
   position: absolute;
   width: calc(100% - 30px);
-  height: calc(100vh - 185px);
+  /*height: calc(100vh - 185px);*/
   top: 15px;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  /*overflow-y: scroll;
+  overflow-x: hidden;*/
 }
 </style>
