@@ -70,7 +70,7 @@ public class RoutingContextChain {
         return this;
     }
 
-    public static <T> Future<Void> simple(RoutingContext context, Class<T> type, Function<T, Object> function) {
+    /*public static <T> Future<Void> simple(RoutingContext context, Class<T> type, Function<T, Object> function) {
         return context.end(JsonUtils.asJsonString(function.apply(JsonUtils.toBean(context.body().asString(), type))));
     }
 
@@ -78,5 +78,5 @@ public class RoutingContextChain {
         T condition = JsonUtils.toBean(context.body().asString(), type);
         condition.startPage();
         return context.end(JsonUtils.asJsonString(PageInfo.of(function.apply(condition))));
-    }
+    }*/
 }

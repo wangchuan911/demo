@@ -33,19 +33,39 @@ public class QueryManagerRouter {
     @VertxRouter(path = "\\/obj\\/(?<id>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
-    public void find(RoutingContextChain chain) {
+    public void findObj(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.valueOf(routingContext.pathParam("id"));
             MetaObject object = metaObjectDao.get(qid);
             JSONObject jsonObject = (JSONObject) JSON.toJSON(object);
-            jsonObject.put("attributes", object.getAttributes());
             jsonObject.put("parent", object.getParent());
             routingContext.end(jsonObject.toJSONString());
         });
     }
 
+    @VertxRouter(path = "\\/obj\\/attrs\\/(?<id>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void objAttr(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long qid = Long.valueOf(routingContext.pathParam("id"));
+            MetaObject object = new MetaObject();
+            object.setId(qid);
+            routingContext.end(JSON.toJSONString(object.getAttributes()));
+        });
+    }
+
     @VertxRouter(path = "/obj", method = "POST")
-    public void query(RoutingContextChain chain) {
+    public void objQuery(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            MetaObjectCondition condition = JsonUtils.toBean(routingContext.body().asString(), MetaObjectCondition.class);
+            condition.startPage();
+            routingContext.end(JsonUtils.asJsonString(PageInfo.of(metaObjectDao.list(condition))));
+        });
+    }
+
+    @VertxRouter(path = "\\/obj\\/component\\/(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
+    public void objComponent(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             MetaObjectCondition condition = JsonUtils.toBean(routingContext.body().asString(), MetaObjectCondition.class);
             condition.startPage();

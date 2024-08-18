@@ -23,10 +23,10 @@ const {proxy} = getCurrentInstance() as ComponentInternalInstance;
 const loading = ref(true)
 const props = defineProps<{ id: number }>()
 const load = (id: number) => {
-  proxy?.$http.get(`obj/${id}`)
-      .then(({data}: { data: Record<any, any> }) => {
+  proxy?.$http.get(`obj/attrs/${id}`)
+      .then(({data}: { data: Array<Record<any, any>> }) => {
         attrs.length = 0;
-        attrs.push(...data.attributes as Array<Record<any, any>>)
+        attrs.push(...data)
 
       })
       .then(() => {
