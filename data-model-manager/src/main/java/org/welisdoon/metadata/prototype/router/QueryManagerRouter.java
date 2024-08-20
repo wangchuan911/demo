@@ -19,7 +19,9 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -83,13 +85,22 @@ public class QueryManagerRouter {
             condition.setData(new MetaLink());
             condition.getData().setObjectId(qid);
             condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
-            routingContext.end(JsonUtils.asJsonString(metaLinkDao.list(condition).stream().flatMap(metaLink -> {
+            List<MetaLink> list = new LinkedList<>();
+            Optional.ofNullable(metaObjectDao.get(qid).getId()).ifPresent(aLong -> {
+                MetaLink metaLink = new MetaLink();
+                metaLink.setObjectId(aLong);
+                metaLink.setTypeId(LinkMetaType.ObjConstructor.getId());
+                list.add(metaLink);
+            });
+
+            list.addAll(metaLinkDao.list(condition).stream().flatMap(metaLink -> {
                 MetaLinkCondition condition1 = new MetaLinkCondition();
                 condition1.setData(new MetaLink());
                 condition1.setParentId(metaLink.getId());
                 condition1.getData().setTypeId(LinkMetaType.SqlToJoin.getId());
                 return metaLinkDao.list(condition1).stream();
-            }).map(metaLink -> {
+            }).collect(Collectors.toList()));
+            routingContext.end(JsonUtils.asJsonString(list.stream().map(metaLink -> {
                 JSONObject object = (JSONObject) JSON.toJSON(metaLink);
                 object.put("value", metaLink.getValue());
                 object.put("object", metaLink.getObject());
