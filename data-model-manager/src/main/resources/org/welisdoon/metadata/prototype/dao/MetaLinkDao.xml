@@ -16,7 +16,22 @@
             resultMap="MetaLink">
         select * from MD_LINK
         <where>
+            <if test="id!=null ">and id = #{id}</if>
             <if test="parentId!=null ">and parent_id = #{parentId}</if>
+            <if test="data!=null">
+                <if test="data.objectId!=null ">and object_id = #{data.objectId}</if>
+                <if test="data.valueId!=null ">and value_id = #{data.valueId}</if>
+                <if test="data.attributeId!=null ">and attribute_id = #{data.attributeId}</if>
+                <if test="data.instanceId!=null ">and instance_id = #{data.instanceId}</if>
+                <if test="data.typeId!=null">
+                    and type_id in ( #{data.typeId,jdbcType=NUMERIC}
+                    <foreach collection="@org.welisdoon.metadata.prototype.consts.LinkMetaType@getChildTypeId(data.typeId)" item="type_id">
+                        ,#{type_id,jdbcType=NUMERIC}
+                    </foreach>
+                    )
+                </if>
+            </if>
+
         </where>
 
     </select>

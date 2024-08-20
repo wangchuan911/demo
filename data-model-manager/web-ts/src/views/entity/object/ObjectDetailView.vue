@@ -3,7 +3,9 @@
     <el-tab-pane label="属性管理" name="attr" >
       <object-attribute-view :id="objId"></object-attribute-view>
     </el-tab-pane>
-    <el-tab-pane label="对象管理" name="obj">配置管理</el-tab-pane>
+    <el-tab-pane label="对象管理" name="obj">
+      <object-combination-view :id="objId"></object-combination-view>
+    </el-tab-pane>
   </el-tabs>
 
 
@@ -14,6 +16,7 @@ import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInte
 import FormItem from "@/components/form/FormItem.vue";
 import {FormItemDefine} from "@/components/form/config";
 import ObjectAttributeView from '@/components/entity/object/ObjectAttributeView';
+import ObjectCombinationView from '@/components/entity/object/ObjectCombinationView';
 import {useRoute} from "vue-router";
 import {TabsPaneContext} from "element-plus";
 

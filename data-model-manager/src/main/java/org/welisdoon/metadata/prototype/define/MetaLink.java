@@ -16,7 +16,7 @@ import java.util.Optional;
  * @Author Septem
  * @Date 11:41
  */
-public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity {
+public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity, ITypeEntity<LinkMetaType> {
     Long objectId;
     MetaObject object;
 

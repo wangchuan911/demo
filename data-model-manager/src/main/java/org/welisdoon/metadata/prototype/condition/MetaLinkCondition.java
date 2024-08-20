@@ -1,12 +1,16 @@
 package org.welisdoon.metadata.prototype.condition;
 
+import org.welisdoon.common.data.BaseCondition;
+import org.welisdoon.metadata.prototype.define.MetaLink;
+import org.welisdoon.metadata.prototype.define.MetaObject;
+
 /**
  * @Classname MetaLinkCondition
  * @Description TODO
  * @Author Septem
  * @Date 18:08
  */
-public class MetaLinkCondition {
+public class MetaLinkCondition extends BaseCondition<Long, MetaLink> {
 
     Long parentId;
 

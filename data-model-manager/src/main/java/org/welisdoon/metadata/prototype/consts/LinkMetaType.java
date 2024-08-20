@@ -8,7 +8,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Classname TableMetaType
@@ -96,5 +99,17 @@ public enum LinkMetaType implements IMetaType {
     @Meta
     public @interface LinkHandle {
         LinkMetaType[] value();
+    }
+
+    public static List<Long> getChildTypeId(long typeId) {
+        Optional<LinkMetaType> optional = Arrays.stream(values()).filter(linkMetaType -> Objects.equals(linkMetaType.getId(), typeId)).findFirst();
+        if (optional.isEmpty()) {
+            return Arrays.asList(UNKNOWN.getId());
+        }
+        return
+                Arrays.stream(values())
+                        .filter(linkMetaType -> linkMetaType.parent != null && Objects.equals(linkMetaType.parent.getId(), typeId))
+                        .map(LinkMetaType::getId)
+                        .collect(Collectors.toList());
     }
 }

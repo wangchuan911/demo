@@ -29,6 +29,7 @@ declare module '@vue/runtime-core' {
     FormItem: typeof import('./src/components/form/FormItem.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     ObjectAttributeView: typeof import('./src/components/entity/object/ObjectAttributeView.vue')['default']
+    ObjectCombinationView: typeof import('./src/components/entity/object/ObjectCombinationView.vue')['default']
     ObjectQueryInput: typeof import('./src/components/form/input/ObjectQueryInput.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
