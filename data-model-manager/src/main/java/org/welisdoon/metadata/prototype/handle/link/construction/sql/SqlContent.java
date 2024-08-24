@@ -24,6 +24,7 @@ public class SqlContent {
     protected List<MetaLink> selects = new LinkedList<>();
     protected List<MetaLink> joins = new LinkedList<>();
     protected volatile static Class<? extends SqlContent> type;
+    protected int scope = 0;
 
     public void setJoins(List<MetaLink> joins) {
         this.joins = joins;
@@ -110,10 +111,12 @@ public class SqlContent {
 
         Map<LinkMetaType, List<MetaLink>> map = joins.stream().collect(Collectors.groupingBy(MetaLink::getType));
         Assert.isTrue(map.getOrDefault(LinkMetaType.SqlToJoin, Collections.emptyList()).size() > 0, "缺少主表");
-        MetaLink mainTable = map.get(LinkMetaType.SqlToJoin).get(0);
+        MetaLink mainTable = map.get(LinkMetaType.SqlToJoin).remove(0);
 
-
-        map.entrySet().stream().filter(entry -> !Objects.equals(entry.getKey(), LinkMetaType.SqlToJoin)).forEach(entry -> {
+        map.entrySet().stream()/*.filter(entry -> !Objects.equals(entry.getKey(), LinkMetaType.SqlToJoin))*/.forEach(entry -> {
+            if (Objects.equals(entry.getKey(), LinkMetaType.SqlToJoin)) {
+                scope++;
+            }
             toSqlJoin(fromBlock, whereBlock, entry.getKey(), map.get(entry.getKey()));
         });
 
@@ -142,7 +145,17 @@ public class SqlContent {
         return builder.toString();
     }
 
-    public static String toTableAlias(MetaLink metaLink) {
-        return "T" + metaLink.getInstanceId();
+    public String toTableAlias(MetaLink metaLink) {
+        if (scope < 26) {
+            return String.format("%s%d", (char) ('A' + scope), metaLink.getInstanceId());
+        } else {
+            int v = scope;
+            StringBuilder stringBuilder = new StringBuilder();
+            do {
+                stringBuilder.insert(0, (char) ('A' + (v % 26)));
+                v /= 26;
+            } while (v > 0);
+            return String.format("%s%d", (char) ('A' + v), metaLink.getInstanceId());
+        }
     }
 }

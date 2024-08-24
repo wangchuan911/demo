@@ -2,6 +2,7 @@ package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
 import org.springframework.stereotype.Component;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataBaseTable;
@@ -55,10 +56,9 @@ public class SqlBuilderHandler implements LinkHandle {
                     return;
                 }
                 default:
-                    switch (Optional.ofNullable(child.getType().getParent()).orElse(LinkMetaType.UNKNOWN)) {
-                        case SqlToJoin:
-                            content.getJoins().add(child);
-                            return;
+                    if (child.getType().isMatched(LinkMetaType.SqlToJoin, Side.Up)) {
+                        content.getJoins().add(child);
+                        return;
                     }
             }
         });

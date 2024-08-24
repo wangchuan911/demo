@@ -24,7 +24,7 @@ public class SqlValueHandler implements ISqlBuilderHandler {
             return metaLink.getValue().toSql();
         }
         if (Objects.nonNull(metaLink.getAttributeId()) && Objects.nonNull(metaLink.getInstanceId())) {
-            return String.format("T%d.%s", metaLink.getInstanceId(), metaLink.getAttribute().getCode());
+            return String.format("%s.%s", content.toTableAlias(metaLink), metaLink.getAttribute().getCode());
         }
         throw new IllegalArgumentException(String.format("不支持当前的link数据转换sql[%s]", metaLink.getId()));
     }

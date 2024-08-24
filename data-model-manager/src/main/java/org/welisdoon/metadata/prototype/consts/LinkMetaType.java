@@ -112,4 +112,24 @@ public enum LinkMetaType implements IMetaType {
                         .map(LinkMetaType::getId)
                         .collect(Collectors.toList());
     }
+
+
+    public boolean isMatched(final LinkMetaType value, Side side) {
+        if (value == null) {
+            return false;
+        }
+        if (this.equals(value)) {
+            return true;
+        }
+        switch (side) {
+            case Up:
+                return this.getParent().isMatched(value, side);
+            case Down:
+                return Arrays.stream(values()).anyMatch(linkMetaType -> {
+                    return this.equals(linkMetaType.getParent()) && linkMetaType.isMatched(value, side);
+                });
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
 }
