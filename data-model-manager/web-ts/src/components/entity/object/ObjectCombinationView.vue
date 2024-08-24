@@ -1,13 +1,20 @@
 <template>
-  <el-table :data="attrs" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 239px)" row-key="id"
-            lazy
-            :load="expand"
-            :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
-    <el-table-column prop="object.name" label="对象描述"/>
-    <el-table-column prop="object.code" label="对象标识"/>
-    <el-table-column prop="object.typeDesc" label="对象类型"/>
-    <el-table-column prop="typeDesc" label="关联方式"/>
-  </el-table>
+  <div>
+    <div style="display: flex;margin: 5px 1px;height:32px ">
+      <el-button type="primary" @click="showSql">查看SQL</el-button>
+    </div>
+
+    <el-table :data="attrs" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)" row-key="id"
+              lazy
+              :load="expand"
+              :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
+      <el-table-column prop="object.name" label="对象描述"/>
+      <el-table-column prop="object.code" label="对象标识"/>
+      <el-table-column prop="object.typeDesc" label="对象类型"/>
+      <el-table-column prop="typeDesc" label="关联方式"/>
+      <el-table-column prop="instanceId" label="对象实例ID"/>
+    </el-table>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -45,8 +52,8 @@ const load = (id: number) => {
       })
 }
 console.log(props.id)
-const normalizedSize = computed(() => props.id)
-watch(normalizedSize, (value, oldValue, onCleanup) => {
+const objectId = computed(() => props.id)
+watch(objectId, (value, oldValue, onCleanup) => {
   console.log(value)
   if (value == -1) {
     loading.value = true
@@ -59,24 +66,26 @@ const expand = (row: Record<any, any>,
                 resolve: (date: Record<any, any>[]) => void) => {
   loading.value = true;
   console.log(row)
-  proxy?.$http.get(`link/expand/${row.id == -1 ? `obj${row.objectId}` : row.id}`)
+  proxy?.$http.get(`link/expand/${row.id <= -1 ? `obj${row.objectId}` : row.id}`)
       .then(({data}: { data: Record<any, any>[] }) => {
         console.log(data)
         data.forEach(value => {
-          /*delete value['parentId']
-          delete value['object']
-          delete value['attribute']
-          delete value['objectId']
-          delete value['sequence']
-          delete value['type']
-          delete value['typeDesc']
-          delete value['typeId']
-          delete value['attributeId']
-          delete value['instanceId']*/
-          delete value['id']
+          data.forEach(value => value.hasChildren = true)
         })
         console.log(data)
         resolve(data)
+      })
+      .then(() => {
+        loading.value = false
+      }, () => {
+        loading.value = false
+      })
+}
+const showSql = () => {
+  loading.value = false
+  proxy?.$http.get(`link/show/${props.id}`)
+      .then(({data}: { data: Record<any, any>[] }) => {
+        console.log(data)
       })
       .then(() => {
         loading.value = false
