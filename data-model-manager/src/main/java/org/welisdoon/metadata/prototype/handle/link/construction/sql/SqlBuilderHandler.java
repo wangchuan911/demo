@@ -10,8 +10,9 @@ import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.HandleContext;
 import org.welisdoon.metadata.prototype.handle.link.LinkHandle;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * @Classname ObjectConstructorHandler
@@ -22,7 +23,11 @@ import java.util.Optional;
 @LinkMetaType.LinkHandle(LinkMetaType.ObjToDataBase)
 @Component
 public class SqlBuilderHandler implements LinkHandle {
+    List<LinkMetaType> linkMetaTypes = Arrays.asList(LinkMetaType.SqlToJoin, LinkMetaType.SqlToSelect);
 
+    public void setLinkMetaTypes(List<LinkMetaType> linkMetaTypes) {
+        this.linkMetaTypes = linkMetaTypes;
+    }
 
     @Override
     public void handler(HandleContext handleContext, MetaLink metaLink) {
@@ -42,24 +47,15 @@ public class SqlBuilderHandler implements LinkHandle {
             mainTable.setInstanceId(1L);
             mainTable.setTypeId(LinkMetaType.SqlToJoin.getId());
             mainTable.addChildren(metaLink.getChildren().stream().filter(child -> Objects.equals(child.getType(), LinkMetaType.DataFuture)).toArray(MetaLink[]::new));
-            content.getJoins().add(mainTable);
+            content.addLink(mainTable);
         }
 
         metaLink.getChildren().forEach(child -> {
-            switch (child.getType()) {
-                case SqlToSelect: {
-                    content.getSelects().add(child);
+            for (LinkMetaType type : linkMetaTypes) {
+                if (child.getType().isMatched(type, Side.Up)) {
+                    content.addLink(child);
                     return;
                 }
-                case SqlToJoin: {
-                    content.getJoins().add(child);
-                    return;
-                }
-                default:
-                    if (child.getType().isMatched(LinkMetaType.SqlToJoin, Side.Up)) {
-                        content.getJoins().add(child);
-                        return;
-                    }
             }
         });
     }

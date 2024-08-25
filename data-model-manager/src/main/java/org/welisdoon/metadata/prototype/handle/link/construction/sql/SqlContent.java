@@ -7,10 +7,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -21,26 +23,23 @@ import java.util.stream.Collectors;
  */
 public class SqlContent {
     final static Logger logger = LoggerFactory.getLogger(SqlContent.class);
-    protected List<MetaLink> selects = new LinkedList<>();
-    protected List<MetaLink> joins = new LinkedList<>();
+    protected List<List<MetaLink>> links = new LinkedList<>();
     protected volatile static Class<? extends SqlContent> type;
     protected int scope = 0;
 
-    public void setJoins(List<MetaLink> joins) {
-        this.joins = joins;
+
+    public void addLink(MetaLink link) {
+        if (link.getType() == LinkMetaType.SqlToJoin) {
+            if (scope == 0 && links.isEmpty()) {
+                links.add(new LinkedList<>());
+            } else {
+                scope++;
+                links.add(new LinkedList<>());
+            }
+        }
+        links.get(scope).add(link);
     }
 
-    public List<MetaLink> getJoins() {
-        return joins;
-    }
-
-    public void setSelects(List<MetaLink> selects) {
-        this.selects = selects;
-    }
-
-    public List<MetaLink> getSelects() {
-        return selects;
-    }
 
     public static SqlContent getInstance() {
         Class<? extends SqlContent> type = ObjectUtils.synchronizedGet(SqlContent.class, sqlContentClass -> SqlContent.type, sqlContentClass -> {
@@ -108,16 +107,20 @@ public class SqlContent {
     public String toSqlJoin() {
         StringBuilder fromBlock = new StringBuilder();
         StringBuilder whereBlock = new StringBuilder();
-
-        Map<LinkMetaType, List<MetaLink>> map = joins.stream().collect(Collectors.groupingBy(MetaLink::getType));
-        Assert.isTrue(map.getOrDefault(LinkMetaType.SqlToJoin, Collections.emptyList()).size() > 0, "缺少主表");
-        MetaLink mainTable = map.get(LinkMetaType.SqlToJoin).remove(0);
-
-        map.entrySet().stream()/*.filter(entry -> !Objects.equals(entry.getKey(), LinkMetaType.SqlToJoin))*/.forEach(entry -> {
-            if (Objects.equals(entry.getKey(), LinkMetaType.SqlToJoin)) {
-                scope++;
-            }
-            toSqlJoin(fromBlock, whereBlock, entry.getKey(), map.get(entry.getKey()));
+        Optional<MetaLink> optional = links.stream().findFirst().map(list -> list.stream().filter(metaLink -> metaLink.getType() == LinkMetaType.SqlToJoin).findFirst()).orElse(Optional.ofNullable(null));
+        Assert.isTrue(optional.isPresent(), "缺少主表");
+        MetaLink mainTable = optional.get();
+        links.get(0).remove(optional.get());
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        List<LinkMetaType> linkMetaTypes = ApplicationContextProvider.getBean(SqlBuilderHandler.class).linkMetaTypes;
+        links.stream().forEach(list -> {
+            scope = atomicInteger.getAndIncrement();
+            list.stream().collect(Collectors.groupingBy(MetaLink::getType)).forEach((linkMetaType, list1) -> {
+                if(linkMetaTypes.stream().noneMatch(linkMetaType1 -> linkMetaType.isMatched(linkMetaType1, Side.Up))){
+                    return;
+                }
+                toSqlJoin(fromBlock, whereBlock, linkMetaType, list1);
+            });
         });
 
         return String.format("select %s from %s %s %s %s",
