@@ -11,8 +11,10 @@ import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -111,16 +113,16 @@ public class SqlContent {
         Assert.isTrue(optional.isPresent(), "缺少主表");
         MetaLink mainTable = optional.get();
         links.get(0).remove(optional.get());
-        AtomicInteger atomicInteger = new AtomicInteger(0);
+        scope = 0;
         List<LinkMetaType> linkMetaTypes = ApplicationContextProvider.getBean(SqlBuilderHandler.class).linkMetaTypes;
         links.stream().forEach(list -> {
-            scope = atomicInteger.getAndIncrement();
             list.stream().collect(Collectors.groupingBy(MetaLink::getType)).forEach((linkMetaType, list1) -> {
-                if(linkMetaTypes.stream().noneMatch(linkMetaType1 -> linkMetaType.isMatched(linkMetaType1, Side.Up))){
+                if (linkMetaTypes.stream().noneMatch(linkMetaType1 -> linkMetaType.isMatched(linkMetaType1, Side.Up))) {
                     return;
                 }
                 toSqlJoin(fromBlock, whereBlock, linkMetaType, list1);
             });
+            scope++;
         });
 
         return String.format("select %s from %s %s %s %s",
@@ -158,7 +160,7 @@ public class SqlContent {
                 stringBuilder.insert(0, (char) ('A' + (v % 26)));
                 v /= 26;
             } while (v > 0);
-            return String.format("%s%d", (char) ('A' + v), metaLink.getInstanceId());
+            return String.format("%s%d", stringBuilder.toString(), metaLink.getInstanceId());
         }
     }
 }
