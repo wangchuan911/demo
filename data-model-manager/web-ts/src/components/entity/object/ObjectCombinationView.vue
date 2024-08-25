@@ -5,9 +5,10 @@
     </div>
 
     <el-table :data="attrs" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)" row-key="id"
-              lazy
+              :lazy="lazy"
               :load="expand"
-              :tree-props="{ children: 'children', hasChildren: 'hasChildren' }">
+              :default-expand-all="!lazy"
+              :tree-props="lazy?{ children: 'children', hasChildren: 'hasChildren' }:{}">
       <el-table-column prop="object.name" label="对象描述"/>
       <el-table-column prop="object.code" label="对象标识"/>
       <el-table-column prop="object.typeDesc" label="对象类型"/>
@@ -35,12 +36,12 @@ const attrs = reactive(new Array<Record<any, any>>());
 const {proxy} = getCurrentInstance() as ComponentCustomProperties;
 const loading = ref(false)
 const props = defineProps<{ id: number }>()
+const lazy = ref(false)
 const load = (id: number) => {
   loading.value = true
   proxy?.$http.get(`obj/combination/${id}`)
       .then(({data}: { data: Array<Record<any, any>> }) => {
         attrs.length = 0;
-        data.forEach(value => value.hasChildren = true)
         console.log(data)
         attrs.push(...data)
 
@@ -68,10 +69,6 @@ const expand = (row: Record<any, any>,
   console.log(row)
   proxy?.$http.get(`link/expand/${row.id <= -1 ? `obj${row.objectId}` : row.id}`)
       .then(({data}: { data: Record<any, any>[] }) => {
-        console.log(data)
-        data.forEach(value => {
-          data.forEach(value => value.hasChildren = true)
-        })
         console.log(data)
         resolve(data)
       })

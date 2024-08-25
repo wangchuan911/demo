@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.welisdoon.common.JsonUtils;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
@@ -40,6 +41,7 @@ public class QueryManagerRouter {
     MetaObjectDao metaObjectDao;
     MetaLinkDao metaLinkDao;
     SqlBuilderHandler sqlBuilderHandler;
+    boolean lazy = false;
 
     @Autowired
     public void setSqlBuilderHandler(SqlBuilderHandler sqlBuilderHandler) {
@@ -93,16 +95,39 @@ public class QueryManagerRouter {
         });
     }
 
+    protected JSONObject linkToJson(MetaLink metaLink) {
+        JSONObject object = (JSONObject) JSON.toJSON(metaLink);
+        object.put("value", metaLink.getValue());
+        object.put("object", metaLink.getObject());
+        object.put("instance", metaLink.getInstance());
+        object.put("attribute", metaLink.getAttribute());
+
+        MetaLinkCondition condition = new MetaLinkCondition();
+        List<MetaLink> list = new LinkedList<>();
+        switch (metaLink.getId() < 0 ? "obj" : "attr") {
+            case "obj":
+                list.addAll(getLinks(metaLink.getObjectId()));
+                break;
+            default:
+                condition.setData(new MetaLink());
+                condition.setParentId(metaLink.getId());
+                list.addAll(metaLinkDao.list(condition));
+                break;
+        }
+        if (!lazy) {
+            if (!CollectionUtils.isEmpty(list)) {
+                object.put("children", list.stream().map(this::linkToJson).collect(Collectors.toList()));
+            }
+        } else {
+            object.put("hasChildren", !CollectionUtils.isEmpty(list));
+        }
+
+        return object;
+    }
+
     protected String formatLinkToString(List<MetaLink> list) {
         return JsonUtils.asJsonString(list
-                .stream().map(metaLink -> {
-                    JSONObject object = (JSONObject) JSON.toJSON(metaLink);
-                    object.put("value", metaLink.getValue());
-                    object.put("object", metaLink.getObject());
-                    object.put("instance", metaLink.getInstance());
-                    object.put("attribute", metaLink.getAttribute());
-                    return object;
-                }).collect(Collectors.toList()));
+                .stream().map(this::linkToJson).collect(Collectors.toList()));
     }
 
     protected List<MetaLink> getLinks(long qid) {
@@ -160,7 +185,7 @@ public class QueryManagerRouter {
             condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
             HandleContext context = new HandleContext();
             sqlBuilderHandler.handler(context, metaLinkDao.list(condition).get(0));
-            routingContext.end(((SqlContent)context.get(sqlBuilderHandler)).toSqlJoin());
+            routingContext.end(((SqlContent) context.get(sqlBuilderHandler)).toSqlJoin());
         });
     }
 
