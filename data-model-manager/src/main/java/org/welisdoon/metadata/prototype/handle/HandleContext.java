@@ -27,4 +27,10 @@ public class HandleContext {
             throw new RuntimeException(throwable.getMessage(), throwable);
         }
     }
+
+    public <T> T set(LinkHandle linkHandle, Supplier<T> supplier) {
+        T t = supplier.get();
+        map.put(linkHandle, t);
+        return t;
+    }
 }
