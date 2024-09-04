@@ -146,11 +146,15 @@ public class QueryManagerRouter {
         condition.getData().setObjectId(qid);
         condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
         list.addAll(metaLinkDao.list(condition).stream().flatMap(metaLink -> {
-            MetaLinkCondition condition1 = new MetaLinkCondition();
-            condition1.setData(new MetaLink());
-            condition1.setParentId(metaLink.getId());
-            condition1.getData().setTypeId(LinkMetaType.SqlToJoin.getId());
-            return metaLinkDao.list(condition1).stream();
+            return LinkMetaType.getChildTypeId(LinkMetaType.ObjConstructor.getId()).stream().flatMap(aLong -> {
+                return LinkMetaType.getChildTypeId(aLong).stream();
+            }).flatMap(aLong -> {
+                MetaLinkCondition condition1 = new MetaLinkCondition();
+                condition1.setData(new MetaLink());
+                condition1.setParentId(metaLink.getId());
+                condition1.getData().setTypeId(aLong);
+                return metaLinkDao.list(condition1).stream();
+            });
         }).collect(Collectors.toList()));
         return list;
     }

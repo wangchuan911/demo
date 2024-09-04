@@ -1,6 +1,7 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -88,10 +89,33 @@ public class SqlContent {
         checkState();
         lock(true);
         try {
-            return String.format("select %s %s %s ", columnsToSql().toString(), tablesToSql().toString(), whereToSql().toString());
+            return String.format("select %s %s %s ", columnsToSql().toString(), tablesToSql().toString(), whereToSqlFormat().toString());
         } finally {
             lock(false);
         }
+    }
+
+    protected StringBuilder whereToSqlFormat() {
+        StringBuilder sql = Optional.ofNullable(whereToSql()).orElseGet(StringBuilder::new);
+        while (sql.charAt(0) == ' ') {
+            sql.delete(0, 1);
+        }
+        for (int i = sql.length() - 1; sql.charAt(i) == ' '; i--) {
+            if (sql.charAt(i) == ' ') {
+                sql.delete(i, i + 1);
+                continue;
+            }
+            break;
+        }
+        if (sql.length() == 0 || sql.lastIndexOf("and") == 0) {
+            sql.setLength(0);
+            return sql;
+        }
+        if (sql.lastIndexOf(" and") == sql.length() - 4) {
+            sql = sql.delete(sql.length() - 4, 4);
+        }
+        sql.insert(0, " where ");
+        return sql;
     }
 
     protected void lock(boolean locked) {
