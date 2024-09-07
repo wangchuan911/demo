@@ -76,7 +76,7 @@ addDrawer("addAttr", (name: string) => ({
   },
   confirm() {
     loading.value = true
-    proxy?.$http.put(`obj/attrs`)
+    proxy?.$http.put(`obj/attrs/${props.id}`, drawers.value[name].form)
         .then(({data}: { data: Array<Record<any, any>> }) => {
           loading.value = false
           drawers.value[name].show = false
