@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.common.JsonUtils;
+import org.welisdoon.metadata.prototype.condition.MetaAttributeCondition;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
+import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.consts.MetaUtils;
+import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
 import org.welisdoon.metadata.prototype.define.MetaLink;
@@ -40,6 +44,7 @@ import java.util.stream.Collectors;
 public class QueryManagerRouter {
     MetaObjectDao metaObjectDao;
     MetaLinkDao metaLinkDao;
+    MetaAttributeDao metaAttributeDao;
     SqlBuilderHandler sqlBuilderHandler;
     boolean lazy = false;
 
@@ -49,9 +54,10 @@ public class QueryManagerRouter {
     }
 
     @Autowired
-    public void setMember(MetaLinkDao metaLinkDao, MetaObjectDao metaObjectDao) {
+    public void setMember(MetaLinkDao metaLinkDao, MetaObjectDao metaObjectDao, MetaAttributeDao metaAttributeDao) {
         this.metaLinkDao = metaLinkDao;
         this.metaObjectDao = metaObjectDao;
+        this.metaAttributeDao = metaAttributeDao;
     }
 
     @VertxRouter(path = "\\/obj\\/(?<id>\\d+)",
@@ -193,4 +199,38 @@ public class QueryManagerRouter {
         });
     }
 
+    @VertxRouter(path = "\\/obj\\/attrs\\/(?<id>\\d+)",
+            method = "PUT",
+            mode = VertxRouteType.PathRegex)
+    public void objAttrAdd(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long qid = Long.parseLong(routingContext.pathParam("id"));
+            MetaObject.Attribute attribute = routingContext.body().asPojo(MetaObject.Attribute.class);
+            attribute.setObjectId(qid);
+            switch (MetaUtils.getInstance().getObject(qid).getType()) {
+                case Object:
+                    attribute.setTypeId(AttributeMetaType.Attributes.getId());
+                    break;
+                case Table:
+                    attribute.setTypeId(AttributeMetaType.Column.getId());
+                    break;
+                default:
+                    routingContext.response().setStatusCode(500).end(String.format("不支持的对象类型[%s]", MetaUtils.getInstance().getObject(qid).getType().getDesc()));
+                    return;
+            }
+            metaAttributeDao.add(attribute);
+            routingContext.end(JSON.toJSONString(attribute));
+        });
+    }
+
+    @VertxRouter(path = "\\/obj\\/attrs\\/(?<id>\\d+)",
+            method = "DEL",
+            mode = VertxRouteType.PathRegex)
+    public void objAttrDel(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long qid = Long.parseLong(routingContext.pathParam("id"));
+            metaAttributeDao.delete(qid);
+            routingContext.end();
+        });
+    }
 }
