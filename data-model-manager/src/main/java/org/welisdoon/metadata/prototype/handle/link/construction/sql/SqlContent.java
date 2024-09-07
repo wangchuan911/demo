@@ -168,7 +168,7 @@ public class SqlContent {
             stream = stream.skip(1);
             sql.append(" and ");
         }
-        links.stream().skip(1).collect(Collectors.groupingBy(MetaLink::getType)).forEach((linkMetaType, list1) -> {
+        stream.collect(Collectors.groupingBy(MetaLink::getType)).forEach((linkMetaType, list1) -> {
             if (!matchLinkMetaType(linkMetaTypes, linkMetaType)) {
                 return;
             }

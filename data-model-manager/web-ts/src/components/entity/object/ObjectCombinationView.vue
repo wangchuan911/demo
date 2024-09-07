@@ -1,7 +1,18 @@
 <template>
   <div>
     <div style="display: flex;margin: 5px 1px;height:32px ">
-      <el-button type="primary" @click="showSql">查看SQL</el-button>
+      <el-popover
+          placement="bottom"
+          title="SQL"
+          :width="200"
+          trigger="click"
+          :content="sql"
+          @show="showSql"
+      >
+        <template #reference>
+          <el-button type="primary">查看SQL</el-button>
+        </template>
+      </el-popover>
     </div>
 
     <el-table :data="attrs" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)" row-key="id"
@@ -78,11 +89,13 @@ const expand = (row: Record<any, any>,
         loading.value = false
       })
 }
+const sql = ref(new String());
 const showSql = () => {
   loading.value = false
   proxy?.$http.get(`link/show/${props.id}`)
       .then(({data}: { data: Record<any, any>[] }) => {
         console.log(data)
+        sql.value = data as unknown as string
       })
       .then(() => {
         loading.value = false
