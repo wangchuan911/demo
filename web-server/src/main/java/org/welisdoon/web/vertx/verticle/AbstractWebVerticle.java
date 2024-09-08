@@ -18,11 +18,11 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 
 import io.vertx.ext.web.handler.BodyHandler;
+import org.apache.commons.lang3.StringUtils;
 import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
-import org.springframework.util.StringUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -172,7 +172,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                         : MainWebVerticle.class != ApplicationContextProvider.getRealClass(verticle.getClass())))
                     return;
 
-                final String prefix = (routePath != null && !StringUtils.isEmpty(routePath.prefix())) ? getRegexPath(routePath.prefix()) : "";
+                final String prefix = (routePath != null && StringUtils.isNotEmpty(routePath.prefix())) ? getRegexPath(routePath.prefix()) : "";
 
                 if (routePath.requestBodyEnable()) {
                     if (bodyHandler == null) {
@@ -206,7 +206,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                                             .values()
                                             .stream()
                                             .filter(httpMethod ->
-                                                    httpMethod.name().equals(httpMethodString))
+                                                    httpMethod.name().equalsIgnoreCase(httpMethodString))
                                             .findFirst();
                                     boolean flag = optional.isPresent();
                                     if (flag) {
