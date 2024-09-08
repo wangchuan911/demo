@@ -42,7 +42,7 @@ import {
   defineEmits,
   watch,
   computed,
-  defineModel
+  defineModel, ComponentCustomProperties
 } from 'vue';
 import {ElMessageBox, ElMessage} from 'element-plus';
 import type {Action} from 'element-plus';
@@ -73,7 +73,7 @@ class AttrAddDrawersContent extends DrawersContent {
 
   confirm() {
     loading.value = true;
-    proxy?.$http.put(`obj/attrs/${props.id}`, this.form)
+    $http.put(`obj/attrs/${props.id}`, this.form)
         .then(({data}: { data: Array<Record<any, any>> }) => {
           loading.value = false;
           this._close();
@@ -98,7 +98,7 @@ const delAttr = (attrId: number) => {
   ElMessageBox.confirm('是否删除?', {confirmButtonText: "确定", cancelButtonText: "取消"})
       .then(() => {
         loading.value = true;
-        proxy?.$http.delete(`obj/attrs/${attrId}`)
+        $http.delete(`obj/attrs/${attrId}`)
             .then(() => {
               for (let i = 0; i < attrs.length; i++) {
                 if (attrs[i].id == attrId) {
@@ -120,10 +120,11 @@ const delAttr = (attrId: number) => {
 };
 const attrs = reactive(new Array<Record<any, any>>());
 const {proxy} = getCurrentInstance() as ComponentInternalInstance;
+const {$http} = proxy as ComponentCustomProperties;
 const loading = ref(true);
 const props = defineProps<{ id: number }>();
 const load = (id: number) => {
-  proxy?.$http.get(`obj/attrs/${id}`)
+  $http.get(`obj/attrs/${id}`)
       .then(({data}: { data: Array<Record<any, any>> }) => {
         attrs.length = 0;
         attrs.push(...data);
