@@ -3,11 +3,13 @@ package org.welisdoon.metadata.prototype.router;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.common.JsonUtils;
-import org.welisdoon.metadata.prototype.condition.MetaAttributeCondition;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
@@ -42,6 +44,8 @@ import java.util.stream.Collectors;
 @VertxConfiguration
 @VertxRoutePath(prefix = "/md", requestBodyEnable = true)
 public class QueryManagerRouter {
+    private static final Logger logger = LoggerFactory.getLogger(QueryManagerRouter.class);
+
     MetaObjectDao metaObjectDao;
     MetaLinkDao metaLinkDao;
     MetaAttributeDao metaAttributeDao;
@@ -218,19 +222,30 @@ public class QueryManagerRouter {
                     routingContext.response().setStatusCode(500).end(String.format("不支持的对象类型[%s]", MetaUtils.getInstance().getObject(qid).getType().getDesc()));
                     return;
             }
+            Assert.notNull(attribute.getObjectId(), "not object");
+            Assert.notNull(attribute.getCode(), "not code");
+            Assert.notNull(attribute.getName(), "not name");
             metaAttributeDao.add(attribute);
             routingContext.end(JSON.toJSONString(attribute));
         });
     }
 
     @VertxRouter(path = "\\/obj\\/attrs\\/(?<id>\\d+)",
-            method = "DEL",
+            method = "DELETE",
             mode = VertxRouteType.PathRegex)
     public void objAttrDel(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             metaAttributeDao.delete(qid);
             routingContext.end();
+        });
+    }
+
+    @VertxRouter(path = "*")
+    public void error(RoutingContextChain chain) {
+        chain.failureHandler(event -> {
+            logger.error(event.failure().getMessage(), event.failure());
+            event.response().setStatusCode(500).end(event.failure().getMessage());
         });
     }
 }

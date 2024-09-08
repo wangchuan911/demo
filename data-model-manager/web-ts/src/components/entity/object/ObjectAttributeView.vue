@@ -49,6 +49,7 @@ import type {Action} from 'element-plus';
 import 'element-plus/es/components/message-box/style/css';
 import 'element-plus/es/components/message/style/css';
 import {DrawersContent} from "@/components/form/config";
+import {AxiosError} from "axios";
 
 
 class AttrAddDrawersContent extends DrawersContent {
@@ -83,7 +84,10 @@ class AttrAddDrawersContent extends DrawersContent {
         }, (error: any) => {
           loading.value = false;
           this._close();
-          ElMessage.error(error);
+          if (error instanceof AxiosError)
+            ElMessage.error(error.response?.data || error);
+          else
+            ElMessage.error(error);
         });
   }
 }
@@ -91,18 +95,28 @@ class AttrAddDrawersContent extends DrawersContent {
 const addAttr = reactive(new AttrAddDrawersContent());
 
 const delAttr = (attrId: number) => {
-  loading.value = true;
-  proxy?.$http.delAttr(`obj/attrs/${attrId}`)
-      .then(({data}: { data: Array<Record<any, any>> }) => {
-        attrs.length = 0;
-        attrs.push(...data);
-
-      })
+  ElMessageBox.confirm('是否删除?', {confirmButtonText: "确定", cancelButtonText: "取消"})
       .then(() => {
-        loading.value = false;
-      }, () => {
-        loading.value = false;
+        loading.value = true;
+        proxy?.$http.delete(`obj/attrs/${attrId}`)
+            .then(() => {
+              for (let i = 0; i < attrs.length; i++) {
+                if (attrs[i].id == attrId) {
+                  attrs.splice(i, 1);
+                  break;
+                }
+              }
+            })
+            .then(() => {
+              loading.value = false;
+            }, () => {
+              loading.value = false;
+            });
+      })
+      .catch(() => {
+        // catch error
       });
+
 };
 const attrs = reactive(new Array<Record<any, any>>());
 const {proxy} = getCurrentInstance() as ComponentInternalInstance;

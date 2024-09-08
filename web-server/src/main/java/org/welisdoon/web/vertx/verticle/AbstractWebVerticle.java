@@ -279,7 +279,7 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
                         }
 
 
-                        LoggerFactory.getLogger(routeMethod.getDeclaringClass()).info("[:{}]{}[{}]", ((AbstractWebVerticle) verticle).port, route.methods() == null ? "[ALL]" : route.methods(), pathString);
+                        LoggerFactory.getLogger(routeMethod.getDeclaringClass()).info("[:{}]{}[{}][{}]", ((AbstractWebVerticle) verticle).port, route.methods() == null ? "[ALL]" : route.methods(), pathString, routeMethod.getName());
                     } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
                         logger.error(e.getMessage(), e);
                         return;
