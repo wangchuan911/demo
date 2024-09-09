@@ -31,5 +31,13 @@
 
     </select>
 
+    <insert id="add" parameterType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute" useGeneratedKeys="true" keyProperty="id">
+        insert into MD_OBJECT_ATTR(id,type_id,code,name,object_id)
+        values (#{id},#{typeId},#{code},#{name},#{objectId})
+    </insert>
+
+    <delete id="delete" parameterType="long">
+        delete from MD_OBJECT_ATTR where id=#{value}
+    </delete>
 </mapper>
 
