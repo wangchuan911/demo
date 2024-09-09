@@ -5,9 +5,19 @@
   <el-table :data="attrs" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)">
     <el-table-column prop="name" label="属性描述"/>
     <el-table-column prop="code" label="属性标识"/>
-    <el-table-column fixed="right" label="操作">
+    <el-table-column fixed="right" label="">
       <template #default="scope">
-        <el-button link type="primary" size="small" @click="delAttr(scope.row.id)">删除</el-button>
+        <!--<el-button link type="primary" size="small" @click="delAttr(scope.row.id)">删除</el-button>-->
+        <el-dropdown>
+            <span class="el-dropdown-link">
+              操作<el-icon class="el-icon--right"><arrow-down/></el-icon>
+            </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item :icon="Plus" @click.prevent="delAttr(scope.row.id)">删除</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </template>
     </el-table-column>
   </el-table>
@@ -44,6 +54,14 @@ import {
   computed,
   defineModel, ComponentCustomProperties
 } from 'vue';
+import {
+  ArrowDown,
+  Check,
+  CircleCheck,
+  CirclePlus,
+  CirclePlusFilled,
+  Plus,
+} from '@element-plus/icons-vue';
 import {ElMessageBox, ElMessage} from 'element-plus';
 import type {Action} from 'element-plus';
 import 'element-plus/es/components/message-box/style/css';
@@ -152,5 +170,10 @@ const close = (event: null) => {
 </script>
 
 <style scoped>
-
+.el-dropdown-link {
+  cursor: pointer;
+  color: var(--el-color-primary);
+  display: flex;
+  align-items: center;
+}
 </style>
