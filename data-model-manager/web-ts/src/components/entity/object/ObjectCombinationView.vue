@@ -41,7 +41,7 @@
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item :icon="Plus" @click.prevent="operation(1,scope.row)">添加关联对象</el-dropdown-item>
+                <el-dropdown-item :icon="Plus" @click.prevent="operation(0,scope.row)">添加关联对象</el-dropdown-item>
                 <!--<el-dropdown-item :icon="CirclePlusFilled" @click.prevent="operation(2,scope.row)">
                   Action 2
                 </el-dropdown-item>
@@ -60,9 +60,9 @@
                 <el-dropdown-item :icon="CirclePlusFilled" @click.prevent="operation(1,scope.row)">
                   添加关联对象
                 </el-dropdown-item>
-                <el-dropdown-item :icon="CirclePlus" @click.prevent="operation(3,scope.row)">添加关联关系</el-dropdown-item>
-                <el-dropdown-item :icon="Check" @click.prevent="operation(4,scope.row)">修改关联关系</el-dropdown-item>
-                <el-dropdown-item :icon="CircleCheck" @click.prevent="operation(5,scope.row)">删除</el-dropdown-item>
+                <el-dropdown-item :icon="CirclePlus" @click.prevent="operation(2,scope.row)">添加关联关系</el-dropdown-item>
+                <el-dropdown-item :icon="Check" @click.prevent="operation(3,scope.row)">修改关联关系</el-dropdown-item>
+                <el-dropdown-item :icon="CircleCheck" @click.prevent="operation(4,scope.row)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -70,6 +70,25 @@
       </el-table-column>
     </el-table>
   </div>
+  <el-drawer v-model="addLink.show" :title="addLink.name" size="50%" show-close
+             :before-close="(done)=>addLink.beforeClose(done)">
+    <template #default>
+      <el-form :model="addLink.form" label-width="auto" style="max-width: 600px">
+        <el-form-item label="标识">
+          <el-input v-model="addLink.form.code"/>
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="addLink.form.name"/>
+        </el-form-item>
+      </el-form>
+    </template>
+    <template #footer>
+      <div style="flex: auto">
+        <el-button @click="addLink.show=false">cancel</el-button>
+        <el-button type="primary" @click="addLink.confirm()">confirm</el-button>
+      </div>
+    </template>
+  </el-drawer>
 </template>
 
 <script lang="ts" setup>
@@ -96,13 +115,14 @@ import {
 } from '@element-plus/icons-vue';
 
 const attrs = reactive(new Array<Record<any, any>>());
-const {proxy} = getCurrentInstance() as ComponentCustomProperties;
+const {proxy} = getCurrentInstance() as ComponentInternalInstance;
+const {$http} = proxy as ComponentCustomProperties;
 const loading = ref(false);
 const props = defineProps<{ id: number }>();
 const lazy = ref(false);
 const load = (id: number) => {
   loading.value = true;
-  proxy?.$http.get(`obj/combination/${id}`)
+  $http.get(`obj/combination/${id}`)
       .then(({data}: { data: Array<Record<any, any>> }) => {
         attrs.length = 0;
         console.log(data);
@@ -135,7 +155,7 @@ const expand = (row: Record<any, any>,
                 resolve: (date: Record<any, any>[]) => void) => {
   loading.value = true;
   console.log(row);
-  proxy?.$http.get(`link/expand/${row.id <= -1 ? `obj${row.objectId}` : row.id}`)
+  $http.get(`link/expand/${row.id <= -1 ? `obj${row.objectId}` : row.id}`)
       .then(({data}: { data: Record<any, any>[] }) => {
         console.log(data);
         resolve(data);
@@ -149,7 +169,7 @@ const expand = (row: Record<any, any>,
 const sql = ref(new String());
 const showSql = () => {
   loading.value = false;
-  proxy?.$http.get(`link/show/${props.id}`)
+  $http.get(`link/show/${props.id}`)
       .then(({data}: { data: Record<any, any>[] }) => {
         console.log(data);
         sql.value = data as unknown as string;
@@ -163,7 +183,76 @@ const showSql = () => {
 const operation = (type: number, row: Record<any, any>) => {
   console.log(type);
   console.log(row);
+  switch (type) {
+    case 1:
+      addLink.add('添加对象', 2, row);
+      break;
+    case 2:
+      addLink.edit('添加关系', 3, row);
+      break;
+  }
 };
+import {DrawersContent} from "@/components/config";
+import {ElMessage, ElMessageBox} from "element-plus";
+import {AxiosError} from "axios";
+
+class LinkAddDrawersContent extends DrawersContent {
+  form: Record<any, any>;
+  name: string | undefined;
+  type: number | undefined;
+
+  constructor() {
+    super();
+    this.form = {};
+  }
+
+  edit(name: string, type: number, data: any) {
+    this.name = name;
+    this.type = type;
+    this.form = {};
+    this._open();
+  }
+
+  add(name: string, type: number, data: any) {
+    this.name = name;
+    this.type = type;
+    this.form = {};
+    this._open();
+  }
+
+  beforeClose(done: () => void) {
+    ElMessageBox.confirm('放弃保存?', {confirmButtonText: "确定", cancelButtonText: "取消"})
+        .then(() => {
+          this.form = {};
+          done();
+        })
+        .catch(() => {
+          // catch error
+        });
+  }
+
+  confirm() {
+    loading.value = true;
+    $http.put(`link`, this.form)
+        .then(({data}: { data: Array<Record<any, any>> }) => {
+          loading.value = false;
+          this._close();
+          if (data instanceof String) {
+            throw data;
+          }
+          attrs.push(data);
+        }, (error: any) => {
+          loading.value = false;
+          this._close();
+          if (error instanceof AxiosError)
+            ElMessage.error(error.response?.data || error);
+          else
+            ElMessage.error(error);
+        });
+  }
+}
+
+const addLink = reactive(new LinkAddDrawersContent());
 </script>
 
 <style scoped>

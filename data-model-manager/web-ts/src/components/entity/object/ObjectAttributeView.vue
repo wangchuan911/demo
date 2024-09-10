@@ -66,7 +66,7 @@ import {ElMessageBox, ElMessage} from 'element-plus';
 import type {Action} from 'element-plus';
 import 'element-plus/es/components/message-box/style/css';
 import 'element-plus/es/components/message/style/css';
-import {DrawersContent} from "@/components/form/config";
+import {DrawersContent} from "@/components/config";
 import {AxiosError} from "axios";
 
 
