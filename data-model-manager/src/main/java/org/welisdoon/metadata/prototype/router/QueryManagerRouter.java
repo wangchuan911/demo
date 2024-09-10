@@ -29,9 +29,7 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -246,6 +244,24 @@ public class QueryManagerRouter {
         chain.failureHandler(event -> {
             logger.error(event.failure().getMessage(), event.failure());
             event.response().setStatusCode(500).end(event.failure().getMessage());
+        });
+    }
+
+    @VertxRouter(path = "/link/types", method = "get")
+    public void linkTypes(RoutingContextChain chain) {
+        chain.failureHandler(event -> {
+            event.end(JSON.toJSONString(Arrays.stream(LinkMetaType.values())
+                    .map(linkMetaType -> Map.of("id", linkMetaType.getId(), "desc", linkMetaType.getDesc()))));
+        });
+    }
+
+    @VertxRouter(path = "/link",
+            method = "PUT")
+    public void linkAdd(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            MetaLink metaLink = routingContext.body().asPojo(MetaLink.class);
+            metaLinkDao.add(metaLink);
+            routingContext.end(JSON.toJSONString(metaLink));
         });
     }
 }

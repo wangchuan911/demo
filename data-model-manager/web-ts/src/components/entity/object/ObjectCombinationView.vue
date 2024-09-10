@@ -185,10 +185,12 @@ const operation = (type: number, row: Record<any, any>) => {
   console.log(row);
   switch (type) {
     case 1:
-      addLink.add('添加对象', 2, row);
+      addLink.value = new ObjectLinkDrawersContent();
+      addLink.value.open(row);
       break;
     case 2:
-      addLink.edit('添加关系', 3, row);
+      addLink.value = new RelLinkDrawersContent();
+      addLink.value.open(row);
       break;
   }
 };
@@ -198,25 +200,19 @@ import {AxiosError} from "axios";
 
 class LinkAddDrawersContent extends DrawersContent {
   form: Record<any, any>;
-  name: string | undefined;
+  name: string;
   type: number | undefined;
+  inputs: Array<Record<any, any>> | undefined;
+  data: Record<any, any> | undefined;
 
   constructor() {
     super();
     this.form = {};
+    this.name = "未知操作";
   }
 
-  edit(name: string, type: number, data: any) {
-    this.name = name;
-    this.type = type;
-    this.form = {};
-    this._open();
-  }
-
-  add(name: string, type: number, data: any) {
-    this.name = name;
-    this.type = type;
-    this.form = {};
+  open(data: Record<any, any>) {
+    this.data = data;
     this._open();
   }
 
@@ -252,7 +248,21 @@ class LinkAddDrawersContent extends DrawersContent {
   }
 }
 
-const addLink = reactive(new LinkAddDrawersContent());
+class RelLinkDrawersContent extends LinkAddDrawersContent {
+  constructor() {
+    super();
+    this.name = "添加关系";
+  }
+}
+
+class ObjectLinkDrawersContent extends LinkAddDrawersContent {
+  constructor() {
+    super();
+    this.name = "添加对象";
+  }
+}
+
+const addLink = ref({} as LinkAddDrawersContent);
 </script>
 
 <style scoped>
