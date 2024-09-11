@@ -62,7 +62,9 @@
                   添加关联对象
                 </el-dropdown-item>
                 <el-dropdown-item :icon="CirclePlus" @click.prevent="operation(2,scope.row)">添加关联关系</el-dropdown-item>
-                <el-dropdown-item :icon="Check" @click.prevent="operation(3,scope.row)" v-if="!stringLike(scope.row.type,'SqlToJoin')">修改关联关系</el-dropdown-item>
+                <el-dropdown-item :icon="Check" @click.prevent="operation(3,scope.row)"
+                                  v-if="!stringLike(scope.row.type,'SqlToJoin')">修改关联关系
+                </el-dropdown-item>
                 <el-dropdown-item :icon="CircleCheck" @click.prevent="operation(4,scope.row)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -198,12 +200,13 @@ const operation = (type: number, row: Record<any, any>) => {
 import {DrawersContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
+import {InputItem, TextItem} from "@/components/form/config";
 
 class LinkAddDrawersContent extends DrawersContent {
   form: Record<any, any>;
   name: string;
   type: number | undefined;
-  inputs: Array<Record<any, any>> | undefined;
+  inputs: Array<InputItem> | undefined;
   data: Record<any, any> | undefined;
 
   constructor() {
@@ -253,6 +256,7 @@ class RelLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加关系";
+    this.inputs = [new TextItem("编码", "code"), new TextItem("名称", "name")];
   }
 }
 
@@ -260,6 +264,7 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加对象";
+    this.inputs = [new TextItem("编码", "code"), new TextItem("名称", "name")];
   }
 }
 
