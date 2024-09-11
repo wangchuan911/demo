@@ -7,14 +7,18 @@ export abstract class DrawersContent {
     abstract confirm(): void;
 
     constructor() {
-        this.show = false
+        this.show = false;
     }
 
     _close(): void {
-        this.show = false
+        this.show = false;
     }
 
     _open(): void {
-        this.show = true
+        this.show = true;
     }
+}
+
+export function stringLike(search: string, ...arr: string[]) {
+    return arr.find(value1 => search.includes(value1)) != null;
 }

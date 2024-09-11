@@ -35,7 +35,7 @@
           >
             Remove
           </el-button>-->
-          <el-dropdown v-if="scope.row._flag">
+          <el-dropdown v-if="scope.row._flag && scope.row.typeId==3006">
             <span class="el-dropdown-link">
               操作<el-icon class="el-icon--right"><arrow-down/></el-icon>
             </span>
@@ -51,17 +51,18 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-dropdown v-else>
+          <el-dropdown v-else-if="!scope.row._flag">
             <span class="el-dropdown-link">
               操作<el-icon class="el-icon--right"><arrow-down/></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item :icon="CirclePlusFilled" @click.prevent="operation(1,scope.row)">
+                <el-dropdown-item :icon="CirclePlusFilled" @click.prevent="operation(1,scope.row)"
+                                  v-if="stringLike(scope.row.type,'SqlToJoin')">
                   添加关联对象
                 </el-dropdown-item>
                 <el-dropdown-item :icon="CirclePlus" @click.prevent="operation(2,scope.row)">添加关联关系</el-dropdown-item>
-                <el-dropdown-item :icon="Check" @click.prevent="operation(3,scope.row)">修改关联关系</el-dropdown-item>
+                <el-dropdown-item :icon="Check" @click.prevent="operation(3,scope.row)" v-if="!stringLike(scope.row.type,'SqlToJoin')">修改关联关系</el-dropdown-item>
                 <el-dropdown-item :icon="CircleCheck" @click.prevent="operation(4,scope.row)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -194,7 +195,7 @@ const operation = (type: number, row: Record<any, any>) => {
       break;
   }
 };
-import {DrawersContent} from "@/components/config";
+import {DrawersContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
 

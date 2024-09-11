@@ -36,19 +36,20 @@ public enum LinkMetaType implements IMetaType {
     SqlToJoinOfWeakRel(3013, "对象关联数据库的表(非强制关联)", SqlToJoin),
     SqlToJoinOfStrongRel(3014, "对象关联数据库的表(强制关联)", SqlToJoin),
     DataFuture(3015, "数据特征"),
-    Equal(3200, "等于"),
-    NotEqual(3201, "不等于"),
-    GreatThan(3202, "大于"),
-    LessThan(3203, "小于"),
-    OR(3204, "或"),
-    AND(3205, "与"),
-    Contain(3206, "包含"),
-    NotContain(3207, "包含"),
-    Exists(3208, "存在"),
-    NotExists(3209, "不存在"),
+    Sql(3199, "SQL语言"),
+    Equal(3200, "等于", Sql),
+    NotEqual(3201, "不等于", Sql),
+    GreatThan(3202, "大于", Sql),
+    LessThan(3203, "小于", Sql),
+    OR(3204, "或", Sql),
+    AND(3205, "与", Sql),
+    Contain(3206, "包含", Sql),
+    NotContain(3207, "包含", Sql),
+    Exists(3208, "存在", Sql),
+    NotExists(3209, "不存在", Sql),
     ItemOfParent(3210, "由上级LINK决定处理方式"),
-    Value(3211, "sql最小项"),
-    Values(3212, "sql最小项集");
+    Value(3211, "sql最小项", Sql),
+    Values(3212, "sql最小项集", Sql);
 
     long id;
     String name;
