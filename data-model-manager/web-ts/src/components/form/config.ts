@@ -20,6 +20,7 @@ export const InputModule = {
     ObjectQueryInput
 };
 import {ElInput} from 'element-plus';
+import MySelect from '@/components/form/input/MySelect.vue';
 
 export abstract class InputItem {
     code: string;
@@ -34,17 +35,39 @@ export abstract class InputItem {
     }
 }
 
+export class Option {
+    name: string;
+    value: any;
+
+    constructor(name: string, value: any) {
+        this.name = name;
+        this.value = value;
+    }
+}
+
 export class selectItem extends InputItem {
     isMulti: boolean;
     checkBoxStyle: boolean;
+    options: Array<Option>;
 
     constructor(code: string, label: string) {
         super(code, label);
         this.isMulti = false;
         this.checkBoxStyle = false;
-        this.comp = ElInput;
+        this.comp = MySelect;
+        this.options = [];
     }
 
+    setOptions(...options: Array<Option>): this {
+        this.options.length = 0;
+        this.addOptions(...options);
+        return this;
+    }
+
+    addOptions(...options: Array<Option>): this {
+        this.options.push(...options);
+        return this;
+    }
 
     setCheckBoxStyle(state: boolean): selectItem {
         this.checkBoxStyle = state;

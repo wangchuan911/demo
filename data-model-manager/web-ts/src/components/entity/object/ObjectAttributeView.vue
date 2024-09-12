@@ -155,12 +155,12 @@ const load = (id: number) => {
       });
 };
 console.log(props.id);
-const normalizedSize = computed(() => props.id);
-watch(normalizedSize, (value, oldValue, onCleanup) => {
+const objectId = computed(() => props.id);
+watch(objectId, (value, oldValue, onCleanup) => {
   console.log(value);
-  if (value == -1) {
+  if (value < 0) {
     loading.value = true;
-  } else if (value != oldValue && value > 0) {
+  } else {
     load(value as number);
   }
 });
