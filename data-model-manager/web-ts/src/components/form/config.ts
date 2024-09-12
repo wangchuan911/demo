@@ -19,15 +19,18 @@ import ObjectQueryInput from "@/components/form/input/ObjectQueryInput.vue";
 export const InputModule = {
     ObjectQueryInput
 };
+import {ElInput} from 'element-plus';
 
 export abstract class InputItem {
     code: string;
     label: string;
+    comp: any;
+    prop: any;
 
     constructor(code: string, label: string) {
-
         this.code = code;
         this.label = label;
+        this.prop = {};
     }
 }
 
@@ -39,6 +42,7 @@ export class selectItem extends InputItem {
         super(code, label);
         this.isMulti = false;
         this.checkBoxStyle = false;
+        this.comp = ElInput;
     }
 
 
@@ -63,6 +67,8 @@ export class TextItem extends InputItem {
     constructor(code: string, label: string) {
         super(code, label);
         this.mode = TextType.Default;
+        this.prop['type'] = 'text';
+        this.comp = ElInput;
     }
 
     setMode(mode: TextType): TextItem {
@@ -74,6 +80,7 @@ export class TextItem extends InputItem {
 export class QueryItem extends InputItem {
     constructor(code: string, label: string) {
         super(code, label);
+        this.comp = ElInput;
     }
 }
 
@@ -83,6 +90,7 @@ export class RadioItem extends InputItem {
     constructor(code: string, label: string) {
         super(code, label);
         this.isMulti = false;
+        this.comp = ElInput;
     }
 
     setMulti(state: boolean): RadioItem {

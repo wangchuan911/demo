@@ -77,11 +77,14 @@
              :before-close="(done)=>addLink.beforeClose(done)">
     <template #default>
       <el-form :model="addLink.form" label-width="auto" style="max-width: 600px">
-        <el-form-item label="标识">
+        <!--<el-form-item label="标识">
           <el-input v-model="addLink.form.code"/>
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="addLink.form.name"/>
+        </el-form-item>-->
+        <el-form-item :label="input.label" v-for="input in addLink.inputs" :key="input.code" :index="input.code">
+          <component :is="input.comp" v-bind="input.prop" v-model="addLink.form[input.code]"></component>
         </el-form-item>
       </el-form>
     </template>
@@ -232,8 +235,12 @@ class LinkAddDrawersContent extends DrawersContent {
   }
 
   confirm() {
+    console.log(this.form);
+  }
+
+  addLink(value: any) {
     loading.value = true;
-    $http.put(`link`, this.form)
+    $http.put(`link`, value)
         .then(({data}: { data: Array<Record<any, any>> }) => {
           loading.value = false;
           this._close();
@@ -256,7 +263,7 @@ class RelLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加关系";
-    this.inputs = [new TextItem("编码", "code"), new TextItem("名称", "name")];
+    this.inputs = [new TextItem("code", "编码"), new TextItem("name", "名称")];
   }
 }
 
@@ -264,7 +271,7 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加对象";
-    this.inputs = [new TextItem("编码", "code"), new TextItem("名称", "name")];
+    this.inputs = [new TextItem("code", "编码"), new TextItem("name", "名称")];
   }
 }
 
