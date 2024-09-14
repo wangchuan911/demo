@@ -1,7 +1,6 @@
-
-
 import {ElInput} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
+import {FormContent} from "@/components/config";
 
 export abstract class InputItem {
     code: string;
@@ -9,24 +8,23 @@ export abstract class InputItem {
     comp: any;
     prop: any;
     propAsync: any;
-    groups: (() => Array<InputItem>);
+    contentGetter: (() => FormContent) = () => null as unknown as FormContent;
 
-    constructor(code: string, label: string, prop: any = {}) {
+    protected constructor(code: string, label: string, prop: any = {}) {
         this.code = code;
         this.label = label;
         this.prop = prop;
-        this.groups = () => [];
     }
 
-    load(propAsync: Record<string, (prop: any, groups: Array<InputItem>) => void>): this {
+    load(propAsync: Record<string, (prop: any, groups: FormContent) => void>): this {
         Object.keys(propAsync).forEach(key => {
-            this.prop[key] = propAsync[key](this.prop, this.groups());
+            this.prop[key] = propAsync[key](this.prop, this.contentGetter());
         });
         return this;
     }
 
-    setGroup(fun: () => Array<InputItem>) {
-        this.groups = fun;
+    setContent(getter: () => FormContent) {
+        this.contentGetter = getter;
     }
 
 }

@@ -33,7 +33,7 @@ export class FormContent {
     addInput(...inputs: Array<InputItem>): this {
         this.inputs.push(...inputs);
         inputs.forEach(value => {
-            value.setGroup(() => this.inputs);
+            value.setContent(() => this);
         });
         return this;
     }
