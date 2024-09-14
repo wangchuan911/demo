@@ -29,37 +29,38 @@ export abstract class InputItem {
 
 }
 
-export class Option {
+export class MyOption {
     name: string;
     value: any;
+    selected: boolean;
 
-    constructor(name: string, value: any) {
+    constructor(name: string, value: any, selected: boolean) {
         this.name = name;
         this.value = value;
+        this.selected = selected;
     }
 }
 
 export class SelectItem extends InputItem {
     isMulti: boolean;
     checkBoxStyle: boolean;
-    options: Array<Option>;
 
     constructor(code: string, label: string, prop: any = {}) {
         super(code, label, prop);
         this.isMulti = false;
         this.checkBoxStyle = false;
         this.comp = MySelect;
-        this.options = [];
+        this.prop['options'] = [];
     }
 
-    setOptions(...options: Array<Option>): this {
-        this.options.length = 0;
+    setOptions(...options: Array<MyOption>): this {
+        this.prop['options'].length = 0;
         this.addOptions(...options);
         return this;
     }
 
-    addOptions(...options: Array<Option>): this {
-        this.options.push(...options);
+    addOptions(...options: Array<MyOption>): this {
+        this.prop['options'].push(...options);
         return this;
     }
 

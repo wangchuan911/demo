@@ -26,10 +26,11 @@ import {ElMessageBox, ElMessage} from 'element-plus';
 import type {Action} from 'element-plus';
 import 'element-plus/es/components/select/style/css';
 import 'element-plus/es/components/option/style/css';
+import {MyOption} from "@/components/form/config";
 
 const model = defineModel();
-const props = defineProps<{ option: Array<{ label: string, value: any }>, prop: any }>();
-const propsOption = computed(() => props.option);
+const props = defineProps<{ options: Array<MyOption>, prop: any }>();
+const propsOption = computed(() => props.options);
 const propsProp = computed(() => props.prop);
 
 

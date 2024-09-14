@@ -204,7 +204,7 @@ const operation = (type: number, row: Record<any, any>) => {
 import {DrawersContent, FormContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
-import {InputItem, TextItem} from "@/components/form/config";
+import {InputItem, MyOption, SelectItem, TextItem} from "@/components/form/config";
 import MyFormContainer from "@/components/form/MyFormContainer.vue";
 
 class LinkAddDrawersContent extends DrawersContent {
@@ -264,7 +264,7 @@ class RelLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加关系";
-    this.content.addInput(new TextItem("code", "编码"), new TextItem("name", "名称"));
+    this.content.addInput(new SelectItem("code", "编码",{}).addOptions(new MyOption("1","1"),new MyOption("2","2")), new TextItem("name", "名称"));
   }
 }
 
