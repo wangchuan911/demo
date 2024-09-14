@@ -1,24 +1,5 @@
-export interface FormItemConfig {
-    type: string
-    placeholder?: string
 
-    [key: string]: any
-}
 
-export class FormItemDefine {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    name!: string;
-    id!: string;
-    mode!: string;
-    init?: any;
-    config!: FormItemConfig;
-}
-
-import ObjectQueryInput from "@/components/form/input/ObjectQueryInput.vue";
-
-export const InputModule = {
-    ObjectQueryInput
-};
 import {ElInput} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
 

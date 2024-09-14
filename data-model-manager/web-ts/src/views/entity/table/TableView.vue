@@ -71,8 +71,6 @@
 
 <script lang="ts" setup>
 import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInternalInstance} from 'vue'
-import FormItem from "@/components/form/FormItem.vue";
-import {FormItemDefine} from "@/components/form/config";
 
 const {proxy} = getCurrentInstance() as ComponentInternalInstance
 const objectTypeId = "1", objectId = "1";

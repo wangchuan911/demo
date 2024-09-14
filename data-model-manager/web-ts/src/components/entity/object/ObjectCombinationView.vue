@@ -76,17 +76,18 @@
   <el-drawer v-model="addLink.show" :title="addLink.name" size="50%" show-close
              :before-close="(done)=>addLink.beforeClose(done)">
     <template #default>
-      <el-form :model="addLink.form" label-width="auto" style="max-width: 600px">
-        <!--<el-form-item label="标识">
+      <!--<el-form :model="addLink.form" label-width="auto" style="max-width: 600px">
+        &lt;!&ndash;<el-form-item label="标识">
           <el-input v-model="addLink.form.code"/>
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="addLink.form.name"/>
-        </el-form-item>-->
+        </el-form-item>&ndash;&gt;
         <el-form-item :label="input.label" v-for="input in addLink.content.inputs" :key="input.code" :index="input.code">
           <component :is="input.comp" v-bind="input.prop" v-model="addLink.content.form[input.code]"></component>
         </el-form-item>
-      </el-form>
+      </el-form>-->
+      <my-form-container v-model="addLink.content"></my-form-container>
     </template>
     <template #footer>
       <div style="flex: auto">
@@ -204,6 +205,7 @@ import {DrawersContent, FormContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
 import {InputItem, TextItem} from "@/components/form/config";
+import MyFormContainer from "@/components/form/MyFormContainer.vue";
 
 class LinkAddDrawersContent extends DrawersContent {
   name: string;

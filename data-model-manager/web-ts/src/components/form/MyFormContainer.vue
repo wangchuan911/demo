@@ -1,0 +1,35 @@
+<template>
+  <el-form :model="model.form" label-width="auto" style="max-width: 600px">
+    <el-form-item :label="input.label" v-for="input in model.inputs" :key="input.code" :index="input.code">
+      <component :is="input.comp" v-bind="input.prop" v-model="model.form[input.code]"></component>
+    </el-form-item>
+  </el-form>
+</template>
+
+<script lang="ts" setup>
+import {
+  ref,
+  reactive,
+  getCurrentInstance,
+  ComponentInternalInstance,
+  defineProps,
+  defineEmits,
+  watch,
+  computed,
+  defineModel, ComponentCustomProperties
+} from 'vue';
+
+import 'element-plus/es/components/select/style/css';
+import 'element-plus/es/components/option/style/css';
+
+const model = defineModel();
+const props = defineProps<{ option: Array<{ label: string, value: any }>, prop: any }>();
+const propsOption = computed(() => props.option);
+const propsProp = computed(() => props.prop);
+
+
+</script>
+
+<style scoped>
+
+</style>

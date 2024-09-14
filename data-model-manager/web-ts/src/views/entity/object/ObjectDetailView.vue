@@ -13,10 +13,6 @@
 
 <script lang="ts" setup>
 import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInternalInstance} from 'vue'
-import FormItem from "@/components/form/FormItem.vue";
-import {FormItemDefine} from "@/components/form/config";
-import ObjectAttributeView from '@/components/entity/object/ObjectAttributeView';
-import ObjectCombinationView from '@/components/entity/object/ObjectCombinationView';
 import {useRoute} from "vue-router";
 import {TabsPaneContext} from "element-plus";
 
