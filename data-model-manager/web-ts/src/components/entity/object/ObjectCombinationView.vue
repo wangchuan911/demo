@@ -83,8 +83,8 @@
         <el-form-item label="描述">
           <el-input v-model="addLink.form.name"/>
         </el-form-item>-->
-        <el-form-item :label="input.label" v-for="input in addLink.inputs" :key="input.code" :index="input.code">
-          <component :is="input.comp" v-bind="input.prop" v-model="addLink.form[input.code]"></component>
+        <el-form-item :label="input.label" v-for="input in addLink.content.inputs" :key="input.code" :index="input.code">
+          <component :is="input.comp" v-bind="input.prop" v-model="addLink.content.form[input.code]"></component>
         </el-form-item>
       </el-form>
     </template>
@@ -200,21 +200,20 @@ const operation = (type: number, row: Record<any, any>) => {
       break;
   }
 };
-import {DrawersContent, stringLike} from "@/components/config";
+import {DrawersContent, FormContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
 import {InputItem, TextItem} from "@/components/form/config";
 
 class LinkAddDrawersContent extends DrawersContent {
-  form: Record<any, any>;
   name: string;
   type: number | undefined;
-  inputs: Array<InputItem> | undefined;
   data: Record<any, any> | undefined;
+  content: FormContent;
 
   constructor() {
     super();
-    this.form = {};
+    this.content = new FormContent({});
     this.name = "未知操作";
   }
 
@@ -226,7 +225,7 @@ class LinkAddDrawersContent extends DrawersContent {
   beforeClose(done: () => void) {
     ElMessageBox.confirm('放弃保存?', {confirmButtonText: "确定", cancelButtonText: "取消"})
         .then(() => {
-          this.form = {};
+          this.content.form = {};
           done();
         })
         .catch(() => {
@@ -235,7 +234,7 @@ class LinkAddDrawersContent extends DrawersContent {
   }
 
   confirm() {
-    console.log(this.form);
+    console.log(this.content.form);
   }
 
   addLink(value: any) {
@@ -263,7 +262,7 @@ class RelLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加关系";
-    this.inputs = [new TextItem("code", "编码"), new TextItem("name", "名称")];
+    this.content.addInput(new TextItem("code", "编码"), new TextItem("name", "名称"));
   }
 }
 
@@ -271,7 +270,7 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加对象";
-    this.inputs = [new TextItem("code", "编码"), new TextItem("name", "名称")];
+    this.content.addInput(new TextItem("code", "编码"), new TextItem("name", "名称"));
   }
 }
 

@@ -27,12 +27,27 @@ export abstract class InputItem {
     label: string;
     comp: any;
     prop: any;
+    propAsync: any;
+    groups: (() => Array<InputItem>);
 
-    constructor(code: string, label: string) {
+    constructor(code: string, label: string, prop: any = {}) {
         this.code = code;
         this.label = label;
-        this.prop = {};
+        this.prop = prop;
+        this.groups = () => [];
     }
+
+    load(propAsync: Record<string, (prop: any, groups: Array<InputItem>) => void>): this {
+        Object.keys(propAsync).forEach(key => {
+            this.prop[key] = propAsync[key](this.prop, this.groups());
+        });
+        return this;
+    }
+
+    setGroup(fun: () => Array<InputItem>) {
+        this.groups = fun;
+    }
+
 }
 
 export class Option {
@@ -45,13 +60,13 @@ export class Option {
     }
 }
 
-export class selectItem extends InputItem {
+export class SelectItem extends InputItem {
     isMulti: boolean;
     checkBoxStyle: boolean;
     options: Array<Option>;
 
-    constructor(code: string, label: string) {
-        super(code, label);
+    constructor(code: string, label: string, prop: any = {}) {
+        super(code, label, prop);
         this.isMulti = false;
         this.checkBoxStyle = false;
         this.comp = MySelect;
@@ -69,12 +84,12 @@ export class selectItem extends InputItem {
         return this;
     }
 
-    setCheckBoxStyle(state: boolean): selectItem {
+    setCheckBoxStyle(state: boolean): SelectItem {
         this.checkBoxStyle = state;
         return this;
     }
 
-    setMulti(state: boolean): selectItem {
+    setMulti(state: boolean): SelectItem {
         this.isMulti = state;
         return this;
     }
@@ -87,8 +102,8 @@ export enum TextType {
 export class TextItem extends InputItem {
     mode: TextType;
 
-    constructor(code: string, label: string) {
-        super(code, label);
+    constructor(code: string, label: string, prop: any = {}) {
+        super(code, label, prop);
         this.mode = TextType.Default;
         this.prop['type'] = 'text';
         this.comp = ElInput;
@@ -101,8 +116,8 @@ export class TextItem extends InputItem {
 }
 
 export class QueryItem extends InputItem {
-    constructor(code: string, label: string) {
-        super(code, label);
+    constructor(code: string, label: string, prop: any = {}) {
+        super(code, label, prop);
         this.comp = ElInput;
     }
 }
@@ -110,8 +125,8 @@ export class QueryItem extends InputItem {
 export class RadioItem extends InputItem {
     isMulti: boolean;
 
-    constructor(code: string, label: string) {
-        super(code, label);
+    constructor(code: string, label: string, prop: any = {}) {
+        super(code, label, prop);
         this.isMulti = false;
         this.comp = ElInput;
     }

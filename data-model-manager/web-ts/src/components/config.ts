@@ -1,3 +1,5 @@
+import {InputItem} from "@/components/form/config";
+
 export abstract class DrawersContent {
 
     show: boolean;
@@ -6,7 +8,7 @@ export abstract class DrawersContent {
 
     abstract confirm(): void;
 
-    constructor() {
+    protected constructor() {
         this.show = false;
     }
 
@@ -16,6 +18,24 @@ export abstract class DrawersContent {
 
     _open(): void {
         this.show = true;
+    }
+}
+
+export class FormContent {
+    form: Record<any, any>;
+    inputs: Array<InputItem>;
+
+    constructor(form: Record<any, any>) {
+        this.form = form;
+        this.inputs = [];
+    }
+
+    addInput(...inputs: Array<InputItem>): this {
+        this.inputs.push(...inputs);
+        inputs.forEach(value => {
+            value.setGroup(() => this.inputs);
+        });
+        return this;
     }
 }
 
