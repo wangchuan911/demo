@@ -204,7 +204,7 @@ const operation = (type: number, row: Record<any, any>) => {
 import {DrawersContent, FormContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
-import {InputItem, MyOption, SelectItem, TextItem} from "@/components/form/config";
+import {InputItem, MyOption, Prop, SelectItem, TextItem} from "@/components/form/config";
 import MyFormContainer from "@/components/form/MyFormContainer.vue";
 
 class LinkAddDrawersContent extends DrawersContent {
@@ -222,6 +222,7 @@ class LinkAddDrawersContent extends DrawersContent {
   open(data: Record<any, any>) {
     this.data = data;
     this._open();
+    this.content.onLoaded();
   }
 
   beforeClose(done: () => void) {
@@ -264,16 +265,25 @@ class RelLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加关系";
-    this.content.addInput(new SelectItem("code", "编码",{}).addOptions(new MyOption("1","1"),new MyOption("2","2")), new TextItem("name", "名称"));
+    this.content.addInput(new SelectItem("code", "编码", {}).addOptions(new MyOption("1", "1"), new MyOption("2", "2")), new TextItem("name", "名称"));
   }
+
 }
 
 class ObjectLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加对象";
-    this.content.addInput(new TextItem("code", "编码"), new TextItem("name", "名称"));
+    this.content.addInput(new SelectItem("code", "编码",
+        new Prop({}, {
+          options: (input: SelectItem, content) => {
+            return $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
+              return data.map(v => new MyOption(v.id, v.desc));
+            });
+          }
+        })));
   }
+
 }
 
 const addLink = ref({} as LinkAddDrawersContent);

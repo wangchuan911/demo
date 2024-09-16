@@ -32,10 +32,13 @@ export class FormContent {
 
     addInput(...inputs: Array<InputItem>): this {
         this.inputs.push(...inputs);
-        inputs.forEach(value => {
-            value.setContent(() => this);
-        });
         return this;
+    }
+
+    onLoaded() {
+        this.inputs.forEach(value => {
+            value.onLoaded(this)
+        })
     }
 }
 

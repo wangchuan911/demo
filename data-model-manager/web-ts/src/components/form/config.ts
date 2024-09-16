@@ -2,23 +2,38 @@ import {ElInput} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
 import {FormContent} from "@/components/config";
 
+export class Prop {
+    prop: any;
+    propAsync: Record<string, (input: InputItem, content: FormContent) => any>;
+
+    constructor(prop: any = {}, propAsync: Record<string, (input: InputItem, content: FormContent) => any> = {}) {
+        this.prop = prop;
+        this.propAsync = propAsync;
+    }
+}
+
 export abstract class InputItem {
     code: string;
     label: string;
     comp: any;
-    prop: any;
-    propAsync: any;
+    prop: Prop;
     contentGetter: (() => FormContent) = () => null as unknown as FormContent;
 
-    protected constructor(code: string, label: string, prop: any = {}) {
+    protected constructor(code: string, label: string, prop: Prop = {prop: {}, propAsync: {}} as Prop) {
         this.code = code;
         this.label = label;
         this.prop = prop;
     }
 
-    load(propAsync: Record<string, (prop: any, groups: FormContent) => void>): this {
-        Object.keys(propAsync).forEach(key => {
-            this.prop[key] = propAsync[key](this.prop, this.contentGetter());
+    onLoaded(content: FormContent): this {
+        this.setContent(() => content);
+        Object.keys(this.prop.propAsync).forEach(key => {
+            const value: any = this.prop.propAsync[key](this, content);
+            if (value instanceof Promise) {
+                value.then(value1 => this.prop.prop[key] = value1);
+            } else {
+                this.prop.prop[key] = value;
+            }
         });
         return this;
     }
@@ -45,22 +60,26 @@ export class SelectItem extends InputItem {
     isMulti: boolean;
     checkBoxStyle: boolean;
 
-    constructor(code: string, label: string, prop: any = {}) {
+    constructor(code: string, label: string, prop: Prop) {
         super(code, label, prop);
         this.isMulti = false;
         this.checkBoxStyle = false;
         this.comp = MySelect;
-        this.prop['options'] = [];
+        this.prop.prop['options'] = [];
+        this.prop.prop['prop'] = {};
     }
 
     setOptions(...options: Array<MyOption>): this {
-        this.prop['options'].length = 0;
+        if (this.prop.prop['options'])
+            this.prop.prop['options'].length = 0;
         this.addOptions(...options);
         return this;
     }
 
     addOptions(...options: Array<MyOption>): this {
-        this.prop['options'].push(...options);
+        if (this.prop.prop['options'] == null)
+            this.prop.prop['options'] = [];
+        this.prop.prop['options'].push(...options);
         return this;
     }
 
@@ -82,10 +101,10 @@ export enum TextType {
 export class TextItem extends InputItem {
     mode: TextType;
 
-    constructor(code: string, label: string, prop: any = {}) {
+    constructor(code: string, label: string, prop: Prop) {
         super(code, label, prop);
         this.mode = TextType.Default;
-        this.prop['type'] = 'text';
+        this.prop.prop['type'] = 'text';
         this.comp = ElInput;
     }
 
@@ -96,7 +115,7 @@ export class TextItem extends InputItem {
 }
 
 export class QueryItem extends InputItem {
-    constructor(code: string, label: string, prop: any = {}) {
+    constructor(code: string, label: string, prop: Prop) {
         super(code, label, prop);
         this.comp = ElInput;
     }
@@ -105,7 +124,7 @@ export class QueryItem extends InputItem {
 export class RadioItem extends InputItem {
     isMulti: boolean;
 
-    constructor(code: string, label: string, prop: any = {}) {
+    constructor(code: string, label: string, prop: Prop) {
         super(code, label, prop);
         this.isMulti = false;
         this.comp = ElInput;

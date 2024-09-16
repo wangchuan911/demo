@@ -32,7 +32,9 @@ const model = defineModel();
 const props = defineProps<{ options: Array<MyOption>, prop: any }>();
 const propsOption = computed(() => props.options);
 const propsProp = computed(() => props.prop);
-
+watch(propsOption, (value, oldValue) => {
+  console.log(value, oldValue);
+});
 
 </script>
 
