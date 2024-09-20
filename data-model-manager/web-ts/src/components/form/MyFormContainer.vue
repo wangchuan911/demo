@@ -1,5 +1,5 @@
 <template>
-  <el-form :model="model.form" label-width="auto" style="max-width: 600px">
+  <el-form :model="model.form" label-width="auto" >
     <el-form-item :label="input.label" v-for="input in model.inputs" :key="input.code" :index="input.code">
       <component :is="input.comp" v-bind="input.prop" v-model="model.form[input.code]"></component>
     </el-form-item>

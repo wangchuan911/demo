@@ -192,7 +192,7 @@ const operation = (type: number, row: Record<any, any>) => {
   console.log(row);
   switch (type) {
     case 1:
-      addLink.value = new ObjectLinkDrawersContent();
+      addLink.value = new ObjectLinkDrawersContent(row);
       addLink.value.open(row);
       break;
     case 2:
@@ -206,6 +206,7 @@ import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
 import {InputItem, MyOption, Prop, SelectItem, TextItem} from "@/components/form/config";
 import MyFormContainer from "@/components/form/MyFormContainer.vue";
+import {ObjectRelItem} from "@/components/entity/object/config";
 
 class LinkAddDrawersContent extends DrawersContent {
   name: string;
@@ -271,14 +272,22 @@ class RelLinkDrawersContent extends LinkAddDrawersContent {
 }
 
 class ObjectLinkDrawersContent extends LinkAddDrawersContent {
-  constructor() {
+  constructor(row: Record<any, any>) {
     super();
     this.name = "添加对象";
-    this.content.addInput(new SelectItem("code", "编码", (input, content) => {
-      $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
-        input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
-      });
-    }));
+    this.content.addInput(
+        new SelectItem("code", "类型", (input, content) => {
+          $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
+            input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
+          });
+        }),
+        new TextItem("parent", "上级", (input, content) => {
+          console.log(row);
+          input.prop.readonly = true;
+          input.prop.value = `[${row.object.code}]${row.object.name}`;
+        }),
+        new ObjectRelItem("rel","关系")
+    );
   }
 
 }

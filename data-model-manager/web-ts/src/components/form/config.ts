@@ -2,6 +2,7 @@ import {ElInput} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
 import {FormContent} from "@/components/config";
 
+
 export declare type InputCompLoadedHandler<T> = (input: T, content: FormContent) => void;
 export declare type ContentGetter = () => FormContent;
 
@@ -136,6 +137,7 @@ export class RadioItem extends InputItem {
         return this;
     }
 }
+
 
 
 /*export class FormDataItem {

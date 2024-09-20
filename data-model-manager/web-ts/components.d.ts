@@ -38,6 +38,7 @@ declare module '@vue/runtime-core' {
     MySelect: typeof import('./src/components/form/input/MySelect.vue')['default']
     ObjectAttributeView: typeof import('./src/components/entity/object/ObjectAttributeView.vue')['default']
     ObjectCombinationView: typeof import('./src/components/entity/object/ObjectCombinationView.vue')['default']
+    ObjectRelAddView: typeof import('./src/components/entity/object/ObjectRelAddView.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }
