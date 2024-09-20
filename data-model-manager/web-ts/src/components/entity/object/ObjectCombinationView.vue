@@ -265,7 +265,7 @@ class RelLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加关系";
-    this.content.addInput(new SelectItem("code", "编码", {}).addOptions(new MyOption("1", "1"), new MyOption("2", "2")), new TextItem("name", "名称"));
+    this.content.addInput(new SelectItem("code", "编码").addOptions(new MyOption("1", "1"), new MyOption("2", "2")), new TextItem("name", "名称"));
   }
 
 }
@@ -274,14 +274,11 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
   constructor() {
     super();
     this.name = "添加对象";
-    this.content.addInput(new SelectItem("code", "编码",
-        new Prop({}, {
-          options: (input: SelectItem, content) => {
-            return $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
-              return data.map(v => new MyOption(v.id, v.desc));
-            });
-          }
-        })));
+    this.content.addInput(new SelectItem("code", "编码", (input, content) => {
+      $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
+        input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
+      });
+    }));
   }
 
 }

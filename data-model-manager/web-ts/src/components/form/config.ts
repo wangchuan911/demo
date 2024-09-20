@@ -2,43 +2,35 @@ import {ElInput} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
 import {FormContent} from "@/components/config";
 
-export class Prop {
-    prop: any;
-    propAsync: Record<string, (input: InputItem, content: FormContent) => any>;
+export declare type InputCompLoadedHandler<T> = (input: T, content: FormContent) => void;
+export declare type ContentGetter = () => FormContent;
 
-    constructor(prop: any = {}, propAsync: Record<string, (input: InputItem, content: FormContent) => any> = {}) {
-        this.prop = prop;
-        this.propAsync = propAsync;
-    }
-}
 
 export abstract class InputItem {
     code: string;
     label: string;
     comp: any;
-    prop: Prop;
-    contentGetter: (() => FormContent) = () => null as unknown as FormContent;
+    prop: any;
+    contentGetter: ContentGetter;
+    inputLoadHandler: InputCompLoadedHandler<any>;
 
-    protected constructor(code: string, label: string, prop: Prop = {prop: {}, propAsync: {}} as Prop) {
+    protected constructor(code: string, label: string, inputLoadHandler: InputCompLoadedHandler<any> = (input, content) => {
+        console.log("empty function");
+    }) {
         this.code = code;
         this.label = label;
-        this.prop = prop;
+        this.prop = {};
+        this.contentGetter = () => null as unknown as FormContent;
+        this.inputLoadHandler = inputLoadHandler;
     }
 
     onLoaded(content: FormContent): this {
         this.setContent(() => content);
-        Object.keys(this.prop.propAsync).forEach(key => {
-            const value: any = this.prop.propAsync[key](this, content);
-            if (value instanceof Promise) {
-                value.then(value1 => this.prop.prop[key] = value1);
-            } else {
-                this.prop.prop[key] = value;
-            }
-        });
+        this.inputLoadHandler(this, content);
         return this;
     }
 
-    setContent(getter: () => FormContent) {
+    setContent(getter: ContentGetter) {
         this.contentGetter = getter;
     }
 
@@ -60,28 +52,31 @@ export class SelectItem extends InputItem {
     isMulti: boolean;
     checkBoxStyle: boolean;
 
-    constructor(code: string, label: string, prop: Prop) {
+    constructor(code: string, label: string, prop: InputCompLoadedHandler<SelectItem> = (input, content) => {
+        console.log("empty function");
+    }) {
         super(code, label, prop);
         this.isMulti = false;
         this.checkBoxStyle = false;
         this.comp = MySelect;
-        this.prop.prop['options'] = [];
-        this.prop.prop['prop'] = {};
+        this.prop['options'] = [];
+        this.prop['prop'] = {};
     }
 
     setOptions(...options: Array<MyOption>): this {
-        if (this.prop.prop['options'])
-            this.prop.prop['options'].length = 0;
+        if (this.prop['options'])
+            this.prop['options'].length = 0;
         this.addOptions(...options);
         return this;
     }
 
     addOptions(...options: Array<MyOption>): this {
-        if (this.prop.prop['options'] == null)
-            this.prop.prop['options'] = [];
-        this.prop.prop['options'].push(...options);
+        if (this.prop['options'] == null)
+            this.prop['options'] = [];
+        this.prop['options'].push(...options);
         return this;
     }
+
 
     setCheckBoxStyle(state: boolean): SelectItem {
         this.checkBoxStyle = state;
@@ -101,10 +96,12 @@ export enum TextType {
 export class TextItem extends InputItem {
     mode: TextType;
 
-    constructor(code: string, label: string, prop: Prop) {
+    constructor(code: string, label: string, prop: InputCompLoadedHandler<TextItem> = (input, content) => {
+        console.log("empty function");
+    }) {
         super(code, label, prop);
         this.mode = TextType.Default;
-        this.prop.prop['type'] = 'text';
+        this.prop['type'] = 'text';
         this.comp = ElInput;
     }
 
@@ -115,7 +112,9 @@ export class TextItem extends InputItem {
 }
 
 export class QueryItem extends InputItem {
-    constructor(code: string, label: string, prop: Prop) {
+    constructor(code: string, label: string, prop: InputCompLoadedHandler<QueryItem> = (input, content) => {
+        console.log("empty function");
+    }) {
         super(code, label, prop);
         this.comp = ElInput;
     }
@@ -124,7 +123,9 @@ export class QueryItem extends InputItem {
 export class RadioItem extends InputItem {
     isMulti: boolean;
 
-    constructor(code: string, label: string, prop: Prop) {
+    constructor(code: string, label: string, prop: InputCompLoadedHandler<RadioItem> = (input, content) => {
+        console.log("empty function");
+    }) {
         super(code, label, prop);
         this.isMulti = false;
         this.comp = ElInput;
