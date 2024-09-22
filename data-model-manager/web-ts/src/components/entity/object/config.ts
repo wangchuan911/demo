@@ -8,6 +8,7 @@ export class ObjectRelItem extends InputItem {
         console.log("empty function");
     }) {
         super(code, label, prop);
+        this.prop.value = [];
         this.comp = ObjectRelAddView;
     }
 

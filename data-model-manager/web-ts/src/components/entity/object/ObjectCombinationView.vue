@@ -286,7 +286,9 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
           input.prop.readonly = true;
           input.prop.value = `[${row.object.code}]${row.object.name}`;
         }),
-        new ObjectRelItem("rel","关系")
+        new ObjectRelItem("rel","关系",(input, content) => {
+          console.log("");
+        })
     );
   }
 

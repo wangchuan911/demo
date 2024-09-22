@@ -23,9 +23,9 @@ public enum LinkMetaType implements IMetaType {
     UNKNOWN(Long.MIN_VALUE, "未知"),
     PrimaryKey(3000, "主键"),
     ForeignKey(3001, "外键"),
-    ObjectLinkSingleLineTable(3002, "对象与单行表的关系"),
+    /*ObjectLinkSingleLineTable(3002, "对象与单行表的关系"),
     ObjectLinkMultiLineTable(3004, "对象与多行表的关系"),
-    HeaderLinkAttributes(3005, "数据标题与属性的关系"),
+    HeaderLinkAttributes(3005, "数据标题与属性的关系"),*/
     ObjConstructor(3006, "对象构造定义"),
     ObjToDataBase(3007, "对象构造定义(数据库)", ObjConstructor),
     ObjToTextData(3008, "对象构造定义(文本数据)", ObjConstructor),

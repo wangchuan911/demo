@@ -2,6 +2,7 @@ package org.welisdoon.metadata.prototype.router;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Classname QueryManagerRouter
@@ -247,11 +249,36 @@ public class QueryManagerRouter {
         });
     }
 
-    @VertxRouter(path = "/link/types", method = "get")
+    @VertxRouter(path = "\\/link\\/types\\/(?<type>\\w*)(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
     public void linkTypes(RoutingContextChain chain) {
-        chain.failureHandler(event -> {
-            event.end(JSON.toJSONString(Arrays.stream(LinkMetaType.values())
-                    .map(linkMetaType -> Map.of("id", linkMetaType.getId(), "desc", linkMetaType.getDesc()))));
+        chain.handler(routingContext -> {
+            Long id = TypeUtils.castToJavaBean(routingContext.pathParam("id"), Long.class);
+            String type = TypeUtils.castToJavaBean(routingContext.pathParam("type"), String.class);
+            List<LinkMetaType> result = new LinkedList<>();
+            switch (Optional.ofNullable(type).orElse("")) {
+                case "obj":
+                    MetaLinkCondition condition = new MetaLinkCondition();
+                    condition.setData(new MetaLink());
+                    condition.getData().setObjectId(id);
+                    condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
+                    result.addAll(metaLinkDao.list(condition).stream().flatMap(metaLink -> {
+                        switch (metaLink.getType()) {
+                            case ObjToDataBase:
+                                return LinkMetaType.getChildTypeId(LinkMetaType.SqlToJoin.getId()).stream().map(LinkMetaType::getInstance);
+                            default:
+                                return Stream.of();
+                        }
+                    }).collect(Collectors.toList()));
+                    break;
+                case "link":
+                    MetaLink metaLink = metaLinkDao.get(id);
+
+                    break;
+                default:
+                    break;
+            }
+            routingContext.end(JSON.toJSONString(result.stream()
+                    .map(linkMetaType -> Map.of("id", linkMetaType.getId(), "desc", linkMetaType.getDesc())).toArray()));
         });
     }
 
