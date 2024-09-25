@@ -204,7 +204,7 @@ const operation = (type: number, row: Record<any, any>) => {
 import {DrawersContent, FormContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
-import {InputItem, MyOption, Prop, SelectItem, TextItem} from "@/components/form/config";
+import {EasySearchItem, InputItem, MyOption, Prop, SelectItem, TextItem} from "@/components/form/config";
 import MyFormContainer from "@/components/form/MyFormContainer.vue";
 import {ObjectRelItem} from "@/components/entity/object/config";
 
@@ -286,7 +286,26 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
           input.prop.readonly = true;
           input.prop.value = `[${row.object.code}]${row.object.name}`;
         }),
-        new ObjectRelItem("rel","关系",(input, content) => {
+        new SelectItem("object", "对象", (input, content) => {
+          let loading2 = ref(false);
+          input.prop.filterable = true;
+          input.prop.remote = true;
+          input.prop.reserveKeyword = true;
+          input.prop.placeholder = "Please enter a keyword";
+          input.prop.remoteMethod = (query: string) => {
+            if (query) {
+              loading2.value = true;
+              setTimeout(() => {
+                input.setOptions(new MyOption(query, query));
+                loading2.value = false;
+              }, 200);
+            } else {
+              input.setOptions();
+            }
+          };
+          input.prop.loading = loading2;
+        }),
+        new ObjectRelItem("rel", "关系", (input, content) => {
           console.log("");
         })
     );

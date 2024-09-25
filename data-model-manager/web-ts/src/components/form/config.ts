@@ -1,5 +1,6 @@
 import {ElInput} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
+import MyEasySearch from '@/components/form/input/MyEasySearch.vue';
 import {FormContent} from "@/components/config";
 
 
@@ -138,7 +139,24 @@ export class RadioItem extends InputItem {
     }
 }
 
+export class EasySearchItem extends InputItem {
 
+    constructor(code: string, label: string, prop: InputCompLoadedHandler<EasySearchItem> = (input, content) => {
+        console.log("empty function");
+    }) {
+        super(code, label, prop);
+        this.comp = MyEasySearch;
+        this.prop['onSearch'] = () => {
+            console.log("empty function");
+        };
+        this.prop['prop'] = {};
+    }
+
+    setOnSearch(fun: () => void): this {
+        this.prop['onSearch'] = fun;
+        return this;
+    }
+}
 
 /*export class FormDataItem {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
