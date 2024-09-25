@@ -296,7 +296,10 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
             if (query) {
               loading2.value = true;
               setTimeout(() => {
-                input.setOptions(new MyOption(query, query));
+                // input.setOptions(new MyOption(query, query));
+                $http.get(`query/object/${objectId.value}?text=${query}`).then(({data}: { data: Array<Record<any, any>> }) => {
+                  input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
+                });
                 loading2.value = false;
               }, 200);
             } else {
