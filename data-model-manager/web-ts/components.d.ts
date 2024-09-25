@@ -34,6 +34,7 @@ declare module '@vue/runtime-core' {
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    MyEasySearch: typeof import('./src/components/form/input/MyEasySearch.vue')['default']
     MyFormContainer: typeof import('./src/components/form/MyFormContainer.vue')['default']
     MySelect: typeof import('./src/components/form/input/MySelect.vue')['default']
     ObjectAttributeView: typeof import('./src/components/entity/object/ObjectAttributeView.vue')['default']
