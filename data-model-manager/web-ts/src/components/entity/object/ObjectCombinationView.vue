@@ -287,27 +287,26 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
           input.prop.value = `[${row.object.code}]${row.object.name}`;
         }),
         new SelectItem("object", "对象", (input, content) => {
-          let loading2 = ref(false);
           input.prop.filterable = true;
           input.prop.remote = true;
           input.prop.reserveKeyword = true;
           input.prop.placeholder = "Please enter a keyword";
+          input.prop.loading = false;
           input.prop.remoteMethod = (query: string) => {
             if (query) {
-              loading2.value = true;
-              /*setTimeout(() => {
+              input.prop.loading = true;
+              setTimeout(() => {
                 input.setOptions(new MyOption(query, query));
-                loading2.value = false;
-              }, 200);*/
-              $http.get(`query/object/${objectId.value}?text=${query}`).then(({data}: { data: Array<Record<any, any>> }) => {
-                loading2.value = false;
+                input.prop.loading = false;
+              }, 200);
+              /*$http.get(`query/object/${objectId.value}?text=${query}`).then(({data}: { data: Array<Record<any, any>> }) => {
+                input.prop.loading = false;
                 input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
-              });
+              });*/
             } else {
               input.setOptions();
             }
           };
-          input.prop.loading = loading2;
         }),
         new ObjectRelItem("rel", "关系", (input, content) => {
           console.log("");
