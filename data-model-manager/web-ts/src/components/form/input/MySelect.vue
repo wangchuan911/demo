@@ -1,11 +1,11 @@
 <template>
   <el-select v-bind="propsProp" v-model="model">
-    <el-option
-        v-for="item in propsOption"
-        :key="item.value"
-        :label="item.label"
-        :value="item.value"
-    />
+    <temlate v-for="item in propsOption" :key="item.value">
+      <component :is="item.comp"
+                 :label="item.name"
+                 :value="item.value"
+      />
+    </temlate>
   </el-select>
 </template>
 

@@ -1,4 +1,4 @@
-import {ElInput} from 'element-plus';
+import {ElInput, ElOption} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
 import MyEasySearch from '@/components/form/input/MyEasySearch.vue';
 import {FormContent} from "@/components/config";
@@ -42,8 +42,9 @@ export class MyOption {
     name: string;
     value: any;
     selected: boolean;
+    comp: any = ElOption;
 
-    constructor(name: string, value: any, selected: boolean) {
+    constructor(value: any, name: string, selected: boolean) {
         this.name = name;
         this.value = value;
         this.selected = selected;

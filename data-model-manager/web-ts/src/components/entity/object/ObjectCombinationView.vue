@@ -276,7 +276,7 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
     super();
     this.name = "添加对象";
     this.content.addInput(
-        new SelectItem("code", "类型", (input, content) => {
+        new SelectItem("type", "类型", (input, content) => {
           $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
             input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
           });
