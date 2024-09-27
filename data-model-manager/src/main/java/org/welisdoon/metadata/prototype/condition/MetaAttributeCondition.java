@@ -27,4 +27,5 @@ public class MetaAttributeCondition {
         this.objectId = objectId;
         return this;
     }
+
 }

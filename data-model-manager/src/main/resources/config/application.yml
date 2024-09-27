@@ -10,7 +10,7 @@ spring:
 vertx:
   webs:
     main:
-      port: 443
+      port: 8443
       sslEnable: true
       sslKeyType: pfx
       sslKeyStore: /opt/wechat/thekeystore

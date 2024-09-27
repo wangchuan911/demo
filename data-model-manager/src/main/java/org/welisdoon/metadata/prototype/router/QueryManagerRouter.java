@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +12,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.common.JsonUtils;
+import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
+import org.welisdoon.metadata.prototype.condition.Page;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.MetaUtils;
@@ -93,7 +96,6 @@ public class QueryManagerRouter {
     public void objQuery(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             MetaObjectCondition condition = JsonUtils.toBean(routingContext.body().asString(), MetaObjectCondition.class);
-            condition.startPage();
             routingContext.end(JsonUtils.asJsonString(PageInfo.of(metaObjectDao.list(condition))));
         });
     }
@@ -291,4 +293,20 @@ public class QueryManagerRouter {
             routingContext.end(JSON.toJSONString(metaLink));
         });
     }
+
+    @VertxRouter(path = "\\/query\\/object\\/(?<id>\\d+)",
+            method = "GET", mode = VertxRouteType.PathRegex)
+    public void queryObject(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            MetaObjectCondition condition = new MetaObjectCondition();
+            condition.setData(new MetaObject());
+            condition.getData().setCode(routingContext.queryParam("text").stream().findFirst().orElse(""));
+            condition.setPage(new Page(1, 10));
+            condition.setQuery("objectSearch");
+            routingContext.end(JSON.toJSONString(
+                    metaObjectDao.list(condition).stream().map(metaObject -> ImmutableMap.of("id", metaObject.getId(), "desc", String.format("[%s]%s", metaObject.getName(), metaObject.getCode()))).toArray()));
+        });
+    }
+
+
 }

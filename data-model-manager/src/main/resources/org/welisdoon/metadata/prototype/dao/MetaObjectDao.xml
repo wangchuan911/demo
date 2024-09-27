@@ -16,6 +16,11 @@
         select * from MD_OBJECT
         <where>
             <if test="parentId!=null ">and parent_id = #{parentId}</if>
+            <choose>
+                <when test="query=='objectSearch' and @org.apache.commons.lang.StringUtils@isNotEmpty(data.code)">
+                    and code like concat('%',#{data.code},'%')
+                </when>
+            </choose>
         </where>
 
     </select>

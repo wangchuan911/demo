@@ -1,6 +1,9 @@
 package org.welisdoon.common.data;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @Classname ICondition
@@ -30,6 +33,7 @@ public abstract class BaseCondition<ID, D> {
         public Page() {
             compute();
         }
+
 
         public Page(int page, int pageSize) {
             setPageSize(pageSize);
@@ -102,7 +106,11 @@ public abstract class BaseCondition<ID, D> {
         return condition;
     }
 
-    public <T extends BaseCondition> T startPage() {
-        return (T) this;
+    public void setQuery(String query) {
+        this.query = query;
+    }
+
+    public String getQuery() {
+        return query;
     }
 }

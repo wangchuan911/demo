@@ -69,7 +69,6 @@ public class DataManagerTableRouter {
         chain.handler(routingContext -> {
             TableCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), TableCondition.class);
 //            PageHelper.startPage(condition.getPage().getPage(), condition.getPage().getPageSize());
-            condition.startPage();
             routingContext.end(JSONObject.toJSONString(PageInfo.of(tableDao.list(condition))));
         });
     }

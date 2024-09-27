@@ -1,5 +1,6 @@
 package org.welisdoon.metadata.prototype.condition;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
@@ -21,5 +22,11 @@ public class MetaLinkCondition extends BaseCondition<Long, MetaLink> {
 
     public Long getParentId() {
         return parentId;
+    }
+
+    @Override
+    @JSONField(deserializeUsing = org.welisdoon.metadata.prototype.condition.Page.class)
+    public void setPage(Page page) {
+        super.setPage(page);
     }
 }
