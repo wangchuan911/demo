@@ -295,14 +295,14 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
           input.prop.remoteMethod = (query: string) => {
             if (query) {
               input.prop.loading = true;
-              setTimeout(() => {
+              /*setTimeout(() => {
                 input.setOptions(new MyOption(query, query));
                 input.prop.loading = false;
-              }, 200);
-              /*$http.get(`query/object/${objectId.value}?text=${query}`).then(({data}: { data: Array<Record<any, any>> }) => {
+              }, 200);*/
+              $http.get(`query/object/${objectId.value}?text=${query}`).then(({data}: { data: Array<Record<any, any>> }) => {
                 input.prop.loading = false;
                 input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
-              });*/
+              });
             } else {
               input.setOptions();
             }
