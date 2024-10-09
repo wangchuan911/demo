@@ -73,7 +73,7 @@
       </el-table-column>
     </el-table>
   </div>
-  <el-drawer v-model="addLink.show" :title="addLink.name" size="50%" show-close
+  <el-drawer v-model="addLink.show" :title="addLink.name" size="70%" show-close
              :before-close="(done)=>addLink.beforeClose(done)">
     <template #default>
       <!--<el-form :model="addLink.form" label-width="auto" style="max-width: 600px">
@@ -204,7 +204,7 @@ const operation = (type: number, row: Record<any, any>) => {
 import {DrawersContent, FormContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
-import {EasySearchItem, InputItem, MyOption, Prop, SelectItem, TextItem} from "@/components/form/config";
+import {EasySearchItem, InputItem, ItemConfig, MyOption, Prop, SelectItem, TextItem} from "@/components/form/config";
 import MyFormContainer from "@/components/form/MyFormContainer.vue";
 import {ObjectRelItem} from "@/components/entity/object/config";
 
@@ -276,17 +276,17 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
     super();
     this.name = "添加对象";
     this.content.addInput(
-        new SelectItem("type", "类型", (input, content) => {
+        new SelectItem("type", "类型", new ItemConfig<SelectItem>((input, content) => {
           $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
             input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
           });
-        }),
-        new TextItem("parent", "上级", (input, content) => {
+        })),
+        new TextItem("parent", "上级", new ItemConfig<TextItem>((input, content) => {
           console.log(row);
           input.prop.readonly = true;
           input.prop.value = `[${row.object.code}]${row.object.name}`;
-        }),
-        new SelectItem("object", "对象", (input, content) => {
+        })),
+        new SelectItem("object", "对象", new ItemConfig<SelectItem>((input, content) => {
           input.prop.filterable = true;
           input.prop.remote = true;
           input.prop.reserveKeyword = true;
@@ -307,10 +307,11 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
               input.setOptions();
             }
           };
-        }),
-        new ObjectRelItem("rel", "关系", (input, content) => {
+        })),
+        new ObjectRelItem("rel", "关系", new ItemConfig<ObjectRelItem>((input, content) => {
           console.log("");
-        })
+          input.prop.objects = attrs;
+        }))
     );
   }
 

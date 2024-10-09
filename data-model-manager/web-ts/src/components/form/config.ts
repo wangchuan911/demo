@@ -5,8 +5,22 @@ import {FormContent} from "@/components/config";
 
 
 export declare type InputCompLoadedHandler<T> = (input: T, content: FormContent) => void;
+export declare type InputCompChangeHandler = (inputCompName: string, value: any, content: FormContent) => void;
 export declare type ContentGetter = () => FormContent;
 
+export class ItemConfig<T> {
+    inputLoadHandler: InputCompLoadedHandler<T>;
+    inputChangeHandler: InputCompChangeHandler;
+
+    constructor(inputLoadHandler: InputCompLoadedHandler<any> = (input, content) => {
+        console.log("empty function");
+    }, inputChangeHandler: InputCompChangeHandler = (input, content) => {
+        console.log("empty function");
+    }) {
+        this.inputLoadHandler = inputLoadHandler;
+        this.inputChangeHandler = inputChangeHandler;
+    }
+}
 
 export abstract class InputItem {
     code: string;
@@ -15,15 +29,15 @@ export abstract class InputItem {
     prop: any;
     contentGetter: ContentGetter;
     inputLoadHandler: InputCompLoadedHandler<any>;
+    inputChangeHandler: InputCompChangeHandler;
 
-    protected constructor(code: string, label: string, inputLoadHandler: InputCompLoadedHandler<any> = (input, content) => {
-        console.log("empty function");
-    }) {
+    protected constructor(code: string, label: string, config: ItemConfig<any>) {
         this.code = code;
         this.label = label;
         this.prop = {};
         this.contentGetter = () => null as unknown as FormContent;
-        this.inputLoadHandler = inputLoadHandler;
+        this.inputLoadHandler = config.inputLoadHandler;
+        this.inputChangeHandler = config.inputChangeHandler;
     }
 
     onLoaded(content: FormContent): this {
@@ -55,9 +69,7 @@ export class SelectItem extends InputItem {
     isMulti: boolean;
     checkBoxStyle: boolean;
 
-    constructor(code: string, label: string, prop: InputCompLoadedHandler<SelectItem> = (input, content) => {
-        console.log("empty function");
-    }) {
+    constructor(code: string, label: string, prop: ItemConfig<SelectItem> = new ItemConfig<SelectItem>()) {
         super(code, label, prop);
         this.isMulti = false;
         this.checkBoxStyle = false;
@@ -99,9 +111,7 @@ export enum TextType {
 export class TextItem extends InputItem {
     mode: TextType;
 
-    constructor(code: string, label: string, prop: InputCompLoadedHandler<TextItem> = (input, content) => {
-        console.log("empty function");
-    }) {
+    constructor(code: string, label: string, prop: ItemConfig<TextItem> = new ItemConfig<TextItem>()) {
         super(code, label, prop);
         this.mode = TextType.Default;
         this.prop['type'] = 'text';
@@ -115,9 +125,7 @@ export class TextItem extends InputItem {
 }
 
 export class QueryItem extends InputItem {
-    constructor(code: string, label: string, prop: InputCompLoadedHandler<QueryItem> = (input, content) => {
-        console.log("empty function");
-    }) {
+    constructor(code: string, label: string, prop: ItemConfig<QueryItem> = new ItemConfig<QueryItem>()) {
         super(code, label, prop);
         this.comp = ElInput;
     }
@@ -126,9 +134,7 @@ export class QueryItem extends InputItem {
 export class RadioItem extends InputItem {
     isMulti: boolean;
 
-    constructor(code: string, label: string, prop: InputCompLoadedHandler<RadioItem> = (input, content) => {
-        console.log("empty function");
-    }) {
+    constructor(code: string, label: string, prop: ItemConfig<RadioItem> = new ItemConfig<RadioItem>()) {
         super(code, label, prop);
         this.isMulti = false;
         this.comp = ElInput;
@@ -142,9 +148,7 @@ export class RadioItem extends InputItem {
 
 export class EasySearchItem extends InputItem {
 
-    constructor(code: string, label: string, prop: InputCompLoadedHandler<EasySearchItem> = (input, content) => {
-        console.log("empty function");
-    }) {
+    constructor(code: string, label: string, prop: ItemConfig<EasySearchItem> = new ItemConfig<EasySearchItem>()) {
         super(code, label, prop);
         this.comp = MyEasySearch;
         this.prop['onSearch'] = () => {

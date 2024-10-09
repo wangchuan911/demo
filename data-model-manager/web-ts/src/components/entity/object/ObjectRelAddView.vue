@@ -2,11 +2,28 @@
   <el-table :data="list" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)" row-key="_id"
             :lazy="false"
             :default-expand-all="true">
-    <el-table-column prop="object.name" label="对象描述"/>
-    <el-table-column prop="object.code" label="对象标识"/>
-    <el-table-column prop="instanceId" label="对象实例ID"/>
-    <el-table-column prop="object.typeDesc" label="对象类型"/>
-    <el-table-column prop="typeDesc" label="关联方式"/>
+    <el-table-column label="对象">
+      <template #default="scope">
+        <el-select v-model="scope.row.itemIndex" @change="(value)=>scope.row.item=objects[value]">
+          <el-option v-for="(item,index) in objects" :key="index"
+                     :label="`[${item.object.name}]${item.object.code}`"
+                     :value="index"
+          />
+        </el-select>
+      </template>
+    </el-table-column>
+    <el-table-column prop="item.instanceId" label="对象实例ID"/>
+    <el-table-column prop="item.object.typeDesc" label="对象类型"/>
+    <el-table-column prop="item.typeDesc" label="关联方式">
+      <template #default="scope">
+        <el-select v-model="scope.row.itemIndex" @change="(value)=>scope.row.item=objects[value]">
+          <el-option v-for="(item,index) in objects" :key="index"
+                     :label="`[${item.object.name}]${item.object.code}`"
+                     :value="index"
+          />
+        </el-select>
+      </template>
+    </el-table-column>
     <el-table-column>
       <template #header>
         <el-button type="primary" size="small" @click="add(null,null)">新增下级</el-button>
@@ -37,17 +54,26 @@ const list = defineModel<Array<any>>();
 if (typeof (list.value) == 'undefined') {
   list.value = [];
 }
+const props = defineProps<{ objects: Array<any> }>();
+const objects = computed(() => props.objects);
+watch(objects, (value, oldValue, onCleanup) => {
+  console.log(value);
+});
 console.log(list);
+console.log(objects);
 const getIndex = () => {
   return new Date().valueOf();
 };
 const add = (row: Record<any, any>) => {
   if (row) {
     row.children = row.children || [];
-    row.children.push({_id: getIndex()});
+    row.children.push(createItem());
   } else {
-    list.value?.push({_id: getIndex()});
+    list.value?.push(createItem());
   }
+};
+const createItem = (def = {}) => {
+  return {_id: getIndex(), item: {}, ...def};
 };
 const del = (_id: number, _list: Array<any>): boolean => {
   _list = _list || list.value;
