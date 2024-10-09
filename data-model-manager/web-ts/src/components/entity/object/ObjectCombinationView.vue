@@ -311,6 +311,8 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
         new ObjectRelItem("rel", "关系", new ItemConfig<ObjectRelItem>((input, content) => {
           console.log("");
           input.prop.objects = attrs;
+        }, (inputCompName, value, content) => {
+          console.log(inputCompName, value);
         }))
     );
   }

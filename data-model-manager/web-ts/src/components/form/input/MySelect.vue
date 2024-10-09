@@ -1,5 +1,5 @@
 <template>
-  <el-select v-bind="propsProp" v-model="model">
+  <el-select v-bind="propsProp" v-model="model" @change="(value)=>emit('change',value)">
     <temlate v-for="item in propsOption" :key="item.value">
       <component :is="item.comp"
                  :label="item.name"
@@ -35,7 +35,7 @@ const propsProp = computed(() => props.prop);
 watch(propsOption, (value, oldValue) => {
   console.log(value, oldValue);
 });
-
+const emit = defineEmits(["change"]);
 </script>
 
 <style scoped>

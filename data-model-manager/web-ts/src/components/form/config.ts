@@ -30,6 +30,8 @@ export abstract class InputItem {
     contentGetter: ContentGetter;
     inputLoadHandler: InputCompLoadedHandler<any>;
     inputChangeHandler: InputCompChangeHandler;
+    events: any;
+
 
     protected constructor(code: string, label: string, config: ItemConfig<any>) {
         this.code = code;
@@ -38,7 +40,15 @@ export abstract class InputItem {
         this.contentGetter = () => null as unknown as FormContent;
         this.inputLoadHandler = config.inputLoadHandler;
         this.inputChangeHandler = config.inputChangeHandler;
+        this.events = {
+            change: (value: any) => {
+                this.contentGetter().inputs.forEach((input: InputItem) => {
+                    input.inputChangeHandler(this.code, value, this.contentGetter());
+                });
+            }
+        };
     }
+
 
     onLoaded(content: FormContent): this {
         this.setContent(() => content);

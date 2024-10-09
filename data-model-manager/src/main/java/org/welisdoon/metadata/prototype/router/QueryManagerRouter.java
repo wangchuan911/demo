@@ -308,5 +308,15 @@ public class QueryManagerRouter {
         });
     }
 
+    @VertxRouter(path = "\\/query\\/link\\/type\\/(?<typeLinkId>\\d+)",
+            method = "GET", mode = VertxRouteType.PathRegex)
+    public void showObjectSubLinkType(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long typeLinkId = Long.parseLong(routingContext.pathParam("typeLinkId"));
+            routingContext.end(JSON.toJSONString(LinkMetaType.getChildTypeId(LinkMetaType.Sql.getId()).stream().map(aLong -> {
+                return ImmutableMap.of("id", aLong, "desc", LinkMetaType.getInstance(aLong).getDesc());
+            })));
+        });
+    }
 
 }
