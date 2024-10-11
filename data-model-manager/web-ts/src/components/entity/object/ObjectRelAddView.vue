@@ -7,7 +7,7 @@
       <template #default="scope">
         <el-select v-model="scope.row.itemIndex" @change="(value)=>scope.row.item=objects[value]">
           <el-option v-for="(item,index) in objects" :key="index"
-                     :label="`[${item.object.name}]${item.object.code}`"
+                     :label="`[${item.instanceId}] ${item.object.code} [${item.object.name}]`"
                      :value="index"
           />
         </el-select>
@@ -16,21 +16,21 @@
     <el-table-column prop="item.object.typeDesc" label="对象类型"/>
     <el-table-column prop="item.typeDesc" label="关联方式">
       <template #default="scope">
-        <el-select v-model="scope.row.itemIndex" @change="(value)=>scope.row.item=objects[value]">
-          <el-option v-for="(item,index) in objects" :key="index"
-                     :label="`[${item.object.name}]${item.object.code}`"
-                     :value="index"
+        <el-select v-model="scope.row.linkTypeId">
+          <el-option v-for="item1 in linkTypes" :key="item1.value"
+                     :label="item1.name"
+                     :value="item1.value"
           />
         </el-select>
       </template>
     </el-table-column>
     <el-table-column>
       <template #header>
-        <el-button type="primary" size="small" @click="add(null,null)">新增下级</el-button>
+        <el-button type="primary" size="small" @click="()=>add(null,null)">新增下级</el-button>
       </template>
       <template #default="scope">
-        <el-button link type="primary" size="small" @click="add(scope.row)">新增下级</el-button>
-        <el-button link type="primary" size="small" @click="del(scope.row._id)">删除</el-button>
+        <el-button link type="primary" size="small" @click="()=>add(scope.row)">新增下级</el-button>
+        <el-button link type="primary" size="small" @click="()=>del(scope.row._id)">删除</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -51,12 +51,14 @@ import {
 } from 'vue';
 
 const list = defineModel<Array<any>>();
-if (typeof (list.value) == 'undefined') {
-  list.value = [];
-}
-const props = defineProps<{ objects: Array<any> }>();
+
+const props = defineProps<{ objects: Array<any>, linkTypes: Array<any> }>();
 const objects = computed(() => props.objects);
+const linkTypes = computed(() => props.linkTypes);
 watch(objects, (value, oldValue, onCleanup) => {
+  console.log(value);
+});
+watch(linkTypes, (value, oldValue, onCleanup) => {
   console.log(value);
 });
 console.log(list);
@@ -65,11 +67,16 @@ const getIndex = () => {
   return new Date().valueOf();
 };
 const add = (row: Record<any, any>) => {
+  console.log(row, list);
   if (row) {
     row.children = row.children || [];
     row.children.push(createItem());
   } else {
-    list.value?.push(createItem());
+    if (typeof (list.value) == 'undefined') {
+      list.value = [createItem()];
+    } else {
+      list.value.push(createItem());
+    }
   }
 };
 const createItem = (def = {}) => {

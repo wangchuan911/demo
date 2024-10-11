@@ -5,12 +5,12 @@ import {FormContent} from "@/components/config";
 
 
 export declare type InputCompLoadedHandler<T> = (input: T, content: FormContent) => void;
-export declare type InputCompChangeHandler = (inputCompName: string, value: any, content: FormContent) => void;
+export declare type InputCompChangeHandler<T> = (input: T, name: string, value: any, content: FormContent) => void;
 export declare type ContentGetter = () => FormContent;
 
 export interface ItemConfig<T> {
     inputLoadHandler: InputCompLoadedHandler<T>;
-    inputChangeHandler: InputCompChangeHandler;
+    inputChangeHandler: InputCompChangeHandler<T>;
 
     /*constructor(inputLoadHandler: InputCompLoadedHandler<any> = (input, content) => {
         console.log("empty function");
@@ -29,7 +29,7 @@ export abstract class InputItem {
     prop: any;
     contentGetter: ContentGetter;
     inputLoadHandler: InputCompLoadedHandler<any>;
-    inputChangeHandler: InputCompChangeHandler;
+    inputChangeHandler: InputCompChangeHandler<any>;
     events: any;
 
 
@@ -41,13 +41,13 @@ export abstract class InputItem {
         this.inputLoadHandler = config.inputLoadHandler || ((input, content) => {
             console.log("loaded", input, content);
         });
-        this.inputChangeHandler = config.inputChangeHandler || ((name, value, content) => {
-            console.log("change", name, value, content);
+        this.inputChangeHandler = config.inputChangeHandler || ((input, name, value, content) => {
+            console.log("change", input, name, value, content);
         });
         this.events = {
             change: (value: any) => {
                 this.contentGetter().inputs.forEach((input: InputItem) => {
-                    input.inputChangeHandler(this.code, value, this.contentGetter());
+                    input.inputChangeHandler(input, this.code, value, this.contentGetter());
                 });
             }
         };

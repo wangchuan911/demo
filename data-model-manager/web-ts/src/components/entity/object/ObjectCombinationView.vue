@@ -275,6 +275,8 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
   constructor(row: Record<any, any>) {
     super();
     this.name = "添加对象";
+
+    const _attrs: Array<any> = attrs.slice(0, attrs.findIndex(value => value.instanceId == row.instanceId) + 1);
     this.content.addInput(
         new SelectItem("type", "类型", {
           inputLoadHandler: (input, content) => {
@@ -287,7 +289,7 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
           inputLoadHandler: (input, content) => {
             console.log(row);
             input.prop.readonly = true;
-            input.prop.value = `[${row.object.code}]${row.object.name}`;
+            input.prop.value = `[${row.instanceId}][${row.object.code}]${row.object.name}`;
           }
         } as ItemConfig<TextItem>),
         new SelectItem("object", "对象", {
@@ -317,9 +319,27 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
         new ObjectRelItem("rel", "关系", {
           inputLoadHandler: (input, content) => {
             console.log("");
-            input.prop.objects = attrs;
-          }, inputChangeHandler: (inputCompName, value, content) => {
-            console.log(inputCompName, value);
+            input.prop.objects = _attrs;
+          },
+          inputChangeHandler: (input, name, value, content) => {
+            console.log(name, value);
+            switch (name) {
+              case 'type':
+                input.prop.loading = true;
+                $http.get(`query/link/type/${value}`).then(({data}: { data: Array<Record<any, any>> }) => {
+                  input.prop.loading = false;
+                  console.log(data);
+                  input.prop.linkTypes = data.map(v => new MyOption(v.id, v.desc));
+                });
+                break;
+              case 'object':
+                input.prop.loading = true;
+                $http.get(`obj/${value}`).then(({data}: { data: Array<Record<any, any>> }) => {
+                  input.prop.loading = false;
+                  input.prop.objects = [{object: data, instanceId: "当前"}, ..._attrs];
+                });
+                break;
+            }
           }
         } as ItemConfig<ObjectRelItem>)
     );

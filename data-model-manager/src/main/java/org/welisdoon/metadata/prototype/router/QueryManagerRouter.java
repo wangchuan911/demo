@@ -315,7 +315,7 @@ public class QueryManagerRouter {
             long typeLinkId = Long.parseLong(routingContext.pathParam("typeLinkId"));
             routingContext.end(JSON.toJSONString(LinkMetaType.getChildTypeId(LinkMetaType.Sql.getId()).stream().map(aLong -> {
                 return ImmutableMap.of("id", aLong, "desc", LinkMetaType.getInstance(aLong).getDesc());
-            })));
+            }).toArray()));
         });
     }
 
