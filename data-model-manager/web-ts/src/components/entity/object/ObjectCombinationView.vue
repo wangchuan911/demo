@@ -276,47 +276,54 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
     super();
     this.name = "添加对象";
     this.content.addInput(
-        new SelectItem("type", "类型", new ItemConfig<SelectItem>((input, content) => {
-          $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
-            input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
-          });
-        })),
-        new TextItem("parent", "上级", new ItemConfig<TextItem>((input, content) => {
-          console.log(row);
-          input.prop.readonly = true;
-          input.prop.value = `[${row.object.code}]${row.object.name}`;
-        })),
-        new SelectItem("object", "对象", new ItemConfig<SelectItem>((input, content) => {
-          input.prop.filterable = true;
-          input.prop.remote = true;
-          input.prop.reserveKeyword = true;
-          input.prop.placeholder = "Please enter a keyword";
-          input.prop.loading = false;
-          input.prop.remoteMethod = (query: string) => {
-            if (query) {
-              input.prop.loading = true;
-              /*setTimeout(() => {
-                input.setOptions(new MyOption(query, query));
-                input.prop.loading = false;
-              }, 200);*/
-              $http.get(`query/object/${objectId.value}?text=${query}`).then(({data}: { data: Array<Record<any, any>> }) => {
-                input.prop.loading = false;
-                input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
-              });
-            } else {
-              input.setOptions();
-            }
-          };
-        })),
-        new ObjectRelItem("rel", "关系", new ItemConfig<ObjectRelItem>((input, content) => {
-          console.log("");
-          input.prop.objects = attrs;
-        }, (inputCompName, value, content) => {
-          console.log(inputCompName, value);
-        }))
+        new SelectItem("type", "类型", {
+          inputLoadHandler: (input, content) => {
+            $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
+              input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
+            });
+          }
+        } as ItemConfig<SelectItem>),
+        new TextItem("parent", "上级", {
+          inputLoadHandler: (input, content) => {
+            console.log(row);
+            input.prop.readonly = true;
+            input.prop.value = `[${row.object.code}]${row.object.name}`;
+          }
+        } as ItemConfig<TextItem>),
+        new SelectItem("object", "对象", {
+          inputLoadHandler: (input, content) => {
+            input.prop.filterable = true;
+            input.prop.remote = true;
+            input.prop.reserveKeyword = true;
+            input.prop.placeholder = "Please enter a keyword";
+            input.prop.loading = false;
+            input.prop.remoteMethod = (query: string) => {
+              if (query) {
+                input.prop.loading = true;
+                /*setTimeout(() => {
+                  input.setOptions(new MyOption(query, query));
+                  input.prop.loading = false;
+                }, 200);*/
+                $http.get(`query/object/${objectId.value}?text=${query}`).then(({data}: { data: Array<Record<any, any>> }) => {
+                  input.prop.loading = false;
+                  input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
+                });
+              } else {
+                input.setOptions();
+              }
+            };
+          }
+        } as ItemConfig<SelectItem>),
+        new ObjectRelItem("rel", "关系", {
+          inputLoadHandler: (input, content) => {
+            console.log("");
+            input.prop.objects = attrs;
+          }, inputChangeHandler: (inputCompName, value, content) => {
+            console.log(inputCompName, value);
+          }
+        } as ItemConfig<ObjectRelItem>)
     );
   }
-
 }
 
 const addLink = ref({} as LinkAddDrawersContent);

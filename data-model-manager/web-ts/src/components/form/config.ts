@@ -8,18 +8,18 @@ export declare type InputCompLoadedHandler<T> = (input: T, content: FormContent)
 export declare type InputCompChangeHandler = (inputCompName: string, value: any, content: FormContent) => void;
 export declare type ContentGetter = () => FormContent;
 
-export class ItemConfig<T> {
+export interface ItemConfig<T> {
     inputLoadHandler: InputCompLoadedHandler<T>;
     inputChangeHandler: InputCompChangeHandler;
 
-    constructor(inputLoadHandler: InputCompLoadedHandler<any> = (input, content) => {
+    /*constructor(inputLoadHandler: InputCompLoadedHandler<any> = (input, content) => {
         console.log("empty function");
     }, inputChangeHandler: InputCompChangeHandler = (input, content) => {
         console.log("empty function");
     }) {
         this.inputLoadHandler = inputLoadHandler;
         this.inputChangeHandler = inputChangeHandler;
-    }
+    }*/
 }
 
 export abstract class InputItem {
@@ -38,8 +38,12 @@ export abstract class InputItem {
         this.label = label;
         this.prop = {};
         this.contentGetter = () => null as unknown as FormContent;
-        this.inputLoadHandler = config.inputLoadHandler;
-        this.inputChangeHandler = config.inputChangeHandler;
+        this.inputLoadHandler = config.inputLoadHandler || ((input, content) => {
+            console.log("loaded", input, content);
+        });
+        this.inputChangeHandler = config.inputChangeHandler || ((name, value, content) => {
+            console.log("change", name, value, content);
+        });
         this.events = {
             change: (value: any) => {
                 this.contentGetter().inputs.forEach((input: InputItem) => {
@@ -79,7 +83,7 @@ export class SelectItem extends InputItem {
     isMulti: boolean;
     checkBoxStyle: boolean;
 
-    constructor(code: string, label: string, prop: ItemConfig<SelectItem> = new ItemConfig<SelectItem>()) {
+    constructor(code: string, label: string, prop: ItemConfig<SelectItem> = {} as ItemConfig<SelectItem>) {
         super(code, label, prop);
         this.isMulti = false;
         this.checkBoxStyle = false;
@@ -121,7 +125,7 @@ export enum TextType {
 export class TextItem extends InputItem {
     mode: TextType;
 
-    constructor(code: string, label: string, prop: ItemConfig<TextItem> = new ItemConfig<TextItem>()) {
+    constructor(code: string, label: string, prop: ItemConfig<TextItem> = {} as ItemConfig<TextItem>) {
         super(code, label, prop);
         this.mode = TextType.Default;
         this.prop['type'] = 'text';
@@ -135,7 +139,7 @@ export class TextItem extends InputItem {
 }
 
 export class QueryItem extends InputItem {
-    constructor(code: string, label: string, prop: ItemConfig<QueryItem> = new ItemConfig<QueryItem>()) {
+    constructor(code: string, label: string, prop: ItemConfig<QueryItem> = {} as ItemConfig<QueryItem>) {
         super(code, label, prop);
         this.comp = ElInput;
     }
@@ -144,7 +148,7 @@ export class QueryItem extends InputItem {
 export class RadioItem extends InputItem {
     isMulti: boolean;
 
-    constructor(code: string, label: string, prop: ItemConfig<RadioItem> = new ItemConfig<RadioItem>()) {
+    constructor(code: string, label: string, prop: ItemConfig<RadioItem> = {} as ItemConfig<RadioItem>) {
         super(code, label, prop);
         this.isMulti = false;
         this.comp = ElInput;
@@ -158,7 +162,7 @@ export class RadioItem extends InputItem {
 
 export class EasySearchItem extends InputItem {
 
-    constructor(code: string, label: string, prop: ItemConfig<EasySearchItem> = new ItemConfig<EasySearchItem>()) {
+    constructor(code: string, label: string, prop: ItemConfig<EasySearchItem> = {} as ItemConfig<EasySearchItem>) {
         super(code, label, prop);
         this.comp = MyEasySearch;
         this.prop['onSearch'] = () => {

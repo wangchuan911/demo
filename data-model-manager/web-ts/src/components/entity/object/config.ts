@@ -4,7 +4,7 @@ import ObjectRelAddView from "@/components/entity/object/ObjectRelAddView.vue";
 export class ObjectRelItem extends InputItem {
 
 
-    constructor(code: string, label: string, prop: ItemConfig<ObjectRelItem> = new ItemConfig<ObjectRelItem>()) {
+    constructor(code: string, label: string, prop: ItemConfig<ObjectRelItem> = {} as ItemConfig<ObjectRelItem>) {
         super(code, label, prop);
         this.prop.value = [];
         this.comp = ObjectRelAddView;

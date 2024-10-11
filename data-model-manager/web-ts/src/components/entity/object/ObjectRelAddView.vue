@@ -2,6 +2,7 @@
   <el-table :data="list" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)" row-key="_id"
             :lazy="false"
             :default-expand-all="true">
+    <el-table-column prop="item.instanceId" label="对象实例ID"/>
     <el-table-column label="对象">
       <template #default="scope">
         <el-select v-model="scope.row.itemIndex" @change="(value)=>scope.row.item=objects[value]">
@@ -12,7 +13,6 @@
         </el-select>
       </template>
     </el-table-column>
-    <el-table-column prop="item.instanceId" label="对象实例ID"/>
     <el-table-column prop="item.object.typeDesc" label="对象类型"/>
     <el-table-column prop="item.typeDesc" label="关联方式">
       <template #default="scope">
