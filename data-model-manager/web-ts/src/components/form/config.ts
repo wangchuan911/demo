@@ -64,6 +64,9 @@ export abstract class InputItem {
         this.contentGetter = getter;
     }
 
+    check(): Boolean {
+        return true;
+    }
 }
 
 export class MyOption {

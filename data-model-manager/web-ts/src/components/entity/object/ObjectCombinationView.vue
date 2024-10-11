@@ -238,7 +238,7 @@ class LinkAddDrawersContent extends DrawersContent {
   }
 
   confirm() {
-    console.log(this.content.form);
+    console.log(this.content.getForm());
   }
 
   addLink(value: any) {

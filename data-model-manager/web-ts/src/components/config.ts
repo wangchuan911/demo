@@ -37,8 +37,19 @@ export class FormContent {
 
     onLoaded() {
         this.inputs.forEach(value => {
-            value.onLoaded(this)
-        })
+            value.onLoaded(this);
+        });
+    }
+
+    getForm(): Record<any, any> {
+        let flag = false;
+        for (const input of this.inputs) {
+            flag = flag || !input.check();
+        }
+        if (flag) {
+            throw "检查不通过";
+        }
+        return this.form;
     }
 }
 
