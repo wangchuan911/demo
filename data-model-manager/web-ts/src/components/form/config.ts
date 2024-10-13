@@ -54,9 +54,9 @@ export abstract class InputItem implements ItemConfig<InputItem> {
         return this;
     }
 
-    onLoaded(content: FormContent): this {
+    async onLoaded(content: FormContent): this {
         this.setContent(() => content);
-        this.inputLoadHandler(this, content);
+        await this.inputLoadHandler(this, content);
         return this;
     }
 

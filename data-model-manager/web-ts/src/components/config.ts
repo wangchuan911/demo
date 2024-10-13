@@ -31,10 +31,10 @@ export class FormContent {
         return this;
     }
 
-    onLoaded() {
-        this.inputs.forEach(value => {
-            value.onLoaded(this);
-        });
+    async onLoaded(): Promise<void> {
+        for (let input of this.inputs) {
+            await input.onLoaded(this);
+        }
     }
 
     async getForm(check: boolean): Promise<Record<any, any>> {
