@@ -54,7 +54,7 @@ export abstract class InputItem implements ItemConfig<InputItem> {
         return this;
     }
 
-    async onLoaded(content: FormContent): this {
+    async onLoaded(content: FormContent): Promise<this> {
         this.setContent(() => content);
         await this.inputLoadHandler(this, content);
         return this;

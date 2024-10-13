@@ -204,7 +204,7 @@ const operation = (type: number, row: Record<any, any>) => {
 import {DrawersContent, FormContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
-import {EasySearchItem, InputItem, ItemConfig, MyOption, Prop, SelectItem, TextItem} from "@/components/form/config";
+import {EasySearchItem, InputItem, ItemConfig, MyOption, SelectItem, TextItem} from "@/components/form/config";
 import MyFormContainer from "@/components/form/MyFormContainer.vue";
 import {ObjectRelItem} from "@/components/entity/object/config";
 
@@ -220,10 +220,11 @@ class LinkAddDrawersContent extends DrawersContent {
     this.name = "未知操作";
   }
 
-  open(data: Record<any, any>) {
+  async open(data: Record<any, any>): Promise<DrawersContent> {
     this.data = data;
     this._open();
-    this.content.onLoaded();
+    await this.content.onLoaded();
+    return this;
   }
 
   beforeClose(done: () => void) {

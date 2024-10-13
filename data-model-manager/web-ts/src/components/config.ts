@@ -32,7 +32,7 @@ export class FormContent {
     }
 
     async onLoaded(): Promise<void> {
-        for (let input of this.inputs) {
+        for (const input of this.inputs) {
             await input.onLoaded(this);
         }
     }
