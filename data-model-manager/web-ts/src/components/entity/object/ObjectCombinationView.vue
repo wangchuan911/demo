@@ -216,7 +216,7 @@ class LinkAddDrawersContent extends DrawersContent {
 
   constructor() {
     super();
-    this.content = new FormContent({});
+    this.content = new FormContent();
     this.name = "未知操作";
   }
 
@@ -229,7 +229,6 @@ class LinkAddDrawersContent extends DrawersContent {
   beforeClose(done: () => void) {
     ElMessageBox.confirm('放弃保存?', {confirmButtonText: "确定", cancelButtonText: "取消"})
         .then(() => {
-          this.content.form = {};
           done();
         })
         .catch(() => {
@@ -279,37 +278,34 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
     const _attrs: Array<any> = attrs.slice(0, attrs.findIndex(value => value.instanceId == row.instanceId) + 1);
     this.content.addInput(
         new SelectItem("type", "类型", {
-          inputLoadHandler: (input, content) => {
-            $http.get(`link/types/obj${objectId.value}`).then(({data}: { data: Array<Record<any, any>> }) => {
-              input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
-            });
+          async inputLoadHandler(input, content) {
+            const {data}: { data: Array<Record<any, any>> } = await $http.get(`link/types/obj${objectId.value}`);
+            input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
           }
         } as ItemConfig<SelectItem>),
         new TextItem("parent", "上级", {
-          inputLoadHandler: (input, content) => {
+          async inputLoadHandler(input, content) {
             console.log(row);
             input.prop.readonly = true;
             input.prop.value = `[${row.instanceId}][${row.object.code}]${row.object.name}`;
+          },
+          async valueToData(input, form, content) {
+            form[input.code] = row.instanceId;
           }
         } as ItemConfig<TextItem>),
         new SelectItem("object", "对象", {
-          inputLoadHandler: (input, content) => {
+          async inputLoadHandler(input, content) {
             input.prop.filterable = true;
             input.prop.remote = true;
             input.prop.reserveKeyword = true;
             input.prop.placeholder = "Please enter a keyword";
             input.prop.loading = false;
-            input.prop.remoteMethod = (query: string) => {
+            input.prop.remoteMethod = async function (query: string) {
               if (query) {
                 input.prop.loading = true;
-                /*setTimeout(() => {
-                  input.setOptions(new MyOption(query, query));
-                  input.prop.loading = false;
-                }, 200);*/
-                $http.get(`query/object/${objectId.value}?text=${query}`).then(({data}: { data: Array<Record<any, any>> }) => {
-                  input.prop.loading = false;
-                  input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
-                });
+                const {data}: { data: Array<Record<any, any>> } = await $http.get(`query/object/${objectId.value}?text=${query}`);
+                input.prop.loading = false;
+                input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
               } else {
                 input.setOptions();
               }
@@ -321,24 +317,24 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
             console.log("");
             input.prop.objects = _attrs;
           },
-          inputChangeHandler: (input, name, value, content) => {
-            console.log(name, value);
-            switch (name) {
-              case 'type':
+          async inputChangeHandler(input, changeInput, content) {
+            console.log(changeInput.code, changeInput.value);
+            switch (changeInput.code) {
+              case 'type': {
                 input.prop.loading = true;
-                $http.get(`query/link/type/${value}`).then(({data}: { data: Array<Record<any, any>> }) => {
-                  input.prop.loading = false;
-                  console.log(data);
-                  input.prop.linkTypes = data.map(v => new MyOption(v.id, v.desc));
-                });
+                const {data}: { data: Array<Record<any, any>> } = await $http.get(`query/link/type/${changeInput.value}`);
+                input.prop.loading = false;
+                console.log(data);
+                input.prop.linkTypes = data.map(v => new MyOption(v.id, v.desc));
                 break;
-              case 'object':
+              }
+              case 'object': {
                 input.prop.loading = true;
-                $http.get(`obj/${value}`).then(({data}: { data: Array<Record<any, any>> }) => {
-                  input.prop.loading = false;
-                  input.prop.objects = [{object: data, instanceId: "当前"}, ..._attrs];
-                });
+                const {data}: { data: Array<Record<any, any>> } = await $http.get(`obj/${changeInput.value}`);
+                input.prop.loading = false;
+                input.prop.objects = [{object: data, instanceId: "当前"}, ..._attrs];
                 break;
+              }
             }
           }
         } as ItemConfig<ObjectRelItem>)

@@ -22,13 +22,9 @@ export abstract class DrawersContent {
 }
 
 export class FormContent {
-    form: Record<any, any>;
-    inputs: Array<InputItem>;
 
-    constructor(form: Record<any, any>) {
-        this.form = form;
-        this.inputs = [];
-    }
+    inputs: Array<InputItem> = [];
+
 
     addInput(...inputs: Array<InputItem>): this {
         this.inputs.push(...inputs);
@@ -41,15 +37,21 @@ export class FormContent {
         });
     }
 
-    getForm(): Record<any, any> {
+    async getForm(check: boolean): Promise<Record<any, any>> {
         let flag = false;
+        const form: Record<any, any> = {};
         for (const input of this.inputs) {
-            flag = flag || !input.check();
+            await input.valueToData(input, form, this);
         }
-        if (flag) {
-            throw "检查不通过";
+        if (check) {
+            for (const input of this.inputs) {
+                flag = flag || !input.check();
+            }
+            if (flag) {
+                throw "检查不通过";
+            }
         }
-        return this.form;
+        return form;
     }
 }
 

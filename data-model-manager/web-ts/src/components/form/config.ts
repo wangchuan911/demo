@@ -3,14 +3,16 @@ import MySelect from '@/components/form/input/MySelect.vue';
 import MyEasySearch from '@/components/form/input/MyEasySearch.vue';
 import {FormContent} from "@/components/config";
 
-
-export declare type InputCompLoadedHandler<T> = (input: T, content: FormContent) => void;
-export declare type InputCompChangeHandler<T> = (input: T, name: string, value: any, content: FormContent) => void;
 export declare type ContentGetter = () => FormContent;
 
 export interface ItemConfig<T> {
-    inputLoadHandler: InputCompLoadedHandler<T>;
-    inputChangeHandler: InputCompChangeHandler<T>;
+    inputLoadHandler(input: T, content: FormContent): Promise<void>;
+
+    inputChangeHandler(input: T, changeInput: InputItem, content: FormContent): Promise<void>;
+
+    dataToValue(input: T, data: any, content: FormContent): Promise<void>;
+
+    valueToData(input: T, form: Record<any, any>, content: FormContent): Promise<void>;
 
     /*constructor(inputLoadHandler: InputCompLoadedHandler<any> = (input, content) => {
         console.log("empty function");
@@ -22,37 +24,35 @@ export interface ItemConfig<T> {
     }*/
 }
 
-export abstract class InputItem {
+export abstract class InputItem implements ItemConfig<InputItem> {
     code: string;
     label: string;
     comp: any;
     prop: any;
     contentGetter: ContentGetter;
-    inputLoadHandler: InputCompLoadedHandler<any>;
-    inputChangeHandler: InputCompChangeHandler<any>;
     events: any;
+    value: any;
+    config: ItemConfig<any>;
 
-
-    protected constructor(code: string, label: string, config: ItemConfig<any>) {
+    protected constructor(code: string, label: string, config: ItemConfig<InputItem>) {
         this.code = code;
         this.label = label;
         this.prop = {};
         this.contentGetter = () => null as unknown as FormContent;
-        this.inputLoadHandler = config.inputLoadHandler || ((input, content) => {
-            console.log("loaded", input, content);
-        });
-        this.inputChangeHandler = config.inputChangeHandler || ((input, name, value, content) => {
-            console.log("change", input, name, value, content);
-        });
+        this.config = config;
+        const _this = this._self();
         this.events = {
-            change: (value: any) => {
-                this.contentGetter().inputs.forEach((input: InputItem) => {
-                    input.inputChangeHandler(input, this.code, value, this.contentGetter());
-                });
+            async change(value: any) {
+                for (const input of _this.contentGetter().inputs) {
+                    await input.inputChangeHandler(input, _this, _this.contentGetter());
+                }
             }
         };
     }
 
+    _self(): this {
+        return this;
+    }
 
     onLoaded(content: FormContent): this {
         this.setContent(() => content);
@@ -64,8 +64,34 @@ export abstract class InputItem {
         this.contentGetter = getter;
     }
 
-    check(): Boolean {
+    check(): boolean {
         return true;
+    }
+
+    async dataToValue(input: any, data: any, content: FormContent): Promise<void> {
+        if (typeof (this.config.dataToValue) == 'function') {
+            return await this.config.dataToValue(input, data, content);
+        }
+        this.value = data[this.code];
+    }
+
+    async inputChangeHandler(input: any, changeInput: InputItem, content: FormContent): Promise<void> {
+        if (typeof (this.config.inputChangeHandler) == 'function') {
+            return await this.config.inputChangeHandler(input, changeInput, content);
+        }
+    }
+
+    async inputLoadHandler(input: any, content: FormContent): Promise<void> {
+        if (typeof (this.config.inputLoadHandler) == 'function') {
+            return await this.config.inputLoadHandler(input, content);
+        }
+    }
+
+    async valueToData(input: any, form: Record<any, any>, content: FormContent): Promise<void> {
+        if (typeof (this.config.valueToData) == 'function') {
+            return await this.config.valueToData(input, form, content);
+        }
+        form[this.code] = this.value;
     }
 }
 
