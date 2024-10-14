@@ -1,6 +1,7 @@
 package org.welisdoon.metadata.prototype.router;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.common.JsonUtils;
-import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
 import org.welisdoon.metadata.prototype.condition.Page;
@@ -33,7 +33,10 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -319,4 +322,37 @@ public class QueryManagerRouter {
         });
     }
 
+    @VertxRouter(path = "\\/add\\/obj\\/link\\/rel\\/(?<objectId>\\d+)",
+            method = "POST", mode = VertxRouteType.PathRegex)
+    public void objectAddLinkRel(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long objectId = Long.parseLong(routingContext.pathParam("objectId"));
+            JSONObject object = JSONObject.parseObject(routingContext.body().asString());
+            JSONArray rel = object.getJSONArray("rel");
+            logger.info(routingContext.body().asString());
+            routingContext.end();
+        });
+    }
+
+    @VertxRouter(path = "/add/obj",
+            method = "POST")
+    public void addObject(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            MetaObject object = JSONObject.parseObject(routingContext.body().asString(), MetaObject.class);
+            metaObjectDao.add(object);
+            routingContext.end(JSON.toJSONString(object));
+        });
+    }
+
+    @VertxRouter(path = "\\/add\\/attr\\/(?<objectId>\\d+)",
+            method = "POST", mode = VertxRouteType.PathRegex)
+    public void addAttr(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long objectId = Long.parseLong(routingContext.pathParam("objectId"));
+            MetaObject.Attribute attribute = JSONObject.parseObject(routingContext.body().asString(), MetaObject.Attribute.class);
+            attribute.setObjectId(objectId);
+            metaAttributeDao.add(attribute);
+            routingContext.end(JSON.toJSONString(attribute));
+        });
+    }
 }

@@ -204,62 +204,38 @@ const operation = (type: number, row: Record<any, any>) => {
 import {DrawersContent, FormContent, stringLike} from "@/components/config";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {AxiosError} from "axios";
-import {EasySearchItem, InputItem, ItemConfig, MyOption, SelectItem, TextItem} from "@/components/form/config";
+import {
+  EasySearchItem,
+  FormDrawersContent,
+  InputItem,
+  ItemConfig,
+  MyOption,
+  SelectItem,
+  TextItem
+} from "@/components/form/config";
 import MyFormContainer from "@/components/form/MyFormContainer.vue";
 import {ObjectRelItem} from "@/components/entity/object/config";
 
-class LinkAddDrawersContent extends DrawersContent {
+class LinkAddDrawersContent extends FormDrawersContent {
   name: string;
   type: number | undefined;
-  data: Record<any, any> | undefined;
-  content: FormContent;
 
   constructor() {
     super();
-    this.content = new FormContent({});
     this.name = "未知操作";
   }
 
-  async open(data: Record<any, any>): Promise<DrawersContent> {
-    this.data = data;
-    this.content.reset(data);
-    this._open();
-    await this.content.onLoaded();
-    return this;
-  }
-
-  beforeClose(done: () => void) {
-    ElMessageBox.confirm('放弃保存?', {confirmButtonText: "确定", cancelButtonText: "取消"})
-        .then(() => {
-          done();
-        })
-        .catch(() => {
-          // catch error
-        });
-  }
-
-  confirm() {
-    console.log(this.content.getForm(true));
-  }
-
-  addLink(value: any) {
-    loading.value = true;
-    $http.put(`link`, value)
-        .then(({data}: { data: Array<Record<any, any>> }) => {
-          loading.value = false;
-          this._close();
-          if (data instanceof String) {
-            throw data;
-          }
-          attrs.push(data);
-        }, (error: any) => {
-          loading.value = false;
-          this._close();
-          if (error instanceof AxiosError)
-            ElMessage.error(error.response?.data || error);
-          else
-            ElMessage.error(error);
-        });
+  async confirm() {
+    try {
+      await $http.post(`add/obj/link/rel/${objectId.value}`, await this.content.getForm(true));
+      this._close()
+    } catch (e: any) {
+      ElMessage({
+        showClose: true,
+        message: e.toString(),
+        type: 'error',
+      });
+    }
   }
 }
 
@@ -341,15 +317,19 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
           },
           async valueToData(input, form, content) {
             async function getVal(node: any): Promise<any> {
-              const children = [];
-              for (const link of (node.children || [])) {
-                children.push(await getVal(link));
+              let children: Array<any> = null;
+              if (node.children != null) {
+                children = [];
+                for (const link of node.children) {
+                  children.push(await getVal(link));
+                }
               }
+
               return {
                 objectId: node.item?.object?.id,
                 instanceId: node.item?.instanceId,
                 linkTypeId: node.linkTypeId,
-                attributeId: (node.item?.attrs || [])[node.attrIndex || 0]?.id,
+                attributeId: node.item?.attrs?.[node.attrIndex || 0]?.id,
                 children
               };
             }

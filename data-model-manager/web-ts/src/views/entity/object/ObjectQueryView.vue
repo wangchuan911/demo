@@ -8,6 +8,9 @@
         <el-button type="primary" @click="submitForm(formRef)">Query</el-button>
         <el-button @click="resetForm(formRef)">Reset</el-button>
       </el-form-item>
+      <el-form-item style="float: right">
+        <el-button type="primary">add</el-button>
+      </el-form-item>
     </el-form>
     <el-table :data="datas" style="width: 100%" height="calc(100vh - 300px)">
       <el-table-column prop="id" label="ID" width="180"/>
@@ -36,32 +39,56 @@
       </div>
     </div>
   </div>
+  <el-drawer v-model="drawer.show" :title="drawer.name" size="70%" show-close
+             :before-close="(done)=>drawer.beforeClose(done)">
+    <template #default>
+      <my-form-container v-model="drawer.content"></my-form-container>
+    </template>
+    <template #footer>
+      <div style="flex: auto">
+        <el-button @click="drawer.show=false">cancel</el-button>
+        <el-button type="primary" @click="drawer.confirm()">confirm</el-button>
+      </div>
+    </template>
+  </el-drawer>
 </template>
 
 <script lang="ts" setup>
 
 import {useRouter, onBeforeRouteUpdate, useRoute, RouteLocationNormalizedLoaded} from "vue-router";
-import {ref, reactive, onActivated, onMounted, getCurrentInstance, ComponentInternalInstance} from 'vue'
+import {
+  ref,
+  reactive,
+  onActivated,
+  onMounted,
+  getCurrentInstance,
+  ComponentInternalInstance,
+  ComponentCustomProperties
+} from 'vue';
 
 import type {FormInstance} from 'element-plus';
-import {ElMessage} from 'element-plus';
+import {ElMessage, ElMessageBox} from 'element-plus';
+import {DrawersContent, FormContent} from "@/components/config";
+import {AxiosError} from "axios";
+import {FormDrawersContent} from "@/components/form/config";
 
 const router = useRouter(), datas = reactive(new Array<{ id: string, name: string, desc?: string }>()),
-    page = reactive({page: 1, total: 0, size: 100})
-const {proxy} = getCurrentInstance() as ComponentInternalInstance
-const loading = ref(false), formRef = ref<FormInstance>(), formModel = reactive({name: ""})
+    page = reactive({page: 1, total: 0, size: 100});
+const {proxy} = getCurrentInstance() as ComponentInternalInstance;
+const {$http} = proxy as ComponentCustomProperties;
+const loading = ref(false), formRef = ref<FormInstance>(), formModel = reactive({name: ""});
 onActivated(() => {
-  console.log("onActivated")
-})
+  console.log("onActivated");
+});
 onMounted(() => {
-  console.log("onMounted")
-})
+  console.log("onMounted");
+});
 
 const resetForm = (formEl: FormInstance | undefined) => {
-  if (!formEl) return
-  formEl.resetFields()
+  if (!formEl) return;
+  formEl.resetFields();
 }, submitForm = (formEl: FormInstance | undefined) => {
-  console.log(formEl)
+  console.log(formEl);
   handleCurrentChange(1);
 }, handleCurrentChange = (pageNumber: number) => {
   loading.value = true;
@@ -70,7 +97,7 @@ const resetForm = (formEl: FormInstance | undefined) => {
     page: {page: pageNumber, size: page.size}
   }).then(value => {
     loading.value = false;
-    console.log(value.data)
+    console.log(value.data);
     datas.length = 0;
     page.page = pageNumber;
     page.total = value.data.total;
@@ -80,12 +107,20 @@ const resetForm = (formEl: FormInstance | undefined) => {
       showClose: true,
       message: reason.toString(),
       type: 'error',
-    })
+    });
     loading.value = false;
-  })
+  });
 }, tableEdit = (row: any) => {
-  router.push({path: `/index/object-detail/${row.id}`})
+  router.push({path: `/index/object-detail/${row.id}`});
+};
+class ObjectLinkDrawersContent extends FormDrawersContent{
+
 }
+const drawer = ref({} as FormDrawersContent);
+
+
+
+
 </script>
 
 <style scoped>

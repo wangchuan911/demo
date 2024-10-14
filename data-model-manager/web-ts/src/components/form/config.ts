@@ -1,9 +1,10 @@
-import {ElInput, ElOption} from 'element-plus';
+import {ElInput, ElMessageBox, ElOption} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
 import MyEasySearch from '@/components/form/input/MyEasySearch.vue';
-import {FormContent} from "@/components/config";
+import {DrawersContent, FormContent} from "@/components/config";
 
 export declare type ContentGetter = () => FormContent;
+
 
 export interface ItemConfig<T> {
     inputLoadHandler(input: T, content: FormContent): Promise<void>;
@@ -202,6 +203,47 @@ export class EasySearchItem extends InputItem {
     setOnSearch(fun: () => void): this {
         this.prop['onSearch'] = fun;
         return this;
+    }
+}
+
+export class FormDrawersContent extends DrawersContent {
+    data: Record<any, any> | undefined;
+    content: FormContent;
+    event: any = {};
+
+    constructor() {
+        super();
+        this.content = new FormContent({});
+    }
+
+    async open(data: Record<any, any>): Promise<DrawersContent> {
+        this.data = data;
+        this.content.reset(data);
+        this._open();
+        await this.content.onLoaded();
+        return this;
+    }
+
+    beforeClose(done: () => void) {
+        ElMessageBox.confirm('放弃保存?', {confirmButtonText: "确定", cancelButtonText: "取消"})
+            .then(() => this.trigger('beforeCloseOk'))
+            .then(() => {
+                done();
+            })
+            .catch((e) => {
+                // catch error
+                this.trigger('beforeCloseFail', e);
+            });
+    }
+
+    async trigger(name: string, ...args: Array<any>) {
+        if (typeof (this.event[name]) == 'function') {
+            await this.event[name](this, ...args);
+        }
+    }
+
+    confirm() {
+        console.log(this.content.getForm(true));
     }
 }
 
