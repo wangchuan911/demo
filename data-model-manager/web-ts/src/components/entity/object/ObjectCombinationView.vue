@@ -216,12 +216,13 @@ class LinkAddDrawersContent extends DrawersContent {
 
   constructor() {
     super();
-    this.content = new FormContent();
+    this.content = new FormContent({});
     this.name = "未知操作";
   }
 
   async open(data: Record<any, any>): Promise<DrawersContent> {
     this.data = data;
+    this.content.reset(data);
     this._open();
     await this.content.onLoaded();
     return this;
@@ -238,7 +239,7 @@ class LinkAddDrawersContent extends DrawersContent {
   }
 
   confirm() {
-    console.log(this.content.getForm());
+    console.log(this.content.getForm(true));
   }
 
   addLink(value: any) {
@@ -318,12 +319,12 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
             console.log("");
             input.prop.objects = _attrs;
           },
-          async inputChangeHandler(input, changeInput, content) {
-            console.log(changeInput.code, changeInput.value);
+          async inputChangeHandler(input, changeInput, value, content) {
+            console.log(changeInput.code, value);
             switch (changeInput.code) {
               case 'type': {
                 input.prop.loading = true;
-                const {data}: { data: Array<Record<any, any>> } = await $http.get(`query/link/type/${changeInput.value}`);
+                const {data}: { data: Array<Record<any, any>> } = await $http.get(`query/link/type/${value}`);
                 input.prop.loading = false;
                 console.log(data);
                 input.prop.linkTypes = data.map(v => new MyOption(v.id, v.desc));
@@ -331,12 +332,33 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
               }
               case 'object': {
                 input.prop.loading = true;
-                const {data}: { data: Array<Record<any, any>> } = await $http.get(`obj/${changeInput.value}`);
+                const {data}: { data: Array<Record<any, any>> } = await $http.get(`obj/${value}`);
                 input.prop.loading = false;
                 input.prop.objects = [{object: data, instanceId: "当前"}, ..._attrs];
                 break;
               }
             }
+          },
+          async valueToData(input, form, content) {
+            async function getVal(node: any): Promise<any> {
+              const children = [];
+              for (const link of (node.children || [])) {
+                children.push(await getVal(link));
+              }
+              return {
+                objectId: node.item?.object?.id,
+                instanceId: node.item?.instanceId,
+                linkTypeId: node.linkTypeId,
+                attributeId: (node.item?.attrs || [])[node.attrIndex || 0]?.id,
+                children
+              };
+            }
+
+            const convertValues = [];
+            for (const link of (content.form[input.code] || [])) {
+              convertValues.push(await getVal(link));
+            }
+            form[input.code] = convertValues;
           }
         } as ItemConfig<ObjectRelItem>)
     );

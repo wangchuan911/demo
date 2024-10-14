@@ -8,7 +8,7 @@ export declare type ContentGetter = () => FormContent;
 export interface ItemConfig<T> {
     inputLoadHandler(input: T, content: FormContent): Promise<void>;
 
-    inputChangeHandler(input: T, changeInput: InputItem, content: FormContent): Promise<void>;
+    inputChangeHandler(input: T, changeInput: InputItem, value: any, content: FormContent): Promise<void>;
 
     dataToValue(input: T, data: any, content: FormContent): Promise<void>;
 
@@ -31,7 +31,6 @@ export abstract class InputItem implements ItemConfig<InputItem> {
     prop: any;
     contentGetter: ContentGetter;
     events: any;
-    value: any;
     config: ItemConfig<any>;
 
     protected constructor(code: string, label: string, config: ItemConfig<InputItem>) {
@@ -44,7 +43,7 @@ export abstract class InputItem implements ItemConfig<InputItem> {
         this.events = {
             async change(value: any) {
                 for (const input of _this.contentGetter().inputs) {
-                    await input.inputChangeHandler(input, _this, _this.contentGetter());
+                    await input.inputChangeHandler(input, _this, value, _this.contentGetter());
                 }
             }
         };
@@ -72,12 +71,12 @@ export abstract class InputItem implements ItemConfig<InputItem> {
         if (typeof (this.config.dataToValue) == 'function') {
             return await this.config.dataToValue(input, data, content);
         }
-        this.value = data[this.code];
+        content.form[this.code] = data[this.code];
     }
 
-    async inputChangeHandler(input: any, changeInput: InputItem, content: FormContent): Promise<void> {
+    async inputChangeHandler(input: any, changeInput: InputItem, value: any, content: FormContent): Promise<void> {
         if (typeof (this.config.inputChangeHandler) == 'function') {
-            return await this.config.inputChangeHandler(input, changeInput, content);
+            return await this.config.inputChangeHandler(input, changeInput, value, content);
         }
     }
 
@@ -91,7 +90,7 @@ export abstract class InputItem implements ItemConfig<InputItem> {
         if (typeof (this.config.valueToData) == 'function') {
             return await this.config.valueToData(input, form, content);
         }
-        form[this.code] = this.value;
+        form[this.code] = content.form[this.code];
     }
 }
 

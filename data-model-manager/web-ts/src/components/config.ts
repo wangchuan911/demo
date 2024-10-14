@@ -22,9 +22,13 @@ export abstract class DrawersContent {
 }
 
 export class FormContent {
+    form: Record<any, any>;
+    inputs: Array<InputItem>;
 
-    inputs: Array<InputItem> = [];
-
+    constructor(form: Record<any, any> = {}) {
+        this.form = form;
+        this.inputs = [];
+    }
 
     addInput(...inputs: Array<InputItem>): this {
         this.inputs.push(...inputs);
@@ -51,7 +55,15 @@ export class FormContent {
                 throw "检查不通过";
             }
         }
+        console.log("原始", this.form);
+        console.log("转换", form);
         return form;
+    }
+
+    reset(data: any = {}): void {
+        for (const formKey in this.form) {
+            delete this.form[formKey];
+        }
     }
 }
 

@@ -6,7 +6,7 @@
     <el-table-column label="对象">
       <template #default="scope">
         <div style="display: flex">
-          <div style="flex: 1">
+          <div style="flex: 3">
             <el-select v-model="scope.row.itemIndex" @change="(value)=>objectChange(value,scope.row)">
               <el-option v-for="(item,index) in objects" :key="index"
                          :label="`[${item.instanceId}] ${item.object.code} [${item.object.name}]`"
@@ -14,7 +14,7 @@
               />
             </el-select>
           </div>
-          <div style="flex: 1">
+          <div style="flex: 2;margin-left: 1em">
             <el-select v-model="scope.row.attrIndex">
               <el-option v-for="(item,index) in scope.row?.item?.attrs" :key="index"
                          :label="`${item.code} [${item.name}]`"
@@ -111,7 +111,7 @@ const del = (_id: number, _list: Array<any>): boolean => {
 async function objectChange(index: number, row: any) {
   row.item = objects.value[index];
   console.log(row.item);
-  const {data}: { data: Array<Record<any, any>> } = await $http.get(`obj/attrs/${row.item.objectId}`);
+  const {data}: { data: Array<Record<any, any>> } = await $http.get(`obj/attrs/${row.item.object.id}`);
   row.item.attrs = data;
 }
 </script>
