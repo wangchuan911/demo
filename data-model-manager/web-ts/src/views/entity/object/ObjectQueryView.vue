@@ -9,7 +9,7 @@
         <el-button @click="resetForm(formRef)">Reset</el-button>
       </el-form-item>
       <el-form-item style="float: right">
-        <el-button type="primary">add</el-button>
+        <el-button type="primary" @click="openDrawer(1,null)">add</el-button>
       </el-form-item>
     </el-form>
     <el-table :data="datas" style="width: 100%" height="calc(100vh - 300px)">
@@ -70,7 +70,7 @@ import type {FormInstance} from 'element-plus';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import {DrawersContent, FormContent} from "@/components/config";
 import {AxiosError} from "axios";
-import {FormDrawersContent} from "@/components/form/config";
+import {FormDrawersContent, ItemConfig, MyOption, SelectItem, TextItem} from "@/components/form/config";
 
 const router = useRouter(), datas = reactive(new Array<{ id: string, name: string, desc?: string }>()),
     page = reactive({page: 1, total: 0, size: 100});
@@ -113,12 +113,46 @@ const resetForm = (formEl: FormInstance | undefined) => {
 }, tableEdit = (row: any) => {
   router.push({path: `/index/object-detail/${row.id}`});
 };
-class ObjectLinkDrawersContent extends FormDrawersContent{
 
+class ObjectLinkDrawersContent extends FormDrawersContent {
+  constructor() {
+    super();
+    this.name = "添加对象";
+    this.content.addInput(new SelectItem("typeId", "类型", {
+      async inputLoadHandler(input: SelectItem, content: FormContent): Promise<void> {
+        const {data} = await $http.get("obj/type");
+        input.addOptions(...data.map(val => new MyOption(val.id, val.desc)));
+      }
+    } as ItemConfig<SelectItem>), new TextItem("code", "标识"), new TextItem("name", "描述"));
+  }
+
+  async confirm() {
+    try {
+      await $http.put(`obj`, await this.content.getForm(true));
+      this._close();
+      submitForm(formRef.value);
+    } catch (e: any) {
+      ElMessage({
+        showClose: true,
+        message: e.toString(),
+        type: 'error',
+      });
+    }
+  }
 }
+
 const drawer = ref({} as FormDrawersContent);
 
-
+const openDrawer = (type: number, row: Record<any, any> = {}) => {
+  console.log(type);
+  console.log(row);
+  switch (type) {
+    case 1:
+      drawer.value = new ObjectLinkDrawersContent();
+      drawer.value.open(row);
+      break;
+  }
+};
 
 
 </script>

@@ -207,12 +207,14 @@ export class EasySearchItem extends InputItem {
 }
 
 export class FormDrawersContent extends DrawersContent {
+    name: string;
     data: Record<any, any> | undefined;
     content: FormContent;
     event: any = {};
 
     constructor() {
         super();
+        this.name = "提交数据";
         this.content = new FormContent({});
     }
 

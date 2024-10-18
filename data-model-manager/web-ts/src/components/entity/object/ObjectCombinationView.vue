@@ -217,18 +217,16 @@ import MyFormContainer from "@/components/form/MyFormContainer.vue";
 import {ObjectRelItem} from "@/components/entity/object/config";
 
 class LinkAddDrawersContent extends FormDrawersContent {
-  name: string;
   type: number | undefined;
 
   constructor() {
     super();
-    this.name = "未知操作";
   }
 
   async confirm() {
     try {
       await $http.post(`add/obj/link/rel/${objectId.value}`, await this.content.getForm(true));
-      this._close()
+      this._close();
     } catch (e: any) {
       ElMessage({
         showClose: true,
