@@ -14,6 +14,7 @@
             </span>
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item :icon="Plus" @click.prevent="modAttr(scope.row)">修改</el-dropdown-item>
               <el-dropdown-item :icon="Plus" @click.prevent="delAttr(scope.row.id)">删除</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -166,6 +167,10 @@ watch(objectId, (value, oldValue, onCleanup) => {
 });
 const close = (event: null) => {
   console.log(event);
+};
+const modAttr = (row: any) => {
+  addAttr.show = true;
+  addAttr.form = row;
 };
 </script>
 
