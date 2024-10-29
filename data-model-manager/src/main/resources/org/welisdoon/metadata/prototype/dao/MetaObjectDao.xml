@@ -35,4 +35,7 @@
         </where>
 
     </select>
+    <insert id="add" parameterType="org.welisdoon.metadata.prototype.define.MetaObject" useGeneratedKeys="true" keyProperty="id">
+        insert into MD_OBJECT(id,type_id,name,code) values(#{id},#{typeId},#{name},#{code})
+    </insert>
 </mapper>

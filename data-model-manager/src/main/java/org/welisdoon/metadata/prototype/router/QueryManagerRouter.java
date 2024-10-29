@@ -19,6 +19,7 @@ import org.welisdoon.metadata.prototype.condition.Page;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.MetaUtils;
+import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
 import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
@@ -33,10 +34,7 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -334,8 +332,8 @@ public class QueryManagerRouter {
         });
     }
 
-    @VertxRouter(path = "/add/obj",
-            method = "POST")
+    @VertxRouter(path = "/obj",
+            method = "PUT")
     public void addObject(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             MetaObject object = JSONObject.parseObject(routingContext.body().asString(), MetaObject.class);
@@ -344,15 +342,12 @@ public class QueryManagerRouter {
         });
     }
 
-    @VertxRouter(path = "\\/add\\/attr\\/(?<objectId>\\d+)",
-            method = "POST", mode = VertxRouteType.PathRegex)
-    public void addAttr(RoutingContextChain chain) {
+    @VertxRouter(path = "/obj/type",
+            method = "GET")
+    public void getObjectType(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            long objectId = Long.parseLong(routingContext.pathParam("objectId"));
-            MetaObject.Attribute attribute = JSONObject.parseObject(routingContext.body().asString(), MetaObject.Attribute.class);
-            attribute.setObjectId(objectId);
-            metaAttributeDao.add(attribute);
-            routingContext.end(JSON.toJSONString(attribute));
+            routingContext.end(JSON.toJSONString(Stream.of(ObjectMetaType.Object, ObjectMetaType.Table)
+                    .map(objectMetaType -> ImmutableMap.of("id", objectMetaType.getId(), "desc", objectMetaType.getDesc())).toArray()));
         });
     }
 }
