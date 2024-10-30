@@ -61,9 +61,10 @@ export class FormContent {
     }
 
     reset(data: any = {}): void {
-        for (const formKey in this.form) {
-            delete this.form[formKey];
-        }
+        this.form = {};
+        this.inputs.forEach(input => {
+            input.dataToValue(input, data, this);
+        });
     }
 }
 

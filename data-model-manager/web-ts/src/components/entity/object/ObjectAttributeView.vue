@@ -25,14 +25,7 @@
   <el-drawer v-model="addAttr.show" title="添加属性" size="50%" show-close
              :before-close="(done)=>addAttr.beforeClose(done)">
     <template #default>
-      <el-form :model="addAttr.form" label-width="auto" style="max-width: 600px">
-        <el-form-item label="标识">
-          <el-input v-model="addAttr.form.code"/>
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="addAttr.form.name"/>
-        </el-form-item>
-      </el-form>
+      <my-form-container v-model="addAttr.content"></my-form-container>
     </template>
     <template #footer>
       <div style="flex: auto">
@@ -69,45 +62,40 @@ import 'element-plus/es/components/message-box/style/css';
 import 'element-plus/es/components/message/style/css';
 import {DrawersContent} from "@/components/config";
 import {AxiosError} from "axios";
+import {FormDrawersContent, ItemConfig, MyOption, SelectItem, TextItem} from "@/components/form/config";
 
 
-class AttrAddDrawersContent extends DrawersContent {
-  form: Record<any, any>;
+class AttrAddDrawersContent extends FormDrawersContent {
 
   constructor() {
     super();
-    this.form = {};
-  }
-
-  beforeClose(done: () => void) {
-    ElMessageBox.confirm('放弃保存?', {confirmButtonText: "确定", cancelButtonText: "取消"})
-        .then(() => {
-          this.form = {};
-          done();
-        })
-        .catch(() => {
-          // catch error
-        });
+    this.name = "属性";
+    this.content.addInput(new TextItem("code", "标识"), new TextItem("name", "描述", {} as ItemConfig<TextItem>));
   }
 
   confirm() {
     loading.value = true;
-    $http.put(`obj/attrs/${props.id}`, this.form)
-        .then(({data}: { data: Array<Record<any, any>> }) => {
-          loading.value = false;
-          this._close();
-          if (data instanceof String) {
-            throw data;
-          }
-          attrs.push(data);
-        }, (error: any) => {
-          loading.value = false;
-          this._close();
-          if (error instanceof AxiosError)
-            ElMessage.error(error.response?.data || error);
-          else
-            ElMessage.error(error);
-        });
+    this.content.getForm(true).then(form => {
+      $http.put(`obj/attrs/${props.id}`, {...this.data, ...form})
+          .then(({data}: { data: Array<Record<any, any>> }) => {
+            loading.value = false;
+            this._close();
+            if (data instanceof String) {
+              throw data;
+            }
+            if (this.data?.id != null)
+              attrs[attrs.findIndex(value => value.id == this.data?.id)] = data;
+            else
+              attrs.push(data);
+          }, (error: any) => {
+            loading.value = false;
+            this._close();
+            if (error instanceof AxiosError)
+              ElMessage.error(error.response?.data || error);
+            else
+              ElMessage.error(error);
+          });
+    });
   }
 }
 
@@ -169,8 +157,7 @@ const close = (event: null) => {
   console.log(event);
 };
 const modAttr = (row: any) => {
-  addAttr.show = true;
-  addAttr.form = row;
+  addAttr.open(row);
 };
 </script>
 

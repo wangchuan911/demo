@@ -26,6 +26,9 @@
       <el-table-column prop="typeDesc" label="关联方式"/>
       <el-table-column prop="instanceId" label="对象实例ID"/>
       <el-table-column>
+        <template #header>
+          <el-button type="primary" size="small" @click="()=>setParent(null,null)">继承</el-button>
+        </template>
         <template #default="scope">
           <!--<el-button
               link
