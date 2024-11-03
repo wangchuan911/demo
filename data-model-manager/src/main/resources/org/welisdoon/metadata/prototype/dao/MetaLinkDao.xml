@@ -10,6 +10,7 @@
         <result column="value_id" property="valueId"></result>
         <result column="attribute_id" property="attributeId"></result>
         <result column="instance_id" property="instanceId"></result>
+        <result column="SEQUENCE" property="sequence"></result>
     </resultMap>
     <select id="list"
             parameterType="org.welisdoon.metadata.prototype.condition.MetaLinkCondition"
@@ -45,5 +46,11 @@
         </where>
 
     </select>
-
+    <insert id="add" parameterType="org.welisdoon.metadata.prototype.define.MetaLink" useGeneratedKeys="true" keyProperty="id">
+        insert into MD_LINK(ID, TYPE_ID, `DESC`, PARENT_ID, OBJECT_ID, INSTANCE_ID, ATTRIBUTE_ID, SEQUENCE, VALUE_ID, LINK_ID)
+        values(#{id}, #{typeId}, #{name},
+               #{parentId,jdbcType=NUMERIC}, #{objectId,jdbcType=NUMERIC}, #{instanceId,jdbcType=NUMERIC},
+               #{attributeId,jdbcType=NUMERIC}, #{sequence,jdbcType=NUMERIC}, #{valueId,jdbcType=NUMERIC},
+               #{linkId,jdbcType=NUMERIC})
+    </insert>
 </mapper>

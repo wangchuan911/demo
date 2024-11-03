@@ -38,4 +38,13 @@
     <insert id="add" parameterType="org.welisdoon.metadata.prototype.define.MetaObject" useGeneratedKeys="true" keyProperty="id">
         insert into MD_OBJECT(id,type_id,name,code) values(#{id},#{typeId},#{name},#{code})
     </insert>
+    <update id="put" parameterType="org.welisdoon.metadata.prototype.define.MetaObject">
+        update MD_OBJECT
+        <set>
+            <if test="parentId!=null">
+                parent_id=#{parentId},
+            </if>
+        </set>
+        where id=#{id}
+    </update>
 </mapper>

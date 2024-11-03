@@ -2,6 +2,7 @@ package org.welisdoon.metadata.prototype.define;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.MetaUtils;
@@ -29,9 +30,20 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     Long valueId;
     MetaValue value;
 
+    Long linkId;
+    MetaLink link;
+
     int sequence;
 
     LinkMetaType type;
+
+    @Override
+    public String getName() {
+        if (StringUtils.isEmpty(super.getName())) {
+            setName(getType().getDesc());
+        }
+        return super.getName();
+    }
 
     @Override
     public int getSequence() {
@@ -137,5 +149,21 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     public List<MetaLink> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink -> children = MetaUtils.getInstance().getChildrenLinks(getId()));
         return super.getChildren();
+    }
+
+    public Long getLinkId() {
+        return linkId;
+    }
+
+    public void setLinkId(Long linkId) {
+        this.linkId = linkId;
+    }
+
+    public MetaLink getLink() {
+        return link;
+    }
+
+    public void setLink(MetaLink link) {
+        this.link = link;
     }
 }

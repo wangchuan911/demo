@@ -27,7 +27,7 @@
       <el-table-column prop="instanceId" label="对象实例ID"/>
       <el-table-column>
         <template #header>
-          <el-button type="primary" size="small" @click="()=>setParent(null,null)">继承</el-button>
+          <el-button type="primary" size="small" @click="()=>operation(3,null)">继承</el-button>
         </template>
         <template #default="scope">
           <!--<el-button
@@ -198,10 +198,11 @@ const operation = (type: number, row: Record<any, any>) => {
       addLink.value = new ObjectLinkDrawersContent(row);
       addLink.value.open(row);
       break;
-    case 2:
-      addLink.value = new RelLinkDrawersContent();
-      addLink.value.open(row);
+    case 3:
+      addLink.value = new ChoiceParentDrawersContent();
+      addLink.value.open({});
       break;
+
   }
 };
 import {DrawersContent, FormContent, stringLike} from "@/components/config";
@@ -226,28 +227,8 @@ class LinkAddDrawersContent extends FormDrawersContent {
     super();
   }
 
-  async confirm() {
-    try {
-      await $http.post(`add/obj/link/rel/${objectId.value}`, await this.content.getForm(true));
-      this._close();
-    } catch (e: any) {
-      ElMessage({
-        showClose: true,
-        message: e.toString(),
-        type: 'error',
-      });
-    }
-  }
 }
 
-class RelLinkDrawersContent extends LinkAddDrawersContent {
-  constructor() {
-    super();
-    this.name = "添加关系";
-    this.content.addInput(new SelectItem("code", "编码").addOptions(new MyOption("1", "1"), new MyOption("2", "2")), new TextItem("name", "名称"));
-  }
-
-}
 
 class ObjectLinkDrawersContent extends LinkAddDrawersContent {
   constructor(row: Record<any, any>) {
@@ -344,9 +325,67 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
         } as ItemConfig<ObjectRelItem>)
     );
   }
+
+  async confirm() {
+    try {
+      await $http.post(`add/obj/link/rel/${objectId.value}`, await this.content.getForm(true));
+      this._close();
+    } catch (e: any) {
+      ElMessage({
+        showClose: true,
+        message: e.toString(),
+        type: 'error',
+      });
+    }
+  }
 }
 
 const addLink = ref({} as LinkAddDrawersContent);
+
+class ChoiceParentDrawersContent extends LinkAddDrawersContent {
+  constructor() {
+    super();
+    this.name = "设置继承对象";
+    this.content.addInput(new SelectItem("parent", "对象", {
+      async inputLoadHandler(input, content) {
+        input.prop.filterable = true;
+        input.prop.remote = true;
+        input.prop.reserveKeyword = true;
+        input.prop.placeholder = "Please enter a keyword";
+        input.prop.loading = false;
+        input.prop.remoteMethod = async function (query: string) {
+          if (query) {
+            input.prop.loading = true;
+            const {data}: { data: { list: Array<Record<any, any>> } } = await $http.post(`obj`, {
+              data: {code: query},
+              page: {page: 1, size: 100},
+              query: 'objectSearch',
+            });
+            input.prop.loading = false;
+            input.setOptions(...(data?.list || []).map(v => new MyOption(v.id, `[${v.name}]${v.code}`)));
+          } else {
+            input.setOptions();
+          }
+        };
+      }
+    } as ItemConfig<SelectItem>));
+  }
+
+  async confirm() {
+    try {
+      const data = await this.content.getForm(true);
+      await $http.post(`obj${objectId.value}/parent${data.parent}`, {});
+      this._close();
+      load(objectId.value)
+    } catch (e: any) {
+      ElMessage({
+        showClose: true,
+        message: e.toString(),
+        type: 'error',
+      });
+    }
+  }
+}
 </script>
 
 <style scoped>

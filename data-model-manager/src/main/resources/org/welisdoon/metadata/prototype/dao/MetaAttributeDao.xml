@@ -31,13 +31,29 @@
 
     </select>
 
-    <insert id="add" parameterType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute" useGeneratedKeys="true" keyProperty="id">
-        insert into MD_OBJECT_ATTR(id,type_id,code,name,object_id)
-        values (#{id},#{typeId},#{code},#{name},#{objectId})
+    <insert id="add" parameterType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into MD_OBJECT_ATTR(id, type_id, code, name, object_id)
+        values (#{id}, #{typeId}, #{code}, #{name}, #{objectId})
     </insert>
 
     <delete id="delete" parameterType="long">
-        delete from MD_OBJECT_ATTR where id=#{value}
+        delete
+        from MD_OBJECT_ATTR
+        where id = #{value}
     </delete>
+
+    <update id="update" parameterType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute">
+        update MD_OBJECT_ATTR
+        <set>
+            <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(code)">
+                code=#{code},
+            </if>
+            <if test="@org.apache.commons.lang.StringUtils@isNotEmpty(name)">
+                name=#{name},
+            </if>
+        </set>
+            where id=#{id}
+    </update>
 </mapper>
 

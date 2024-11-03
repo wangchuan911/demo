@@ -1,8 +1,8 @@
 <template>
   <div v-loading="loading">
     <el-form ref="formRef" :inline="true" :model="formModel">
-      <el-form-item label="table name" prop="name">
-        <el-input v-model="formModel.name"/>
+      <el-form-item label="table name" prop="code">
+        <el-input v-model="formModel.code"/>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="submitForm(formRef)">Query</el-button>
@@ -93,6 +93,7 @@ const resetForm = (formEl: FormInstance | undefined) => {
 }, handleCurrentChange = (pageNumber: number) => {
   loading.value = true;
   proxy?.$http.post(`obj`, {
+    query: 'objectSearch',
     data: formModel,
     page: {page: pageNumber, size: page.size}
   }).then(value => {

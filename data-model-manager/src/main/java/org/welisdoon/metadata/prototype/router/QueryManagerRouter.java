@@ -201,7 +201,10 @@ public class QueryManagerRouter {
             condition.getData().setObjectId(qid);
             condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
             HandleContext context = new HandleContext();
-            sqlBuilderHandler.handler(context, metaLinkDao.list(condition).get(0));
+            sqlBuilderHandler.handler(context, metaLinkDao.list(condition).stream().findFirst().orElseGet(() -> {
+                repairObjConstructionData(metaObjectDao.get(qid));
+                return metaLinkDao.list(condition).stream().findFirst().orElseThrow();
+            }));
             routingContext.end(((SqlContent) context.get(sqlBuilderHandler)).toSqlJoin());
         });
     }
@@ -212,7 +215,7 @@ public class QueryManagerRouter {
     public void objAttrAdd(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            MetaObject.Attribute attribute = routingContext.body().asPojo(MetaObject.Attribute.class);
+            MetaObject.Attribute attribute = JSON.parseObject(routingContext.body().asString()).toJavaObject(MetaObject.Attribute.class);
             attribute.setObjectId(qid);
             switch (MetaUtils.getInstance().getObject(qid).getType()) {
                 case Object:
@@ -228,7 +231,10 @@ public class QueryManagerRouter {
             Assert.notNull(attribute.getObjectId(), "not object");
             Assert.notNull(attribute.getCode(), "not code");
             Assert.notNull(attribute.getName(), "not name");
-            metaAttributeDao.add(attribute);
+            if (attribute.getId() != null)
+                metaAttributeDao.update(attribute);
+            else
+                metaAttributeDao.add(attribute);
             routingContext.end(JSON.toJSONString(attribute));
         });
     }
@@ -289,7 +295,7 @@ public class QueryManagerRouter {
             method = "PUT")
     public void linkAdd(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            MetaLink metaLink = routingContext.body().asPojo(MetaLink.class);
+            MetaLink metaLink = JSON.parseObject(routingContext.body().asString()).toJavaObject(MetaLink.class);
             metaLinkDao.add(metaLink);
             routingContext.end(JSON.toJSONString(metaLink));
         });
@@ -338,8 +344,25 @@ public class QueryManagerRouter {
         chain.handler(routingContext -> {
             MetaObject object = JSONObject.parseObject(routingContext.body().asString(), MetaObject.class);
             metaObjectDao.add(object);
+            if (object.getType() == ObjectMetaType.Object) {
+                MetaLink link = new MetaLink();
+                link.setTypeId(LinkMetaType.ObjConstructor.getId());
+                link.setObjectId(object.getId());
+                link.setParentId(0L);
+                metaLinkDao.add(link);
+            }
             routingContext.end(JSON.toJSONString(object));
         });
+    }
+
+    protected void repairObjConstructionData(MetaObject object) {
+        if (object.getType() == ObjectMetaType.Object) {
+            MetaLink link = new MetaLink();
+            link.setTypeId(LinkMetaType.ObjConstructor.getId());
+            link.setObjectId(object.getId());
+            link.setParentId(0L);
+            metaLinkDao.add(link);
+        }
     }
 
     @VertxRouter(path = "/obj/type",
@@ -348,6 +371,17 @@ public class QueryManagerRouter {
         chain.handler(routingContext -> {
             routingContext.end(JSON.toJSONString(Stream.of(ObjectMetaType.Object, ObjectMetaType.Table)
                     .map(objectMetaType -> ImmutableMap.of("id", objectMetaType.getId(), "desc", objectMetaType.getDesc())).toArray()));
+        });
+    }
+
+    @VertxRouter(path = "\\/obj(?<objectId>\\d+)\\/parent(?<parentId>\\d+)",
+            method = "POST", mode = VertxRouteType.PathRegex)
+    public void getObjectParent(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            MetaObject object = new MetaObject();
+            object.setId(Long.parseLong(routingContext.pathParam("objectId")));
+            object.setParentId(Long.parseLong(routingContext.pathParam("parentId")));
+            routingContext.end(Integer.toString(metaObjectDao.put(object)));
         });
     }
 }
