@@ -254,7 +254,7 @@ public class QueryManagerRouter {
     public void error(RoutingContextChain chain) {
         chain.failureHandler(event -> {
             logger.error(event.failure().getMessage(), event.failure());
-            event.response().setStatusCode(500).end(event.failure().getMessage());
+            event.response().setStatusCode(500).end(Optional.ofNullable(event.failure().getMessage()).orElse(""));
         });
     }
 

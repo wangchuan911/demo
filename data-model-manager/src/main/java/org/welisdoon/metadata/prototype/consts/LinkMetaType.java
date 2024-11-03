@@ -124,7 +124,7 @@ public enum LinkMetaType implements IMetaType {
         }
         switch (side) {
             case Up:
-                return this.getParent().isMatched(value, side);
+                return this.getParent() != null && this.getParent().isMatched(value, side);
             case Down:
                 return Arrays.stream(values()).anyMatch(linkMetaType -> {
                     return this.equals(linkMetaType.getParent()) && linkMetaType.isMatched(value, side);
