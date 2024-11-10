@@ -47,4 +47,7 @@
         </set>
         where id=#{id}
     </update>
+    <delete id="delete" parameterType="long">
+        delete from MD_OBJECT where id=#{value}
+    </delete>
 </mapper>

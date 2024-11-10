@@ -20,9 +20,17 @@
               :load="expand"
               :default-expand-all="!lazy"
               :tree-props="lazy?{ children: 'children', hasChildren: 'hasChildren' }:{}">
-      <el-table-column prop="object.name" label="对象描述"/>
-      <el-table-column prop="object.code" label="对象标识"/>
-      <el-table-column prop="object.typeDesc" label="对象类型"/>
+      <el-table-column label="对象描述">
+        <template #default="scope">
+          {{scope.row.object?.name}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>{{scope.row.attribute?.name}}
+        </template>
+      </el-table-column>
+      <el-table-column label="对象标识">
+        <template #default="scope">{{scope.row.object?.code}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">.</template>{{scope.row.attribute?.code}}</template>
+      </el-table-column>
+      <el-table-column  label="对象类型">
+        <template #default="scope">{{scope.row.object?.typeDesc}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>{{scope.row.attribute?.typeDesc}}</template>
+      </el-table-column>
       <el-table-column prop="typeDesc" label="关联方式"/>
       <el-table-column prop="instanceId" label="对象实例ID"/>
       <el-table-column>
@@ -38,13 +46,15 @@
           >
             Remove
           </el-button>-->
-          <el-dropdown v-if="scope.row._flag && scope.row.typeId==3006">
+          <el-dropdown v-if="scope.row._flag && scope.row._level==1 && scope.row.typeId==3006">
             <span class="el-dropdown-link">
               操作<el-icon class="el-icon--right"><arrow-down/></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item :icon="Plus" @click.prevent="operation(0,scope.row)">添加关联对象</el-dropdown-item>
+                <el-dropdown-item :icon="Plus" @click.prevent="operation(0,scope.row)">
+                  向[{{scope.row.object.name}}]后添加关联对象
+                </el-dropdown-item>
                 <!--<el-dropdown-item :icon="CirclePlusFilled" @click.prevent="operation(2,scope.row)">
                   Action 2
                 </el-dropdown-item>
@@ -64,7 +74,6 @@
                                   v-if="stringLike(scope.row.type,'SqlToJoin')">
                   添加关联对象
                 </el-dropdown-item>
-                <el-dropdown-item :icon="CirclePlus" @click.prevent="operation(2,scope.row)">添加关联关系</el-dropdown-item>
                 <el-dropdown-item :icon="Check" @click.prevent="operation(3,scope.row)"
                                   v-if="!stringLike(scope.row.type,'SqlToJoin')">修改关联关系
                 </el-dropdown-item>
@@ -136,11 +145,12 @@ const load = (id: number) => {
       .then(({data}: { data: Array<Record<any, any>> }) => {
         attrs.length = 0;
         console.log(data);
-        const setFlag = (dat: Record<any, any>, flag: boolean) => {
+        const setFlag = (dat: Record<any, any>, flag: boolean, level: number) => {
           dat._flag = (dat.id < 0 || flag);
-          (dat.children || []).forEach((dat2: Record<any, any>) => setFlag(dat2, dat._flag));
+          dat._level = level;
+          (dat.children || []).forEach((dat2: Record<any, any>) => setFlag(dat2, dat._flag, level + 1));
         };
-        data.forEach(value => setFlag(value, false));
+        data.forEach(value => setFlag(value, false, 1));
         attrs.push(...data);
 
       })
@@ -201,6 +211,10 @@ const operation = (type: number, row: Record<any, any>) => {
     case 3:
       addLink.value = new ChoiceParentDrawersContent();
       addLink.value.open({});
+      break;
+    case 0:
+      addLink.value = new ObjectLinkDrawersContent(row);
+      addLink.value.open(row);
       break;
 
   }
@@ -376,7 +390,7 @@ class ChoiceParentDrawersContent extends LinkAddDrawersContent {
       const data = await this.content.getForm(true);
       await $http.post(`obj${objectId.value}/parent${data.parent}`, {});
       this._close();
-      load(objectId.value)
+      load(objectId.value);
     } catch (e: any) {
       ElMessage({
         showClose: true,

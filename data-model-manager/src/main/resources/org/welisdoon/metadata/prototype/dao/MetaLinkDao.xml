@@ -53,4 +53,7 @@
                #{attributeId,jdbcType=NUMERIC}, #{sequence,jdbcType=NUMERIC}, #{valueId,jdbcType=NUMERIC},
                #{linkId,jdbcType=NUMERIC})
     </insert>
+    <delete id="delete" parameterType="long">
+        delete from MD_LINK where id=#{value}
+    </delete>
 </mapper>

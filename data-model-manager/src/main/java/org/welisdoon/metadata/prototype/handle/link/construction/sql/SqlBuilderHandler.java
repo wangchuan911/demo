@@ -22,7 +22,7 @@ import java.util.Objects;
  */
 @LinkMetaType.LinkHandle(LinkMetaType.ObjToDataBase)
 @Component
-public class SqlBuilderHandler implements LinkHandle {
+public class SqlBuilderHandler implements LinkHandle<SqlContent> {
     List<LinkMetaType> linkMetaTypes = Arrays.asList(LinkMetaType.SqlToJoin, LinkMetaType.SqlToSelect);
 
     public void setLinkMetaTypes(List<LinkMetaType> linkMetaTypes) {
@@ -30,33 +30,23 @@ public class SqlBuilderHandler implements LinkHandle {
     }
 
     @Override
-    public void handler(HandleContext handleContext, MetaLink metaLink) {
+    public void handler(SqlContent content, MetaLink metaLink) {
         MetaObject parent = metaLink.getObject().getParent();
-        SqlContent content;
         if (parent instanceof DataObject) {
             MetaLink parentLink = new MetaLink();
-//            parentLink.setId(Long.MIN_VALUE);
             parentLink.setObjectId(parent.getId());
             parentLink.setObject(parent);
-            this.handler(handleContext, parentLink);
-            content = handleContext.set(this, () -> {
-                SqlContent parentContent = handleContext.get(SqlBuilderHandler.this);
-                SqlContent content1 = SqlContent.getInstance();
-                content1.setParent(parentContent);
-                return content1;
-            });
+            SqlContent parentObjectContent = SqlContent.getInstance();
+            this.handler(parentObjectContent, parentLink);
+            content.setParent(parentObjectContent);
         } else if (parent instanceof DataBaseTable) {
             MetaLink mainTable = new MetaLink();
-//            mainTable.setId(Long.MIN_VALUE);
             mainTable.setObjectId(parent.getId());
             mainTable.setObject(parent);
             mainTable.setInstanceId(1L);
             mainTable.setTypeId(LinkMetaType.SqlToJoin.getId());
             mainTable.addChildren(metaLink.getChildren().stream().filter(child -> Objects.equals(child.getType(), LinkMetaType.DataFuture)).toArray(MetaLink[]::new));
-            content = handleContext.get(this, SqlContent::getInstance);
             content.addLink(mainTable);
-        } else {
-            content = handleContext.get(this, SqlContent::getInstance);
         }
 
         metaLink.getChildren().forEach(child -> {

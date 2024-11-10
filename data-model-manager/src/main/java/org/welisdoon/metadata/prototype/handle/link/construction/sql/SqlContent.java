@@ -10,6 +10,7 @@ import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
+import org.welisdoon.metadata.prototype.handle.HandleContext;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.LinkedList;
@@ -25,7 +26,7 @@ import java.util.stream.Stream;
  * @Author Septem
  * @Date 16:47
  */
-public class SqlContent {
+public class SqlContent implements HandleContext {
     final static Logger logger = LoggerFactory.getLogger(SqlContent.class);
     protected List<MetaLink> links = new LinkedList<>();
     protected volatile static Class<? extends SqlContent> type;

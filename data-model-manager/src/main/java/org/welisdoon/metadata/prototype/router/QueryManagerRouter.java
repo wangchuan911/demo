@@ -25,7 +25,6 @@ import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
-import org.welisdoon.metadata.prototype.handle.HandleContext;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilderHandler;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -62,9 +61,17 @@ public class QueryManagerRouter {
     }
 
     @Autowired
-    public void setMember(MetaLinkDao metaLinkDao, MetaObjectDao metaObjectDao, MetaAttributeDao metaAttributeDao) {
-        this.metaLinkDao = metaLinkDao;
+    public void setMetaObjectDao(MetaObjectDao metaObjectDao) {
         this.metaObjectDao = metaObjectDao;
+    }
+
+    @Autowired
+    public void setMetaLinkDao(MetaLinkDao metaLinkDao) {
+        this.metaLinkDao = metaLinkDao;
+    }
+
+    @Autowired
+    public void setMetaAttributeDao(MetaAttributeDao metaAttributeDao) {
         this.metaAttributeDao = metaAttributeDao;
     }
 
@@ -200,12 +207,12 @@ public class QueryManagerRouter {
             condition.setData(new MetaLink());
             condition.getData().setObjectId(qid);
             condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
-            HandleContext context = new HandleContext();
+            SqlContent context = SqlContent.getInstance();
             sqlBuilderHandler.handler(context, metaLinkDao.list(condition).stream().findFirst().orElseGet(() -> {
                 repairObjConstructionData(metaObjectDao.get(qid));
                 return metaLinkDao.list(condition).stream().findFirst().orElseThrow();
             }));
-            routingContext.end(((SqlContent) context.get(sqlBuilderHandler)).toSqlJoin());
+            routingContext.end(context.toSqlJoin());
         });
     }
 
@@ -384,4 +391,40 @@ public class QueryManagerRouter {
             routingContext.end(Integer.toString(metaObjectDao.put(object)));
         });
     }
+
+    @VertxRouter(path = "\\/obj\\/(?<id>\\d+)",
+            method = "DELETE",
+            mode = VertxRouteType.PathRegex)
+    public void objDel(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long qid = Long.parseLong(routingContext.pathParam("id"));
+            MetaObject object = metaObjectDao.get(qid);
+            Assert.isTrue(org.apache.commons.collections4.CollectionUtils.isNotEmpty(object.getChildren()), "有子类不能删除");
+            for (MetaObject.Attribute attribute : object.getAttributes()) {
+                metaAttributeDao.delete(attribute.getId());
+            }
+            MetaLinkCondition condition = new MetaLinkCondition();
+            condition.setData(new MetaLink());
+            condition.getData().setObjectId(object.getId());
+            condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
+
+            metaLinkDao.list(condition).stream().forEach(metaLink -> {
+                delLink(metaLink);
+            });
+            metaObjectDao.delete(qid);
+            routingContext.end();
+        });
+    }
+
+    protected int delLink(MetaLink metaLink) {
+        if (Objects.isNull(metaLink) || Objects.isNull(metaLink.getId())) {
+            return 0;
+        }
+        (Optional.ofNullable(metaLink.getChildren()).orElse(Collections.emptyList())).stream().filter(Objects::nonNull).forEach(metaLink1 -> {
+            delLink(metaLink1);
+        });
+        return metaLinkDao.delete(metaLink.getId());
+    }
+
+    ;
 }
