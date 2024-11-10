@@ -90,10 +90,10 @@ class AttrAddDrawersContent extends FormDrawersContent {
           }, (error: any) => {
             loading.value = false;
             this._close();
-            if (error instanceof AxiosError)
+            /*if (error instanceof AxiosError)
               ElMessage.error(error.response?.data || error);
             else
-              ElMessage.error(error);
+              ElMessage.error(error);*/
           });
     });
   }

@@ -139,4 +139,20 @@ public class MetaUtils {
             return instance = ApplicationContextProvider.getBean(MetaUtils.class);
         });
     }
+
+    public MetaObjectDao getMetaObjectDao() {
+        return metaObjectDao;
+    }
+
+    public MetaLinkDao getMetaLinkDao() {
+        return metaLinkDao;
+    }
+
+    public MetaAttributeDao getMetaAttributeDao() {
+        return metaAttributeDao;
+    }
+
+    public MetaValueDao getMetaValueDao() {
+        return metaValueDao;
+    }
 }

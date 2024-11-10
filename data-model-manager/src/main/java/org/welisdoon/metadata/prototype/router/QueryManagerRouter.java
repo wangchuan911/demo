@@ -6,10 +6,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.welisdoon.common.JsonUtils;
@@ -53,6 +55,7 @@ public class QueryManagerRouter {
     MetaLinkDao metaLinkDao;
     MetaAttributeDao metaAttributeDao;
     SqlBuilderHandler sqlBuilderHandler;
+    TransactionTemplate transactionTemplate;
     boolean lazy = false;
 
     @Autowired
@@ -73,6 +76,11 @@ public class QueryManagerRouter {
     @Autowired
     public void setMetaAttributeDao(MetaAttributeDao metaAttributeDao) {
         this.metaAttributeDao = metaAttributeDao;
+    }
+
+    @Autowired
+    public void setTransactionTemplate(TransactionTemplate transactionTemplate) {
+        this.transactionTemplate = transactionTemplate;
     }
 
     @VertxRouter(path = "\\/obj\\/(?<id>\\d+)",
@@ -273,7 +281,7 @@ public class QueryManagerRouter {
             List<LinkMetaType> result = new LinkedList<>();
             switch (Optional.ofNullable(type).orElse("")) {
                 case "obj":
-                    MetaLinkCondition condition = new MetaLinkCondition();
+                    /*MetaLinkCondition condition = new MetaLinkCondition();
                     condition.setData(new MetaLink());
                     condition.getData().setObjectId(id);
                     condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
@@ -285,6 +293,9 @@ public class QueryManagerRouter {
                                 return Stream.of();
                         }
                     }).collect(Collectors.toList()));
+                    if(result.isEmpty()){*/
+                    result.addAll(LinkMetaType.getChildTypeId(LinkMetaType.SqlToJoin.getId()).stream().map(LinkMetaType::getInstance).collect(Collectors.toList()));
+                    /*}*/
                     break;
                 case "link":
                     MetaLink metaLink = metaLinkDao.get(id);
@@ -337,12 +348,103 @@ public class QueryManagerRouter {
             method = "POST", mode = VertxRouteType.PathRegex)
     public void objectAddLinkRel(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            long objectId = Long.parseLong(routingContext.pathParam("objectId"));
-            JSONObject object = JSONObject.parseObject(routingContext.body().asString());
-            JSONArray rel = object.getJSONArray("rel");
+            transactionTemplate.execute(status -> {
+                try {
+                    long objectId = Long.parseLong(routingContext.pathParam("objectId"));
+                    JSONObject body = JSONObject.parseObject(routingContext.body().asString());
+
+                    Long object = body.getLong("object");
+                    Long parent = body.getLong("parent");
+                    Long typeId = body.getLong("type");
+                    MetaLink link0 = null;
+                    boolean start = false, stop = false;
+                    for (MetaLink link : getLinks(objectId)) {
+                        if (link.getId() < 0) continue;
+                        if (start) {
+                            if (!stop) {
+                                stop = true;
+                                link0 = new MetaLink();
+                                link0.setObjectId(object);
+                                link0.setTypeId(typeId);
+                                link0.setInstanceId(getNextInstanceId(objectId));
+                                link0.setSequence(link.getSequence());
+                                metaLinkDao.add(link0);
+                            }
+                            link.setSequence(link.getSequence() + 1);
+                            metaLinkDao.put(link);
+                            continue;
+                        } else {
+                            start = link.getInstanceId() == parent;
+                        }
+                    }
+                    JSONArray rel = body.getJSONArray("rel");
+                    for (int i = 0; i < rel.size(); i++) {
+                        objectAddLinkRel(link0, link0, rel.getJSONObject(i));
+                    }
+                    status.flush();
+                } catch (Throwable e) {
+                    status.setRollbackOnly();
+                }
+                return null;
+            });
+
             logger.info(routingContext.body().asString());
             routingContext.end();
         });
+    }
+
+    public void objectAddLinkRel(MetaLink root, MetaLink parent, JSONObject link) {
+
+        MetaLink metaLink = new MetaLink();
+        metaLink.setTypeId(link.getLong("linkTypeId"));
+        metaLink.setAttributeId(link.getLong("attributeId"));
+        String instanceIdStr = link.getString("instanceId");
+        if (StringUtils.isNotEmpty(instanceIdStr) && StringUtils.isNumeric(instanceIdStr)) {
+            metaLink.setInstanceId(Long.parseLong(instanceIdStr));
+        } else {
+            metaLink.setInstance(root.getInstance());
+        }
+        metaLink.setParentId(parent.getId());
+        metaLink.setObjectId(link.getLong("objectId"));
+        metaLinkDao.add(metaLink);
+        Optional.ofNullable(link.getJSONArray("children")).ifPresent(objects -> {
+            for (int i1 = 0; i1 < objects.size(); i1++) {
+                objectAddLinkRel(root, metaLink, objects.getJSONObject(i1));
+            }
+        });
+    }
+
+    protected long getNextInstanceId(long objectId) {
+        List<Long> list = getInstanceIds(objectId).stream().sorted().collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(list)) {
+            return 2L;
+        }
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i) != i + 2) {
+                return list.get(i) - 1;
+            }
+        }
+        return list.get(list.size() - 1) + 1;
+    }
+
+    protected Collection<Long> getInstanceIds(long objectId) {
+        Set<Long> set = new HashSet<>();
+        List<MetaLink> list = getLinks(objectId);
+        for (MetaLink metaLink : list) {
+            set.addAll(getInstanceIds(metaLink));
+        }
+        return set;
+    }
+
+    protected Collection<Long> getInstanceIds(MetaLink metaLink) {
+        Set<Long> set = new HashSet<>();
+        Long instanceId = metaLink.getInstanceId();
+        if (instanceId != null || metaLink.getInstanceId() > 0) {
+            for (MetaLink child : metaLink.getChildren()) {
+                set.add(child.getInstanceId());
+            }
+        }
+        return set;
     }
 
     @VertxRouter(path = "/obj",
@@ -399,7 +501,7 @@ public class QueryManagerRouter {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             MetaObject object = metaObjectDao.get(qid);
-            Assert.isTrue(org.apache.commons.collections4.CollectionUtils.isNotEmpty(object.getChildren()), "有子类不能删除");
+            Assert.isTrue(org.apache.commons.collections4.CollectionUtils.isEmpty(object.getChildren()), "有子类不能删除");
             for (MetaObject.Attribute attribute : object.getAttributes()) {
                 metaAttributeDao.delete(attribute.getId());
             }

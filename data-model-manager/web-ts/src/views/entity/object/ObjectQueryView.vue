@@ -20,6 +20,7 @@
       <el-table-column fixed="right" label="操作">
         <template #default="scope">
           <el-button link type="primary" size="small" @click="tableEdit(scope.row)">Edit</el-button>
+          <el-button link type="danger" size="small" @click="tableDel(scope.row)">Del</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -113,6 +114,15 @@ const resetForm = (formEl: FormInstance | undefined) => {
   });
 }, tableEdit = (row: any) => {
   router.push({path: `/index/object-detail/${row.id}`});
+}, tableDel = async (row: any): Promise<void> => {
+  loading.value = true;
+  try {
+    await ElMessageBox.confirm('放弃保存?', {confirmButtonText: "确定", cancelButtonText: "取消"});
+    await $http.delete(`obj/${row.id}`);
+    await submitForm(formRef.value);
+  } finally {
+    loading.value = false;
+  }
 };
 
 class ObjectLinkDrawersContent extends FormDrawersContent {

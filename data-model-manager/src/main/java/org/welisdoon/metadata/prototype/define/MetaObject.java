@@ -3,6 +3,7 @@ package org.welisdoon.metadata.prototype.define;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.MetaUtils;
 import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
@@ -10,6 +11,7 @@ import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -54,6 +56,15 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
                         parent = (MetaObject) ApplicationContextProvider.getBean(MetaUtils.class).getType(ApplicationContextProvider.getBean(MetaObjectDao.class).get(parentId))
         );
         return super.getParent();
+    }
+
+    @JsonIgnore
+    @JSONField(deserialize = false, serialize = false)
+    public List<MetaObject> getChildren() {
+        ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink ->
+                setChildren(MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition().setParentId(this.getId())))
+        );
+        return super.getChildren();
     }
 
     /**
