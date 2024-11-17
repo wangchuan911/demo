@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @Classname TableMetaType
@@ -36,20 +35,21 @@ public enum LinkMetaType implements IMetaType {
     SqlToJoinOfWeakRel(3013, "对象关联数据库的表(非强制关联)", SqlToJoin),
     SqlToJoinOfStrongRel(3014, "对象关联数据库的表(强制关联)", SqlToJoin),
     DataFuture(3015, "数据特征"),
-    Sql(3199, "SQL语言"),
-    Equal(3200, "等于", Sql),
-    NotEqual(3201, "不等于", Sql),
-    GreatThan(3202, "大于", Sql),
-    LessThan(3203, "小于", Sql),
-    OR(3204, "或", Sql),
-    AND(3205, "与", Sql),
-    Contain(3206, "包含", Sql),
-    NotContain(3207, "包含", Sql),
-    Exists(3208, "存在", Sql),
-    NotExists(3209, "不存在", Sql),
+    Sql(3198, "SQL"),
+    SqlOperator(3199, "SQL语言关系符", Sql),
+    Equal(3200, "等于", SqlOperator),
+    NotEqual(3201, "不等于", SqlOperator),
+    GreatThan(3202, "大于", SqlOperator),
+    LessThan(3203, "小于", SqlOperator),
+    OR(3204, "或", SqlOperator),
+    AND(3205, "与", SqlOperator),
+    Contain(3206, "包含", SqlOperator),
+    NotContain(3207, "包含", SqlOperator),
+    Exists(3208, "存在", SqlOperator),
+    NotExists(3209, "不存在", SqlOperator),
     ItemOfParent(3210, "由上级LINK决定处理方式"),
-    Value(3211, "sql最小项", Sql),
-    Values(3212, "sql最小项集", Sql);
+    Value(3211, "sql最小项", SqlOperator),
+    Values(3212, "sql最小项集", SqlOperator);
 
     long id;
     String name;

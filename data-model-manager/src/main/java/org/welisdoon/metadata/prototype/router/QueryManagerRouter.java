@@ -338,7 +338,7 @@ public class QueryManagerRouter {
     public void showObjectSubLinkType(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long typeLinkId = Long.parseLong(routingContext.pathParam("typeLinkId"));
-            routingContext.end(JSON.toJSONString(LinkMetaType.getChildTypeId(LinkMetaType.Sql.getId()).stream().map(aLong -> {
+            routingContext.end(JSON.toJSONString(LinkMetaType.getChildTypeId(LinkMetaType.SqlOperator.getId()).stream().map(aLong -> {
                 return ImmutableMap.of("id", aLong, "desc", LinkMetaType.getInstance(aLong).getDesc());
             }).toArray()));
         });
