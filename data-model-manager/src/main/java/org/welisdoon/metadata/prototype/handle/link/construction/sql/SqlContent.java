@@ -35,7 +35,7 @@ public class SqlContent implements HandleContext {
     List<LinkMetaType> linkMetaTypes = null;
 
     public void addLink(MetaLink link) {
-        checkState();
+        isLocked();
         links.add(link);
     }
 
@@ -47,8 +47,16 @@ public class SqlContent implements HandleContext {
         this.parent = parent;
     }
 
-    protected void checkState() {
+    public void isLocked() {
         Assert.isTrue(!locked, "content is locked");
+    }
+
+    public SqlContent getParent() {
+        return parent;
+    }
+
+    public List<MetaLink> getLinks() {
+        return links;
     }
 
     public static SqlContent getInstance() {
@@ -67,14 +75,11 @@ public class SqlContent implements HandleContext {
         return JSONObject.parseObject("{}", type);
     }
 
-    protected String toSqlJoin(String joinOpr, String condOpr, MetaLink metaLink) {
-        return String.format(" %s %s %s %s %s", joinOpr, metaLink.getObject().getCode(), this.toTableAlias(metaLink), condOpr, metaLink.getChildren().stream().map(child -> {
-            return ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this);
-        }).collect(Collectors.joining(" and ")));
+    public void lock(boolean locked) {
+        this.locked = locked;
     }
 
-
-    protected synchronized List<LinkMetaType> getLinkMetaTypes() {
+    public synchronized List<LinkMetaType> getLinkMetaTypes() {
         if (linkMetaTypes == null) {
             if (this.parent != null) {
                 linkMetaTypes = this.parent.getLinkMetaTypes();
@@ -85,6 +90,32 @@ public class SqlContent implements HandleContext {
         }
         return linkMetaTypes;
     }
+
+    public String toTableAlias(MetaLink metaLink) {
+        int scope = 0;
+        SqlContent parent = this;
+        while (Objects.nonNull((parent = parent.getParent()))) {
+            scope++;
+        }
+        if (scope < 26) {
+            return String.format("%s%d", (char) ('A' + scope), metaLink.getInstanceId());
+        } else {
+            int v = scope;
+            StringBuilder stringBuilder = new StringBuilder();
+            do {
+                stringBuilder.insert(0, (char) ('A' + (v % 26)));
+                v /= 26;
+            } while (v > 0);
+            return String.format("%s%d", stringBuilder.toString(), metaLink.getInstanceId());
+        }
+    }
+
+    /*protected String toSqlJoin(String joinOpr, String condOpr, MetaLink metaLink) {
+        return String.format(" %s %s %s %s %s", joinOpr, metaLink.getObject().getCode(), this.toTableAlias(metaLink), condOpr, metaLink.getChildren().stream().map(child -> {
+            return ISqlBuilderHandler.getHandler(child.getType()).toSql(child, this);
+        }).collect(Collectors.joining(" and ")));
+    }
+
 
     public String toSqlJoin() {
         checkState();
@@ -234,5 +265,5 @@ public class SqlContent implements HandleContext {
             } while (v > 0);
             return String.format("%s%d", stringBuilder.toString(), metaLink.getInstanceId());
         }
-    }
+    }*/
 }

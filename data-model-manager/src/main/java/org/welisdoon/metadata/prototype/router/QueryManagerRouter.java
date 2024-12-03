@@ -29,6 +29,7 @@ import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilderHandler;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.builder.SqlShowBuilder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -56,6 +57,7 @@ public class QueryManagerRouter {
     MetaAttributeDao metaAttributeDao;
     SqlBuilderHandler sqlBuilderHandler;
     TransactionTemplate transactionTemplate;
+    SqlShowBuilder sqlShowBuilder;
     boolean lazy = false;
 
     @Autowired
@@ -81,6 +83,11 @@ public class QueryManagerRouter {
     @Autowired
     public void setTransactionTemplate(TransactionTemplate transactionTemplate) {
         this.transactionTemplate = transactionTemplate;
+    }
+
+    @Autowired
+    public void setSqlShowBuilder(SqlShowBuilder sqlShowBuilder) {
+        this.sqlShowBuilder = sqlShowBuilder;
     }
 
     @VertxRouter(path = "\\/obj\\/(?<id>\\d+)",
@@ -220,7 +227,7 @@ public class QueryManagerRouter {
                 repairObjConstructionData(metaObjectDao.get(qid));
                 return metaLinkDao.list(condition).stream().findFirst().orElseThrow();
             }));
-            routingContext.end(context.toSqlJoin());
+            routingContext.end(sqlShowBuilder.build(context));
         });
     }
 
