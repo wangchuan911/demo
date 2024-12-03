@@ -1,9 +1,11 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
+import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -84,6 +86,7 @@ public interface SqlBuilder {
                 });
                 break;
             case SqlToJoinOfWeakRel:
+            case SqlToJoinOfMultiDataRel:
                 list.stream().forEach(metaLink -> {
                     sql.append(buildJoin(content, "left join", "on", metaLink));
                 });
@@ -103,13 +106,13 @@ public interface SqlBuilder {
             stream = stream.skip(1);
             sql.append(" and ");
         }
-        stream.collect(Collectors.groupingBy(MetaLink::getType)).forEach((linkMetaType, list1) -> {
-            if (!matchLinkMetaType(linkMetaTypes, linkMetaType)) {
-                return;
-            }
-            buildWhere(content, sql, linkMetaType, list1);
-        });
-
+        sql.append(stream.
+                collect(Collectors.groupingBy(MetaLink::getType))
+                .entrySet().stream()
+                .filter(entry -> matchLinkMetaType(linkMetaTypes, entry.getKey()))
+                .map(entry -> buildWhere(content, entry.getKey(), entry.getValue()))
+                .filter(StringUtils::isNotEmpty)
+                .collect(Collectors.joining(" and ")));
         return sql;
     }
 
@@ -117,34 +120,29 @@ public interface SqlBuilder {
         return linkMetaTypes.stream().anyMatch(linkMetaType1 -> linkMetaType.isMatched(linkMetaType1, Side.Up));
     }
 
-    default void buildWhere(SqlContent sqlContent, StringBuilder sql, LinkMetaType type, List<MetaLink> list) {
+    default String buildWhere(SqlContent sqlContent, LinkMetaType type, List<MetaLink> list) {
         switch (type) {
             case SqlToJoinOfMultiDataRel:
-                StringBuilder _fromBlock = new StringBuilder();
-                StringBuilder _whereBlock = new StringBuilder();
-                list.stream().forEach(metaLink -> {
-                    StringBuilder _sql, _sql2;
-                    String linkTableOpr, LinkCondOpr;
-                    if (_fromBlock.length() == 0) {
-                        _sql = _fromBlock;
-                        _sql2 = _whereBlock;
-                        linkTableOpr = " from ";
-                        LinkCondOpr = " where ";
-                    } else {
-                        _sql = _fromBlock;
-                        _sql2 = _fromBlock;
-                        linkTableOpr = " join ";
-                        LinkCondOpr = " on ";
-                    }
-                    _sql.append(linkTableOpr).append(metaLink.getObject().getCode()).append(sqlContent.toTableAlias(metaLink));
-                    _sql2.append(LinkCondOpr);
-                    metaLink.getChildren().forEach(child -> {
-                        _sql2.append(ISqlBuilderHandler.getHandler(child.getType()).toSql(child, sqlContent));
-                    });
-                });
-                sql.append(" exist (select 1 ").append(_fromBlock).append(_whereBlock).append(")");
-                break;
+                List<List<MetaLink>> lists = new LinkedList<>();
+                List<MetaLink> links;
+                for (MetaLink metaLink : list) {
+
+                }
+                return lists.stream().map(list1 -> list1.stream().findFirst().map(metaLink -> {
+                    String joins = list1
+                            .stream()
+                            .skip(1)
+                            .map(metaLink1 -> String
+                                    .format(" join %s %s on %s",
+                                            metaLink1.getObject().getCode(),
+                                            sqlContent.toTableAlias(metaLink1),
+                                            metaLink1.getChildren()
+                                                    .stream().map(child -> ISqlBuilderHandler.getHandler(child.getType()).toSql(child, sqlContent)).collect(Collectors.joining(" and "))))
+                            .collect(Collectors.joining());
+                    return String.format(" exist (select 1 from %s %s %s where %s )", metaLink.getObject().getCode(), sqlContent.toTableAlias(metaLink), joins, metaLink.getChildren().stream().map(child -> ISqlBuilderHandler.getHandler(child.getType()).toSql(child, sqlContent)).collect(Collectors.joining(" and ")));
+                }).orElse("")).collect(Collectors.joining(" and "));
         }
+        return null;
     }
 
     default String buildColumns(SqlContent content) {
