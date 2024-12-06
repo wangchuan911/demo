@@ -1,24 +1,22 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
 import com.alibaba.fastjson.JSONObject;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
-import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.handle.HandleContext;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.builder.BuildNode;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.builder.SqlContentNode;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @Classname SqlContent
@@ -28,51 +26,26 @@ import java.util.stream.Stream;
  */
 public class SqlContent implements HandleContext {
     final static Logger logger = LoggerFactory.getLogger(SqlContent.class);
-    protected List<MetaLink> links = new LinkedList<>();
+    protected List<BuildNode> links = new LinkedList<>();
     protected volatile static Class<? extends SqlContent> type;
-    protected SqlContent parent;
     protected volatile boolean locked = false;
-    List<LinkMetaType> linkMetaTypes = null;
 
-    public void addLink(MetaLink link) {
+    public void addLink(BuildNode node) {
         isLocked();
-        links.add(link);
+        links.add(node);
     }
+
 
     public SqlContent() {
 
-    }
-
-    public void setParent(SqlContent parent) {
-        this.parent = parent;
     }
 
     public void isLocked() {
         Assert.isTrue(!locked, "content is locked");
     }
 
-    public SqlContent getParent() {
-        return parent;
-    }
-
-    public List<MetaLink> getLinks() {
+    public List<BuildNode> getLinks() {
         return links;
-    }
-
-    public static SqlContent getInstance() {
-        Class<? extends SqlContent> type = ObjectUtils.synchronizedGet(SqlContent.class, sqlContentClass -> SqlContent.type, sqlContentClass -> {
-            Environment environment = ApplicationContextProvider.getBean(Environment.class);
-            try {
-                Class<?> aType = Class.forName(Optional.ofNullable(environment.getProperty("metadata.link.sqlContent.type")).orElse(SqlContent.class.getName()));
-                Assert.isTrue(SqlContent.class.isAssignableFrom(aType), String.format("type：%s must be extend org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent", SqlContent.type));
-                SqlContent.type = (Class<? extends SqlContent>) aType;
-            } catch (ClassNotFoundException e) {
-                logger.error(e.getMessage());
-                SqlContent.type = SqlContent.class;
-            }
-            return SqlContent.type;
-        });
-        return JSONObject.parseObject("{}", type);
     }
 
     public void lock(boolean locked) {
@@ -80,35 +53,14 @@ public class SqlContent implements HandleContext {
     }
 
     public synchronized List<LinkMetaType> getLinkMetaTypes() {
-        if (linkMetaTypes == null) {
-            if (this.parent != null) {
-                linkMetaTypes = this.parent.getLinkMetaTypes();
-            }
-        }
-        if (linkMetaTypes == null) {
-            linkMetaTypes = ApplicationContextProvider.getBean(SqlBuilderHandler.class).linkMetaTypes;
-        }
-        return linkMetaTypes;
+        return ApplicationContextProvider.getBean(SqlBuilderHandler.class).linkMetaTypes;
     }
 
-    public String toTableAlias(MetaLink metaLink) {
-        int scope = 0;
-        SqlContent parent = this;
-        while (Objects.nonNull((parent = parent.getParent()))) {
-            scope++;
-        }
-        if (scope < 26) {
-            return String.format("%s%d", (char) ('A' + scope), metaLink.getInstanceId());
-        } else {
-            int v = scope;
-            StringBuilder stringBuilder = new StringBuilder();
-            do {
-                stringBuilder.insert(0, (char) ('A' + (v % 26)));
-                v /= 26;
-            } while (v > 0);
-            return String.format("%s%d", stringBuilder.toString(), metaLink.getInstanceId());
-        }
+
+    public String getAlias(MetaLink metaLink) {
+        return "T" + metaLink.getInstanceId();
     }
+
 
     /*protected String toSqlJoin(String joinOpr, String condOpr, MetaLink metaLink) {
         return String.format(" %s %s %s %s %s", joinOpr, metaLink.getObject().getCode(), this.toTableAlias(metaLink), condOpr, metaLink.getChildren().stream().map(child -> {

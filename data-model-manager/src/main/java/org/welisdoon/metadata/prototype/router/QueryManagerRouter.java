@@ -222,7 +222,7 @@ public class QueryManagerRouter {
             condition.setData(new MetaLink());
             condition.getData().setObjectId(qid);
             condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
-            SqlContent context = SqlContent.getInstance();
+            SqlContent context = new SqlContent();
             sqlBuilderHandler.handler(context, metaLinkDao.list(condition).stream().findFirst().orElseGet(() -> {
                 repairObjConstructionData(metaObjectDao.get(qid));
                 return metaLinkDao.list(condition).stream().findFirst().orElseThrow();

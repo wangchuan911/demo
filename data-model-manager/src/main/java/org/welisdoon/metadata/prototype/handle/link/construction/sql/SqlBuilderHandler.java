@@ -2,13 +2,15 @@ package org.welisdoon.metadata.prototype.handle.link.construction.sql;
 
 import org.springframework.stereotype.Component;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
 import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
-import org.welisdoon.metadata.prototype.handle.HandleContext;
 import org.welisdoon.metadata.prototype.handle.link.LinkHandle;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.builder.LinkNode;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.builder.SqlContentNode;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,12 +35,10 @@ public class SqlBuilderHandler implements LinkHandle<SqlContent> {
     public void handler(SqlContent content, MetaLink metaLink) {
         MetaObject parent = metaLink.getObject().getParent();
         if (parent instanceof DataObject) {
-            MetaLink parentLink = new MetaLink();
-            parentLink.setObjectId(parent.getId());
-            parentLink.setObject(parent);
-            SqlContent parentObjectContent = SqlContent.getInstance();
-            this.handler(parentObjectContent, parentLink);
-            content.setParent(parentObjectContent);
+            SqlContentNode subContent = getSubSqlContent(parent);
+            subContent.setUpperContent(content);
+            subContent.setInstanceId(1L);
+            content.addLink(subContent);
         } else if (parent instanceof DataBaseTable) {
             MetaLink mainTable = new MetaLink();
             mainTable.setObjectId(parent.getId());
@@ -46,16 +46,30 @@ public class SqlBuilderHandler implements LinkHandle<SqlContent> {
             mainTable.setInstanceId(1L);
             mainTable.setTypeId(LinkMetaType.SqlToJoin.getId());
             mainTable.addChildren(metaLink.getChildren().stream().filter(child -> Objects.equals(child.getType(), LinkMetaType.DataFuture)).toArray(MetaLink[]::new));
-            content.addLink(mainTable);
+            content.addLink(new LinkNode(mainTable));
         }
 
         metaLink.getChildren().forEach(child -> {
             for (LinkMetaType type : linkMetaTypes) {
                 if (child.getType().isMatched(type, Side.Up)) {
-                    content.addLink(child);
+                    if (child.getObjectId() != null && child.getObject().getType() == ObjectMetaType.Object) {
+                        SqlContentNode subContent = getSubSqlContent(child.getObject());
+                        content.addLink(subContent.setUpperContent(content).setInstanceId(child.getInstanceId()));
+                    } else {
+                        content.addLink(new LinkNode(child));
+                    }
                     return;
                 }
             }
         });
+    }
+
+    protected SqlContentNode getSubSqlContent(MetaObject subObject) {
+        MetaLink subLink = new MetaLink();
+        subLink.setObjectId(subObject.getId());
+        subLink.setObject(subObject);
+        SqlContentNode subContent = new SqlContentNode();
+        this.handler(subContent, subLink);
+        return subContent;
     }
 }

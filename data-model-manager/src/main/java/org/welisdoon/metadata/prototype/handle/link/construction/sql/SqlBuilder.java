@@ -5,11 +5,8 @@ import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @Classname SqlBuilder
@@ -29,15 +26,13 @@ public interface SqlBuilder {
         }
     }
 
-    default String buildJoin(SqlContent content, String joinOpr, String condOpr, MetaLink metaLink) {
-        return String.format(" %s %s %s %s %s", joinOpr, metaLink.getObject().getCode(), content.toTableAlias(metaLink), condOpr, metaLink.getChildren().stream().map(child -> {
-            return ISqlBuilderHandler.getHandler(child.getType()).toSql(child, content);
-        }).collect(Collectors.joining(" and ")));
-    }
-
-
     default String buildWheres(SqlContent content) {
-        StringBuilder sql = Optional.ofNullable(buildWhere(content)).orElseGet(StringBuilder::new);
+        StringBuilder sql = new StringBuilder();
+        sql.append(content.getLinks().stream().map(buildNode -> buildNode.buildWheres(content, this)).filter(StringUtils::isNoneBlank).collect(Collectors.joining(" and ")));
+        if (sql.length() == 0) {
+            return "";
+        }
+//        StringBuilder sql = Optional.ofNullable(buildWhere(content)).orElseGet(StringBuilder::new);
         while (sql.charAt(0) == ' ') {
             sql.delete(0, 1);
         }
@@ -60,41 +55,10 @@ public interface SqlBuilder {
     }
 
     default String buildJoins(SqlContent content) {
-        StringBuilder sql = content.getParent() == null ? new StringBuilder() : new StringBuilder(buildJoins(content.getParent()));
-        List<LinkMetaType> linkMetaTypes = content.getLinkMetaTypes();
-        Stream<MetaLink> stream = content.getLinks().stream();
-        if (content.getParent() == null) {
-            sql.append(" from ");
-            MetaLink mainTable = content.getLinks().stream().findFirst().orElseThrow(() -> new IllegalStateException("缺少主表"));
-            sql.append(mainTable.getObject().getCode()).append(" ").append(content.toTableAlias(mainTable));
-            stream = stream.skip(1);
-        }
-        stream.collect(Collectors.groupingBy(MetaLink::getType)).forEach((linkMetaType, list1) -> {
-            if (!matchLinkMetaType(linkMetaTypes, linkMetaType)) {
-                return;
-            }
-            buildJoin(content, sql, linkMetaType, list1);
-        });
-        return sql.toString();
+        return content.getLinks().stream().map(buildNode -> buildNode.buildJoins(content, this)).filter(StringUtils::isNoneBlank).collect(Collectors.joining(" "));
     }
 
-    default void buildJoin(SqlContent content, StringBuilder sql, LinkMetaType type, List<MetaLink> list) {
-        switch (type) {
-            case SqlToJoinOfStrongRel:
-                list.stream().forEach(metaLink -> {
-                    sql.append(buildJoin(content, "join", "on", metaLink));
-                });
-                break;
-            case SqlToJoinOfWeakRel:
-            case SqlToJoinOfMultiDataRel:
-                list.stream().forEach(metaLink -> {
-                    sql.append(buildJoin(content, "left join", "on", metaLink));
-                });
-                break;
-        }
-    }
-
-    default StringBuilder buildWhere(SqlContent content) {
+    /*default StringBuilder buildWhere(SqlContent content) {
         StringBuilder sql = Optional.ofNullable(content.getParent()).map(this::buildWhere).orElseGet(StringBuilder::new);
         List<LinkMetaType> linkMetaTypes = content.getLinkMetaTypes();
         Stream<MetaLink> stream = content.getLinks().stream();
@@ -114,7 +78,7 @@ public interface SqlBuilder {
                 .filter(StringUtils::isNotEmpty)
                 .collect(Collectors.joining(" and ")));
         return sql;
-    }
+    }*/
 
     default boolean matchLinkMetaType(List<LinkMetaType> linkMetaTypes, LinkMetaType linkMetaType) {
         return linkMetaTypes.stream().anyMatch(linkMetaType1 -> linkMetaType.isMatched(linkMetaType1, Side.Up));
@@ -123,29 +87,24 @@ public interface SqlBuilder {
     default String buildWhere(SqlContent sqlContent, LinkMetaType type, List<MetaLink> list) {
         switch (type) {
             case SqlToJoinOfMultiDataRel:
-                List<List<MetaLink>> lists = new LinkedList<>();
-                List<MetaLink> links;
-                for (MetaLink metaLink : list) {
-
-                }
-                return lists.stream().map(list1 -> list1.stream().findFirst().map(metaLink -> {
-                    String joins = list1
-                            .stream()
-                            .skip(1)
-                            .map(metaLink1 -> String
-                                    .format(" join %s %s on %s",
-                                            metaLink1.getObject().getCode(),
-                                            sqlContent.toTableAlias(metaLink1),
-                                            metaLink1.getChildren()
-                                                    .stream().map(child -> ISqlBuilderHandler.getHandler(child.getType()).toSql(child, sqlContent)).collect(Collectors.joining(" and "))))
-                            .collect(Collectors.joining());
-                    return String.format(" exist (select 1 from %s %s %s where %s )", metaLink.getObject().getCode(), sqlContent.toTableAlias(metaLink), joins, metaLink.getChildren().stream().map(child -> ISqlBuilderHandler.getHandler(child.getType()).toSql(child, sqlContent)).collect(Collectors.joining(" and ")));
-                }).orElse("")).collect(Collectors.joining(" and "));
+                MetaLink metaLink = list.get(0);
+                String joins = list
+                        .stream()
+                        .skip(1)
+                        .map(metaLink1 -> String
+                                .format(" join %s %s on %s",
+                                        metaLink1.getObject().getCode(),
+                                        sqlContent.getAlias(metaLink1),
+                                        metaLink1.getChildren()
+                                                .stream().map(child -> ISqlBuilderHandler.getHandler(child.getType()).toSql(child, sqlContent)).collect(Collectors.joining(" and "))))
+                        .collect(Collectors.joining());
+                return String.format(" exist (select 1 from %s %s %s where %s )", metaLink.getObject().getCode(), sqlContent.getAlias(metaLink), joins, metaLink.getChildren().stream().map(child -> ISqlBuilderHandler.getHandler(child.getType()).toSql(child, sqlContent)).collect(Collectors.joining(" and ")));
         }
         return null;
     }
 
     default String buildColumns(SqlContent content) {
-        return "*";
+        String sql = content.getLinks().stream().map(buildNode -> buildNode.buildColumns(content, this)).filter(StringUtils::isNoneBlank).collect(Collectors.joining(","));
+        return StringUtils.isAllBlank(sql) ? "*" : sql;
     }
 }
