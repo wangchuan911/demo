@@ -60,9 +60,17 @@ import {ElMessageBox, ElMessage} from 'element-plus';
 import type {Action} from 'element-plus';
 import 'element-plus/es/components/message-box/style/css';
 import 'element-plus/es/components/message/style/css';
-import {DrawersContent} from "@/components/config";
+import {DrawersContent, FormContent} from "@/components/config";
 import {AxiosError} from "axios";
-import {FormDrawersContent, ItemConfig, MyOption, SelectItem, TextItem} from "@/components/form/config";
+import {
+  FormDrawersContent,
+  ItemConfig,
+  MyOption,
+  MyTreeOption,
+  SelectItem,
+  SelectTreeItem,
+  TextItem
+} from "@/components/form/config";
 
 
 class AttrAddDrawersContent extends FormDrawersContent {
@@ -70,7 +78,14 @@ class AttrAddDrawersContent extends FormDrawersContent {
   constructor() {
     super();
     this.name = "属性";
-    this.content.addInput(new TextItem("code", "标识"), new TextItem("name", "描述", {} as ItemConfig<TextItem>));
+    this.content.addInput(new TextItem("code", "标识"), new TextItem("name", "描述", {} as ItemConfig<TextItem>), new SelectTreeItem("attr", "关联表字段", {
+      async inputLoadHandler(input: SelectTreeItem, content: FormContent): Promise<void> {
+        /*const {data} = await $http.get("obj/type");
+        input.addOptions(...data.map(val => new MyTreeOption(val.id, val.desc)));*/
+        input.prop.renderAfterExpand = true;
+        input.addOptions(new MyTreeOption("1", "1", [new MyTreeOption("3", "3")]), new MyTreeOption("2", "2"))
+      }
+    } as ItemConfig<SelectTreeItem>));
   }
 
   confirm() {

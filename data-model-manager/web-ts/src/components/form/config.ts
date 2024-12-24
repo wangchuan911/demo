@@ -1,5 +1,6 @@
 import {ElInput, ElMessageBox, ElOption} from 'element-plus';
 import MySelect from '@/components/form/input/MySelect.vue';
+import MyTreeSelect from '@/components/form/input/MyTreeSelect.vue';
 import MyEasySearch from '@/components/form/input/MyEasySearch.vue';
 import {DrawersContent, FormContent} from "@/components/config";
 
@@ -246,6 +247,51 @@ export class FormDrawersContent extends DrawersContent {
 
     confirm() {
         console.log(this.content.getForm(true));
+    }
+}
+
+export class MyTreeOption {
+    value: any;
+    label: string;
+    children?: Array<MyTreeOption>
+
+    constructor(value: any, label: string, children?: Array<MyTreeOption>) {
+        this.label = label;
+        this.value = value;
+        this.children = children;
+    }
+}
+
+export class SelectTreeItem extends InputItem {
+    isMulti: boolean;
+
+    constructor(code: string, label: string, prop: ItemConfig<SelectTreeItem> = {} as ItemConfig<SelectTreeItem>) {
+        super(code, label, prop);
+        this.isMulti = false;
+        this.comp = MyTreeSelect;
+        this.prop['tree'] = [];
+        this.prop['prop'] = {multiple: this.isMulti};
+    }
+
+    setOptions(...options: Array<MyTreeOption>): this {
+        if (this.prop['tree'])
+            this.prop['tree'].length = 0;
+        this.addOptions(...options);
+        return this;
+    }
+
+    addOptions(...options: Array<MyTreeOption>): this {
+        if (this.prop['tree'] == null)
+            this.prop['tree'] = [];
+        this.prop['tree'].push(...options);
+        return this;
+    }
+
+
+    setMulti(state: boolean): SelectTreeItem {
+        this.isMulti = state;
+        this.prop['prop'].multiple = state;
+        return this;
     }
 }
 
