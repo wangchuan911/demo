@@ -78,29 +78,27 @@ class AttrAddDrawersContent extends FormDrawersContent {
   constructor() {
     super();
     this.name = "属性";
-    this.content.addInput(new TextItem("code", "标识"), new TextItem("name", "描述", {} as ItemConfig<TextItem>), (() => {
-      const item = new SelectTreeItem("attr", "关联表字段", {
-        async inputLoadHandler(input: SelectTreeItem, content: FormContent): Promise<void> {
-          const {data}: { data: Array<any> } = await $http.get(`tree/obj/${props.id}`);
-          // input.prop.renderAfterExpand = false;
-          input.prop.prop.expandOnClickNode = false;
-          input.prop.prop.renderAfterExpand = false;
-          input.prop.prop.renderAfterExpand = false;
-          // input.prop.prop.showCheckbox = true;
+    this.content.addInput(new TextItem("code", "标识"), new TextItem("name", "描述", {} as ItemConfig<TextItem>),
+        new SelectTreeItem("attr", "关联表字段", {
+          async inputLoadHandler(input: SelectTreeItem, content: FormContent): Promise<void> {
+            const {data}: { data: Array<any> } = await $http.get(`tree/obj/${props.id}`);
+            // input.prop.defaultExpandAll = false;
+            input.prop.prop.expandOnClickNode = false;
+            input.prop.prop.renderAfterExpand = false;
+            // input.prop.prop.showCheckbox = true;
 
-          // input.prop.showCheckbox= true;
-          const format = (values: any[]): MyTreeOption[] => {
-            if (!values) {
-              return null as unknown as MyTreeOption[];
+            // input.prop.showCheckbox= true;
+            const format = (values: any[]): MyTreeOption[] => {
+              if (!values) {
+                return null as unknown as MyTreeOption[];
+              }
+              return values.map(val => new MyTreeOption(val.id, `[${val.type}]${val.code}`, format(val.children)));
             }
-            return values.map(val => new MyTreeOption(val.id, `[${val.type}]${val.code}`, format(val.children)));
+            input.setOptions(...format(data));
           }
-          input.setOptions(...format(data));
-        }
-      } as ItemConfig<SelectTreeItem>);
-      item.prop.prop.defaultExpandAll = true;
-      return item
-    })());
+        } as ItemConfig<SelectTreeItem>).andThen(item => {
+          item.prop.defaultExpandAll = true
+        }));
   }
 
   confirm() {
