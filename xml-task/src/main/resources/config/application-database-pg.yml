@@ -1,6 +1,6 @@
 spring:
   datasource:
-    enabled: true
+    enabled: false
     username: rim
     #welisdoon
     password:

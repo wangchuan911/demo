@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task>
+    <initialization>
+        <database id="rimdb" model="jdbc:oracle"></database>
+        <value id="val1"></value>
+        <value id="now"
+               value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyy-MM-dd HH:mm:ss'))}}"></value>
+        <value id="bodyStart" tag="body">
+            <![CDATA[ {
+            "data": {
+            "provinceAbbreviation": "GXG",
+            "keyCode": "/iTbzYVVDFXErxfthG8Mz3AfKY14C4RyHW3Qdw8ENHg=",
+            "operator": "18977141208",
+            "requestTime": "{{$values.now}}",
+            ]]>
+        </value>
+        <value id="bodyEnd" tag="body">
+            }
+            }
+        </value>
+        <instance tag="sql" id="sqlGetArea">
+            SELECT 451 || substr(a.main_id, 4) as "id",
+            a.region_no as "code",
+            a.region_name as "name",
+            decode(a.super_region_id, null, null, 451 || substr(a.super_region_id, 4)) as "parentId",
+            decode(a.grade_id, 2000002, 100699, 2000004, 100700, 100698) as "areaLevelId",
+            a.alias as "PPM_CODE",
+            100383 as "isValid"
+            FROM rimdb.spc_region_main a
+            where a.region_id = #{getLog.item.resId,jdbcType=VARCHAR}
+        </instance>
+        <instance tag="sql" id="sqlGetRoom">
+            SELECT a.district_id as "id",
+            a.history_name as "code",
+            a.china_name as "name",
+            4519 || substr(a.room_id, 5) as "addressId",
+            a.china_name as "addressName",
+            nvl(c.x, 0.0) as "longitude",
+            nvl(c.y, 0.0) as "latitude",
+            decode(a.room_type,
+            3020501,
+            103584,
+            3020502,
+            103585,
+            3020503,
+            103586,
+            3020504,
+            103587,
+            3020505,
+            114226, 114226) as "roomLevelId",
+            decode(a.property,
+            40002,
+            100071,
+            40005,
+            101668,
+            40004,
+            100073,
+            40007,
+            101671,
+            40006,
+            107015,
+            40001,
+            100077,
+            40003,
+            100078,
+            107015) as "propertyTypeId",
+            decode(a.type_id,
+            2050001,
+            100246,
+            2050003,
+            100258,
+            2050004,
+            100252,
+            2050006,
+            100254,
+            2050007,
+            100249,
+            2050009,
+            100266,
+            2050010,
+            100245,
+            2050012,
+            108490,
+            2050013,
+            100260,
+            2050015,
+            100269,
+            2050016,
+            100251,
+            2050017,
+            100246,
+            2050018,
+            100246,
+            2050019,
+            100246,
+            2050020,
+            100267,
+            2050021,
+            107034,
+            2050029,
+            100267,
+            2050030,
+            100267,
+            2050028,
+            100255,
+            2050023,
+            100247,
+            2050024,
+            100250,
+            2050026,
+            100261,
+            2050027,
+            102021,
+            2050040,
+            108481,
+            2050041,
+            102016,
+            2050042,
+            102015,
+            2050043,
+            102018,
+            2050044,
+            100248,
+            2050045,
+            108489,
+            2050046,
+            102021,
+            2050047,
+            100248,
+            2050048,
+            100248,
+            2050049,
+            100248,
+            2050050,
+            100262,
+            2050051,
+            100265,
+            2050052,
+            100268,
+            2050053,
+            100243,
+            2050054,
+            102025,
+            2050032,
+            100267,
+            2050033,
+            103325,
+            2050035,
+            100248,
+            2050037,
+            100248,
+            2050039,
+            100248,
+            2050022,
+            100253,
+            2050025,
+            100259,
+            2050031,
+            100267,
+            2050034,
+            100263,
+            2050038,
+            100248,
+            2050002,
+            100251,
+            2050005,
+            100264,
+            2050008,
+            100244,
+            2050011,
+            100263,
+            2050014,
+            100248,
+            3020507,
+            103326,
+            3020508,
+            108469,
+            3020509,
+            108675,
+            100267) as "roomKindId",
+            451 || substr(b.s_main_id, 4) as "regionId",
+            d.childregion_id as "tmlId",
+            1010100001 as "specId",
+            100383 as "isValid",
+            451 || substr(b.main_id, 4) as "parentId"
+            FROM rimdb.spc_room a
+            JOIN rimdb.vw_main_region b
+            ON a.bldg_id = b.main_id
+            LEFT JOIN webmap.gx_m_spt_pt c
+            ON a.room_id = c.resid
+            join spc_station d
+            on a.station_id = d.station_id
+            WHERE a.delete_state = '0'
+            AND a.history_name IS NOT NULL
+            and a.room_id = #{getLog.item.resId,jdbcType=VARCHAR}
+        </instance>
+        <instance tag="sql" id="sqlGetSite">
+            SELECT a.childregion_id as "id",
+            a.alias as "code",
+            a.china_name as "name",
+            451 || substr(b.s_main_id, 4) as "regionId",
+            nvl(c.x, 0.0) as "coordinateX",
+            nvl(c.y, 0.0) as "coordinateY",
+            decode(a.authority,
+            40002,
+            107017,
+            40005,
+            108468,
+            40004,
+            100078,
+            40007,
+            100078,
+            40006,
+            108468,
+            40001,
+            107017,
+            40003,
+            100078,
+            107017) as "propertyTypeId",
+            decode(a.type_id,
+            2010010,
+            114001,
+            3020506,
+            114003,
+            2010003,
+            114003,
+            2010001,
+            114000,
+            2010002,
+            114002,
+            114003) as "areaTypeId",
+            4519 || substr(a.station_id, 5) as "addressId",
+            a.china_name as "addressName",
+            100383 as "isValid",
+            2210200001 as "specId",
+            451 || substr(b.main_id, 4) as "parentId"
+            FROM rimdb.spc_station a
+            join rimdb.vw_main_region b on a.parent_id = b.main_id
+            left join webmap.gx_m_spc_pt c on a.station_id = c.resid
+            where a.delete_state = '0'
+            and a.alias is not null
+            AND a.station_id = #{getLog.item.resId,jdbcType=VARCHAR}
+        </instance>
+        <instance id="json-header" tag="header" name="Content-Type" content="application/json"/>
+        <instance id="format-body" tag="body">
+            <![CDATA[{{$values.getLogItem.replaceAll('\\s+([\\{\\}\\,\\"\\[\\]])'," $1").replaceAll('([\\{\\}\\,\\"\\[\\]])\\s+',"$1 ")}}]]></instance>
+    </initialization>
+    <start>
+        <select link="rimdb" id="getLog">
+            <sql>
+                SELECT a.log_id as "logId", a.RES_ID as "resId", a.res_type_id as "resTypeId", DEAL_TYPE as "type"
+                FROM rimdb.spc_main_log a
+                where state in (0)
+            </sql>
+            <iterator>
+                <insert link="rimdb" id="lock">
+                    update rimdb.spc_main_log a set remark='更新中',state=3
+                    where log_id=#{getLog.item.logId,jdbcType=VARCHAR} and state in (0)
+                </insert>
+                <set-value name="lock"></set-value>
+                <if test="$values.lock == 0">
+                    <continue></continue>
+                </if>
+                <choice>
+                    <when test="getLog.item.resTypeId==200">
+                        <select link="rimdb" id="getArea">
+                            <sql ref="sqlGetArea"></sql>
+                            <iterator>
+                                <set-value name="itemIndex" value="{{getLog.index}}"></set-value>
+                                <if test="getLog.item.type=='I'.toString()">
+                                    <set-value name="getLogItem">
+                                        {{$values.bodyStart}}
+                                        "areaItems": [
+                                        {
+                                        "entityInfo": {
+                                        "code": "{{getArea.item.code}}",
+                                        "name": "{{getArea.item.code}}",
+                                        "parentId": "{{getArea.item.code}}",
+                                        "specId": "2210100001",
+                                        "areaLevelId": "{{getArea.item.areaLevelId}}"
+                                        }
+                                        }
+                                        ]
+                                        {{$values.bodyEnd}}
+                                    </set-value>
+                                    <catch>
+                                        <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/addAreaentityInfo.out"
+                                              is-log="true" id="http" output="json">
+                                            <body ref="format-body"></body>
+                                            <header ref="json-header"></header>
+                                        </http>
+                                        <set-value name="http"></set-value>
+                                    </catch>
+                                </if>
+                                <if test="getLog.item.type=='U'.toString()">
+                                    <set-value name="itemIndex" value="{{getLog.index}}"></set-value>
+                                    <set-value name="getLogItem">
+                                        {{$values.bodyStart}}
+                                        "areaItems": [
+                                        {
+                                        "entityInfo": {
+                                        "id": "{{getArea.item.id}}",
+                                        "code": "{{getArea.item.code}}",
+                                        "name": "{{getArea.item.code}}",
+                                        "parentId": "{{getArea.item.code}}",
+                                        "specId": "2210100001",
+                                        "areaLevelId": "{{getArea.item.areaLevelId}}"
+                                        }
+                                        }
+                                        ]
+                                        {{$values.bodyEnd}}
+
+                                    </set-value>
+                                    <catch>
+                                        <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/modAreaentityInfo.out"
+                                              is-log="true" id="http" output="json">
+                                            <body ref="format-body"></body>
+                                            <header ref="json-header"></header>
+                                        </http>
+                                        <set-value name="http"></set-value>
+                                    </catch>
+                                </if>
+                            </iterator>
+                        </select>
+                        <if test="getLog.item.type=='D'.toString()">
+                            <set-value name="itemIndex" value="{{getLog.index}}"></set-value>
+                            <set-value name="getLogItem">
+                                {{$values.bodyStart}}
+                                "areaIds": [
+                                {
+                                "id": "{{getLog.item.resId}}"
+                                }
+                                ]
+                                {{$values.bodyEnd}}
+
+                            </set-value>
+                            <catch>
+                                <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/delAreaentityInfo.out"
+                                      is-log="true" id="http" output="json">
+                                    <body ref="format-body"></body>
+                                    <header ref="json-header"></header>
+                                </http>
+                                <set-value name="http"></set-value>
+                            </catch>
+                        </if>
+                    </when>
+                    <when test="getLog.item.resTypeId==205">
+                        <select link="rimdb" id="getRoom">
+                            <sql ref="sqlGetRoom"></sql>
+                            <iterator>
+                                <set-value name="itemIndex" value="{{getLog.index}}"></set-value>
+                                <if test="getLog.item.type=='I'.toString()">
+                                    <set-value name="getLogItem">
+                                        {{$values.bodyStart}}
+                                        "siteAddressItems": [
+                                        {
+                                        "entityInfo": {
+                                        "code": "{{getRoom.item.code}}",
+                                        "name": "{{getRoom.item.code}}",
+                                        "addressId": "",
+                                        "addressName": "{{getRoom.item.name}}",
+                                        "tmlId": "{{getRoom.item.tmlId}}",
+                                        "longitude": "{{getRoom.item.longitude}}",
+                                        "latitude": "{{getRoom.item.latitude}}",
+                                        "roomKindId": [
+                                        "{{getRoom.item.roomKindId}}"
+                                        ],
+                                        "roomLevelId": "{{getRoom.item.roomLevelId}}",
+                                        "propertyTypeId": "{{getRoom.item.propertyTypeId}}",
+                                        "parentId": "{{getRoom.item.parentId}}",
+                                        "regionId": "{{getRoom.item.regionId}}",
+                                        "specId": "1010100001",
+                                        "longCode": ""
+                                        }
+                                        }
+                                        ]
+                                        {{$values.bodyEnd}}
+                                    </set-value>
+                                    <catch>
+                                        <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/addSiteAddressEntityInfo.out"
+                                              is-log="true" id="http" output="json">
+                                            <body ref="format-body"></body>
+                                            <header ref="json-header"></header>
+                                        </http>
+                                        <set-value name="http"></set-value>
+                                        <if test="$values.http!=null and $values.http.result!=null and $values.http.result.status=='0'.toString()">
+                                            <insert link="rimdb">
+                                                update spc_room a set district_id=#{$values.http.data.siteAddressItems.get(0).entityInfo.id,jdbcType=VARCHAR} where a.room_id=#{getLog.item.resId,jdbcType=VARCHAR}
+                                            </insert>
+                                        </if>
+                                    </catch>
+                                </if>
+                                <if test="getLog.item.type=='U'.toString()">
+                                    <set-value name="getLogItem">
+                                        {{$values.bodyStart}}
+                                        "siteAddressItems": [
+                                        {
+                                        "entityInfo": {
+                                        "id": "{{getRoom.item.id}}",
+                                        "code": "{{getRoom.item.code}}",
+                                        "name": "{{getRoom.item.code}}",
+                                        "addressId": "",
+                                        "addressName": "{{getRoom.item.name}}",
+                                        "tmlId": "{{getRoom.item.tmlId}}",
+                                        "longitude": "{{getRoom.item.longitude}}",
+                                        "latitude": "{{getRoom.item.latitude}}",
+                                        "roomKindId": [
+                                        "{{getRoom.item.roomKindId}}"
+                                        ],
+                                        "roomLevelId": "{{getRoom.item.roomLevelId}}",
+                                        "propertyTypeId": "{{getRoom.item.propertyTypeId}}",
+                                        "parentId": "{{getRoom.item.parentId}}",
+                                        "regionId": "{{getRoom.item.regionId}}",
+                                        "specId": "1010100001",
+                                        "longCode": ""
+                                        }
+                                        }
+                                        ]
+                                        {{$values.bodyEnd}}
+                                    </set-value>
+                                    <catch>
+                                        <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/updateSiteAddressEntityInfo.out"
+                                              is-log="true" id="http" output="json">
+                                            <body ref="format-body"></body>
+                                            <header ref="json-header"></header>
+                                        </http>
+                                        <set-value name="http"></set-value>
+                                    </catch>
+                                </if>
+                            </iterator>
+                        </select>
+                        <if test="getLog.item.type=='D'.toString()">
+                            <set-value name="itemIndex" value="{{getLog.index}}"></set-value>
+                            <set-value name="getLogItem">
+                                {{$values.bodyStart}}
+                                "siteAddressItems": [
+                                {
+                                "id": "{{getLog.item.resId}}"
+                                }
+                                ]
+
+                                {{$values.bodyEnd}}
+                            </set-value>
+                            <catch>
+                                <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/deleteSiteAddressEntityInfo.out">
+                                    <body ref="format-body"></body>
+                                    <header ref="json-header"></header>
+                                </http>
+                                <set-value name="http"></set-value>
+                            </catch>
+                        </if>
+                    </when>
+                    <when test="getLog.item.resTypeId==201">
+                        <select link="rimdb" id="getSite">
+                            <sql ref="sqlGetSite"></sql>
+                            <iterator>
+                                <set-value name="itemIndex" value="{{getLog.index}}"></set-value>
+                                <if test="getLog.item.type=='I'.toString()">
+                                    <set-value name="getLogItem">
+                                        {{$values.bodyStart}}
+                                        "siteItems": [
+                                        {
+                                        "entityInfo": {
+                                        "code": "{{getSite.item.code}}",
+                                        "name": "{{getSite.item.name}}",
+                                        "regionId": "{{getSite.item.regionId}}",
+                                        "parentId": "{{getSite.item.parentId}}",
+                                        "specId": 2210200001,
+                                        "coordinateX": "{{getSite.item.coordinateX}}",
+                                        "coordinateY": "{{getSite.item.coordinateY}}",
+                                        "addressId": "{{getSite.item.addressId}}",
+                                        "addressName": "{{getSite.item.addressName}}",
+                                        "propertyTypeId": "{{getSite.item.propertyTypeId}}",
+                                        "areaRoleId": "",
+                                        "areaTypeId": "{{getSite.item.areaTypeId}}"
+                                        }
+                                        }
+                                        ]
+                                        {{$values.bodyEnd}}
+                                    </set-value>
+                                    <catch>
+                                        <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/addSiteentityInfo.out"
+                                              is-log="true" id="http" output="json">
+                                            <body ref="format-body"></body>
+                                            <header ref="json-header"></header>
+                                        </http>
+                                        <set-value name="http"></set-value>
+                                        <if test="$values.http!=null and $values.http.result!=null and $values.http.result.status=='0'.toString()">
+                                            <insert link="rimdb">
+                                                update spc_station a set childregion_id=#{$values.http.data.siteItems.get(0).entityInfo.id,jdbcType=VARCHAR} where a.station_id=#{getLog.item.resId,jdbcType=VARCHAR}
+                                            </insert>
+                                        </if>
+                                    </catch>
+                                </if>
+                                <if test="getLog.item.type=='U'.toString()">
+                                    <set-value name="getLogItem">
+                                        {{$values.bodyStart}}
+                                        "siteItems": [
+                                        {
+                                        "entityInfo": {
+                                        "specId": 2210200001,
+                                        "id":"{{getSite.item.id}}",
+                                        "code": "{{getSite.item.code}}",
+                                        "name": "{{getSite.item.name}}",
+                                        "regionId":"{{getSite.item.regionId}}",
+                                        "parentId":"{{getSite.item.parentId}}",
+                                        "coordinateX": "{{getSite.item.coordinateX}}",
+                                        "coordinateY": "{{getSite.item.coordinateY}}",
+                                        "addressId": "{{getSite.item.addressId}}",
+                                        "addressName": "{{getSite.item.addressName}}",
+                                        "propertyTypeId": "{{getSite.item.propertyTypeId}}",
+                                        "areaRoleId": null,
+                                        "areaTypeId": {{getSite.item.areaTypeId}}
+                                        }
+                                        }
+                                        ]
+
+                                        {{$values.bodyEnd}}
+
+                                    </set-value>
+                                    <catch>
+                                        <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/modSiteEntityInfo.out"
+                                              is-log="true" id="http" output="json">
+                                            <body ref="format-body"></body>
+                                            <header ref="json-header"></header>
+                                        </http>
+                                        <set-value name="http"></set-value>
+                                    </catch>
+                                </if>
+                            </iterator>
+                        </select>
+                        <if test="getLog.item.type=='D'.toString()">
+                            <set-value name="itemIndex" value="{{getLog.index}}"></set-value>
+                            <set-value name="getLogItem">
+                                {{$values.bodyStart}}
+                                "siteIds": [
+                                {
+                                "id": "{{getLog.item.resId}}"
+                                }
+                                ]
+                                {{$values.bodyEnd}}
+                            </set-value>
+                            <catch>
+                                <http url="http://134.201.27.154:7600/resservice/unified/model/bureauStandingManagementService/deleteSiteEntity.out"
+                                      is-log="true" id="http" output="json">
+                                    <body ref="format-body">
+                                    </body>
+                                    <header ref="json-header"></header>
+                                </http>
+                                <set-value name="http"></set-value>
+                            </catch>
+                        </if>
+                    </when>
+                </choice>
+                <if test="http!=null and $values.itemIndex==getLog.index">
+                    <insert link="rimdb" id="unlock">
+                        update rimdb.spc_main_log a set
+                        <choice>
+                            <when test="$values.http!=null and $values.http.result!=null and $values.http.result.status=='0'.toString()">
+                                a.state = 1,remark='更新结束'
+                            </when>
+                            <otherwise>
+                                a.state = -1,remark='更新失败'
+                            </otherwise>
+                        </choice>
+                        where log_id=#{getLog.item.logId,jdbcType=VARCHAR}
+                    </insert>
+                    <insert link="rimdb" id="unlock2">
+                        update rimdb.spc_main_log a set
+                        a.INPUT_MSG=#{http.input,jdbcType=VARCHAR}
+                        ,a.RETURN_MSG=#{http.output,jdbcType=VARCHAR}
+                        where log_id=#{getLog.item.logId,jdbcType=VARCHAR}
+                    </insert>
+                </if>
+            </iterator>
+        </select>
+    </start>
+</task>

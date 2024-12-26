@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task>
+    <initialization>
+        <database id="rimdb_pg" model="postgresql"></database>
+        <value id="now"
+               value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyy-MM-dd HH:mm:ss'))}}"/>
+        <value id="remotePath"
+               value="/ftp_upload/dxzc/UnusedRes_{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMdd'))}}.csv"/>
+        <value id="path" value="/app/java/project/xml-task/tmp/UnusedRes.csv"></value>
+    </initialization>
+    <start>
+        <csv id="csv1" write="{{$values.path}}" header="true">
+            <col name="资源实物ID"></col>
+            <col name="资源编号"></col>
+            <col name="资源名称"></col>
+            <col name="资源规格型号ID"></col>
+            <col name="资产卡片编号"></col>
+            <col name="资源系统公司代码ID"></col>
+            <col name="工程编号"></col>
+            <col name="规格型号"></col>
+            <col name="厂家"></col>
+            <col name="安装位置"></col>
+            <col name="当前经度（手机所在）"></col>
+            <col name="当前纬度（手机所在）"></col>
+            <col name="资源上图经度"></col>
+            <col name="资源上图纬度"></col>
+            <col name="巡检扫码人员人力工号"></col>
+            <col name="巡检扫码人员姓名"></col>
+            <col name="扫码时间"></col>
+            <col name="数据来源"></col>
+            <col name="订单编码"></col>
+            <select id="select" link="rimdb_pg">
+                <sql><![CDATA[
+                    SELECT
+                            a.entity_id as "resId",/*资源实物ID*/
+                            a.entity_code as "resCode",/*资源编号*/
+                            a.entity_name as "resName",/*资源名称*/
+                            a.entity_spec_id as "resTypeId",/*资源规格型号ID*/
+                            a.assetscardcode as "assetCard",/*资产卡片编号*/
+                            a.organizeid as "organizeId",/*资源系统公司代码ID*/
+                            a.project_code as "projectCode",/*工程编号*/
+                            a.entity_spec as "resType",/*规格型号*/
+                            a.manufacturer as "manufacturer",/*厂家*/
+                            a.address as "address",/*安装位置*/
+                            b.longitude as "longitude",/*当前经度（手机所在）*/
+                            b.latitude as "latitude",/*当前纬度（手机所在）*/
+                            c.longitude as "longitude",/*资源上图经度*/
+                            c.latitude as "latitude",/*资源上图纬度*/
+                            b."operator" as "staffId",/*巡检扫码人员人力工号*/
+                            b.operator_name as "staffName",/*巡检扫码人员姓名*/
+                            now() as "time",/*扫码时间*/
+                            '报废标识' as "source",/*数据来源*/
+                            '' as "orderCode"/*订单编码*/
+                    FROM rp_mss_proj_res A
+                    LEFT JOIN pm_pub_scan_log b
+                        ON A.entity_id = b.res_id
+                        AND EXISTS (
+                            SELECT 1
+                            from pm_pub_scan_log b1
+                            WHERE b1.res_id = b.res_id
+                            GROUP BY b1.res_id
+                            having MAX ( b1.ID ) = b.ID
+                        )
+                    left join cm_device c
+                        on c.id=a.entity_id
+                    where 1=1
+                    ]]>
+                </sql>
+                <iterator thread="4">
+                    <write-line>
+                        <col value="{{select.item.resId}}"/>
+                        <col value="{{select.item.resCode}}"/>
+                        <col value="{{select.item.resName}}"/>
+                        <col value="{{select.item.resTypeId}}"/>
+                        <col value="{{select.item.assetCard}}"/>
+                        <col value="{{select.item.organizeId}}"/>
+                        <col value="{{select.item.projectCode}}"/>
+                        <col value="{{select.item.resType}}"/>
+                        <col value="{{select.item.manufacturer}}"/>
+                        <col value="{{select.item.address}}"/>
+                        <col value="{{select.item.longitude}}"/>
+                        <col value="{{select.item.latitude}}"/>
+                        <col value="{{select.item.longitude}}"/>
+                        <col value="{{select.item.latitude}}"/>
+                        <col value="{{select.item.staffId}}"/>
+                        <col value="{{select.item.staffName}}"/>
+                        <col value="{{select.item.time}}"/>
+                        <col value="{{select.item.source}}"/>
+                        <col value="{{select.item.orderCode}}"/>
+                    </write-line>
+                </iterator>
+            </select>
+        </csv>
+        <sftp id="resftp" local="{{$values.path}}"
+              put="/ftp_upload/dxzc/UnusedRes_{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMdd'))}}.csv"></sftp>
+    </start>
+</task>

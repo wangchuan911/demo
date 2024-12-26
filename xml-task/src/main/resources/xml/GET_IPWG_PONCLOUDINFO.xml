@@ -5,7 +5,7 @@
         <value id="val1"></value>
         <value id="now"
                value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
-        <value id="path" value="/slview/guangkuan/IPWG_PONCLOUDINFO_{{now}}.txt"></value>
+        <value id="path" value="/slview/guangkuan/IPWG_PONCLOUDINFO_{{$values.now}}.txt"></value>
         <value id="path"
                value="D:\Workspaces\WelisdoonProject\java\web-server\xml-task\src\main\resources\demo\demo2.csv"></value>
     </initialization>

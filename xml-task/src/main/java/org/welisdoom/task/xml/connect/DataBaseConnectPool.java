@@ -304,7 +304,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
 
 
     default Future<Void> closePools() {
-        return (Future) CompositeFuture.join(new HashSet<String>(getPools().keySet()).stream().map(s -> closePool(s)).collect(Collectors.toList()));
+        return (Future) Future.join(new HashSet<String>(getPools().keySet()).stream().map(s -> closePool(s)).collect(Collectors.toList()));
     }
 
     default Future<Void> closePool(String name) {

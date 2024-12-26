@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
@@ -37,7 +36,7 @@ public class Transactional extends Unit implements Executable {
                     return entry.getValue().commit();
                 else
                     return entry.getValue().rollback();*/
-                return CompositeFuture.join(this.allTransaction(data).stream().map(entry -> {
+                return Future.join(this.allTransaction(data).stream().map(entry -> {
                     if (event.succeeded())
                         return entry.getValue().commit();
                     else
@@ -132,8 +131,8 @@ public class Transactional extends Unit implements Executable {
 
     @Override
     protected Future<Void> hook(TaskInstance taskInstance) {
-        return CompositeFuture.join(allTransaction(taskInstance).stream().map(entry ->
-                CompositeFuture.join(Arrays.asList(
+        return Future.join(allTransaction(taskInstance).stream().map(entry ->
+                Future.join(Arrays.asList(
                         entry
                                 .getValue()
                                 .rollback()

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task>
+    <initialization>
+        <database id="rimdb"></database>
+        <value id="path" value="/app/java/project/xml-task/tmp/project_check.csv"></value>
+        <!--<value id="path"
+               value="D:\Workspaces\WelisdoonProject\java\web-server\xml-task\src\main\resources\demo\proj.csv"></value>-->
+        <value id="remotePath" value="/resftp/extsys/fufu/"></value>
+    </initialization>
+    <start>
+        <catch>
+            <http url="http://134.194.14.85:32700/portal/res-interface/resBizIndividuationAxis/queryAddress"
+                  is-log="true" id="queryAddress" output="json">
+                <header name="X-APP-ID" content="975a2e8408cb6ee073d6aef244e1a2d1"></header>
+                <header name="X-APP-KEY" content="0c2babbabc7d35a512eb19d2b617c1c5"></header>
+                <header name="Content-Type" content="application/json"></header>
+                <body>
+                    {
+                    "data":{
+                    "searchAddress":"金湖帝景",
+                    "sharding_id":"451102000000000021347376",
+                    "pagination":{}
+                    }
+                    }
+                </body>
+            </http>
+            <set-value name="queryAddress"></set-value>
+            <foreach id="addressesList" collection="$values.queryAddress.data.addressesList">
+                <set-value id="body">
+                    {
+                    "head": {
+                    "senderId": "",
+                    "serviceName": "",
+                    "msgId": ""
+                    },
+                    "data": {
+                    "accessModeId": "",
+                    "areaCode": "{{queryAddress.item.districtCode}}",
+                    "areaId": "",
+                    "areaName": "广西/南宁市/青秀区",
+                    "latitude": "{{queryAddress.item.latitude}}",
+                    "longitude": "{{queryAddress.item.longitude}}",
+                    "addressName": "{{queryAddress.item.fullName}}",
+                    "addressId": "{{queryAddress.item.id}}",
+                    "locationId": "{{queryAddress.item.locationIds}}",
+                    "productTypeId": "",
+                    "rate": "",
+                    "distance": 500,
+                    "returnResFlag": "1"
+                    }
+                    }
+                </set-value>
+                <foreach collection="{'http://134.194.14.85:32700/portal/res-interface/resBizIndividuationAxis/queryAddress','http://10.141.136.40:10000/confirmweb/confirm/confirm/Resource/AbilityQuery','http://134.194.16.8:11000/api/openapi/dcoos2/ossrim_businessResAbilityApi/businessResAbilityApi
+'}" id="urls" thread="4">
+                    <!--<set-value name="index" value="urls.item.index"></set-value>-->
+                    <time-counter>
+                        <choice>
+                            <when test="urls.item.index==3">
+                                <http url="http://134.194.14.85:32700/portal/res-interface/resBizIndividuationAxis/queryAddress"
+                                      is-log="true" id="queryAddress" output="json">
+                                    <body>
+                                        {{$values.body}}
+                                    </body>
+                                </http>
+                                <!--<set-value name="http"></set-value>-->
+                            </when>
+                            <other>
+                                <http url="http://134.194.14.85:32700/portal/res-interface/resBizIndividuationAxis/queryAddress"
+                                      is-log="true" id="queryAddress" output="json">
+                                    <header name="X-APP-ID" content="f27174676ed49cbd59d50e1d62abead7"></header>
+                                    <header name="X-APP-KEY" content="7b4bca67f6e6af32e5a3f3e7fed09c24"></header>
+                                    <header name="Content-Type" content="application/json"></header>
+                                    <body>
+                                        {{$values.body}}
+                                    </body>
+                                </http>
+                            </other>
+                        </choice>
+                    </time-counter>
+                    <choice>
+                        <when test="urls.item.index==0">
+                            <set-value name="time0"></set-value>
+                        </when>
+                        <when test="urls.item.index==1">
+                            <set-value name="time1"></set-value>
+                        </when>
+                        <when test="urls.item.index==2">
+                            <set-value name="time2"></set-value>
+                        </when>
+                        <when test="urls.item.index==3">
+                            <set-value name="time3"></set-value>
+                        </when>
+                    </choice>
+                </foreach>
+                <insert link="rimdb">
+                    insert into tmp_wzd_api_cost_test(name,local_cost,dcoos_cost,jt_cost,dcoos_self_cost)
+                    values('查勘'||#{queryAddress.item.id,jdbcType=VARCHAR},
+                        #{$value.time0,jdbcType=VARCHAR},
+                        #{$value.time1,jdbcType=VARCHAR},
+                        #{$value.time2,jdbcType=VARCHAR},
+                        #{$value.time3,jdbcType=VARCHAR}
+                    )
+                </insert>
+            </foreach>
+            <error>
+
+            </error>
+        </catch>
+    </start>
+</task>

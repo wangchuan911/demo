@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.handler;
 
+import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.entity.*;
 import org.welisdoom.task.xml.intf.type.Root;
@@ -110,7 +111,7 @@ public class SAXParserHandler extends DefaultHandler {
     public void characters(char[] ch, int start, int length) throws SAXException {
         super.characters(ch, start, length);
         String value = new String(ch, start, length);
-        if (value.trim().equals("")) {
+        if (StringUtils.isAllBlank(value)) {
             return;
         }
 //        print(value);

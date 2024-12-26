@@ -102,7 +102,7 @@ public class Unit implements UnitType, IData<String, Model> {
 
     protected Future<Void> hook(TaskInstance taskInstance) {
         return this.destroy(taskInstance).transform(event ->
-                taskInstance.getChildrenRequest() == null ? (Future) CompositeFuture.join(Arrays.stream(taskInstance.getChildrenRequest()).map(taskRequest1 -> this.hook(taskInstance)).collect(Collectors.toList())) : Future.succeededFuture()
+                taskInstance.getChildrenRequest() == null ? (Future) Future.join(Arrays.stream(taskInstance.getChildrenRequest()).map(taskRequest1 -> this.hook(taskInstance)).collect(Collectors.toList())) : Future.succeededFuture()
         );
     }
 
@@ -169,15 +169,16 @@ public class Unit implements UnitType, IData<String, Model> {
 
     protected Future<Object> startChildUnit(TaskInstance data, Object value, Unit unit) {
         long cost = System.currentTimeMillis();
-        return executeBlocking(promise -> {
-            System.out.println();
-            unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-            try {
-                unit.start(data, value).onComplete(promise);
-            } catch (Throwable e) {
-                promise.fail(e);
-            }
-        }).onComplete(objectAsyncResult -> {
+
+        System.out.println();
+        unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+        Future<Object> future;
+        try {
+            future = unit.start(data, value);
+        } catch (Throwable e) {
+            future = Future.failedFuture(e);
+        }
+        return future.onComplete(objectAsyncResult -> {
             if (objectAsyncResult.failed())
                 unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
             unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
@@ -240,10 +241,6 @@ public class Unit implements UnitType, IData<String, Model> {
         return UnitType.textFormat(data, attributes.get(name));
     }
 
-
-    protected static <T> Future<T> executeBlocking(Handler<Promise<T>> blockingCodeHandler) {
-        return Task.getVertx().executeBlocking(blockingCodeHandler);
-    }
 
     protected String getAttrOptions(String name) {
         return Optional.ofNullable(attributes.get(name)).orElseGet(() -> {

@@ -1,55 +1,125 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <task>
     <initialization>
-        <instance id="ftp1" tag="ftp"/>
-        <instance id="csv1" tag="csv"/>
-        <instance id="http1" tag="http"/>
-        <database id="rimdb" model="oracle"></database>
-        <value id="val1"></value>
-        <value id="val2"></value>
+
+        <database id="mirror_rc_res_sch" model="postgresql"></database>
+        <value id="now"
+               value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
     </initialization>
     <start>
-        <!--<transactional link="rimdb" >
-            <http>
-                <body>asdasdasdsadasdasdasdasdas</body>
-            </http>
-            <select id="select1" link="rimdb">
-                <sql>
-                    select 1 as "val" from dual union select 2 from dual union select 3 from dual union select 4 from
-                    dual
-                    where
-                    <if test="$inputs.input1=='123'">
-                        1=1 and
-                    </if>
-
-                    1=1
-                </sql>
-                <iterator>
-                    <if test="select1.item.val==2 ">
-                        <http url="">
-                            <body>
-                                {"name":"{{$inputs.input1}}","name2":"{{$inputs.input2}}","name3":"{{$inputs.input3}}"}
-
-                            </body>
-                        </http>
-                        <insert>
-                            insert into pub_scan_log(id,res_id)
-                            values(seq_pub_scan_log.nextval,#{select1.item.val,jdbcType=VARCHAR})
-                        </insert>
-                        <ftp ref="ftp1"></ftp>
-                    </if>
-                    <if test="select1.item.val==3">
-                        <break deep="1"/>
-                    </if>
-                </iterator>
-            </select>
-        </transactional>-->
-        <insert link="rimdb">
-            insert asd
-            <choice>
-                <when test="1==1">asd</when>
-                <otherwise>qwe</otherwise>
-            </choice>
-        </insert>
+        <select link="mirror_rc_res_sch" id="getAddress">
+            <sql>
+            with ta as (
+            select 451990000000002004896356 id from dual union all
+            select 0 id from dual union all
+            select 451990000000002004896366 id from dual union all
+            select 451990000000002004896367 id from dual union all
+            select 451990000000002004896369 id from dual union all
+            select 451990000000002004896380 id from dual union all
+            select 451990000000002004896382 id from dual union all
+            select 451990000000002004896384 id from dual union all
+            select 451990000000002004896386 id from dual union all
+            select 451990000000002004935759 id from dual union all
+            select 451990000000002004896390 id from dual union all
+            select 451990000000002004896396 id from dual union all
+            select 451990000000002004896398 id from dual union all
+            select 451990000000002004896458 id from dual union all
+            select 451990000000002004896460 id from dual union all
+            select 451990000000002004896467 id from dual union all
+            select 451990000000002004896474 id from dual union all
+            select 451990000000002004896481 id from dual union all
+            select 451990000000002004896501 id from dual union all
+            select 451990000000002004896511 id from dual union all
+            select 451990000000002004896357 id from dual union all
+            select 451990000000002004896358 id from dual union all
+            select 451990000000002004896371 id from dual union all
+            select 451990000000002004896373 id from dual union all
+            select 451990000000002004896374 id from dual union all
+            select 451990000000002004896376 id from dual union all
+            select 451990000000002004896378 id from dual union all
+            select 451990000000002004896388 id from dual union all
+            select 451990000000002004896392 id from dual union all
+            select 451990000000002004896394 id from dual union all
+            select 451990000000002004896400 id from dual union all
+            select 451990000000002004896402 id from dual union all
+            select 451990000000002004896404 id from dual union all
+            select 451990000000002004896428 id from dual union all
+            select 451990000000002004896436 id from dual union all
+            select 451990000000002004896438 id from dual union all
+            select 451990000000002004896440 id from dual union all
+            select 451990000000002004896454 id from dual union all
+            select 451990000000002004896406 id from dual union all
+            select 451990000000002004896408 id from dual union all
+            select 451990000000002004896410 id from dual union all
+            select 451990000000002004896412 id from dual union all
+            select 451990000000002004896414 id from dual union all
+            select 451990000000002004896415 id from dual union all
+            select 451990000000002004896417 id from dual union all
+            select 451990000000002004896419 id from dual union all
+            select 451990000000002004896432 id from dual union all
+            select 451990000000002004896434 id from dual union all
+            select 451990000000002004896435 id from dual union all
+            select 451990000000002004896442 id from dual union all
+            select 451990000000002004896444 id from dual union all
+            select 451990000000002004896446 id from dual union all
+            select 451990000000002004896448 id from dual union all
+            select 451990000000002004896450 id from dual union all
+            select 451990000000002004896456 id from dual union all
+            select 451990000000002004896462 id from dual union all
+            select 451990000000002004896464 id from dual union all
+            select 451990000000002004896465 id from dual union all
+            select 451990000000002004896469 id from dual union all
+            select 451990000000002004896471 id from dual union all
+            select 451990000000002004896473 id from dual union all
+            select 451990000000002004896483 id from dual union all
+            select 451990000000002004896497 id from dual union all
+            select 451990000000002004896499 id from dual union all
+            select 451990000000002004896503 id from dual union all
+            select 451990000000002004896505 id from dual union all
+            select 451990000000002004896507 id from dual union all
+            select 451990000000002004896352 id from dual union all
+            select 451990000000002004896353 id from dual union all
+            select 451990000000002004896354 id from dual union all
+            select 451990000000002004896355 id from dual union all
+            select 451990000000002004896359 id from dual union all
+            select 451990000000002004896360 id from dual union all
+            select 451990000000002004896361 id from dual union all
+            select 451990000000002004896362 id from dual union all
+            select 451990000000002004896363 id from dual union all
+            select 451990000000002004896364 id from dual union all
+            select 451990000000002004896365 id from dual union all
+            select 451990000000002004896421 id from dual union all
+            select 451990000000002004896423 id from dual union all
+            select 451990000000002004896424 id from dual union all
+            select 0 id from dual union all
+            select 451990000000002004896427 id from dual union all
+            select 451990000000002004896430 id from dual union all
+            select 451990000000002004896451 id from dual union all
+            select 451990000000002004896453 id from dual union all
+            select 451990000000002004896476 id from dual union all
+            select 451990000000002004896477 id from dual union all
+            select 451990000000002004896479 id from dual union all
+            select 451990000000002004896485 id from dual union all
+            select 451990000000002004896487 id from dual union all
+            select 451990000000002004896489 id from dual union all
+            select 451990000000002004896495 id from dual union all
+            select 451990000000002004896491 id from dual union all
+            select 451990000000002004896493 id from dual union all
+            select 451990000000002004896513 id from dual union all
+            select 451990000000002004896515 id from dual union all
+            select 451990000000002004896519 id from dual union all
+            select 451990000000002004896521 id from dual union all
+            select 451990000000002004896509 id from dual union all
+            select 451990000000002004896517 id from dual union all
+            select 451990000000002004896523 id from dual union all
+            )
+            select a.id as "id",(case when b.id is null then '有' else '无' end)  as  "error" from ta a left join rm_address b on a.id=b.id
+            </sql>
+            <iterator>
+                <if test="getAddress.item.error=='有'">
+                    <set-value name="msg" value="{{$values.msg}},{{getAddress.item.id}}"></set-value>
+                </if>
+            </iterator>
+        </select>
     </start>
 </task>

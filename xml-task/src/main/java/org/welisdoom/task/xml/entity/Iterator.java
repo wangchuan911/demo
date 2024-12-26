@@ -111,15 +111,7 @@ public class Iterator extends Unit implements Executable {
                     ThreadInfo threadInfo = data.cache(this, () -> new ThreadInfo(data, threadCount()));
                     log("并发-线程中");
                     return threadInfo.run(taskRequest ->
-                            Task.getVertx().executeBlocking(event -> {
-                                execute(taskRequest, o).onComplete(event1 -> {
-                                    if (event1.succeeded()) {
-                                        event.complete();
-                                    } else {
-                                        event.fail(event1.cause());
-                                    }
-                                });
-                            })
+                            execute(taskRequest, o)
                     );
                 } catch (Throwable throwable) {
                     return Future.failedFuture(throwable);

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task>
+    <initialization>
+        <value id="now"
+               value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
+    </initialization>
+    <start>
+        <excel id="read" read="d:/Users/Septem/Desktop/标准地址商户打标导入模板.xls" split="d:/Users/Septem/Desktop/aa"
+               max-lines="1000" header="true" target-type=".xls">
+
+        </excel>
+    </start>
+</task>

@@ -28,7 +28,7 @@ public class VertxHttp extends Http {
     protected Future start(TaskInstance data, Object preUnitResult) {
         String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
         log(LogUtils.styleString("params:", 42, 2, inputBody));
-        log(data, "不记录", "不记录");
+        addLog(data, "不记录", "不记录");
 
 
         try {
@@ -55,7 +55,7 @@ public class VertxHttp extends Http {
                                     result = outputBody;
                                     break;
                             }
-                            log(data, inputBody, outputBody);
+                            addLog(data, inputBody, outputBody);
                             return httpClientResponse.end().onComplete(ev -> Future.succeededFuture(result));
                         } else {
                             return httpClientResponse.end().onComplete(ev -> Future.failedFuture(outputBody));
@@ -63,7 +63,7 @@ public class VertxHttp extends Http {
                     })
             );
         } catch (Throwable e) {
-            log(data, inputBody, e);
+            addLog(data, inputBody, e);
             return Future.failedFuture(e);
         }
     }

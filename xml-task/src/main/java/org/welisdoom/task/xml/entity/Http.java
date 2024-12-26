@@ -1,9 +1,10 @@
 package org.welisdoom.task.xml.entity;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Future;
-import io.vertx.core.impl.NoStackTraceThrowable;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -14,13 +15,13 @@ import org.welisdoom.task.xml.intf.type.UnitType;
 import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.ObjectUtils;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -83,86 +84,146 @@ public class Http extends Unit implements Executable, Copyable {
 
     @Override
     protected Future<Object> start(TaskInstance data, Object preUnitResult) {
-        String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim(),
-                outputBody = "empty data";
+        String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
         log(LogUtils.styleString("params:", 42, 2, inputBody));
-        HttpURLConnection httpConnection = null;
-        log(data, "不记录", "不记录");
-        try {
+        addLog(data, "不记录", "不记录");
+        return Task.getVertx().executeBlocking(() -> {
+            HttpURLConnection httpConnection = null;
+            try {
+                String outputBody = "empty data";
             /*if (true) {
                 toNext.complete();
                 return;
             }*/
-            httpConnection = (HttpURLConnection) new URL(getUrl(data)).openConnection();
-            // 打开和URL之间的连接
+                httpConnection = ((HttpURLConnection) new URL(getUrl(data)).openConnection());
+                // 打开和URL之间的连接
 
-            // 发送POST请求必须设置如下两行
-            httpConnection.setDoOutput(true);
-            httpConnection.setDoInput(true);
-            httpConnection.setRequestMethod(attributes.getOrDefault("method", "POST"));    // POST方法
+                // 发送POST请求必须设置如下两行
+                httpConnection.setDoOutput(true);
+                httpConnection.setDoInput(true);
+                httpConnection.setRequestMethod(attributes.getOrDefault("method", "POST"));    // POST方法
+                String contentType = "";
+                for (Header header : getChild(Header.class)) {
+                    httpConnection.setRequestProperty(header.getName(), header.getContent());
+                    log(String.format("header: %s = %s", header.getName(), header.getContent()));
+                    if (header.getName().equalsIgnoreCase("content-type")) {
+                        contentType = header.getContent();
+                    }
+                }
 
 
-            for (Header header : getChild(Header.class)) {
-                httpConnection.setRequestProperty(header.getName(), header.getContent());
-                log(String.format("header: %s = %s", header.getName(), header.getContent()));
-            }
+                write(httpConnection, inputBody, contentType);
 
-            OutputStream output = httpConnection.getOutputStream();
-            try (output) {
-                StreamUtils.copy(inputBody, Charset.forName("utf-8"), output);
-            }
-
-            httpConnection.connect();
-            if (httpConnection.getResponseCode() == 200) {
-                InputStream input = httpConnection.getInputStream();
-                Object result;
+                httpConnection.connect();
+                if (httpConnection.getResponseCode() == 200) {
+                    InputStream input = httpConnection.getInputStream();
+                    Object result;
             /*try (input) {
                 StreamUtils.copyToString(input, Charset.forName("utf-8"));
             }*/
-                switch (attributes.getOrDefault("output", "default")) {
-                    case "stream":
-                        outputBody = "data is stream";
-                        result = (input);
-                        break;
-                    case "json":
-                        result = (JSON.parse(outputBody = StreamUtils.copyToString(input, Charset.forName("utf-8"))));
-                        break;
-                    default:
-                        result = (outputBody = StreamUtils.copyToString(input, Charset.forName("utf-8")));
-                        break;
+                    switch (attributes.getOrDefault("output", "default")) {
+                        case "stream":
+                            outputBody = "data is stream";
+                            result = (input);
+                            break;
+                        case "json":
+                            result = (JSON.parse(outputBody = StreamUtils.copyToString(input, StandardCharsets.UTF_8)));
+                            break;
+                        default:
+                            result = (outputBody = StreamUtils.copyToString(input, StandardCharsets.UTF_8));
+                            break;
+                    }
+                    addLog(data, inputBody, outputBody);
+                    return result;
+                } else {
+                    InputStream input = httpConnection.getErrorStream();
+                    throw new IllegalStateException(StreamUtils.copyToString(input, StandardCharsets.UTF_8));
                 }
-                log(data, inputBody, outputBody);
-                return Future.succeededFuture(result);
-            } else {
-                InputStream input = httpConnection.getErrorStream();
-                throw new NoStackTraceThrowable(StreamUtils.copyToString(input, Charset.forName("utf-8")));
-            }
-        } catch (Throwable e) {
-            log(data, inputBody, e);
-            return Future.failedFuture(e);
-        } finally {
-            if (httpConnection != null) {
-                try {
-                    httpConnection.disconnect();
-                } catch (Throwable e1) {
-                    e1.printStackTrace();
+
+            } finally {
+                if (httpConnection != null) {
+                    try {
+                        httpConnection.disconnect();
+                    } catch (Throwable e1) {
+                        e1.printStackTrace();
+                    }
                 }
             }
-        }
+        }).onComplete(event -> {
+            if (event.failed()) {
+                addLog(data, inputBody, event.cause());
+            }
+        });
     }
 
-    protected void log(TaskInstance data, String input, Throwable e) {
+    protected void addLog(TaskInstance data, String input, Throwable e) {
         if ("true".equals(attributes.get("is-log"))) {
             try {
                 ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
-                log(data, input, /*ExceptionUtils.getStackTrace(e)*/e.getMessage());
+                addLog(data, input, /*ExceptionUtils.getStackTrace(e)*/e.getMessage());
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }
         }
     }
 
-    protected void log(TaskInstance data, String input, String output) {
+    protected void write(HttpURLConnection httpConnection, String inputBody, String contentType) throws IOException {
+        switch (Optional.ofNullable(contentType).orElse("").toLowerCase(Locale.ROOT)) {
+            case "content-type":
+                if (contentType.contains("application/x-www-form-urlencoded")
+                        && inputBody.startsWith("{") && inputBody.endsWith("{")) {
+                    JSONObject object = JSON.parseObject(inputBody);
+                    StringBuilder builder = new StringBuilder();
+                    for (String s : object.keySet()) {
+                        builder.append("&").append(s).append("=").append(URLEncoder.encode(object.getString(s), StandardCharsets.UTF_8));
+                    }
+                    inputBody = builder.length() == 0 ? "" : builder.substring(1);
+                    log("{}:{} 入参转换 {}", "content-type", contentType, inputBody);
+                } else if (contentType.contains("multipart/form-data")) {
+                    String end = "\r\n";
+                    String boundary = "*****";
+                    String twoHyphens = "--";
+                    httpConnection.setRequestProperty("ContentType", "multipart/form-data;boundary=" + boundary);
+                    httpConnection.setRequestProperty("Connection", "Keep-Alive");
+                    httpConnection.setRequestMethod("POST");
+                    httpConnection.setUseCaches(false);
+                    String[] uploadFilePaths = Arrays.stream(inputBody.split("\n"))
+                            .filter(StringUtils::isNotEmpty).map(String::trim).toArray(String[]::new);
+                    DataOutputStream ds = new DataOutputStream(httpConnection.getOutputStream());
+                    try (ds) {
+                        for (int i = 0; i < uploadFilePaths.length; i++) {
+                            String uploadFile = uploadFilePaths[i];
+                            String filename = uploadFile.substring(uploadFile.lastIndexOf("//") + 1);
+                            ds.writeBytes(twoHyphens + boundary + end);
+                            ds.writeBytes("Content-Disposition: form-data; " + "name=\"" + i + "\";filename=\"" + filename
+                                    + "\"" + end);
+                            ds.writeBytes(end);
+                            FileInputStream fStream = new FileInputStream(uploadFile);
+                            try (fStream) {
+                                int bufferSize = 1024;
+                                byte[] buffer = new byte[bufferSize];
+                                int length = -1;
+                                while ((length = fStream.read(buffer)) != -1) {
+                                    ds.write(buffer, 0, length);
+                                }
+                                ds.writeBytes(end);
+                            }
+                        }
+                        ds.writeBytes(twoHyphens + boundary + twoHyphens + end);
+                        ds.flush();
+                    }
+                    return;
+                }
+                break;
+        }
+
+        OutputStream output = httpConnection.getOutputStream();
+        try (output) {
+            StreamUtils.copy(inputBody, Charset.forName("utf-8"), output);
+        }
+    }
+
+    protected void addLog(TaskInstance data, String input, String output) {
         if ("true".equals(attributes.get("is-log"))) {
             try {
                 Map log = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);

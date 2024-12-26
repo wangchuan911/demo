@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<task>
+    <initialization>
+        <database id="rimdb"></database>
+        <value id="path" value="/app/java/project/xml-task/tmp/project_check.csv"></value>
+        <!--<value id="path"
+               value="D:\Workspaces\WelisdoonProject\java\web-server\xml-task\src\main\resources\demo\proj.csv"></value>-->
+        <value id="remotePath" value="/resftp/extsys/fufu/"></value>
+    </initialization>
+    <start>
+        <select link="rimdb" id="getLog">
+            <sql>
+                SELECT a.ID as "id", a.log_batch as "logId"
+                FROM rimdb.v8_proj_check_rela a
+                where 0 in (is_update_ftp,is_call_back)
+                <if test="$inputs!=null and $inputs.logId!=null">
+                    and a.log_batch=#{$inputs.logId,jdbcType=VARCHAR}
+                </if>
+            </sql>
+            <iterator>
+                <insert link="rimdb" id="lock">
+                    update rimdb.v8_proj_check_rela a set is_update_ftp=3
+                    where log_batch=#{getLog.item.logId,jdbcType=VARCHAR} and is_update_ftp = 0
+                </insert>
+                <set-value name="lock"></set-value>
+                <if test="$values.lock > 0">
+                    <catch>
+                        <csv id="csv1" write="{{$values.path}}" header="true" re-writer="{{getProjCheck.index==1}}">
+                            <col name="地市"></col>
+                            <col name="区域"></col>
+                            <col name="资源类型"></col>
+                            <col name="资源编码"></col>
+                            <col name="资源名称"></col>
+                            <col name="不合格原因"></col>
+                            <select id="getProjCheck" link="rimdb">
+                                <sql>
+                                    SELECT a.region_name as "region" , c.region_name as "city" , a.res_type as
+                                    "resType"
+                                    ,
+                                    a.res_no
+                                    as "resNo" , a.res_name as "resName",
+                                    nvl(a.check_result, a.error_msg) as "result"
+                                    FROM rimdb.import_proj_res_check a
+                                    JOIN rimdb.pub_project b ON a.project_no = b.project_no
+                                    JOIN rimdb.vw_region_new c ON b.region_id = c.region_id
+                                    WHERE a.log_batch = #{getLog.item.logId,jdbcType=VARCHAR}
+                                    AND nvl(a.is_ok, '0') !='1'
+                                </sql>
+                                <iterator>
+                                    <write-line>
+                                        <col value="{{getProjCheck.item.city}}"></col>
+                                        <col value="{{getProjCheck.item.region}}"></col>
+                                        <col value="{{getProjCheck.item.resType}}"></col>
+                                        <col value="{{getProjCheck.item.resNo}}"></col>
+                                        <col value="{{getProjCheck.item.resName}}"></col>
+                                        <col value="{{getProjCheck.item.result}}"></col>
+                                    </write-line>
+                                </iterator>
+                            </select>
+                        </csv>
+                        <sftp id="fufu" local="{{$values.path}}"
+                              put="{{$values.remotePath}}{{getLog.item.id}}.csv"></sftp>
+                        <insert link="rimdb" id="unlock">
+                            update rimdb.v8_proj_check_rela a set is_update_ftp=1
+                            where log_batch=#{getLog.item.logId,jdbcType=VARCHAR}
+                        </insert>
+                        <error>
+                            <insert link="rimdb" id="unlock">
+                                update rimdb.v8_proj_check_rela a set is_update_ftp=-1
+                                where log_batch=#{getLog.item.logId,jdbcType=VARCHAR}
+                            </insert>
+                        </error>
+                    </catch>
+                </if>
+                <insert link="rimdb" id="lock">
+                    update rimdb.v8_proj_check_rela a set is_call_back=3
+                    where log_batch=#{getLog.item.logId,jdbcType=VARCHAR} and is_call_back = 0 and is_update_ftp=1
+                </insert>
+                <set-value name="lock"></set-value>
+                <if test="$values.lock > 0">
+                    <catch>
+                        <select id="summary" link="rimdb">
+                            <sql>
+                                select max(res) as "summary"
+                                from (
+                                select listagg(a.res, ',') WITHIN GROUP (ORDER BY a.res) res
+                                from (
+                                select a.res_type||':'|| count (1) res from RIMDB.IMPORT_PROJ_RES_CHECK a where
+                                a.log_batch=#{getLog.item.logId,jdbcType=VARCHAR} group by a.res_type
+                                ) a
+                                ) where 1=1
+                            </sql>
+                            <iterator>
+                                <set-value name="summary" value="{{summary.item.summary}}"></set-value>
+                            </iterator>
+                        </select>
+                        <set-value name="pass" value="通过"></set-value>
+                        <select id="pass" link="rimdb">
+                            <sql>
+                                select 1 as "noPass"
+                                from rimdb.import_proj_res_check a
+                                where a.log_batch = #{getLog.item.logId,jdbcType=VARCHAR}
+                                and a.is_ok = '0'
+                                and rownum = 1
+                            </sql>
+                            <iterator>
+                                <set-value name="pass" value="不通过"></set-value>
+                            </iterator>
+                        </select>
+                        <http url="http://134.194.16.8:11000/api/openapi/dcoos2/projcodeOneKeyVerResult/projcodeOneKeyVer/getProjcodeOneKeyVerResult"
+                              is-log="true" id="http" output="json">
+                            <header name="X-APP-ID" content="975a2e8408cb6ee073d6aef244e1a2d1"></header>
+                            <header name="X-APP-KEY" content="0c2babbabc7d35a512eb19d2b617c1c5"></header>
+                            <header name="Content-Type" content="application/json"></header>
+                            <body>
+                                {
+                                "Project_no":"{{getLog.item.id.split('_')[0]}}",
+                                "Serial_num":"{{getLog.item.id.split('_')[1]}}",
+                                "Check_resault":"{{$values.pass}}",
+                                "Summary":"{{$values.summary}}",
+                                }
+                            </body>
+                        </http>
+                        <set-value name="http"></set-value>
+                        <insert link="rimdb" id="unlock">
+                            update rimdb.v8_proj_check_rela a set
+                            is_call_back=1,call_back_result=#{http.output,jdbcType=VARCHAR}
+                            where log_batch=#{getLog.item.logId,jdbcType=VARCHAR}
+                        </insert>
+                        <if test="1==1"></if>
+                        <error>
+                            <insert link="rimdb" id="unlock">
+                                update rimdb.v8_proj_check_rela a set is_call_back=-1
+                                where log_batch=#{getLog.item.logId,jdbcType=VARCHAR}
+                            </insert>
+                        </error>
+                    </catch>
+                </if>
+            </iterator>
+        </select>
+    </start>
+</task>
