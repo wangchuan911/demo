@@ -9,5 +9,5 @@ package org.welisdoon.metadata.prototype.define;
 public interface ISequenceEntity {
     int getSequence();
 
-    void setSequence(int i);
+    ISequenceEntity setSequence(int i);
 }

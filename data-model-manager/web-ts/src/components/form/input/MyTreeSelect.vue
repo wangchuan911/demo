@@ -1,11 +1,5 @@
 <template>
-  <el-tree-select v-bind="propsProp" :data="treeOptions" v-model="model" @change="(value)=>emit('change',value)">
-    <temlate v-for="item in data" :key="item.value">
-      <component :is="item.comp"
-                 :label="item.name"
-                 :value="item.value"
-      />
-    </temlate>
+  <el-tree-select :="propsProp" :data="treeOptions" v-model="model" @change="(value)=>emit('change',value)">
   </el-tree-select>
 </template>
 
@@ -32,7 +26,11 @@ const model = defineModel();
 const props = defineProps<{ tree: Array<MyTreeOption>, prop: any }>();
 const treeOptions = computed(() => props.tree);
 const propsProp = computed(() => props.prop);
+console.log(treeOptions, propsProp)
 watch(treeOptions, (value, oldValue) => {
+  console.log(value, oldValue);
+});
+watch(propsProp, (value, oldValue) => {
   console.log(value, oldValue);
 });
 const emit = defineEmits(["change"]);

@@ -96,8 +96,9 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
     }
 
     @Override
-    public void setSequence(int sequence) {
+    public MetaValue setSequence(int sequence) {
         this.sequence = sequence;
+        return this;
     }
 
     @Override

@@ -51,16 +51,18 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     }
 
     @Override
-    public void setSequence(int i) {
+    public MetaLink setSequence(int i) {
         this.sequence = i;
+        return this;
     }
 
     public Long getObjectId() {
         return objectId;
     }
 
-    public void setObjectId(Long objectId) {
+    public MetaLink setObjectId(Long objectId) {
         this.objectId = objectId;
+        return this;
     }
 
     @JsonIgnore
@@ -71,8 +73,9 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
         return object;
     }
 
-    public void setObject(MetaObject object) {
+    public MetaLink setObject(MetaObject object) {
         this.object = object;
+        return this;
     }
 
 
@@ -80,8 +83,9 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
         return attributeId;
     }
 
-    public void setAttributeId(Long attributeId) {
+    public MetaLink setAttributeId(Long attributeId) {
         this.attributeId = attributeId;
+        return this;
     }
 
     @JsonIgnore
@@ -92,16 +96,18 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
         return attribute;
     }
 
-    public void setAttribute(MetaObject.Attribute attribute) {
+    public MetaLink setAttribute(MetaObject.Attribute attribute) {
         this.attribute = attribute;
+        return this;
     }
 
     public Long getInstanceId() {
         return instanceId;
     }
 
-    public void setInstanceId(Long instanceId) {
+    public MetaLink setInstanceId(Long instanceId) {
         this.instanceId = instanceId;
+        return this;
     }
 
 
@@ -109,8 +115,9 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
         return instance;
     }
 
-    public void setInstance(MetaInstance instance) {
+    public MetaLink setInstance(MetaInstance instance) {
         this.instance = instance;
+        return this;
     }
 
 
@@ -118,8 +125,9 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
         return valueId;
     }
 
-    public void setValueId(Long valueId) {
+    public MetaLink setValueId(Long valueId) {
         this.valueId = valueId;
+        return this;
     }
 
 
@@ -131,8 +139,9 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
         return value;
     }
 
-    public void setValue(MetaValue value) {
+    public MetaLink setValue(MetaValue value) {
         this.value = value;
+        return this;
     }
 
 
@@ -155,15 +164,17 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
         return linkId;
     }
 
-    public void setLinkId(Long linkId) {
+    public MetaLink setLinkId(Long linkId) {
         this.linkId = linkId;
+        return this;
     }
 
     public MetaLink getLink() {
         return link;
     }
 
-    public void setLink(MetaLink link) {
+    public MetaLink setLink(MetaLink link) {
         this.link = link;
+        return this;
     }
 }

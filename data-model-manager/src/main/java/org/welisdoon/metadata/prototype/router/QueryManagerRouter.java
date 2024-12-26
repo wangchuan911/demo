@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
-import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -336,7 +335,7 @@ public class QueryManagerRouter {
             condition.setPage(new Page(1, 10));
             condition.setQuery("objectSearch");
             routingContext.end(JSON.toJSONString(
-                    metaObjectDao.list(condition).stream().map(metaObject -> ImmutableMap.of("id", metaObject.getId(), "desc", String.format("[%s]%s", metaObject.getName(), metaObject.getCode()))).toArray()));
+                    metaObjectDao.list(condition).stream().map(metaObject -> Map.of("id", metaObject.getId(), "desc", String.format("[%s]%s", metaObject.getName(), metaObject.getCode()))).toArray()));
         });
     }
 
@@ -346,7 +345,7 @@ public class QueryManagerRouter {
         chain.handler(routingContext -> {
             long typeLinkId = Long.parseLong(routingContext.pathParam("typeLinkId"));
             routingContext.end(JSON.toJSONString(LinkMetaType.getChildTypeId(LinkMetaType.SqlOperator.getId()).stream().map(aLong -> {
-                return ImmutableMap.of("id", aLong, "desc", LinkMetaType.getInstance(aLong).getDesc());
+                return Map.of("id", aLong, "desc", LinkMetaType.getInstance(aLong).getDesc());
             }).toArray()));
         });
     }
@@ -486,7 +485,7 @@ public class QueryManagerRouter {
     public void getObjectType(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             routingContext.end(JSON.toJSONString(Stream.of(ObjectMetaType.Object, ObjectMetaType.Table)
-                    .map(objectMetaType -> ImmutableMap.of("id", objectMetaType.getId(), "desc", objectMetaType.getDesc())).toArray()));
+                    .map(objectMetaType -> Map.of("id", objectMetaType.getId(), "desc", objectMetaType.getDesc())).toArray()));
         });
     }
 
@@ -525,6 +524,7 @@ public class QueryManagerRouter {
         });
     }
 
+
     protected int delLink(MetaLink metaLink) {
         if (Objects.isNull(metaLink) || Objects.isNull(metaLink.getId())) {
             return 0;
@@ -535,5 +535,41 @@ public class QueryManagerRouter {
         return metaLinkDao.delete(metaLink.getId());
     }
 
-    ;
+    @VertxRouter(path = "\\/tree\\/obj\\/(?<id>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void objTree(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long qid = Long.parseLong(routingContext.pathParam("id"));
+            List<Map<String, Object>> list = new LinkedList<>();
+            MetaObject object = metaObjectDao.get(qid);
+            objTree(list, object);
+            routingContext.end(JSON.toJSONString(list));
+        });
+    }
+
+    protected void objTree(List<Map<String, Object>> list, MetaObject object) {
+        if (object == null) {
+            return;
+        }
+        List<Map<String, Object>> list1;
+        switch (object.getType()) {
+            case Object:
+                objTree(list1 = new LinkedList<>(), object.getParent());
+                list.add(Map.of("id", object.getId(), "code", object.getCode(), "type", object.getType().getDesc(), "typeId", object.getTypeId(), "children", list1));
+                break;
+            case Table:
+                list1 = metaAttributeDao.list(new MetaObject.Attribute().setObjectId(object.getId())).stream()
+                        .map(attribute -> Map.<String, Object>of("id", attribute.getId(), "code", attribute.getCode(), "type", attribute.getType().getDesc(), "typeId", attribute.getTypeId())).collect(Collectors.toList());
+                list.add(Map.of("id", object.getId(), "code", object.getCode(), "type", object.getType().getDesc(), "typeId", object.getTypeId(), "children", list1));
+                return;
+            default:
+                return;
+        }
+        MetaLinkCondition condition = new MetaLinkCondition().setData(new MetaLink().setObjectId(object.getId()));
+        condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
+        metaLinkDao.list(condition).forEach(metaLink -> {
+
+        });
+    }
 }

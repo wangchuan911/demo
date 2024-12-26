@@ -26,7 +26,7 @@ public class MetaObjectCondition extends BaseCondition<Long, MetaObject> {
 
     @Override
     @JSONField(deserializeUsing = org.welisdoon.metadata.prototype.condition.Page.class)
-    public void setPage(Page page) {
-        super.setPage(page);
+    public MetaObjectCondition setPage(Page page) {
+        return super.setPage(page);
     }
 }

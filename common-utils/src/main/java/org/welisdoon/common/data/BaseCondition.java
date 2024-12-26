@@ -18,8 +18,9 @@ public abstract class BaseCondition<ID, D> {
     String query;
     Page page;
 
-    public void setPage(Page page) {
+    public <T extends BaseCondition> T setPage(Page page) {
         this.page = page;
+        return (T) this;
     }
 
     public Page getPage() {
@@ -90,24 +91,28 @@ public abstract class BaseCondition<ID, D> {
         return data;
     }
 
-    public void setId(ID id) {
+    public <T extends BaseCondition> T setId(ID id) {
         this.id = id;
+        return (T) this;
     }
 
-    public void setData(D data) {
+    public <T extends BaseCondition> T setData(D data) {
         this.data = data;
+        return (T) this;
     }
 
-    public void setCondition(Map<String, Object> condition) {
+    public <T extends BaseCondition> T setCondition(Map<String, Object> condition) {
         this.condition = condition;
+        return (T) this;
     }
 
     public Map<String, Object> getCondition() {
         return condition;
     }
 
-    public void setQuery(String query) {
+    public <T extends BaseCondition> T setQuery(String query) {
         this.query = query;
+        return (T) this;
     }
 
     public String getQuery() {

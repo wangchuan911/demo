@@ -94,6 +94,7 @@ export abstract class InputItem implements ItemConfig<InputItem> {
         }
         form[this.code] = content.form[this.code];
     }
+
 }
 
 export class MyOption {
@@ -263,14 +264,12 @@ export class MyTreeOption {
 }
 
 export class SelectTreeItem extends InputItem {
-    isMulti: boolean;
 
     constructor(code: string, label: string, prop: ItemConfig<SelectTreeItem> = {} as ItemConfig<SelectTreeItem>) {
         super(code, label, prop);
-        this.isMulti = false;
         this.comp = MyTreeSelect;
         this.prop['tree'] = [];
-        this.prop['prop'] = {multiple: this.isMulti};
+        this.prop['prop'] = {defaultExpandAll: false};
     }
 
     setOptions(...options: Array<MyTreeOption>): this {
@@ -289,8 +288,7 @@ export class SelectTreeItem extends InputItem {
 
 
     setMulti(state: boolean): SelectTreeItem {
-        this.isMulti = state;
-        this.prop['prop'].multiple = state;
+        this.prop['prop'].showCheckbox = state;
         return this;
     }
 }
