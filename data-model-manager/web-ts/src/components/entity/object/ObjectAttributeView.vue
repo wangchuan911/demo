@@ -71,6 +71,7 @@ import {
   SelectTreeItem,
   TextItem
 } from "@/components/form/config";
+import {AttrObjMapperItem} from "@/components/entity/object/config";
 
 
 class AttrAddDrawersContent extends FormDrawersContent {
@@ -98,6 +99,12 @@ class AttrAddDrawersContent extends FormDrawersContent {
           }
         } as ItemConfig<SelectTreeItem>).andThen(item => {
           item.prop.defaultExpandAll = true
+        }),
+        new AttrObjMapperItem('colMapper', "复杂映射", {
+          async inputLoadHandler(input: SelectTreeItem, content: FormContent): Promise<void> {
+            input.prop.cols.length = 0;
+            input.prop.rows.length = 0;
+          }
         }));
   }
 
