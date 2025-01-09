@@ -24,8 +24,10 @@ import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
 import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
+import org.welisdoon.metadata.prototype.define.ITypeEntity;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
+import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilderHandler;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.builder.SqlShowBuilder;
@@ -535,6 +537,56 @@ public class QueryManagerRouter {
         return metaLinkDao.delete(metaLink.getId());
     }
 
+    @VertxRouter(path = "\\/tree\\/table\\/(?<id>\\d+)",
+            method = "GET",
+            mode = VertxRouteType.PathRegex)
+    public void tableTree(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long qid = Long.parseLong(routingContext.pathParam("id"));
+            List<Map<String, Object>> list = new LinkedList<>();
+            MetaObject object = metaObjectDao.get(qid);
+            tableTree(list, object);
+            routingContext.end(JSON.toJSONString(list));
+        });
+    }
+
+    protected void tableTree(final List<Map<String, Object>> list, MetaObject object) {
+        if (object == null) {
+            return;
+        }
+        switch (object.getType()) {
+            case Object:
+                List<MetaLink> list2 = getLinks(object.getId());
+                list2.stream().map(MetaLink::getObject).filter(Objects::nonNull).forEach(metaObject -> {
+                    tableTree(list, metaObject);
+                });
+                break;
+            case Table:
+                Optional.ofNullable(object.getAttributes()).ifPresent(attributes -> {
+                    list.add(toTreeNode(object, Arrays.stream(attributes).map(attribute -> toTreeNode(attribute, null)).collect(Collectors.toList())));
+                });
+                return;
+            default:
+                return;
+        }
+    }
+
+    protected Map<String, Object> toTreeNode(MetaPrototype obj, List<Map<String, Object>> list) {
+        List<Map.Entry<String, Object>> list1 = new LinkedList<>();
+        list1.add(Map.entry("id", obj.getId()));
+        list1.add(Map.entry("code", obj.getCode()));
+        if (obj instanceof ITypeEntity) {
+            list1.add(Map.entry("type", ((ITypeEntity<?>) obj).getType().getDesc()));
+            list1.add(Map.entry("typeId", obj.getTypeId()));
+        }
+        if (list != null) {
+            list1.add(Map.entry("children", list));
+        } else {
+            list1.add(Map.entry("leaf", true));
+        }
+        return Map.ofEntries(list1.toArray(new Map.Entry[0]));
+    }
+
     @VertxRouter(path = "\\/tree\\/obj\\/(?<id>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
@@ -552,24 +604,12 @@ public class QueryManagerRouter {
         if (object == null) {
             return;
         }
-        List<Map<String, Object>> list1;
-        switch (object.getType()) {
-            case Object:
-                objTree(list1 = new LinkedList<>(), object.getParent());
-                list.add(Map.of("id", object.getId(), "code", object.getCode(), "type", object.getType().getDesc(), "typeId", object.getTypeId(), "children", list1));
-                break;
-            case Table:
-                list1 = metaAttributeDao.list(new MetaObject.Attribute().setObjectId(object.getId())).stream()
-                        .map(attribute -> Map.<String, Object>of("id", attribute.getId(), "code", attribute.getCode(), "type", attribute.getType().getDesc(), "typeId", attribute.getTypeId())).collect(Collectors.toList());
-                list.add(Map.of("id", object.getId(), "code", object.getCode(), "type", object.getType().getDesc(), "typeId", object.getTypeId(), "children", list1));
-                return;
-            default:
-                return;
+        if (object.getType() != ObjectMetaType.Object) {
+            return;
         }
-        MetaLinkCondition condition = new MetaLinkCondition().setData(new MetaLink().setObjectId(object.getId()));
-        condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
-        metaLinkDao.list(condition).forEach(metaLink -> {
-
-        });
+        List<Map<String, Object>> list1 = metaAttributeDao.list(new MetaObject.Attribute().setObjectId(object.getId())).stream()
+                .map(attribute -> toTreeNode(attribute, null)).collect(Collectors.toList());
+        list.add(toTreeNode(object, list1));
+        objTree(list, object.getParent());
     }
 }

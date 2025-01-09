@@ -82,7 +82,7 @@ class AttrAddDrawersContent extends FormDrawersContent {
     this.content.addInput(new TextItem("code", "标识"), new TextItem("name", "描述", {} as ItemConfig<TextItem>),
         new SelectTreeItem("attr", "关联表字段", {
           async inputLoadHandler(input: SelectTreeItem, content: FormContent): Promise<void> {
-            const {data}: { data: Array<any> } = await $http.get(`tree/obj/${props.id}`);
+            const {data}: { data: Array<any> } = await $http.get(`tree/table/${props.id}`);
             // input.prop.defaultExpandAll = false;
             input.prop.prop.expandOnClickNode = false;
             input.prop.prop.renderAfterExpand = false;
