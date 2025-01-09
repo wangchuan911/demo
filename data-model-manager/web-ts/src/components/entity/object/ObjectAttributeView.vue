@@ -105,7 +105,7 @@ class AttrAddDrawersContent extends FormDrawersContent {
             input.prop.cols.length = 0;
             input.prop.rows.length = 0;
           }
-        }));
+        } as ItemConfig<AttrObjMapperItem>));
   }
 
   confirm() {
