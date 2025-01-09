@@ -48,7 +48,7 @@
       title="选择对象"
       width="500"
   >
-<!--    <span>This is a message</span>-->
+    <!--    <span>This is a message</span>-->
     <el-select
         v-model="options"
         filterable
@@ -137,20 +137,22 @@ const del = (key: string, index: number) => {
   }
 
 }
-const options: MyOption[] = reactive([]);
+const options: any[] = reactive([]);
 
 const queryObj = async (query: string) => {
   if (query) {
+    if (options.find(option => (option.label || "").toUpperCase().indexOf((query || "").toUpperCase()) >= 0) != null) {
+      return
+    }
     dialog.obj.loading = true;
     const {data}: { data: { list: Array<Record<any, any>> } } = await $http.post(`obj`, {
-      data: {code: query},
+      data: {code: query, typeId: 1001},
       page: {page: 1, size: 100},
       query: 'objectSearch',
     });
     dialog.obj.loading = false;
+    options.length = 0;
     options.push(...(data?.list || []).map(v => ({value: v.id, label: `[${v.name}]${v.code}`} as any)));
-  } else {
-    options.length == 0
   }
 }
 </script>

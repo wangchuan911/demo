@@ -369,6 +369,9 @@ class ChoiceParentDrawersContent extends LinkAddDrawersContent {
         input.prop.loading = false;
         input.prop.remoteMethod = async function (query: string) {
           if (query) {
+            if (input.prop['options'].find((option: any) => (option.name || "").toUpperCase().indexOf((query || "").toUpperCase()) >= 0) != null) {
+              return
+            }
             input.prop.loading = true;
             const {data}: { data: { list: Array<Record<any, any>> } } = await $http.post(`obj`, {
               data: {code: query},
