@@ -11,5 +11,5 @@ import org.welisdoon.web.common.dao.ITemplateDao;
  * @Date 14:59
  */
 @Repository
-public interface MetaValueDao extends ITemplateDao<Long, MetaValue, MetaValue> {
+public interface MetaValueDao extends ITemplateDao<Long, MetaValue, MetaValue>, MetaPrototypeCreator<MetaValue> {
 }

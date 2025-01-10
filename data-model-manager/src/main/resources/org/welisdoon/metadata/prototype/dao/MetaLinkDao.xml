@@ -37,6 +37,11 @@
         </where>
 
     </select>
+
+    <select id="generate" parameterType="long" resultMap="MetaLink">
+        select #{value} type_id from dual
+    </select>
+
     <select id="get"
             parameterType="long"
             resultMap="MetaLink">

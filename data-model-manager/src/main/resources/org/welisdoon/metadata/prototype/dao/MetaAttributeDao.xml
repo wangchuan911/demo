@@ -43,6 +43,10 @@
         where id = #{value}
     </delete>
 
+    <select id="generate" parameterType="long" resultMap="MetaAttribute">
+        select #{value} type_id from dual
+    </select>
+
     <update id="update" parameterType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute">
         update MD_OBJECT_ATTR
         <set>

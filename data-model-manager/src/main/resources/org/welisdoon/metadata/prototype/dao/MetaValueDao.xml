@@ -22,6 +22,9 @@
 
     </select>
 
+    <select id="generate" parameterType="long" resultMap="MetaValue">
+        select #{value} type_id from dual
+    </select>
 
     <select id="get"
             parameterType="long"

@@ -78,8 +78,12 @@ public class ApplicationContextProvider implements ApplicationContextAware {
     }
 
     public static Type[] getRawType(Object bean, Class targetClass) {
+        return getRawType(bean.getClass(), targetClass);
+    }
+
+    public static Type[] getRawType(Class clz, Class targetClass) {
         return Arrays
-                .stream(getRealClass(bean.getClass())
+                .stream(getRealClass(clz)
                         .getGenericInterfaces())
                 .filter(type -> {
                     if (type instanceof ParameterizedType) {
@@ -88,6 +92,6 @@ public class ApplicationContextProvider implements ApplicationContextAware {
                     return false;
                 }).map(type -> ((ParameterizedType) type).getActualTypeArguments())
                 .findFirst()
-                .get();
+                .orElseGet(() -> new Type[0]);
     }
 }

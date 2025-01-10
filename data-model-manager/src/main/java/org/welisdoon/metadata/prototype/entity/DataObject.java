@@ -1,8 +1,11 @@
 package org.welisdoon.metadata.prototype.entity;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
-import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
 import org.welisdoon.metadata.prototype.define.MetaObject;
+
+import java.util.Arrays;
 
 /**
  * @Classname DataObject
@@ -10,16 +13,16 @@ import org.welisdoon.metadata.prototype.define.MetaObject;
  * @Author Septem
  * @Date 14:49
  */
-@ObjectMetaType.MetaType(ObjectMetaType.Object)
 public class DataObject extends MetaObject {
-    Attributes[] attributes;
 
-    public DataObject(long id) {
-
+    @JsonIgnore
+    @JSONField(deserialize = false, serialize = false)
+    public Field[] getFields() {
+        return Arrays.stream(getAttributes()).filter(attribute -> attribute instanceof Field).toArray(Field[]::new);
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Attributes)
-    public static class Attributes extends Attribute<DataObject> {
+    public static class Field extends Attribute<DataObject> {
         DataBaseTable.Column[] columns;
 
         public DataBaseTable.Column[] getColumns() {

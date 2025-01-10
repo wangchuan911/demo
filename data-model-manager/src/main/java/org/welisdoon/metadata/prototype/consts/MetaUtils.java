@@ -1,29 +1,17 @@
 package org.welisdoon.metadata.prototype.consts;
 
-import com.alibaba.fastjson.util.TypeUtils;
-import org.apache.commons.collections4.KeyValue;
-import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.collections4.keyvalue.DefaultKeyValue;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
-import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
-import org.welisdoon.metadata.prototype.dao.MetaValueDao;
-import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
-import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
-import org.welisdoon.metadata.prototype.define.MetaValue;
-import org.welisdoon.metadata.prototype.define.MetaLink;
-import org.welisdoon.metadata.prototype.define.MetaObject;
-import org.welisdoon.metadata.prototype.define.MetaPrototype;
+import org.welisdoon.metadata.prototype.dao.*;
+import org.welisdoon.metadata.prototype.define.*;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
-import javax.annotation.PostConstruct;
-import java.lang.annotation.Annotation;
 import java.util.*;
 
 /**
@@ -35,15 +23,10 @@ import java.util.*;
 
 @Component
 public class MetaUtils {
-
     final static Logger logger = LoggerFactory.getLogger(MetaUtils.class);
 
-    static Map<Long, KeyValue<Class<? extends MetaPrototype>, IMetaType>> LONG_KEY_VALUE_MAP = new HashMap<>();
-
-    static KeyValue<Class<? extends MetaPrototype>, IMetaType> get(long id) {
-        return LONG_KEY_VALUE_MAP.get(id);
-    }
-
+    static Map<Long, Enum<? extends IMetaType>> LONG_KEY_VALUE_MAP_2 = new HashMap<>();
+    static Map<Class<? extends IMetaType>, Class<? extends MetaPrototypeCreator>> LONG_KEY_VALUE_MAP_1 = new HashMap<>();
 
     MetaAttributeDao metaAttributeDao;
     MetaObjectDao metaObjectDao;
@@ -71,27 +54,32 @@ public class MetaUtils {
         this.metaValueDao = metaValueDao;
     }
 
-    @Autowired
     Reflections reflections;
 
-    @PostConstruct
-    void init() {
-        reflections.getTypesAnnotatedWith(Meta.class).stream()
-                .filter(aClass -> Annotation.class.isAssignableFrom(aClass))
-                .map(aClass -> (Class<? extends Annotation>) aClass)
-                .forEach(aClass -> {
-                    reflections.getTypesAnnotatedWith(aClass)
-                            .stream()
-                            .filter(aClass1 -> MetaObject.class.isAssignableFrom(aClass1))
-                            .forEach(aClass1 -> {
-                                IMetaType iMetaType = ((IMetaType) AnnotationUtils.getValue(aClass1.getAnnotation(aClass)));
-                                if (Objects.nonNull(iMetaType)
-                                        && (!LONG_KEY_VALUE_MAP.containsKey(iMetaType.getId()) || aClass1.isAssignableFrom(LONG_KEY_VALUE_MAP.get(iMetaType.getId()).getKey()))) {
-                                    LONG_KEY_VALUE_MAP.put(iMetaType.getId(), new DefaultKeyValue(aClass1, iMetaType));
-                                }
-                            });
+    @Autowired
+    public void setReflections(Reflections reflections, SqlSessionFactory sqlSessionFactory) {
+        this.reflections = reflections;
+        this.loadMetaType();
+
+    }
+
+    void loadMetaType() {
+        reflections.getSubTypesOf(IMetaType.class).stream().filter(Class::isEnum).flatMap(aClass -> {
+            return Arrays.stream(aClass.getEnumConstants());
+        }).forEach(iMetaType -> {
+            LONG_KEY_VALUE_MAP_2.put(iMetaType.getId(), (Enum) iMetaType);
+        });
+        reflections.getSubTypesOf(ITypeEntity.class).stream().forEach(aClass -> {
+            Arrays.stream(ApplicationContextProvider.getRawType(aClass, ITypeEntity.class)).forEach(type -> {
+                reflections.getSubTypesOf(MetaPrototypeCreator.class).stream().filter(aClass1 -> {
+                    return Arrays.stream(ApplicationContextProvider.getRawType(aClass1, MetaPrototypeCreator.class)).anyMatch(type1 -> {
+                        return type1 == aClass;
+                    });
+                }).forEach(aClass1 -> {
+                    LONG_KEY_VALUE_MAP_1.put((Class) type, aClass1);
                 });
-        logger.info(LONG_KEY_VALUE_MAP.toString());
+            });
+        });
     }
 
     public MetaPrototype getType(@NonNull MetaPrototype o) {
@@ -104,8 +92,20 @@ public class MetaUtils {
     }
 
     public MetaPrototype getType(@NonNull Long typeId) {
-        if (LONG_KEY_VALUE_MAP.containsKey(typeId))
-            return TypeUtils.castToJavaBean(MapUtils.EMPTY_SORTED_MAP, LONG_KEY_VALUE_MAP.get(typeId).getKey());
+        IMetaType iMetaType = getMetaType(typeId);
+        return Optional.ofNullable(LONG_KEY_VALUE_MAP_1.get(iMetaType.getClass())).map(aClass -> {
+            try {
+                return ApplicationContextProvider.getApplicationContext().getBean(aClass).generate(typeId);
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+                return null;
+            }
+        }).orElse(null);
+    }
+
+    public IMetaType getMetaType(@NonNull Long typeId) {
+        if (LONG_KEY_VALUE_MAP_2.containsKey(typeId))
+            return (IMetaType) LONG_KEY_VALUE_MAP_2.get(typeId);
         return null;
     }
 

@@ -12,5 +12,5 @@ import org.welisdoon.web.common.dao.ITemplateDao;
  * @Date 14:59
  */
 @Repository
-public interface MetaLinkDao extends ITemplateDao<Long, MetaLink, MetaLinkCondition> {
+public interface MetaLinkDao extends ITemplateDao<Long, MetaLink, MetaLinkCondition> , MetaPrototypeCreator<MetaLink>{
 }

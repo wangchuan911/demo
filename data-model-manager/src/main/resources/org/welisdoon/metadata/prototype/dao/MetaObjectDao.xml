@@ -9,6 +9,11 @@
         <result column="type_id" property="typeId"></result>
         <result column="name" property="name"></result>
         <result column="code" property="code"></result>
+        <discriminator column="type_id" javaType="long" typeHandler="org.welisdoon.metadata.prototype.dao.MetaTypeHandler">
+            <case value="Table" resultType="org.welisdoon.metadata.prototype.entity.DataBaseTable"></case>
+            <case value="Object" resultType="org.welisdoon.metadata.prototype.entity.DataObject"></case>
+            <case value="UNKNOWN" resultType="org.welisdoon.metadata.prototype.define.MetaObject"></case>
+        </discriminator>
     </resultMap>
     <select id="list"
             parameterType="org.welisdoon.metadata.prototype.condition.MetaObjectCondition"
@@ -25,6 +30,9 @@
 
     </select>
 
+    <select id="generate" parameterType="long" resultMap="MetaObject">
+        select #{value} type_id from dual
+    </select>
 
     <select id="get"
             parameterType="long"
