@@ -82,7 +82,7 @@ public class MetaUtils {
         });
     }
 
-    public MetaPrototype getType(@NonNull MetaPrototype o) {
+    /*public MetaPrototype getType(@NonNull MetaPrototype o) {
         MetaPrototype metaPrototype = getType(o.getTypeId());
         if (Objects.isNull(metaPrototype)) {
             return o;
@@ -90,7 +90,7 @@ public class MetaUtils {
         metaPrototype.copyTo(o);
         return metaPrototype;
     }
-
+*/
     public MetaPrototype getType(@NonNull Long typeId) {
         IMetaType iMetaType = getMetaType(typeId);
         return Optional.ofNullable(LONG_KEY_VALUE_MAP_1.get(iMetaType.getClass())).map(aClass -> {
@@ -113,20 +113,17 @@ public class MetaUtils {
         return getType(iMetaType.getId());
     }
 
-    public MetaObject getObject(@NonNull Long id) {
-
-        MetaObject metaObject = metaObjectDao.get(id);
-        return Objects.isNull(metaObject) ? null : (MetaObject) getType(metaObject);
+    public <T extends MetaObject> T getObject(@NonNull Long id) {
+        return (T) metaObjectDao.get(id);
     }
 
-    public MetaObject.Attribute getAttribute(@NonNull Long id) {
-        MetaObject.Attribute metaAttribute = metaAttributeDao.get(id);
-        return Objects.isNull(metaAttribute) ? null : (MetaObject.Attribute) getType(metaAttribute);
+    public <T extends MetaObject.Attribute> T getAttribute(@NonNull Long id) {
+        return (T) metaAttributeDao.get(id);
     }
 
-    public MetaValue getValue(@NonNull Long id) {
+    public <T extends MetaValue> T getValue(@NonNull Long id) {
         MetaValue keyValue = metaValueDao.get(id);
-        return Objects.isNull(keyValue) ? null : keyValue;
+        return Objects.isNull(keyValue) ? null : (T) keyValue;
     }
 
     public List<MetaLink> getChildrenLinks(@NonNull Long parentId) {

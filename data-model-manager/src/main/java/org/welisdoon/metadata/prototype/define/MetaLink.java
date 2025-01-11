@@ -67,10 +67,10 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
 
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public MetaObject getObject() {
+    public <T extends MetaObject> T getObject() {
         if (Objects.nonNull(objectId))
             ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(object), metaLink -> object = MetaUtils.getInstance().getObject(getObjectId()));
-        return object;
+        return (T) object;
     }
 
     public MetaLink setObject(MetaObject object) {
@@ -90,10 +90,10 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
 
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public MetaObject.Attribute getAttribute() {
+    public <T extends MetaObject.Attribute> T getAttribute() {
         if (Objects.nonNull(attributeId))
             ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(attribute), metaLink -> attribute = MetaUtils.getInstance().getAttribute(getAttributeId()));
-        return attribute;
+        return (T) attribute;
     }
 
     public MetaLink setAttribute(MetaObject.Attribute attribute) {
@@ -111,8 +111,8 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     }
 
 
-    public MetaInstance getInstance() {
-        return instance;
+    public <T extends MetaInstance> T getInstance() {
+        return (T) instance;
     }
 
     public MetaLink setInstance(MetaInstance instance) {

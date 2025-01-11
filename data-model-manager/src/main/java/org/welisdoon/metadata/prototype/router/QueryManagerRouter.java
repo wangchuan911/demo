@@ -28,6 +28,7 @@ import org.welisdoon.metadata.prototype.define.ITypeEntity;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaPrototype;
+import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilderHandler;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.builder.SqlShowBuilder;
@@ -167,7 +168,7 @@ public class QueryManagerRouter {
     }
 
     protected List<MetaLink> getLinks(long qid) {
-        List<MetaLink> list = new LinkedList<>();
+        /*List<MetaLink> list = new LinkedList<>();
         Optional.ofNullable(metaObjectDao.get(qid).getParentId()).ifPresent(aLong -> {
             MetaLink metaLink = new MetaLink();
             metaLink.setObjectId(aLong);
@@ -192,7 +193,12 @@ public class QueryManagerRouter {
                 return metaLinkDao.list(condition1).stream();
             });
         }).collect(Collectors.toList()));
-        return list;
+        return list;*/
+        MetaObject object = MetaUtils.getInstance().getObject(qid);
+        if (object instanceof DataObject) {
+            return Arrays.asList(((DataObject) object).getConstructorLinks());
+        }
+        return Collections.emptyList();
     }
 
     @VertxRouter(path = "\\/link\\/expand\\/(?<type>\\w*)(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
@@ -242,7 +248,7 @@ public class QueryManagerRouter {
             attribute.setObjectId(qid);
             switch (MetaUtils.getInstance().getObject(qid).getType()) {
                 case Object:
-                    attribute.setTypeId(AttributeMetaType.Attributes.getId());
+                    attribute.setTypeId(AttributeMetaType.Field.getId());
                     break;
                 case Table:
                     attribute.setTypeId(AttributeMetaType.Column.getId());
@@ -557,7 +563,7 @@ public class QueryManagerRouter {
         switch (object.getType()) {
             case Object:
                 List<MetaLink> list2 = getLinks(object.getId());
-                list2.stream().map(MetaLink::getObject).filter(Objects::nonNull).forEach(metaObject -> {
+                list2.stream().map(MetaLink::<MetaObject>getObject).filter(Objects::nonNull).forEach(metaObject -> {
                     tableTree(list, metaObject);
                 });
                 break;

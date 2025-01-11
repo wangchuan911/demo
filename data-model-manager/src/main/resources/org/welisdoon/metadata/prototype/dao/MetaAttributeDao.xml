@@ -10,6 +10,11 @@
         <result column="name" property="name"></result>
         <result column="code" property="code"></result>
         <result column="object_id" property="objectId"></result>
+        <discriminator column="type_id" javaType="long" typeHandler="org.welisdoon.metadata.prototype.dao.MetaTypeHandler">
+            <case value="Field" resultType="org.welisdoon.metadata.prototype.entity.DataObject$Field"></case>
+            <case value="Column" resultType="org.welisdoon.metadata.prototype.entity.DataBaseTable$Column"></case>
+            <case value="UNKNOWN" resultType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute"></case>
+        </discriminator>
     </resultMap>
     <select id="list"
             parameterType="org.welisdoon.metadata.prototype.condition.MetaAttributeCondition"

@@ -53,7 +53,7 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
         ObjectUtils.synchronizedInitial(this,
                 tAttribute -> Objects.nonNull(parent),
                 tAttribute ->
-                        parent = (MetaObject) ApplicationContextProvider.getBean(MetaUtils.class).getType(ApplicationContextProvider.getBean(MetaObjectDao.class).get(parentId))
+                        parent = MetaUtils.getInstance().getObject(parentId)
         );
         return super.getParent();
     }
