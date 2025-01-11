@@ -1,6 +1,6 @@
 <template>
   <div style="display: flex;margin: 5px 1px;height:32px ">
-    <el-button type="primary" @click="addAttr.show=true">添加属性</el-button>
+    <el-button type="primary" @click="addAttr.open({})">添加属性</el-button>
   </div>
   <el-table :data="attrs" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)">
     <el-table-column prop="name" label="属性描述"/>

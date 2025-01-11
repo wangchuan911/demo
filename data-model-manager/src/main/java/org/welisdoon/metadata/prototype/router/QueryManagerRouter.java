@@ -201,7 +201,7 @@ public class QueryManagerRouter {
         return Collections.emptyList();
     }
 
-    @VertxRouter(path = "\\/link\\/expand\\/(?<type>\\w*)(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
+    @VertxRouter(path = "\\/link\\/expand\\/(?<type>[a-zA-Z]*)(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
     public void linkExpand(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             MetaLinkCondition condition = new MetaLinkCondition();
@@ -230,11 +230,10 @@ public class QueryManagerRouter {
             condition.getData().setObjectId(qid);
             condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
             SqlContent context = new SqlContent();
-            sqlBuilderHandler.handler(context, metaLinkDao.list(condition).stream().findFirst().orElseGet(() -> {
-                repairObjConstructionData(metaObjectDao.get(qid));
-                return metaLinkDao.list(condition).stream().findFirst().orElseThrow();
-            }));
-            routingContext.end(sqlShowBuilder.build(context));
+            routingContext.end(metaLinkDao.list(condition).stream().findFirst().map(metaLink -> {
+                sqlBuilderHandler.handler(context, metaLink);
+                return sqlShowBuilder.build(context);
+            }).orElse("未配置关联,无法生成展示!"));
         });
     }
 
@@ -287,7 +286,7 @@ public class QueryManagerRouter {
         });
     }
 
-    @VertxRouter(path = "\\/link\\/types\\/(?<type>\\w*)(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
+    @VertxRouter(path = "\\/link\\/types\\/(?<type>[a-zA-Z]*)(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
     public void linkTypes(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             Long id = TypeUtils.castToJavaBean(routingContext.pathParam("id"), Long.class);
@@ -372,7 +371,8 @@ public class QueryManagerRouter {
                     Long typeId = body.getLong("type");
                     MetaLink link0 = null;
                     boolean start = false, stop = false;
-                    for (MetaLink link : getLinks(objectId)) {
+                    List<MetaLink> links = getLinks(objectId);
+                    for (MetaLink link : links) {
                         if (link.getId() < 0) continue;
                         if (start) {
                             if (!stop) {
@@ -392,11 +392,16 @@ public class QueryManagerRouter {
                         }
                     }
                     JSONArray rel = body.getJSONArray("rel");
+                    if (link0 == null) {
+                        logger.info("初始化数据");
+                        link0 = repairObjConstructionData(repairObjConstructionData(0L, objectId, LinkMetaType.ObjToDataBase).getId(), object, LinkMetaType.getInstance(typeId));
+                    }
                     for (int i = 0; i < rel.size(); i++) {
                         objectAddLinkRel(link0, link0, rel.getJSONObject(i));
                     }
                     status.flush();
                 } catch (Throwable e) {
+                    logger.error(e.getMessage(), e);
                     status.setRollbackOnly();
                 }
                 return null;
@@ -478,14 +483,16 @@ public class QueryManagerRouter {
         });
     }
 
-    protected void repairObjConstructionData(MetaObject object) {
-        if (object.getType() == ObjectMetaType.Object) {
-            MetaLink link = new MetaLink();
-            link.setTypeId(LinkMetaType.ObjConstructor.getId());
-            link.setObjectId(object.getId());
-            link.setParentId(0L);
+    protected MetaLink repairObjConstructionData(long parentId, long objectId, LinkMetaType linkMetaType) {
+
+        MetaLink link = new MetaLink();
+        link.setTypeId(linkMetaType.getId());
+        link.setObjectId(objectId);
+        link.setParentId(parentId);
+        return metaLinkDao.list(new MetaLinkCondition().setData(link)).stream().findFirst().orElseGet(() -> {
             metaLinkDao.add(link);
-        }
+            return link;
+        });
     }
 
     @VertxRouter(path = "/obj/type",
