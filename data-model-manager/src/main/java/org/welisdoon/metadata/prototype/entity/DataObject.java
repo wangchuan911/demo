@@ -37,9 +37,8 @@ public class DataObject extends MetaObject {
     public MetaLink[] getConstructorLinks() {
         return Optional.ofNullable(constructorLinks).orElseGet(() -> {
             MetaLinkDao metaLinkDao = MetaUtils.getInstance().getMetaLinkDao();
-            MetaObjectDao metaObjectDao = MetaUtils.getInstance().getMetaObjectDao();
             List<MetaLink> list = new LinkedList<>();
-            Optional.ofNullable(metaObjectDao.get(this.getId()).getParentId()).ifPresent(aLong -> {
+            Optional.ofNullable(this.getParentId()).ifPresent(aLong -> {
                 MetaLink metaLink = new MetaLink();
                 metaLink.setObjectId(aLong);
                 metaLink.setId(-1 * this.getId());
@@ -52,7 +51,7 @@ public class DataObject extends MetaObject {
             condition.setData(new MetaLink());
             condition.getData().setObjectId(this.getId());
             condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
-            list.addAll(metaLinkDao.list(condition).stream().flatMap(metaLink -> {
+            metaLinkDao.list(condition).stream().flatMap(metaLink -> {
                 return LinkMetaType.getChildTypeId(LinkMetaType.ObjConstructor.getId()).stream().flatMap(aLong -> {
                     return LinkMetaType.getChildTypeId(aLong).stream();
                 }).flatMap(aLong -> {
@@ -62,7 +61,7 @@ public class DataObject extends MetaObject {
                     condition1.getData().setTypeId(aLong);
                     return metaLinkDao.list(condition1).stream();
                 });
-            }).collect(Collectors.toList()));
+            }).forEach(list::add);
             constructorLinks = list.toArray(new MetaLink[0]);
             return constructorLinks;
         });
