@@ -2,7 +2,7 @@
   <el-button type="primary" size="small" @click="()=>add('col')">添加列</el-button>
   <el-button type="primary" size="small" @click="()=>add('row')">添加行</el-button>
   <el-table :data="rows" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)">
-    <el-table-column width="200">
+    <el-table-column width="150">
       <template #header>
         对象
       </template>
@@ -26,6 +26,21 @@
         </el-select>
       </template>
     </el-table-column>
+
+    <el-table-column width="150">
+      <template #header>
+        当前属性
+      </template>
+      <template #default="scope">
+        <el-select v-model="scope.row.mapper.current">
+          <el-option v-for="(item,index) in scope.row.attrs" :key="index"
+                     :label="`[${item.name}]${item.code}`"
+                     :value="item.id"
+          />
+        </el-select>
+      </template>
+    </el-table-column>
+
     <template v-for="(col,index) in cols" v-bind:key="index">
       <el-table-column prop="{{col.code}}" label="{{col.name}}" width="200">
         <template #header>
