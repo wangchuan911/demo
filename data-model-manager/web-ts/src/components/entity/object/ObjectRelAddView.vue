@@ -6,6 +6,14 @@
     <el-table-column label="对象">
       <template #default="scope">
         <div style="display: flex">
+          <div style="flex: 2">
+            <el-select v-model="scope.row.linkTypeId">
+              <el-option v-for="item1 in linkTypes" :key="item1.value"
+                         :label="item1.name"
+                         :value="item1.value"
+              />
+            </el-select>
+          </div>
           <div style="flex: 3">
             <el-select v-model="scope.row.itemIndex" @change="(value)=>objectChange(value,scope.row)">
               <el-option v-for="(item,index) in objects" :key="index"
@@ -23,16 +31,6 @@
             </el-select>
           </div>
         </div>
-      </template>
-    </el-table-column>
-    <el-table-column label="关联方式" width="200">
-      <template #default="scope">
-        <el-select v-model="scope.row.linkTypeId">
-          <el-option v-for="item1 in linkTypes" :key="item1.value"
-                     :label="item1.name"
-                     :value="item1.value"
-          />
-        </el-select>
       </template>
     </el-table-column>
     <el-table-column width="200">

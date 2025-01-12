@@ -25,13 +25,13 @@
           {{scope.row.object?.name}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>{{scope.row.attribute?.name}}
         </template>
       </el-table-column>
+      <el-table-column prop="typeDesc" label="关联方式"/>
       <el-table-column label="对象标识">
         <template #default="scope">{{scope.row.object?.code}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">.</template>{{scope.row.attribute?.code}}</template>
       </el-table-column>
       <el-table-column  label="对象类型">
         <template #default="scope">{{scope.row.object?.typeDesc}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>{{scope.row.attribute?.typeDesc}}</template>
       </el-table-column>
-      <el-table-column prop="typeDesc" label="关联方式"/>
       <el-table-column prop="instanceId" label="对象实例ID"/>
       <el-table-column>
         <template #header>
