@@ -22,15 +22,23 @@
               :tree-props="lazy?{ children: 'children', hasChildren: 'hasChildren' }:{}">
       <el-table-column label="对象描述">
         <template #default="scope">
-          {{scope.row.object?.name}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>{{scope.row.attribute?.name}}
+          {{scope.row.object?.name}}
+          <template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>
+          {{scope.row.attribute?.name}}
         </template>
       </el-table-column>
       <el-table-column prop="typeDesc" label="关联方式"/>
       <el-table-column label="对象标识">
-        <template #default="scope">{{scope.row.object?.code}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">.</template>{{scope.row.attribute?.code}}</template>
+        <template #default="scope">{{scope.row.object?.code}}
+          <template v-if="scope.row.object!=null && scope.row.attribute!=null">.</template>
+          {{scope.row.attribute?.code}}
+        </template>
       </el-table-column>
-      <el-table-column  label="对象类型">
-        <template #default="scope">{{scope.row.object?.typeDesc}}<template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>{{scope.row.attribute?.typeDesc}}</template>
+      <el-table-column label="对象类型">
+        <template #default="scope">{{scope.row.object?.typeDesc}}
+          <template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>
+          {{scope.row.attribute?.typeDesc}}
+        </template>
       </el-table-column>
       <el-table-column prop="instanceId" label="对象实例ID"/>
       <el-table-column>
@@ -64,18 +72,14 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-dropdown v-else-if="!scope.row._flag">
+          <el-dropdown v-else-if="stringLike(scope.row.type,'SqlToJoin')">
             <span class="el-dropdown-link">
               操作<el-icon class="el-icon--right"><arrow-down/></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item :icon="CirclePlusFilled" @click.prevent="operation(1,scope.row)"
-                                  v-if="stringLike(scope.row.type,'SqlToJoin')">
+                <el-dropdown-item :icon="CirclePlusFilled" @click.prevent="operation(1,scope.row)">
                   添加关联对象
-                </el-dropdown-item>
-                <el-dropdown-item :icon="Check" @click.prevent="operation(3,scope.row)"
-                                  v-if="!stringLike(scope.row.type,'SqlToJoin')">修改关联关系
                 </el-dropdown-item>
                 <el-dropdown-item :icon="CircleCheck" @click.prevent="operation(4,scope.row)">删除</el-dropdown-item>
               </el-dropdown-menu>
@@ -371,7 +375,7 @@ class ChoiceParentDrawersContent extends LinkAddDrawersContent {
         input.prop.remoteMethod = async function (query: string) {
           if (query) {
             if (input.prop['options'].find((option: any) => (option.name || "").toUpperCase().indexOf((query || "").toUpperCase()) >= 0) != null) {
-              return
+              return;
             }
             input.prop.loading = true;
             const {data}: { data: { list: Array<Record<any, any>> } } = await $http.post(`obj`, {
