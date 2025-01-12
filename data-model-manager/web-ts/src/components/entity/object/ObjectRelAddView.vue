@@ -14,7 +14,7 @@
               />
             </el-select>
           </div>
-          <div style="flex: 3">
+          <div style="flex: 3" v-if="scope.row.linkTypeId==3211">
             <el-select v-model="scope.row.itemIndex" @change="(value)=>objectChange(value,scope.row)">
               <el-option v-for="(item,index) in objects" :key="index"
                          :label="`[${item.instanceId}] ${item.object.code} [${item.object.name}]`"
@@ -22,7 +22,7 @@
               />
             </el-select>
           </div>
-          <div style="flex: 2;margin-left: 1em">
+          <div style="flex: 2;margin-left: 1em" v-if="scope.row.linkTypeId==3211">
             <el-select v-model="scope.row.attrIndex">
               <el-option v-for="(item,index) in scope.row?.item?.attrs" :key="index"
                          :label="`${item.code} [${item.name}]`"
