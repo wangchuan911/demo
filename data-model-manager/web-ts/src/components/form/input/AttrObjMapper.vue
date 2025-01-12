@@ -200,6 +200,15 @@ const del = (key: string, index: number) => {
   switch (key) {
     case "col":
       cols.value.splice(index, 1);
+      rows.value.forEach(row => {
+        delete row.mapper[index];
+        let idx = index + 1;
+        while (row.mapper[idx] != null) {
+          row.mapper[idx - 1] = row.mapper[idx];
+          delete row.mapper[idx];
+          idx++;
+        }
+      });
       break;
     case "row":
       rows.value.splice(index, 1);
@@ -229,6 +238,7 @@ const queryObj = async (query: string) => {
 async function objectChange(row: any, value: any) {
   console.log(value);
   setAttr(row.attrs, value);
+  row.mapper = {};
 }
 
 </script>
