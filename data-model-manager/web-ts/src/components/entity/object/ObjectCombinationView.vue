@@ -344,6 +344,7 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
     try {
       await $http.post(`add/obj/link/rel/${objectId.value}`, await this.content.getForm(true));
       this._close();
+      load(objectId.value);
     } catch (e: any) {
       ElMessage({
         showClose: true,
