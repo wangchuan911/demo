@@ -63,7 +63,7 @@ import 'element-plus/es/components/message/style/css';
 import {DrawersContent, FormContent} from "@/components/config";
 import {AxiosError} from "axios";
 import {
-  FormDrawersContent,
+  FormDrawersContent, InputItem,
   ItemConfig,
   MyOption,
   MyTreeOption,
@@ -94,16 +94,17 @@ class AttrAddDrawersContent extends FormDrawersContent {
                 return null as unknown as MyTreeOption[];
               }
               return values.map(val => new MyTreeOption(val.id, `[${val.type}]${val.code}`, format(val.children)));
-            }
+            };
             input.setOptions(...format(data));
           }
         } as ItemConfig<SelectTreeItem>).andThen(item => {
-          item.prop.defaultExpandAll = true
+          item.prop.defaultExpandAll = true;
         }),
-        new AttrObjMapperItem('colMapper', "复杂映射", {
+        new AttrObjMapperItem('colMapper', "属性映射", {
           async inputLoadHandler(input: SelectTreeItem, content: FormContent): Promise<void> {
             input.prop.cols.length = 0;
             input.prop.rows.length = 0;
+            input.prop.objectId = props.id;
           }
         } as ItemConfig<AttrObjMapperItem>));
   }

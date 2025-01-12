@@ -1,28 +1,60 @@
 <template>
   <el-button type="primary" size="small" @click="()=>add('col')">添加列</el-button>
   <el-button type="primary" size="small" @click="()=>add('row')">添加行</el-button>
-  <el-table :data="rows" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)" row-key="_id"
-            :lazy="false"
-            :default-expand-all="true">
+  <el-table :data="rows" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)">
     <el-table-column width="200">
       <template #header>
         对象
       </template>
       <template #default="scope">
-        {{ scope.$index }}
-
+        <el-select
+            v-model="scope.row.objectId"
+            filterable
+            remote
+            placeholder="Please enter a keyword"
+            :remote-method="queryObj"
+            :loading="dialog.obj.loading"
+            @change="(value)=>objectChange(scope.row,value)"
+            style="width: 240px"
+        >
+          <el-option
+              v-for="item in options"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
       </template>
     </el-table-column>
     <template v-for="(col,index) in cols" v-bind:key="index">
-      <el-table-column prop="{{col.code}}" label="{{col.name}}" width="160">
+      <el-table-column prop="{{col.code}}" label="{{col.name}}" width="200">
         <template #header>
-          {{ col.name }}
-          <el-icon>
-            <Close @click="()=>del('col',index)" style="color: darkred"/>
-          </el-icon>
+          <el-row :gutter="10">
+            <el-col :span="20">
+              <el-select v-model="col.attrId">
+                <el-option v-for="(item,index) in attrs" :key="index"
+                           :label="`[${item.name}]${item.code}`"
+                           :value="item.id"
+                />
+              </el-select>
+              <!--<el-icon>
+                <Close @click="()=>del('col',index)" style="color: red"/>
+              </el-icon>-->
+
+            </el-col>
+            <el-col :span="4">
+              <el-button style="width: 20px" type="danger" link @click="()=>del('col',index)">删除</el-button>
+            </el-col>
+          </el-row>
+
         </template>
         <template #default="scope">
-          {{ scope.row[col.key] }}
+          <el-select v-model="scope.row.mapper[index]">
+            <el-option v-for="(item,index) in scope.row.attrs" :key="index"
+                       :label="`[${item.name}]${item.code}`"
+                       :value="item.id"
+            />
+          </el-select>
         </template>
       </el-table-column>
     </template>
@@ -43,12 +75,12 @@
     </el-table-column>
   </el-table>
 
-  <el-dialog
+  <!--<el-dialog
       v-model="dialog.obj.show"
       title="选择对象"
       width="500"
   >
-    <!--    <span>This is a message</span>-->
+    &lt;!&ndash;    <span>This is a message</span>&ndash;&gt;
     <el-select
         v-model="options"
         filterable
@@ -73,7 +105,7 @@
         </el-button>
       </div>
     </template>
-  </el-dialog>
+  </el-dialog>-->
 
 </template>
 
@@ -99,26 +131,49 @@ import {MyOption} from "@/components/form/config";
 const list = defineModel<Array<any>>();
 const {proxy} = getCurrentInstance() as ComponentInternalInstance;
 const {$http} = proxy as ComponentCustomProperties;
-const props = defineProps<{ cols: Array<any>, rows: Array<any> }>();
+const props = defineProps<{ cols: Array<any>, rows: Array<any>, objectId: number }>();
 const cols = computed(() => props.cols);
 const rows = computed(() => props.rows);
+const objectId = computed(() => props.objectId);
 watch(cols, (value, oldValue, onCleanup) => {
   console.log(value);
 });
 watch(rows, (value, oldValue, onCleanup) => {
   console.log(value);
 });
+
+const attrs = reactive([]);
+const setAttr = (attrs: [], value: number) => {
+  $http.get(`obj/attrs/${value}`)
+      .then(({data}: { data: Array<Record<any, any>> }) => {
+        attrs.length = 0;
+        attrs.push(...data);
+      })
+      .then(() => {
+        // loading.value = false;
+      }, () => {
+        // loading.value = false;
+      });
+};
+watch(objectId, (value, oldValue, onCleanup) => {
+  console.log(value);
+  if (isNaN(value) || objectId.value < 0) {
+    return;
+  }
+  setAttr(attrs, value);
+
+});
 const add = (key: string) => {
   switch (key) {
     case "col":
-      cols.value.push({name: "test", key: "test"});
+      cols.value.push({});
       break;
     case "row":
-      dialog.obj.show = true;
-      rows.value.push({test: "test"});
+      // dialog.obj.show = true;
+      rows.value.push({mapper: {}, attrs: []});
       break;
   }
-}
+};
 const dialog = reactive({
   obj: {
     show: false,
@@ -129,20 +184,20 @@ const dialog = reactive({
 const del = (key: string, index: number) => {
   switch (key) {
     case "col":
-      cols.value.splice(index, 1)
+      cols.value.splice(index, 1);
       break;
     case "row":
-      rows.value.splice(index, 1)
+      rows.value.splice(index, 1);
       break;
   }
 
-}
+};
 const options: any[] = reactive([]);
 
 const queryObj = async (query: string) => {
   if (query) {
     if (options.find(option => (option.label || "").toUpperCase().indexOf((query || "").toUpperCase()) >= 0) != null) {
-      return
+      return;
     }
     dialog.obj.loading = true;
     const {data}: { data: { list: Array<Record<any, any>> } } = await $http.post(`obj`, {
@@ -154,7 +209,13 @@ const queryObj = async (query: string) => {
     options.length = 0;
     options.push(...(data?.list || []).map(v => ({value: v.id, label: `[${v.name}]${v.code}`} as any)));
   }
+};
+
+async function objectChange(row: any, value: any) {
+  console.log(value);
+  setAttr(row.attrs, value);
 }
+
 </script>
 
 <style scoped>

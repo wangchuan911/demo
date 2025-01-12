@@ -1,6 +1,6 @@
 import {InputItem, ItemConfig} from "@/components/form/config";
 import ObjectRelAddView from "@/components/entity/object/ObjectRelAddView.vue";
-import AttrObjMapper from '@/components/form/input/AttrObjMapper.vue'
+import AttrObjMapper from '@/components/form/input/AttrObjMapper.vue';
 
 export class ObjectRelItem extends InputItem {
 
@@ -18,6 +18,7 @@ export class AttrObjMapperItem extends InputItem {
         super(code, label, prop);
         this.prop.cols = [];
         this.prop.rows = [];
+        this.prop.objectId = -1;
         this.comp = AttrObjMapper;
     }
 
