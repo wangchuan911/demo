@@ -394,7 +394,8 @@ public class QueryManagerRouter {
                     JSONArray rel = body.getJSONArray("rel");
                     if (link0 == null) {
                         logger.info("初始化数据");
-                        link0 = repairObjConstructionData(repairObjConstructionData(0L, objectId, LinkMetaType.ObjToDataBase).getId(), object, LinkMetaType.getInstance(typeId));
+                        MetaLink root = repairObjConstructionData(new MetaLink().setObjectId(objectId).setParentId(0L).setTypeId(LinkMetaType.ObjToDataBase.getId()));
+                        link0 = repairObjConstructionData(new MetaLink().setObjectId(object).setTypeId(typeId).setParentId(root.getId()).setInstanceId(getNextInstanceId(objectId)).setSequence(1));
                     }
                     for (int i = 0; i < rel.size(); i++) {
                         objectAddLinkRel(link0, link0, rel.getJSONObject(i));
@@ -418,13 +419,11 @@ public class QueryManagerRouter {
         metaLink.setTypeId(link.getLong("linkTypeId"));
         metaLink.setAttributeId(link.getLong("attributeId"));
         String instanceIdStr = link.getString("instanceId");
-        if (StringUtils.isNotEmpty(instanceIdStr) && StringUtils.isNumeric(instanceIdStr)) {
-            metaLink.setInstanceId(Long.parseLong(instanceIdStr));
-        } else {
-            metaLink.setInstance(root.getInstance());
-        }
         metaLink.setParentId(parent.getId());
         metaLink.setObjectId(link.getLong("objectId"));
+        if (StringUtils.isNotEmpty(instanceIdStr)) {
+            metaLink.setInstanceId(StringUtils.isNumeric(instanceIdStr) ? Long.parseLong(instanceIdStr) : root.getInstanceId());
+        }
         metaLinkDao.add(metaLink);
         Optional.ofNullable(link.getJSONArray("children")).ifPresent(objects -> {
             for (int i1 = 0; i1 < objects.size(); i1++) {
@@ -483,12 +482,7 @@ public class QueryManagerRouter {
         });
     }
 
-    protected MetaLink repairObjConstructionData(long parentId, long objectId, LinkMetaType linkMetaType) {
-
-        MetaLink link = new MetaLink();
-        link.setTypeId(linkMetaType.getId());
-        link.setObjectId(objectId);
-        link.setParentId(parentId);
+    protected MetaLink repairObjConstructionData(MetaLink link) {
         return metaLinkDao.list(new MetaLinkCondition().setData(link)).stream().findFirst().orElseGet(() -> {
             metaLinkDao.add(link);
             return link;
