@@ -1,30 +1,24 @@
 package org.welisdoon.web.vertx.verticle;
 
 import io.vertx.core.Future;
-import io.vertx.core.TimeoutStream;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.ext.web.client.WebClient;
 import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.scheduling.support.CronSequenceGenerator;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.annotation.Verticle;
 import org.welisdoon.web.vertx.annotation.VertxCron;
 
 import java.lang.reflect.Method;
-import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 
 /**
@@ -51,16 +45,16 @@ public class SchedulerVerticle extends AbstractMyVerticle {
             if (verticle instanceof SchedulerVerticle)
                 methods.stream().forEach(method -> {
                     VertxCron cron = method.getDeclaredAnnotation(VertxCron.class);
-                    CronSequenceGenerator generator = new CronSequenceGenerator(cron.expression());
+                    CronExpression generator = CronExpression.parse(cron.expression());
                     if (cron.immediate())
                         this.invoke(verticle, method);
                     timer(vertx, generator, method, verticle);
                 });
         }
 
-        protected void timer(final Vertx vertx, final CronSequenceGenerator generator, final Method method, final AbstractMyVerticle verticle) {
-            vertx.timerStream(generator.next(new Date()).getTime() - System.currentTimeMillis())
-                    .handler(event -> {
+        protected void timer(final Vertx vertx, final CronExpression generator, final Method method, final AbstractMyVerticle verticle) {
+            vertx.setTimer(generator.next(LocalDateTime.now()).minus(System.currentTimeMillis(), ChronoUnit.NANOS).toEpochSecond(ZoneOffset.UTC),
+                    event -> {
                         synchronized (methods) {
                             tasks.put(method, event);
                         }
@@ -85,14 +79,13 @@ public class SchedulerVerticle extends AbstractMyVerticle {
                     return null;
                 }
             }).toArray();
-            return verticle.getVertx().executeBlocking(promise -> {
-                try {
-                    ((Future) method.invoke(ApplicationContextProvider.getBean(this.ServiceClass), params)).onComplete(promise::complete);
-                } catch (Throwable e) {
-                    logger.error(e.getMessage(), e);
-                    promise.fail(e);
-                }
-            });
+            try {
+                Object val = method.invoke(ApplicationContextProvider.getBean(this.ServiceClass), params);
+
+                return val instanceof Future ? (Future) val : Future.succeededFuture(val);
+            } catch (Throwable e) {
+                return Future.failedFuture(e);
+            }
         }
 
         @Override
