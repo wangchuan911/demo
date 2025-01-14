@@ -434,37 +434,16 @@ public class QueryManagerRouter {
     }
 
     protected long getNextInstanceId(long objectId) {
-        List<Long> list = getInstanceIds(objectId).stream().sorted().collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(list)) {
-            return 2L;
-        }
-        for (int i = 0; i < list.size(); i++) {
-            if (list.get(i) != i + 2) {
-                return list.get(i) - 1;
+        List<Long> list = getLinks(objectId).stream().map(MetaLink::getInstanceId).filter(Objects::nonNull).sorted().collect(Collectors.toList());
+        for (int i = 1; i < list.size(); i++) {
+            if (list.get(i) == (i + 1)) {
+                continue;
             }
+            return list.get(i - 1) + 1;
         }
-        return list.get(list.size() - 1) + 1;
+        return list.stream().min(Comparator.reverseOrder()).orElse(1L) + 1;
     }
 
-    protected Collection<Long> getInstanceIds(long objectId) {
-        Set<Long> set = new HashSet<>();
-        List<MetaLink> list = getLinks(objectId);
-        for (MetaLink metaLink : list) {
-            set.addAll(getInstanceIds(metaLink));
-        }
-        return set;
-    }
-
-    protected Collection<Long> getInstanceIds(MetaLink metaLink) {
-        Set<Long> set = new HashSet<>();
-        Long instanceId = metaLink.getInstanceId();
-        if (instanceId != null || metaLink.getInstanceId() > 0) {
-            for (MetaLink child : metaLink.getChildren()) {
-                set.add(child.getInstanceId());
-            }
-        }
-        return set;
-    }
 
     @VertxRouter(path = "/obj",
             method = "PUT")
