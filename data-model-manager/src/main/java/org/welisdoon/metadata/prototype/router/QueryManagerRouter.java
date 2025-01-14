@@ -139,16 +139,15 @@ public class QueryManagerRouter {
         object.put("instance", metaLink.getInstance());
         object.put("attribute", metaLink.getAttribute());
 
-        MetaLinkCondition condition = new MetaLinkCondition();
         List<MetaLink> list = new LinkedList<>();
         switch (metaLink.getId() < 0 ? "obj" : "attr") {
             case "obj":
                 list.addAll(getLinks(metaLink.getObjectId()));
                 break;
             default:
-                condition.setData(new MetaLink());
-                condition.setParentId(metaLink.getId());
-                list.addAll(metaLinkDao.list(condition));
+                if (metaLink.getParent() != null) {
+                    list.addAll(metaLink.getParent().getChildren());
+                }
                 break;
         }
         if (!lazy) {
@@ -196,7 +195,7 @@ public class QueryManagerRouter {
         return list;*/
         MetaObject object = MetaUtils.getInstance().getObject(qid);
         if (object instanceof DataObject) {
-            return Arrays.asList(((DataObject) object).getConstructorLinks());
+            return ((DataObject) object).getConstructorLinks();
         }
         return Collections.emptyList();
     }
@@ -225,13 +224,9 @@ public class QueryManagerRouter {
     public void show(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            MetaLinkCondition condition = new MetaLinkCondition();
-            condition.setData(new MetaLink());
-            condition.getData().setObjectId(qid);
-            condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
             SqlContent context = new SqlContent();
-            routingContext.end(metaLinkDao.list(condition).stream().findFirst().map(metaLink -> {
-                sqlBuilderHandler.handler(context, metaLink);
+            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
+                sqlBuilderHandler.handler(context, construct);
                 return sqlShowBuilder.build(context);
             }).orElse("未配置关联,无法生成展示!"));
         });
@@ -394,7 +389,13 @@ public class QueryManagerRouter {
                     JSONArray rel = body.getJSONArray("rel");
                     if (link0 == null) {
                         logger.info("初始化数据");
-                        MetaLink root = repairObjConstructionData(new MetaLink().setObjectId(objectId).setParentId(0L).setTypeId(LinkMetaType.ObjToDataBase.getId()));
+                        MetaObject metaObject = MetaUtils.getInstance().getObject(objectId);
+                        MetaLink root = Optional.of(metaObject).map(MetaObject::getConstruct).orElseGet(() -> {
+                            MetaLink metaLink = repairObjConstructionData(new MetaLink().setObjectId(objectId).setParentId(0L).setTypeId(LinkMetaType.ObjToDataBase.getId()));
+                            metaObject.setConstructId(metaLink.getId());
+                            MetaUtils.getInstance().getMetaObjectDao().put(metaObject);
+                            return metaLink;
+                        });
                         link0 = repairObjConstructionData(new MetaLink().setObjectId(object).setTypeId(typeId).setParentId(root.getId()).setInstanceId(getNextInstanceId(objectId)).setSequence(1));
                     }
                     for (int i = 0; i < rel.size(); i++) {
@@ -520,14 +521,7 @@ public class QueryManagerRouter {
             for (MetaObject.Attribute attribute : object.getAttributes()) {
                 metaAttributeDao.delete(attribute.getId());
             }
-            MetaLinkCondition condition = new MetaLinkCondition();
-            condition.setData(new MetaLink());
-            condition.getData().setObjectId(object.getId());
-            condition.getData().setTypeId(LinkMetaType.ObjConstructor.getId());
-
-            metaLinkDao.list(condition).stream().forEach(metaLink -> {
-                delLink(metaLink);
-            });
+            delLink(object.getConstruct());
             metaObjectDao.delete(qid);
             routingContext.end();
         });

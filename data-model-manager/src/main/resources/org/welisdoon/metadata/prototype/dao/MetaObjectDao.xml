@@ -9,6 +9,7 @@
         <result column="type_id" property="typeId"></result>
         <result column="name" property="name"></result>
         <result column="code" property="code"></result>
+        <result column="construct_link_id" property="constructId"></result>
         <discriminator column="type_id" javaType="long" typeHandler="org.welisdoon.metadata.prototype.dao.MetaTypeHandler">
             <case value="Table" resultType="org.welisdoon.metadata.prototype.entity.DataBaseTable"></case>
             <case value="Object" resultType="org.welisdoon.metadata.prototype.entity.DataObject"></case>
@@ -26,6 +27,9 @@
                     and code like concat('%',#{data.code},'%')
                 </when>
             </choose>
+            <if test="data.typeId!=null">
+                and type_id=#{data.typeId,jdbcType=NUMERIC}
+            </if>
         </where>
 
     </select>
@@ -51,6 +55,9 @@
         <set>
             <if test="parentId!=null">
                 parent_id=#{parentId},
+            </if>
+            <if test="constructId!=null">
+                construct_link_id=#{constructId}
             </if>
         </set>
         where id=#{id}
