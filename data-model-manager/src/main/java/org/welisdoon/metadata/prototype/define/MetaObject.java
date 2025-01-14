@@ -24,6 +24,8 @@ import java.util.Optional;
 public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity<ObjectMetaType> {
     Attribute[] attributes;
     ObjectMetaType type;
+    Long constructId;
+    MetaLink construct;
 
     public void setAttributes(Attribute[] attributes) {
         this.attributes = attributes;
@@ -42,6 +44,23 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
             type = ObjectMetaType.getInstance(typeId);
             return type;
         });
+    }
+
+    public Long getConstructId() {
+        return constructId;
+    }
+
+    public MetaObject setConstructId(Long constructId) {
+        this.constructId = constructId;
+        return this;
+    }
+
+    public MetaLink getConstruct() {
+        if (constructId == null)
+            return null;
+        return Optional.ofNullable(construct).orElseGet(() ->
+                construct = MetaUtils.getInstance().getMetaLinkDao().get(constructId)
+        );
     }
 
     @Override

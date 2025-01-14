@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @Date 14:49
  */
 public class DataObject extends MetaObject {
-    MetaLink[] constructorLinks;
+    /*MetaLink[] constructorLinks;*/
 
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
@@ -34,8 +34,21 @@ public class DataObject extends MetaObject {
 
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public MetaLink[] getConstructorLinks() {
-        return Optional.ofNullable(constructorLinks).orElseGet(() -> {
+    public List<MetaLink> getConstructorLinks() {
+        List<MetaLink> list = new LinkedList<>();
+        Optional.ofNullable(getConstruct()).ifPresent(construct -> {
+            Optional.ofNullable(this.getParentId()).ifPresent(aLong -> {
+                MetaLink metaLink = new MetaLink();
+                metaLink.setObjectId(aLong);
+                metaLink.setId(-1 * this.getId());
+                metaLink.setTypeId(LinkMetaType.ObjConstructor.getId());
+                metaLink.setInstanceId(1L);
+                list.add(metaLink);
+            });
+            construct.getChildren().stream().filter(metaLink -> metaLink.getType().getParent() == LinkMetaType.SqlToJoin).forEach(list::add);
+        });
+        return list;
+        /*return Optional.ofNullable(constructorLinks).orElseGet(() -> {
             MetaLinkDao metaLinkDao = MetaUtils.getInstance().getMetaLinkDao();
             List<MetaLink> list = new LinkedList<>();
             Optional.ofNullable(this.getParentId()).ifPresent(aLong -> {
@@ -64,7 +77,7 @@ public class DataObject extends MetaObject {
             }).forEach(list::add);
             constructorLinks = list.toArray(new MetaLink[0]);
             return constructorLinks;
-        });
+        });*/
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Field)
