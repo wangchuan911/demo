@@ -19,9 +19,11 @@ import java.util.stream.Stream;
  */
 public class LinkNode implements BuildNode {
     MetaLink link;
+    boolean main;
 
-    public LinkNode(MetaLink link) {
+    public LinkNode(MetaLink link, boolean isMain) {
         this.link = link;
+        this.main = isMain;
     }
 
     @Override
