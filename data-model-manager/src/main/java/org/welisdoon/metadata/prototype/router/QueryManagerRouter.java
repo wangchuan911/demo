@@ -369,22 +369,21 @@ public class QueryManagerRouter {
                     List<MetaLink> links = getLinks(objectId);
                     for (MetaLink link : links) {
                         if (link.getId() < 0) continue;
-                        if (start) {
-                            if (!stop) {
-                                stop = true;
-                                link0 = new MetaLink();
-                                link0.setObjectId(object);
-                                link0.setTypeId(typeId);
-                                link0.setInstanceId(getNextInstanceId(objectId));
-                                link0.setSequence(link.getSequence());
-                                metaLinkDao.add(link0);
-                            }
-                            link.setSequence(link.getSequence() + 1);
-                            metaLinkDao.put(link);
+                        if (!start) {
+                            start = Objects.equals(link.getInstanceId(), parent);
                             continue;
-                        } else {
-                            start = link.getInstanceId() == parent;
                         }
+                        if (!stop) {
+                            stop = true;
+                            link0 = new MetaLink();
+                            link0.setObjectId(object);
+                            link0.setTypeId(typeId);
+                            link0.setInstanceId(getNextInstanceId(objectId));
+                            link0.setSequence(link.getSequence());
+                            metaLinkDao.add(link0);
+                        }
+                        link.setSequence(link.getSequence() + 1);
+                        metaLinkDao.put(link);
                     }
                     JSONArray rel = body.getJSONArray("rel");
                     if (link0 == null) {
