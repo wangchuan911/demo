@@ -52,10 +52,6 @@ public class SqlContent implements HandleContext {
         this.locked = locked;
     }
 
-    public synchronized List<LinkMetaType> getLinkMetaTypes() {
-        return ApplicationContextProvider.getBean(SqlBuilderHandler.class).linkMetaTypes;
-    }
-
 
     public String getAlias(MetaLink metaLink) {
         return "T" + metaLink.getInstanceId();

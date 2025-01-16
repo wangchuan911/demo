@@ -25,11 +25,7 @@ import java.util.Objects;
 @LinkMetaType.LinkHandle(LinkMetaType.ObjToDataBase)
 @Component
 public class SqlBuilderHandler implements LinkHandle<SqlContent> {
-    List<LinkMetaType> linkMetaTypes = Arrays.asList(LinkMetaType.SqlToJoin, LinkMetaType.SqlToSelect);
 
-    public void setLinkMetaTypes(List<LinkMetaType> linkMetaTypes) {
-        this.linkMetaTypes = linkMetaTypes;
-    }
 
     @Override
     public void handler(SqlContent content, MetaLink metaLink) {
@@ -49,17 +45,12 @@ public class SqlBuilderHandler implements LinkHandle<SqlContent> {
             content.addLink(new LinkNode(mainTable));
         }
 
-        metaLink.getChildren().forEach(child -> {
-            for (LinkMetaType type : linkMetaTypes) {
-                if (child.getType().isMatched(type, Side.Up)) {
-                    if (child.getObjectId() != null && child.getObject().getConstruct() != null) {
-                        SqlContentNode subContent = getSubSqlContent(child.getObject().getConstruct());
-                        content.addLink(subContent.setUpperContent(content).setInstanceId(child.getInstanceId()));
-                    } else {
-                        content.addLink(new LinkNode(child));
-                    }
-                    return;
-                }
+        metaLink.getChildren().stream().filter(child -> child.getType().isMatched(LinkMetaType.SqlToJoin, Side.Up)).forEach(child -> {
+            if (child.getObjectId() != null && child.getObject().getConstruct() != null) {
+                SqlContentNode subContent = getSubSqlContent(child.getObject().getConstruct());
+                content.addLink(subContent.setUpperContent(content).setInstanceId(child.getInstanceId()));
+            } else {
+                content.addLink(new LinkNode(child));
             }
         });
     }

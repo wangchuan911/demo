@@ -5,6 +5,7 @@ import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.Side;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -80,8 +81,8 @@ public interface SqlBuilder {
         return sql;
     }*/
 
-    default boolean matchLinkMetaType(List<LinkMetaType> linkMetaTypes, LinkMetaType linkMetaType) {
-        return linkMetaTypes.stream().anyMatch(linkMetaType1 -> linkMetaType.isMatched(linkMetaType1, Side.Up));
+    default boolean matchLinkMetaType( LinkMetaType linkMetaType,LinkMetaType... linkMetaTypes) {
+        return Arrays.stream(linkMetaTypes).anyMatch(linkMetaType1 -> linkMetaType.isMatched(linkMetaType1, Side.Up));
     }
 
     default String buildWhere(SqlContent sqlContent, LinkMetaType type, List<MetaLink> list) {

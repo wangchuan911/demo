@@ -7,6 +7,7 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilder;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,7 +31,7 @@ public class LinkNode implements BuildNode {
 
     @Override
     public String buildJoins(SqlContent content, SqlBuilder sqlBuilder) {
-        if (!sqlBuilder.matchLinkMetaType(content.getLinkMetaTypes(), link.getType())) {
+        if (!sqlBuilder.matchLinkMetaType(link.getType(), LinkMetaType.SqlToJoin)) {
             return "";
         }
         if (isMain(content, link)) {
@@ -48,8 +49,7 @@ public class LinkNode implements BuildNode {
 
     @Override
     public String buildWheres(SqlContent content, SqlBuilder sqlBuilder) {
-        List<LinkMetaType> linkMetaTypes = content.getLinkMetaTypes();
-        if (!sqlBuilder.matchLinkMetaType(linkMetaTypes, link.getType())) {
+        if (!sqlBuilder.matchLinkMetaType(link.getType(), LinkMetaType.SqlToJoin)) {
             return sqlBuilder.buildWhere(content, link.getType(), List.of(link));
         }
         return null;
