@@ -157,7 +157,7 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     @JSONField(deserialize = false, serialize = false)
     public MetaLink getParent() {
         if (Objects.nonNull(getParentId()))
-            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(super.getParent()), metaLink -> parent = MetaUtils.getInstance().getMetaLinkDao().get(getId()));
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(super.getParent()), metaLink -> parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId()));
         return super.getParent();
     }
 

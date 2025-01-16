@@ -146,9 +146,7 @@ public class QueryManagerRouter {
                 list.addAll(getLinks(metaLink.getObjectId()));
                 break;
             default:
-                if (metaLink.getParent() != null) {
-                    list.addAll(metaLink.getParent().getChildren());
-                }
+                list.addAll(metaLink.getChildren());
                 break;
         }
         if (!lazy) {
