@@ -21,7 +21,7 @@ import java.util.Optional;
  * @Author Septem
  * @Date 11:41
  */
-public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity<ObjectMetaType> {
+public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity<ObjectMetaType>, Construction {
     Attribute[] attributes;
     ObjectMetaType type;
     Long constructId;
@@ -55,11 +55,14 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
         return this;
     }
 
+    @Override
+    @JsonIgnore
+    @JSONField(deserialize = false, serialize = false)
     public MetaLink getConstruct() {
-        if (constructId == null)
+        if (getConstructId() == null)
             return null;
         return Optional.ofNullable(construct).orElseGet(() ->
-                construct = MetaUtils.getInstance().getMetaLinkDao().get(constructId)
+                construct = MetaUtils.getInstance().getMetaLinkDao().get(getConstructId())
         );
     }
 
@@ -92,9 +95,11 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
      * @Author Septem
      * @Date 11:41
      */
-    public static class Attribute<T extends MetaObject> extends MetaPrototype<Attribute> implements ITypeEntity<AttributeMetaType> {
+    public static class Attribute<T extends MetaObject> extends MetaPrototype<Attribute> implements ITypeEntity<AttributeMetaType>, Construction {
         Long objectId;
         AttributeMetaType type;
+        Long constructId;
+        MetaLink construct;
 
         public Long getObjectId() {
             return objectId;
@@ -134,6 +139,26 @@ public class MetaObject extends MetaPrototype<MetaObject> implements ITypeEntity
                 attribute = attribute.getParent();
             }
             return attribute;
+        }
+
+        public Long getConstructId() {
+            return constructId;
+        }
+
+        public Attribute setConstructId(Long constructId) {
+            this.constructId = constructId;
+            return this;
+        }
+
+        @Override
+        @JsonIgnore
+        @JSONField(deserialize = false, serialize = false)
+        public MetaLink getConstruct() {
+            if (getConstructId() == null)
+                return null;
+            return Optional.ofNullable(construct).orElseGet(() ->
+                    construct = MetaUtils.getInstance().getMetaLinkDao().get(getConstructId())
+            );
         }
     }
 }

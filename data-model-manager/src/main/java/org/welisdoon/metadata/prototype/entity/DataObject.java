@@ -119,6 +119,14 @@ public class DataObject extends MetaObject {
                 public RowType getType() {
                     return type;
                 }
+
+                public Long getId() {
+                    return id;
+                }
+
+                public void setId(Long id) {
+                    this.id = id;
+                }
             }
 
             public List<Row> getRows() {
@@ -141,6 +149,13 @@ public class DataObject extends MetaObject {
                     return typeId;
                 }
 
+                public void setObjectId(Long objectId) {
+                    this.objectId = objectId;
+                }
+
+                public void setAttrId(Long attrId) {
+                    this.attrId = attrId;
+                }
             }
 
             public static class KeyRow extends AttrRow {

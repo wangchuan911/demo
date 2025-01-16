@@ -7,11 +7,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.dao.*;
 import org.welisdoon.metadata.prototype.define.*;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -67,7 +69,16 @@ public class MetaUtils {
         reflections.getSubTypesOf(IMetaType.class).stream().filter(Class::isEnum).flatMap(aClass -> {
             return Arrays.stream(aClass.getEnumConstants());
         }).forEach(iMetaType -> {
-            LONG_KEY_VALUE_MAP_2.put(iMetaType.getId(), (Enum) iMetaType);
+            if ("UNKNOWN".equalsIgnoreCase(((Enum) iMetaType).name())) {
+                return;
+            }
+            IMetaType metaType = (IMetaType) LONG_KEY_VALUE_MAP_2.put(iMetaType.getId(), (Enum) iMetaType);
+            Assert.isNull(metaType, () -> {
+                throw new IllegalStateException(MessageFormat.format("字典值存在冲突{0}:{1}.{2},{3}.{4}",
+                        ((IMetaType) iMetaType).getId(),
+                        iMetaType.getClass().getCanonicalName(), ((Enum) iMetaType).name(),
+                        metaType.getClass().getCanonicalName(), ((Enum) metaType).name()));
+            });
         });
         reflections.getSubTypesOf(ITypeEntity.class).stream().forEach(aClass -> {
             Arrays.stream(ApplicationContextProvider.getRawType(aClass, ITypeEntity.class)).forEach(type -> {
