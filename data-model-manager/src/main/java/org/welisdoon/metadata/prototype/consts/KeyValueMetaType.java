@@ -12,7 +12,7 @@ public enum KeyValueMetaType implements IMetaType {
     UNKNOWN(Long.MIN_VALUE, "未知"),
     ObjectValue(5000, "值(关联对象)"),
     AttributeValue(5001, "值(关联属性)"),
-    InstanceValue(5001, "值(关联实例)");
+    InstanceValue(5002, "值(关联实例)");
     long id;
     String name;
 

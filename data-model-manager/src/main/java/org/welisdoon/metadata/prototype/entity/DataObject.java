@@ -2,12 +2,9 @@ package org.welisdoon.metadata.prototype.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
+import org.welisdoon.metadata.prototype.consts.IMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
-import org.welisdoon.metadata.prototype.consts.MetaUtils;
-import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
-import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 
@@ -15,7 +12,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @Classname DataObject
@@ -83,13 +79,100 @@ public class DataObject extends MetaObject {
     @AttributeMetaType.MetaType(AttributeMetaType.Field)
     public static class Field extends Attribute<DataObject> {
         DataBaseTable.Column[] columns;
+        List<RowMapper> mappers;
 
         public DataBaseTable.Column[] getColumns() {
             return columns;
         }
 
-        public void setColumns(DataBaseTable.Column[] columns) {
+        public Field setColumns(DataBaseTable.Column[] columns) {
             this.columns = columns;
+            return this;
+        }
+
+        public List<RowMapper> getMappers() {
+            return mappers;
+        }
+
+        public Field setMappers(List<RowMapper> mappers) {
+            this.mappers = mappers;
+            return this;
+        }
+
+        public Field setMappers(MetaLink link) {
+            return this;
+        }
+
+        public static class RowMapper {
+            List<Row> rows;
+
+            public static class Row {
+                Long id;
+                RowType type;
+                Long typeId;
+
+                public void setTypeId(Long typeId) {
+                    this.typeId = typeId;
+                    type = Arrays.stream(RowType.values()).filter(rowType -> rowType.getId() == typeId).findFirst().orElseThrow(() -> new IllegalStateException("未知属性"));
+                }
+
+                public RowType getType() {
+                    return type;
+                }
+            }
+
+            public List<Row> getRows() {
+                return rows;
+            }
+
+            public static class AttrRow extends Row {
+                Long objectId;
+                Long attrId;
+
+                public Long getObjectId() {
+                    return objectId;
+                }
+
+                public Long getAttrId() {
+                    return attrId;
+                }
+
+                public Long getTypeId() {
+                    return typeId;
+                }
+
+            }
+
+            public static class KeyRow extends AttrRow {
+
+            }
+
+            public static class MapperRow extends Row {
+
+            }
+
+            public enum RowType implements IMetaType {
+                Key(2100, "主要关联项", KeyRow.class), Attr(2101, "属性关联", AttrRow.class), Condition(2102, "条件关联", MapperRow.class);
+                long id;
+                String name;
+                Class<? extends Row> rowType;
+
+                RowType(long id, String name, Class<? extends Row> rowType) {
+                    this.id = id;
+                    this.name = name;
+                    this.rowType = rowType;
+                }
+
+                @Override
+                public long getId() {
+                    return id;
+                }
+
+                @Override
+                public String getDesc() {
+                    return name;
+                }
+            }
         }
     }
 }

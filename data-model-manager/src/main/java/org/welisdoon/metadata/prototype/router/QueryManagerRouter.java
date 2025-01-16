@@ -237,9 +237,10 @@ public class QueryManagerRouter {
     public void objAttrAdd(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            MetaObject.Attribute attribute = JSON.parseObject(routingContext.body().asString()).toJavaObject(MetaObject.Attribute.class);
+            JSONObject attrJSON = JSON.parseObject(routingContext.body().asString());
+            MetaObject.Attribute<?> attribute = attrJSON.toJavaObject(MetaObject.Attribute.class);
             attribute.setObjectId(qid);
-            switch (MetaUtils.getInstance().getObject(qid).getType()) {
+            /*switch (MetaUtils.getInstance().getObject(qid).getType()) {
                 case Object:
                     attribute.setTypeId(AttributeMetaType.Field.getId());
                     break;
@@ -249,14 +250,21 @@ public class QueryManagerRouter {
                 default:
                     routingContext.response().setStatusCode(500).end(String.format("不支持的对象类型[%s]", MetaUtils.getInstance().getObject(qid).getType().getDesc()));
                     return;
-            }
+            }*/
+            MetaObject metaObject = MetaUtils.getInstance().getObject(qid);
+            Arrays.stream(AttributeMetaType.values()).filter(attributeMetaType -> attributeMetaType.getObjectMetaType() == metaObject.getType()).findFirst().ifPresentOrElse(attributeMetaType -> {
+                attribute.setTypeId(attributeMetaType.getId());
+            }, () -> {
+                throw new IllegalStateException(String.format("不支持的对象类型[%s]", metaObject.getType().getDesc()));
+            });
             Assert.notNull(attribute.getObjectId(), "not object");
             Assert.notNull(attribute.getCode(), "not code");
             Assert.notNull(attribute.getName(), "not name");
-            if (attribute.getId() != null)
+            if (attribute.getId() != null) {
                 metaAttributeDao.update(attribute);
-            else
+            } else {
                 metaAttributeDao.add(attribute);
+            }
             routingContext.end(JSON.toJSONString(attribute));
         });
     }
