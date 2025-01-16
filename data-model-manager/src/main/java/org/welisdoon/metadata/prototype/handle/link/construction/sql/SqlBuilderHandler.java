@@ -35,7 +35,7 @@ public class SqlBuilderHandler implements LinkHandle<SqlContent> {
     public void handler(SqlContent content, MetaLink metaLink) {
         MetaObject parent = metaLink.getObject().getParent();
         if (parent instanceof DataObject) {
-            SqlContentNode subContent = getSubSqlContent(parent);
+            SqlContentNode subContent = getSubSqlContent(parent.getConstruct());
             subContent.setUpperContent(content);
             subContent.setInstanceId(1L);
             content.addLink(subContent);
@@ -52,8 +52,8 @@ public class SqlBuilderHandler implements LinkHandle<SqlContent> {
         metaLink.getChildren().forEach(child -> {
             for (LinkMetaType type : linkMetaTypes) {
                 if (child.getType().isMatched(type, Side.Up)) {
-                    if (child.getObjectId() != null && child.getObject().getType() == ObjectMetaType.Object) {
-                        SqlContentNode subContent = getSubSqlContent(child.getObject());
+                    if (child.getObjectId() != null && child.getObject().getConstruct() != null) {
+                        SqlContentNode subContent = getSubSqlContent(child.getObject().getConstruct());
                         content.addLink(subContent.setUpperContent(content).setInstanceId(child.getInstanceId()));
                     } else {
                         content.addLink(new LinkNode(child));
@@ -64,10 +64,7 @@ public class SqlBuilderHandler implements LinkHandle<SqlContent> {
         });
     }
 
-    protected SqlContentNode getSubSqlContent(MetaObject subObject) {
-        MetaLink subLink = new MetaLink();
-        subLink.setObjectId(subObject.getId());
-        subLink.setObject(subObject);
+    protected SqlContentNode getSubSqlContent(MetaLink subLink) {
         SqlContentNode subContent = new SqlContentNode();
         this.handler(subContent, subLink);
         return subContent;

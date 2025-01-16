@@ -38,6 +38,7 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -389,12 +390,13 @@ public class QueryManagerRouter {
                     if (link0 == null) {
                         logger.info("初始化数据");
                         MetaObject metaObject = MetaUtils.getInstance().getObject(objectId);
-                        MetaLink root = Optional.of(metaObject).map(MetaObject::getConstruct).orElseGet(() -> {
-                            MetaLink metaLink = repairObjConstructionData(new MetaLink().setObjectId(objectId).setParentId(0L).setTypeId(LinkMetaType.ObjToDataBase.getId()));
-                            metaObject.setConstructId(metaLink.getId());
+                        Assert.notNull(metaObject, () -> MessageFormat.format("对象{0}不存在", objectId));
+                        MetaLink root = metaObject.getConstruct();
+                        if (root == null) {
+                            root = repairObjConstructionData(new MetaLink().setObjectId(objectId).setParentId(0L).setTypeId(LinkMetaType.ObjToDataBase.getId()));
+                            metaObject.setConstructId(root.getId());
                             MetaUtils.getInstance().getMetaObjectDao().put(metaObject);
-                            return metaLink;
-                        });
+                        }
                         link0 = repairObjConstructionData(new MetaLink().setObjectId(object).setTypeId(typeId).setParentId(root.getId()).setInstanceId(getNextInstanceId(objectId)).setSequence(1));
                     }
                     for (int i = 0; i < rel.size(); i++) {
