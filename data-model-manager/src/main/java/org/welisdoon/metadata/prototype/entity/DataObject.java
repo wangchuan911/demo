@@ -7,7 +7,9 @@ import org.welisdoon.metadata.prototype.consts.IMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
+import org.welisdoon.metadata.prototype.define.MetaPrototype;
 
+import javax.xml.crypto.Data;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -77,17 +79,23 @@ public class DataObject extends MetaObject {
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Field)
-    public static class Field extends Attribute<DataObject> {
-        DataBaseTable.Column[] columns;
+    public static class Field extends Attribute implements MetaPrototype.Child<MetaLink> {
+        List<DataBaseTable.Column> columns;
         List<RowMapper> mappers;
+        MetaLink parent;
 
-        public DataBaseTable.Column[] getColumns() {
+        public List<DataBaseTable.Column> getColumns() {
             return columns;
         }
 
-        public Field setColumns(DataBaseTable.Column[] columns) {
+        public Field setColumns(List<DataBaseTable.Column> columns) {
             this.columns = columns;
             return this;
+        }
+
+        @Override
+        public DataObject getObject() {
+            return (DataObject) super.getObject();
         }
 
         public List<RowMapper> getMappers() {
@@ -100,6 +108,17 @@ public class DataObject extends MetaObject {
         }
 
         public Field setMappers(MetaLink link) {
+            return this;
+        }
+
+        @Override
+        public MetaLink getParent() {
+            return parent;
+        }
+
+        @Override
+        public Child setParent(MetaLink parent) {
+            this.parent = parent;
             return this;
         }
 

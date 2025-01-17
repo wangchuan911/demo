@@ -83,7 +83,7 @@ public abstract class MetaPrototype {
         this.parentId = metaPrototype.parentId;
     }
 
-    interface Parent<T> {
+    public interface Parent<T> {
         List<T> getChildren();
 
         Parent setChildren(List<T> children);
@@ -104,7 +104,7 @@ public abstract class MetaPrototype {
         }
     }
 
-    interface Child<T> {
+    public interface Child<T> {
         T getParent();
 
         Child setParent(T parent);

@@ -111,7 +111,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
      * @Author Septem
      * @Date 11:41
      */
-    public static class Attribute<T extends MetaObject> extends MetaPrototype implements ITypeEntity<AttributeMetaType> {
+    public static class Attribute extends MetaPrototype implements ITypeEntity<AttributeMetaType> {
         Long objectId;
         AttributeMetaType type;
 
@@ -124,8 +124,8 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
             return this;
         }
 
-        public T getObject() {
-            return (T) MetaUtils.getInstance().getObject(id);
+        public MetaObject getObject() {
+            return MetaUtils.getInstance().getObject(id);
         }
 
         public AttributeMetaType getType() {

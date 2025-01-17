@@ -19,11 +19,11 @@ public class DataBaseTable extends MetaObject {
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
     public List<Column> getColumns() {
-        return (List)getAttributes();
+        return (List) getAttributes();
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Column)
-    public static class Column extends Attribute<DataBaseTable> {
+    public static class Column extends Attribute {
         boolean primary;
 
         public boolean isPrimary() {
@@ -32,6 +32,11 @@ public class DataBaseTable extends MetaObject {
 
         public void setPrimary(boolean primary) {
             this.primary = primary;
+        }
+
+        @Override
+        public DataBaseTable getObject() {
+            return (DataBaseTable) super.getObject();
         }
     }
 

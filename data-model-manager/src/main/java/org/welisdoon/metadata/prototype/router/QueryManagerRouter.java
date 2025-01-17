@@ -238,7 +238,7 @@ public class QueryManagerRouter {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             JSONObject attrJSON = JSON.parseObject(routingContext.body().asString());
-            MetaObject.Attribute<?> attribute = attrJSON.toJavaObject(MetaObject.Attribute.class);
+            MetaObject.Attribute attribute = attrJSON.toJavaObject(MetaObject.Attribute.class);
             attribute.setObjectId(qid);
             /*switch (MetaUtils.getInstance().getObject(qid).getType()) {
                 case Object:
