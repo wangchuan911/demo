@@ -1,10 +1,12 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.builder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilder;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @Classname TableNode
@@ -39,8 +41,8 @@ public class SqlContentNode extends SqlContent implements BuildNode {
     }
 
     @Override
-    public String buildJoins(SqlContent sqlContent, SqlBuilder sqlBuilder) {
-        return sqlBuilder.buildJoins(this);
+    public String buildJoins(SqlContent content, SqlBuilder sqlBuilder) {
+        return this.getLinks().stream().map(buildNode -> buildNode.buildJoins(this, sqlBuilder)).filter(StringUtils::isNoneBlank).collect(Collectors.joining(" "));
     }
 
     @Override
@@ -57,12 +59,13 @@ public class SqlContentNode extends SqlContent implements BuildNode {
     public String getAlias(MetaLink metaLink) {
         StringBuilder alias = new StringBuilder();
         alias.append(metaLink.getInstanceId());
-
-        SqlContent parent = getUpperContent();
+        SqlContent parent = this;
         while (parent instanceof SqlContentNode) {
             alias.append("_").append(((SqlContentNode) parent).getInstanceId());
             parent = ((SqlContentNode) parent).getUpperContent();
         }
         return alias.reverse().insert(0, "T").toString();
     }
+
+
 }
