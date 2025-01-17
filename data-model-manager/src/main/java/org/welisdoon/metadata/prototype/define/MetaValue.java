@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 11:54
  */
-public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEntity, ITypeEntity<KeyValueMetaType> {
+public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEntity<KeyValueMetaType>, MetaPrototype.Child<MetaValue>, MetaPrototype.Parent<MetaValue> {
     final int LENGTH = 4000;
     String value;
     Long valueTypeId;
@@ -30,6 +30,8 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
     KeyValueType valueType;
     int sequence;
     boolean bigFile;
+    List<MetaValue> children;
+    MetaValue parent;
 
     public String getValue() {
         if (bigFile) {
@@ -145,7 +147,15 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
         ObjectUtils.synchronizedInitial(this, metaValue -> Objects.nonNull(children), metaValue -> {
             children = ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
         });
-        return super.getChildren();
+        return children;
+    }
+
+    @Override
+    public MetaValue setChildren(List<MetaValue> children) {
+        this.children = children;
+        if (children != null)
+            this.children.forEach(this::bind);
+        return this;
     }
 
     public void setBigFile(boolean bigFile) {
@@ -154,5 +164,16 @@ public class MetaValue extends MetaPrototype<MetaValue> implements ISequenceEnti
 
     public boolean isBigFile() {
         return bigFile;
+    }
+
+    @Override
+    public MetaValue getParent() {
+        return parent;
+    }
+
+    @Override
+    public MetaValue setParent(MetaValue parent) {
+        this.parent = parent;
+        return this;
     }
 }

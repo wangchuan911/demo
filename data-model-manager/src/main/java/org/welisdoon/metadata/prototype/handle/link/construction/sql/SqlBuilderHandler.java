@@ -38,7 +38,7 @@ public class SqlBuilderHandler implements LinkHandle<SqlContent> {
             mainTable.setObject(parent);
             mainTable.setInstanceId(1L);
             mainTable.setTypeId(LinkMetaType.SqlToJoin.getId());
-            mainTable.addChildren(metaLink.getChildren().stream().filter(child -> Objects.equals(child.getType(), LinkMetaType.DataFuture)).toArray(MetaLink[]::new));
+            mainTable.addChildren(metaLink.getChildren().stream().filter(child -> Objects.equals(child.getType(), LinkMetaType.DataFuture)));
             content.addLink(new LinkNode(mainTable, !(content instanceof SqlContentNode)));
         }
 

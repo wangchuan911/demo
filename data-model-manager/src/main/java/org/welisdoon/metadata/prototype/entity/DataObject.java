@@ -24,8 +24,8 @@ public class DataObject extends MetaObject {
 
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public Field[] getFields() {
-        return Arrays.stream(getAttributes()).filter(attribute -> attribute instanceof Field).toArray(Field[]::new);
+    public List<Field> getFields() {
+        return (List) getAttributes();
     }
 
     @JsonIgnore

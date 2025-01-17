@@ -7,6 +7,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * @Classname MetaPrototype
@@ -14,11 +15,9 @@ import java.util.Objects;
  * @Author Septem
  * @Date 11:48
  */
-public abstract class MetaPrototype<T extends MetaPrototype> {
+public abstract class MetaPrototype {
     Long id, typeId, parentId;
     String code, name;
-    T parent;
-    List<T> children;
 
     public Long getId() {
         return id;
@@ -32,7 +31,7 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
         return typeId;
     }
 
-    public T setTypeId(Long typeId) {
+    public <T extends MetaPrototype> T setTypeId(Long typeId) {
         this.typeId = typeId;
         return (T) this;
     }
@@ -41,7 +40,7 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
         return parentId;
     }
 
-    public T setParentId(Long parentId) {
+    public <T extends MetaPrototype> T setParentId(Long parentId) {
         this.parentId = parentId;
         return (T) this;
     }
@@ -62,52 +61,12 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
         this.name = name;
     }
 
-    public void setParent(T parent) {
-        this.parent = parent;
-        if (Objects.isNull(this.parent.children)) {
-            synchronized (this.parent) {
-                if (Objects.isNull(this.parent.children)) {
-                    this.parent.children = new LinkedList<>();
-                }
-            }
-        }
-        this.parent.children.add(this);
-    }
-
-    @JsonIgnore
-    @JSONField(deserialize = false, serialize = false)
-    public T getParent() {
-        return parent;
-    }
-
-    public void setChildren(List<T> children) {
-        this.children = children;
-        if (CollectionUtils.isEmpty(children)) return;
-        this.children.forEach(t -> t.setParent(this));
-    }
-
-    public void addChildren(T... children) {
-        if (Objects.isNull(this.children))
-            synchronized (this) {
-                if (Objects.isNull(this.children))
-                    this.children = new LinkedList<>();
-            }
-
-        for (T child : children) {
-            child.setParent(this);
-            this.children.add(child);
-        }
-    }
-
-    public List<T> getChildren() {
-        return children;
-    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MetaPrototype<?> that = (MetaPrototype<?>) o;
+        MetaPrototype that = (MetaPrototype) o;
         return Objects.equals(getId(), that.getId()) && Objects.equals(getTypeId(), that.getTypeId());
     }
 
@@ -120,9 +79,35 @@ public abstract class MetaPrototype<T extends MetaPrototype> {
         this.id = metaPrototype.id;
         this.code = metaPrototype.code;
         this.name = metaPrototype.name;
-        this.parent = (T) metaPrototype.parent;
         this.typeId = metaPrototype.typeId;
         this.parentId = metaPrototype.parentId;
-        this.children = metaPrototype.children;
+    }
+
+    interface Parent<T> {
+        List<T> getChildren();
+
+        Parent setChildren(List<T> children);
+
+        default void bind(T child) {
+            if (child instanceof Child && this instanceof Parent) {
+                ((Child) child).setParent(this);
+            }
+        }
+
+        default Parent addChildren(Stream<T> children) {
+            if (children == null) return this;
+            if (getChildren() == null) {
+                setChildren(new LinkedList<>());
+            }
+            children.forEach(t -> getChildren().add(t));
+            return this;
+        }
+    }
+
+    interface Child<T> {
+        T getParent();
+
+        Child setParent(T parent);
+
     }
 }

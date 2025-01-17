@@ -403,7 +403,7 @@ public class QueryManagerRouter {
                             metaObject.setConstructId(root.getId());
                             MetaUtils.getInstance().getMetaObjectDao().put(metaObject);
                         }
-                        link0 = repairObjConstructionData(new MetaLink().setObjectId(object).setTypeId(typeId).setParentId(root.getId()).setInstanceId(getNextInstanceId(objectId)).setSequence(1));
+                        link0 = repairObjConstructionData(new MetaLink().setObjectId(object).<MetaLink>setTypeId(typeId).<MetaLink>setParentId(root.getId()).setInstanceId(getNextInstanceId(objectId)).setSequence(1));
                     }
                     for (int i = 0; i < rel.size(); i++) {
                         objectAddLinkRel(link0, link0, rel.getJSONObject(i));
@@ -550,7 +550,7 @@ public class QueryManagerRouter {
                 break;
             case Table:
                 Optional.ofNullable(object.getAttributes()).ifPresent(attributes -> {
-                    list.add(toTreeNode(object, Arrays.stream(attributes).map(attribute -> toTreeNode(attribute, null)).collect(Collectors.toList())));
+                    list.add(toTreeNode(object, attributes.stream().map(attribute -> toTreeNode(attribute, null)).collect(Collectors.toList())));
                 });
                 return;
             default:

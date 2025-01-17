@@ -6,6 +6,7 @@ import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @Classname DataBaseTable
@@ -15,11 +16,10 @@ import java.util.Arrays;
  */
 public class DataBaseTable extends MetaObject {
 
-
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public Column[] getColumns() {
-        return Arrays.stream(getAttributes()).filter(attribute -> attribute instanceof Column).toArray(Column[]::new);
+    public List<Column> getColumns() {
+        return (List)getAttributes();
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Column)

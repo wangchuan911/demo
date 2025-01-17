@@ -17,7 +17,7 @@ import java.util.Optional;
  * @Author Septem
  * @Date 11:41
  */
-public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity, ITypeEntity<LinkMetaType> {
+public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEntity<LinkMetaType>, MetaPrototype.Child<MetaLink>, MetaPrototype.Parent<MetaLink> {
     Long objectId;
     MetaObject object;
 
@@ -36,6 +36,9 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     int sequence;
 
     LinkMetaType type;
+
+    List<MetaLink> children;
+    MetaLink parent;
 
     @Override
     public String getName() {
@@ -157,8 +160,13 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     @JSONField(deserialize = false, serialize = false)
     public MetaLink getParent() {
         if (Objects.nonNull(getParentId()))
-            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(super.getParent()), metaLink -> parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId()));
-        return super.getParent();
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(parent), metaLink -> parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId()));
+        return parent;
+    }
+
+    @Override
+    public MetaLink setParent(MetaLink parent) {
+        return this;
     }
 
     @Override
@@ -166,7 +174,15 @@ public class MetaLink extends MetaPrototype<MetaLink> implements ISequenceEntity
     @JSONField(deserialize = false, serialize = false)
     public List<MetaLink> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink -> children = MetaUtils.getInstance().getChildrenLinks(getId()));
-        return super.getChildren();
+        return children;
+    }
+
+    @Override
+    public MetaLink setChildren(List<MetaLink> children) {
+        this.children = children;
+        if (children != null)
+            this.children.forEach(this::bind);
+        return this;
     }
 
     public Long getLinkId() {
