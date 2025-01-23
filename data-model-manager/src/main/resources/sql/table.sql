@@ -32,8 +32,7 @@ create table MD_OBJECT_ATTR
     CODE varchar(200) null,
     NAME varchar(200) null,
     PARENT_ID int null,
-    TYPE_ID int not null,
-    CONSTRUCT_LINK_ID int null
+    TYPE_ID int not null
 );
 
 create table MD_VALUE

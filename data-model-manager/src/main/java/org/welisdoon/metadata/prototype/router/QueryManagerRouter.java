@@ -524,20 +524,21 @@ public class QueryManagerRouter {
         return metaLinkDao.delete(metaLink.getId());
     }
 
-    @VertxRouter(path = "\\/tree\\/table\\/(?<id>\\d+)",
+    @VertxRouter(path = "\\/attr\\/bind\\/tree\\/(?<id>\\d+)",
             method = "GET",
             mode = VertxRouteType.PathRegex)
-    public void tableTree(RoutingContextChain chain) {
+    public void attrBindTree(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             List<Map<String, Object>> list = new LinkedList<>();
-            MetaObject object = metaObjectDao.get(qid);
-            tableTree(list, object);
+            MetaUtils.getInstance().getObject(qid).getConstruct().getChildren().forEach(metaLink -> {
+                attrBindTree(list, null, metaLink.getObject(), metaLink.getInstanceId());
+            });
             routingContext.end(JSON.toJSONString(list));
         });
     }
 
-    protected void tableTree(final List<Map<String, Object>> list, MetaObject object) {
+    protected void attrBindTree(final List<Map<String, Object>> list, MetaObject parent, MetaObject object, long instanceId) {
         if (object == null) {
             return;
         }
@@ -545,12 +546,17 @@ public class QueryManagerRouter {
             case Object:
                 List<MetaLink> list2 = getLinks(object.getId());
                 list2.stream().map(MetaLink::<MetaObject>getObject).filter(Objects::nonNull).forEach(metaObject -> {
-                    tableTree(list, metaObject);
+                    attrBindTree(list, object, metaObject, instanceId);
                 });
                 break;
             case Table:
                 Optional.ofNullable(object.getAttributes()).ifPresent(attributes -> {
-                    list.add(toTreeNode(object, attributes.stream().map(attribute -> toTreeNode(attribute, null)).collect(Collectors.toList())));
+                    Map<String, Object> node = toTreeNode(object, attributes.stream().map(attribute -> toTreeNode(attribute, null)).collect(Collectors.toList()));
+                    node.put("rootInstanceId", instanceId);
+                    if (parent != null) {
+                        node.put("objectId", parent.getId());
+                    }
+                    list.add(node);
                 });
                 return;
             default:
