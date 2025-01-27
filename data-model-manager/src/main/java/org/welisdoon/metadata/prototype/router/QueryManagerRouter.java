@@ -30,6 +30,7 @@ import org.welisdoon.metadata.prototype.define.ITypeEntity;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaPrototype;
+import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilderHandler;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
@@ -42,6 +43,7 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -533,33 +535,40 @@ public class QueryManagerRouter {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             List<Map<String, Object>> list = getLinks(qid).stream().map(metaLink -> {
-                return attrBindTree(null, metaLink, metaLink);
+                return attrBindTree(null, metaLink, metaLink, null);
             }).filter(MapUtils::isNotEmpty).collect(Collectors.toList());
             routingContext.end(JSON.toJSONString(list));
         });
     }
 
-    protected Map<String, Object> attrBindTree(MetaObject parent, MetaLink link, final MetaLink root) {
+    protected Map<String, Object> attrBindTree(MetaObject parent, MetaLink link, final MetaLink root, String seq) {
         if (link == null || link.getObject() == null) {
             return null;
         }
+        String seqNext = (StringUtils.isNotEmpty(seq) ? (seq + "@") : "") + "LINK" + link.getId();
         switch (link.getObject().getType()) {
             case Object:
                 List<MetaLink> list2 = getLinks(link.getObject().getId());
                 return toTreeNode(link.getObject(), list2.stream().map(metaLink -> {
-                    return attrBindTree(link.getObject(), metaLink, root);
-                }).collect(Collectors.toList()));
+                    return attrBindTree(link.getObject(), metaLink, root, seqNext);
+                }).collect(Collectors.toList()), entries -> {
+                    entries.add(Map.entry("seq", seqNext));
+                    entries.add(Map.entry("instanceId", link.getInstanceId()));
+                });
             case Table:
                 return toTreeNode(link.getObject(), link.getObject().getAttributes().stream().map(attribute -> {
                     return toTreeNode(attribute, null, entries -> {
                         if (root != null)
                             entries.add(Map.entry("rootInstanceId", root.getInstanceId()));
-                        if (link != null)
-                            entries.add(Map.entry("instanceId", link.getInstanceId()));
                         if (parent != null)
                             entries.add(Map.entry("objectId", parent.getId()));
+                        entries.add(Map.entry("seq", seqNext + "@ATTR" + attribute.getId()));
+                        entries.add(Map.entry("instanceId", link.getInstanceId()));
                     });
-                }).collect(Collectors.toList()));
+                }).collect(Collectors.toList()), entries -> {
+                    entries.add(Map.entry("seq", seqNext));
+                    entries.add(Map.entry("instanceId", link.getInstanceId()));
+                });
             default:
                 return null;
         }
@@ -589,29 +598,44 @@ public class QueryManagerRouter {
         return Map.ofEntries(list1.toArray(new Map.Entry[0]));
     }
 
-    @VertxRouter(path = "\\/tree\\/obj\\/(?<id>\\d+)",
-            method = "GET",
+    @VertxRouter(path = "\\/attr\\/bind\\/obj\\/(?<id>\\d+)",
+            method = "POST",
             mode = VertxRouteType.PathRegex)
-    public void objTree(RoutingContextChain chain) {
+    public void attrBindObj(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            long qid = Long.parseLong(routingContext.pathParam("id"));
-            List<Map<String, Object>> list = new LinkedList<>();
-            MetaObject object = metaObjectDao.get(qid);
-            objTree(list, object);
-            routingContext.end(JSON.toJSONString(list));
+            String path = (String) JsonUtils.getKeyValue(JSONObject.parseObject(routingContext.body().asString()), "path");
+            DataObject object = MetaUtils.getInstance().getObject(Long.parseLong(routingContext.pathParam("id")));
+            DataBaseTable table = null;
+            MetaObject.Attribute attribute = null;
+            for (String s : path.split("@")) {
+                if (s.startsWith("ATTR")) {
+                    Assert.notNull(table, () -> String.format("错误的路径:%s,分片：%s", path, s));
+                    long attrId = Long.parseLong(s.substring(4));
+                    attribute = table.getAttributes().stream().filter(attribute1 -> Objects.equals(attribute1.getId(), attrId)).findFirst().orElseThrow(() -> new IllegalStateException(String.format("表:[%s]没有找到对应字段:%s", path)));
+                    break;
+                }
+                Assert.isNull(table, () -> String.format("错误的路径:%s,分片：%s", path, s));
+                if (s.startsWith("LINK")) {
+                    long linkId = Long.parseLong(s.substring(4));
+                    for (MetaLink constructorLink : object.getConstructorLinks()) {
+                        if (Objects.equals(constructorLink.getId(), linkId)) {
+                            if (constructorLink.getObject() instanceof DataBaseTable) {
+                                table = constructorLink.getObject();
+                            } else if (constructorLink.getObject() instanceof DataObject) {
+                                object = constructorLink.getObject();
+                            } else {
+                                throw new IllegalStateException(String.format("错误的路径:%s,分片：%s", path, s));
+                            }
+                        }
+                    }
+                    continue;
+                }
+                throw new IllegalStateException(String.format("错误的路径:%s,分片：%s", path, s));
+            }
+            Assert.notNull(attribute, () -> String.format("没有找到对应字段:%s", path));
+            logger.info("{},{},{}", object, table, attribute);
+            routingContext.end(JSON.toJSONString("{}"));
         });
     }
 
-    protected void objTree(List<Map<String, Object>> list, MetaObject object) {
-        if (object == null) {
-            return;
-        }
-        if (object.getType() != ObjectMetaType.Object) {
-            return;
-        }
-        List<Map<String, Object>> list1 = metaAttributeDao.list(new MetaObject.Attribute().setObjectId(object.getId())).stream()
-                .map(attribute -> toTreeNode(attribute, null)).collect(Collectors.toList());
-        list.add(toTreeNode(object, list1));
-        objTree(list, object.getParent());
-    }
 }
