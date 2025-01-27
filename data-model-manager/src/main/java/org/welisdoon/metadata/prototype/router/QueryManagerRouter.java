@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
+import com.hazelcast.shaded.org.jctools.queues.MessagePassingQueue;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -530,41 +532,44 @@ public class QueryManagerRouter {
     public void attrBindTree(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            List<Map<String, Object>> list = new LinkedList<>();
-            MetaUtils.getInstance().getObject(qid).getConstruct().getChildren().forEach(metaLink -> {
-                attrBindTree(list, null, metaLink.getObject(), metaLink.getInstanceId());
-            });
+            List<Map<String, Object>> list = getLinks(qid).stream().map(metaLink -> {
+                return attrBindTree(null, metaLink, metaLink);
+            }).filter(MapUtils::isNotEmpty).collect(Collectors.toList());
             routingContext.end(JSON.toJSONString(list));
         });
     }
 
-    protected void attrBindTree(final List<Map<String, Object>> list, MetaObject parent, MetaObject object, long instanceId) {
-        if (object == null) {
-            return;
+    protected Map<String, Object> attrBindTree(MetaObject parent, MetaLink link, final MetaLink root) {
+        if (link == null || link.getObject() == null) {
+            return null;
         }
-        switch (object.getType()) {
+        switch (link.getObject().getType()) {
             case Object:
-                List<MetaLink> list2 = getLinks(object.getId());
-                list2.stream().map(MetaLink::<MetaObject>getObject).filter(Objects::nonNull).forEach(metaObject -> {
-                    attrBindTree(list, object, metaObject, instanceId);
-                });
-                break;
+                List<MetaLink> list2 = getLinks(link.getObject().getId());
+                return toTreeNode(link.getObject(), list2.stream().map(metaLink -> {
+                    return attrBindTree(link.getObject(), metaLink, root);
+                }).collect(Collectors.toList()));
             case Table:
-                Optional.ofNullable(object.getAttributes()).ifPresent(attributes -> {
-                    Map<String, Object> node = toTreeNode(object, attributes.stream().map(attribute -> toTreeNode(attribute, null)).collect(Collectors.toList()));
-                    node.put("rootInstanceId", instanceId);
-                    if (parent != null) {
-                        node.put("objectId", parent.getId());
-                    }
-                    list.add(node);
-                });
-                return;
+                return toTreeNode(link.getObject(), link.getObject().getAttributes().stream().map(attribute -> {
+                    return toTreeNode(attribute, null, entries -> {
+                        if (root != null)
+                            entries.add(Map.entry("rootInstanceId", root.getInstanceId()));
+                        if (link != null)
+                            entries.add(Map.entry("instanceId", link.getInstanceId()));
+                        if (parent != null)
+                            entries.add(Map.entry("objectId", parent.getId()));
+                    });
+                }).collect(Collectors.toList()));
             default:
-                return;
+                return null;
         }
     }
 
     protected Map<String, Object> toTreeNode(MetaPrototype obj, List<Map<String, Object>> list) {
+        return toTreeNode(obj, list, null);
+    }
+
+    protected Map<String, Object> toTreeNode(MetaPrototype obj, List<Map<String, Object>> list, MessagePassingQueue.Consumer<List<Map.Entry<String, Object>>> consumer) {
         List<Map.Entry<String, Object>> list1 = new LinkedList<>();
         list1.add(Map.entry("id", obj.getId()));
         list1.add(Map.entry("code", obj.getCode()));
@@ -572,11 +577,15 @@ public class QueryManagerRouter {
             list1.add(Map.entry("type", ((ITypeEntity<?>) obj).getType().getDesc()));
             list1.add(Map.entry("typeId", obj.getTypeId()));
         }
-        if (list != null) {
+        if (list != null)
             list1.add(Map.entry("children", list));
-        } else {
+        else
             list1.add(Map.entry("leaf", true));
+
+        if (consumer != null) {
+            consumer.accept(list1);
         }
+
         return Map.ofEntries(list1.toArray(new Map.Entry[0]));
     }
 
