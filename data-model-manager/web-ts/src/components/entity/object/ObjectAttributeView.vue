@@ -93,9 +93,15 @@ class AttrAddDrawersContent extends FormDrawersContent {
               if (!values) {
                 return null as unknown as MyTreeOption[];
               }
-              return values.map(val => new MyTreeOption(val.id, `[${val.type}]${val.code}`, format(val.children)));
+              return values.map(val => new MyTreeOption(val.seq, `[${val.instanceId}][${val.type}]${val.code}`, format(val.children)));
             };
             input.setOptions(...format(data));
+          },
+          async inputChangeHandler(input: SelectTreeItem, changeInput: InputItem, value: any, content: FormContent): Promise<void> {
+            console.log(value)
+            await $http.post(`attr/bind/obj/${props.id}`, {
+              path: value
+            });
           }
         } as ItemConfig<SelectTreeItem>).andThen(item => {
           item.prop.defaultExpandAll = true;
