@@ -43,7 +43,6 @@ import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -604,38 +603,48 @@ public class QueryManagerRouter {
     public void attrBindObj(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             String path = (String) JsonUtils.getKeyValue(JSONObject.parseObject(routingContext.body().asString()), "path");
-            DataObject object = MetaUtils.getInstance().getObject(Long.parseLong(routingContext.pathParam("id")));
-            DataBaseTable table = null;
-            MetaObject.Attribute attribute = null;
-            for (String s : path.split("@")) {
-                if (s.startsWith("ATTR")) {
-                    Assert.notNull(table, () -> String.format("错误的路径:%s,分片：%s", path, s));
-                    long attrId = Long.parseLong(s.substring(4));
-                    attribute = table.getAttributes().stream().filter(attribute1 -> Objects.equals(attribute1.getId(), attrId)).findFirst().orElseThrow(() -> new IllegalStateException(String.format("表:[%s]没有找到对应字段:%s", path)));
-                    break;
-                }
-                Assert.isNull(table, () -> String.format("错误的路径:%s,分片：%s", path, s));
-                if (s.startsWith("LINK")) {
-                    long linkId = Long.parseLong(s.substring(4));
-                    for (MetaLink constructorLink : object.getConstructorLinks()) {
-                        if (Objects.equals(constructorLink.getId(), linkId)) {
-                            if (constructorLink.getObject() instanceof DataBaseTable) {
-                                table = constructorLink.getObject();
-                            } else if (constructorLink.getObject() instanceof DataObject) {
-                                object = constructorLink.getObject();
-                            } else {
-                                throw new IllegalStateException(String.format("错误的路径:%s,分片：%s", path, s));
-                            }
-                        }
-                    }
-                    continue;
-                }
-                throw new IllegalStateException(String.format("错误的路径:%s,分片：%s", path, s));
-            }
-            Assert.notNull(attribute, () -> String.format("没有找到对应字段:%s", path));
-            logger.info("{},{},{}", object, table, attribute);
+            Deque<MetaPrototype> list = getAttrPath(path, MetaUtils.getInstance().getObject(Long.parseLong(routingContext.pathParam("id"))));
+            Assert.isTrue(list.peekLast() instanceof MetaObject.Attribute/*notNull(attribute*/, () -> String.format("没有找到对应字段:%s", path));
+//            logger.info("{},{},{}", object, table, attribute);
+            logger.info("{},{}", path, list.stream().map(Objects::toString).collect(Collectors.joining(",")));
             routingContext.end(JSON.toJSONString("{}"));
         });
+    }
+
+    protected Deque<MetaPrototype> getAttrPath(String path, MetaObject metaObject) {
+        Deque<MetaPrototype> list = new LinkedList<>();
+        list.add(/*DataObject object =*/ metaObject);
+            /*DataBaseTable table = null;
+            MetaObject.Attribute attribute = null;*/
+
+        for (String s : path.split("@")) {
+            if (s.startsWith("ATTR")) {
+                Assert.notNull(/*table*/list.peekLast(), () -> String.format("错误的路径:%s,分片：%s", path, s));
+                long attrId = Long.parseLong(s.substring(4));
+                list.add(/*attribute =*/ ((DataBaseTable) list.peekLast()).getAttributes().stream().filter(attribute1 -> Objects.equals(attribute1.getId(), attrId)).findFirst().orElseThrow(() -> new IllegalStateException(String.format("表:[%s]没有找到对应字段:%s", path))));
+                break;
+            }
+//                Assert.isNull(table, () -> String.format("错误的路径:%s,分片：%s", path, s));
+            if (s.startsWith("LINK")) {
+                long linkId = Long.parseLong(s.substring(4));
+                for (MetaLink constructorLink : ((DataObject) list.peekLast()).getConstructorLinks()) {
+                    if (Objects.equals(constructorLink.getId(), linkId)) {
+                        if (constructorLink.getObject() != null) {
+                            list.add(constructorLink.getObject());
+                        }/*if (constructorLink.getObject() instanceof DataBaseTable) {
+                               table = constructorLink.getObject();
+                            } else if (constructorLink.getObject() instanceof DataObject) {
+                                object = constructorLink.getObject();
+                            }*/ else {
+                            throw new IllegalStateException(String.format("错误的路径:%s,分片：%s", path, s));
+                        }
+                    }
+                }
+                continue;
+            }
+            throw new IllegalStateException(String.format("错误的路径:%s,分片：%s", path, s));
+        }
+        return list;
     }
 
 }
