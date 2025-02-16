@@ -16,6 +16,7 @@ export class ObjectRelItem extends InputItem {
 export class AttrObjMapperItem extends InputItem {
     constructor(code: string, label: string, prop: ItemConfig<AttrObjMapperItem> = {} as ItemConfig<AttrObjMapperItem>) {
         super(code, label, prop);
+        this.prop.value = {};
         this.prop.cols = [];
         this.prop.rows = [];
         this.prop.objectId = -1;

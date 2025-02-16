@@ -143,7 +143,7 @@ import {
 import MySelect from "@/components/form/input/MySelect.vue";
 import {MyOption} from "@/components/form/config";
 
-const list = defineModel<Array<any>>();
+const values = defineModel<Record<any, any>>();
 const {proxy} = getCurrentInstance() as ComponentInternalInstance;
 const {$http} = proxy as ComponentCustomProperties;
 const props = defineProps<{ cols: Array<any>, rows: Array<any>, objectId: number }>();
@@ -156,6 +156,11 @@ watch(cols, (value, oldValue, onCleanup) => {
 watch(rows, (value, oldValue, onCleanup) => {
   console.log(value);
 });
+console.log(values.value)
+console.log(cols)
+console.log(rows)
+console.log(objectId)
+values.value = values.value || {cols, rows};
 
 const attrs = reactive([]);
 const setAttr = (attrs: [], value: number) => {

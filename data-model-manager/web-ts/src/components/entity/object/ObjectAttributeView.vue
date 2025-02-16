@@ -99,18 +99,25 @@ class AttrAddDrawersContent extends FormDrawersContent {
           },
           async inputChangeHandler(input: SelectTreeItem, changeInput: InputItem, value: any, content: FormContent): Promise<void> {
             console.log(value)
-            await $http.post(`attr/bind/obj/${props.id}`, {
+            const {data}: { data: Array<any> } = await $http.post(`attr/bind/obj/${props.id}`, {
               path: value
             });
+            content.form["attrId"] = data;
           }
         } as ItemConfig<SelectTreeItem>).andThen(item => {
           item.prop.defaultExpandAll = true;
         }),
         new AttrObjMapperItem('colMapper', "属性映射", {
-          async inputLoadHandler(input: SelectTreeItem, content: FormContent): Promise<void> {
+          async inputLoadHandler(input: AttrObjMapperItem, content: FormContent): Promise<void> {
             input.prop.cols.length = 0;
             input.prop.rows.length = 0;
             input.prop.objectId = props.id;
+          },
+          async valueToData(input: AttrObjMapperItem, form: Record<any, any>, content: FormContent): Promise<void> {
+            form[input.code] = {
+              rows: content.form[input.code].rows,
+              cols: content.form[input.code].cols
+            };
           }
         } as ItemConfig<AttrObjMapperItem>));
   }
