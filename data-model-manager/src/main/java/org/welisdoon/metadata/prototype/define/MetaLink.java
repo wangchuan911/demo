@@ -202,4 +202,25 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         this.link = link;
         return this;
     }
+
+    @Override
+    public int delete() {
+        super.delete();
+        int update = 0;
+        if (getParentId() != null) {
+            update += getChildren().stream().map(MetaLink::delete).reduce(0, Integer::sum);
+        }
+        update += MetaUtils.getInstance().getMetaLinkDao().delete(this.getId());
+        return update;
+    }
+
+    @Override
+    public int add() {
+        return MetaUtils.getInstance().getMetaLinkDao().add(this);
+    }
+
+    @Override
+    public int update() {
+        return MetaUtils.getInstance().getMetaLinkDao().put(this);
+    }
 }

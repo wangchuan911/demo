@@ -1,12 +1,8 @@
 package org.welisdoon.metadata.prototype.define;
 
-import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.collections4.CollectionUtils;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Stream;
 
 /**
@@ -18,6 +14,7 @@ import java.util.stream.Stream;
 public abstract class MetaPrototype {
     Long id, typeId, parentId;
     String code, name;
+
 
     public Long getId() {
         return id;
@@ -83,6 +80,25 @@ public abstract class MetaPrototype {
         this.parentId = metaPrototype.parentId;
     }
 
+
+    static Map<Class<? extends MetaPrototype>, Queue<MetaPrototype>> cache = new ConcurrentHashMap<>();
+
+    public int delete() {
+        if (!cache.containsKey(this)) {
+            synchronized (cache) {
+                if (!cache.containsKey(this)) {
+                    cache.put(this.getClass(), new LinkedBlockingQueue<>());
+                }
+            }
+        }
+        cache.get(this.getClass()).offer(this);
+        return 0;
+    }
+
+    abstract public int add();
+
+    abstract public int update();
+
     public interface Parent<T> {
         List<T> getChildren();
 
@@ -103,6 +119,7 @@ public abstract class MetaPrototype {
             return this;
         }
     }
+
 
     public interface Child<T> {
         T getParent();

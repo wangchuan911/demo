@@ -176,4 +176,20 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
         this.parent = parent;
         return this;
     }
+
+    @Override
+    public int delete() {
+        super.delete();
+        return 0;
+    }
+
+    @Override
+    public int add() {
+        return 0;
+    }
+
+    @Override
+    public int update() {
+        return 0;
+    }
 }

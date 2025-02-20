@@ -7,9 +7,6 @@ import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.MetaUtils;
 import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
-import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
-import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
-import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.util.List;
 import java.util.Objects;
@@ -105,6 +102,33 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         return this;
     }
 
+    @Override
+    public int delete() {
+        int update = getChildren().stream().map(MetaObject::delete).reduce(0, Integer::sum);
+        super.delete();
+        if (getConstructId() != null) {
+            update += MetaUtils.getInstance().getMetaLinkDao().get(getConstructId()).delete();
+        }
+        return update;
+    }
+
+    @Override
+    public int add() {
+        int update = MetaUtils.getInstance().getMetaObjectDao().add(this);
+        for (Attribute attribute : getAttributes()) {
+            if (attribute.getId() != null)
+                continue;
+            attribute.setObjectId(this.getId());
+            update += attribute.add();
+        }
+        return update;
+    }
+
+    @Override
+    public int update() {
+        return MetaUtils.getInstance().getMetaObjectDao().put(this);
+    }
+
     /**
      * @Classname MetaObject
      * @Description TODO
@@ -133,6 +157,26 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
                 type = AttributeMetaType.getInstance(typeId);
                 return type;
             });
+        }
+
+        @Override
+        public int delete() {
+            super.delete();
+            int update = MetaUtils.getInstance().getMetaObjectDao().delete(this.getId());
+            if (getParentId() != null) {
+                update += MetaUtils.getInstance().getMetaLinkDao().get(getParentId()).delete();
+            }
+            return update;
+        }
+
+        @Override
+        public int add() {
+            return MetaUtils.getInstance().getMetaAttributeDao().add(this);
+        }
+
+        @Override
+        public int update() {
+            return MetaUtils.getInstance().getMetaAttributeDao().put(this);
         }
     }
 }
