@@ -160,7 +160,6 @@ console.log(values.value)
 console.log(cols)
 console.log(rows)
 console.log(objectId)
-values.value = values.value || {cols, rows};
 
 const attrs = reactive([]);
 const setAttr = (attrs: [], value: number) => {
@@ -183,7 +182,14 @@ watch(objectId, (value, oldValue, onCleanup) => {
   setAttr(attrs, value);
 
 });
+const initValue = () => {
+  if (!values.value) {
+    values.value = {cols, rows};
+  }
+}
+initValue();
 const add = (key: string) => {
+  initValue();
   switch (key) {
     case "col":
       cols.value.push({});

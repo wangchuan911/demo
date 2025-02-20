@@ -57,6 +57,7 @@ export class FormContent {
         }
         console.log("原始", this.form);
         console.log("转换", form);
+        console.log("转换(string)", JSON.stringify(form));
         return form;
     }
 
