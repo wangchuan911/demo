@@ -240,72 +240,82 @@ public class QueryManagerRouter {
             mode = VertxRouteType.PathRegex)
     public void objAttrAdd(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            long qid = Long.parseLong(routingContext.pathParam("id"));
-            JSONObject attrJSON = JSON.parseObject(routingContext.body().asString());
-            MetaObject.Attribute attribute = attrJSON.toJavaObject(MetaObject.Attribute.class);
-            attribute.setObjectId(qid);
-            /*switch (MetaUtils.getInstance().getObject(qid).getType()) {
-                case Object:
-                    attribute.setTypeId(AttributeMetaType.Field.getId());
-                    break;
-                case Table:
-                    attribute.setTypeId(AttributeMetaType.Column.getId());
-                    break;
-                default:
-                    routingContext.response().setStatusCode(500).end(String.format("不支持的对象类型[%s]", MetaUtils.getInstance().getObject(qid).getType().getDesc()));
-                    return;
-            }*/
-            MetaObject metaObject = MetaUtils.getInstance().getObject(qid);
-            Arrays.stream(AttributeMetaType.values()).filter(attributeMetaType -> attributeMetaType.getObjectMetaType() == metaObject.getType()).findFirst().ifPresentOrElse(attributeMetaType -> {
-                attribute.setTypeId(attributeMetaType.getId());
-            }, () -> {
-                throw new IllegalStateException(String.format("不支持的对象类型[%s]", metaObject.getType().getDesc()));
-            });
-            Assert.notNull(attribute.getObjectId(), "not object");
-            Assert.notNull(attribute.getCode(), "not code");
-            Assert.notNull(attribute.getName(), "not name");
-            switch (attribute.getType()) {
-                case Field:
-                    if (attribute.getParentId() != null)
-                        MetaUtils.getInstance().getMetaLinkDao().get(attribute.getParentId()).remove();
-                    String attr = attrJSON.getString("attr");
-                    if (StringUtils.isNotEmpty(attr)) {
-                        int index = 0;
-                        MetaLink root = null, parent = null;
-                        for (MetaPrototype metaPrototype : getAttrPath(attr, metaObject)) {
-                            try {
-                                if (metaPrototype instanceof MetaLink) {
-                                    MetaLink node = ((MetaLink) metaPrototype);
-                                    long linkId = node.getId() < 0 ? metaObject.getConstructId() : node.getId();
-                                    if (index == 0) {
-                                        root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(node.getObjectId());
-                                    } else {
-                                        parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(parent.getId()).setObjectId(node.getObjectId());
-                                        root.setChildren(ImmutableList.of(parent));
+            routingContext.end(JSON.toJSONString(
+                    transactionTemplate.execute(status -> {
+                        long qid = Long.parseLong(routingContext.pathParam("id"));
+                        JSONObject attrJSON = JSON.parseObject(routingContext.body().asString());
+                        MetaObject.Attribute attribute = attrJSON.toJavaObject(MetaObject.Attribute.class);
+                        attribute.setObjectId(qid);
+                        MetaObject metaObject = MetaUtils.getInstance().getObject(qid);
+                        Arrays.stream(AttributeMetaType.values()).filter(attributeMetaType -> attributeMetaType.getObjectMetaType() == metaObject.getType()).findFirst().ifPresentOrElse(attributeMetaType -> {
+                            attribute.setTypeId(attributeMetaType.getId());
+                        }, () -> {
+                            throw new IllegalStateException(String.format("不支持的对象类型[%s]", metaObject.getType().getDesc()));
+                        });
+                        Assert.notNull(attribute.getObjectId(), "not object");
+                        Assert.notNull(attribute.getCode(), "not code");
+                        Assert.notNull(attribute.getName(), "not name");
+                        switch (attribute.getType()) {
+                            case Field:
+                                if (attribute.getParentId() != null)
+                                    MetaUtils.getInstance().getMetaLinkDao().get(attribute.getParentId()).remove();
+                                String attr = attrJSON.getString("attr");
+                                if (StringUtils.isNotEmpty(attr)) {
+                                    int index = 0;
+                                    MetaLink root = null, parent = null;
+                                    for (MetaPrototype metaPrototype : getAttrPath(attr, metaObject)) {
+                                        try {
+                                            if (metaPrototype instanceof MetaLink) {
+                                                MetaLink node = ((MetaLink) metaPrototype);
+                                                long linkId = node.getId() < 0 ? metaObject.getConstructId() : node.getId();
+                                                if (index == 0) {
+                                                    root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(node.getObjectId());
+                                                    root.setSequence(1);
+                                                } else {
+                                                    parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(parent.getId()).setObjectId(node.getObjectId());
+                                                    root.setChildren(ImmutableList.of(parent));
+                                                }
+                                            } else if (metaPrototype instanceof MetaObject.Attribute) {
+                                                if (index == 0) {
+                                                    root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId());
+                                                }
+                                                parent.setAttributeId(metaPrototype.getId());
+                                            }
+                                        } finally {
+                                            index++;
+                                        }
                                     }
-                                } else if (metaPrototype instanceof MetaObject.Attribute) {
-                                    if (index == 0) {
-                                        root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId());
-                                    }
-                                    parent.setAttributeId(metaPrototype.getId());
+                                    root.save();
+                                    attribute.setParentId(root.getId());
+
                                 }
-                            } finally {
-                                index++;
-                            }
+                                if (attrJSON.containsKey("colMapper")) {
+                                    JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
+                                    JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
+                                    for (int i = 0; i < rows.size(); i++) {
+                                        JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
+                                        Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
+                                        Long outCurrentAttrId = mapper.getLong("current");
+                                        for (int i1 = 0; i1 < cols.size(); i1++) {
+                                            Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i), "attrId", Long.class);
+                                            Long outRowAttrId = mapper.getLong(String.valueOf(i1));
+                                        }
+                                    }
+                                }
+                                break;
+
+                            default:
+                                break;
                         }
-                        root.save();
-                        attribute.setParentId(root.getId());
 
-                    }
-                    break;
-            }
-
-            if (attribute.getId() != null) {
-                metaAttributeDao.update(attribute);
-            } else {
-                metaAttributeDao.add(attribute);
-            }
-            routingContext.end(JSON.toJSONString(attribute));
+                        if (attribute.getId() != null) {
+                            metaAttributeDao.update(attribute);
+                        } else {
+                            metaAttributeDao.add(attribute);
+                        }
+                        return attribute;
+                    })
+            ));
         });
     }
 
