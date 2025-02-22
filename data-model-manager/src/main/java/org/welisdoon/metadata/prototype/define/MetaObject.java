@@ -103,30 +103,31 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     }
 
     @Override
-    public int delete() {
-        int update = getChildren().stream().map(MetaObject::delete).reduce(0, Integer::sum);
-        super.delete();
+    public int remove() {
+        int update = getChildren().stream().map(MetaObject::remove).reduce(0, Integer::sum);
+        super.remove();
         if (getConstructId() != null) {
-            update += MetaUtils.getInstance().getMetaLinkDao().get(getConstructId()).delete();
+            update += MetaUtils.getInstance().getMetaLinkDao().get(getConstructId()).remove();
         }
         return update;
     }
 
     @Override
-    public int add() {
-        int update = MetaUtils.getInstance().getMetaObjectDao().add(this);
+    public int save() {
+        int update;
+        if (getId() != null) {
+            update = MetaUtils.getInstance().getMetaObjectDao().put(this);
+        } else {
+            super.save();
+            update = MetaUtils.getInstance().getMetaObjectDao().add(this);
+        }
         for (Attribute attribute : getAttributes()) {
             if (attribute.getId() != null)
                 continue;
             attribute.setObjectId(this.getId());
-            update += attribute.add();
+            update += attribute.save();
         }
         return update;
-    }
-
-    @Override
-    public int update() {
-        return MetaUtils.getInstance().getMetaObjectDao().put(this);
     }
 
     /**
@@ -160,23 +161,23 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         }
 
         @Override
-        public int delete() {
-            super.delete();
+        public int remove() {
+            super.remove();
             int update = MetaUtils.getInstance().getMetaObjectDao().delete(this.getId());
             if (getParentId() != null) {
-                update += MetaUtils.getInstance().getMetaLinkDao().get(getParentId()).delete();
+                update += MetaUtils.getInstance().getMetaLinkDao().get(getParentId()).remove();
             }
             return update;
         }
 
         @Override
-        public int add() {
+        public int save() {
+            if (getId() != null) {
+                return MetaUtils.getInstance().getMetaAttributeDao().put(this);
+            }
+            super.save();
             return MetaUtils.getInstance().getMetaAttributeDao().add(this);
         }
 
-        @Override
-        public int update() {
-            return MetaUtils.getInstance().getMetaAttributeDao().put(this);
-        }
     }
 }

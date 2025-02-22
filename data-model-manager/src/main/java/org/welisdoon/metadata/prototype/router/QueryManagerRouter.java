@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.ImmutableList;
 import com.hazelcast.shaded.org.jctools.queues.MessagePassingQueue;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -263,6 +264,42 @@ public class QueryManagerRouter {
             Assert.notNull(attribute.getObjectId(), "not object");
             Assert.notNull(attribute.getCode(), "not code");
             Assert.notNull(attribute.getName(), "not name");
+            switch (attribute.getType()) {
+                case Field:
+                    if (attribute.getParentId() != null)
+                        MetaUtils.getInstance().getMetaLinkDao().get(attribute.getParentId()).remove();
+                    String attr = attrJSON.getString("attr");
+                    if (StringUtils.isNotEmpty(attr)) {
+                        int index = 0;
+                        MetaLink root = null, parent = null;
+                        for (MetaPrototype metaPrototype : getAttrPath(attr, metaObject)) {
+                            try {
+                                if (metaPrototype instanceof MetaLink) {
+                                    MetaLink node = ((MetaLink) metaPrototype);
+                                    long linkId = node.getId() < 0 ? metaObject.getConstructId() : node.getId();
+                                    if (index == 0) {
+                                        root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(node.getObjectId());
+                                    } else {
+                                        parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(parent.getId()).setObjectId(node.getObjectId());
+                                        root.setChildren(ImmutableList.of(parent));
+                                    }
+                                } else if (metaPrototype instanceof MetaObject.Attribute) {
+                                    if (index == 0) {
+                                        root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId());
+                                    }
+                                    parent.setAttributeId(metaPrototype.getId());
+                                }
+                            } finally {
+                                index++;
+                            }
+                        }
+                        root.save();
+                        attribute.setParentId(root.getId());
+
+                    }
+                    break;
+            }
+
             if (attribute.getId() != null) {
                 metaAttributeDao.update(attribute);
             } else {

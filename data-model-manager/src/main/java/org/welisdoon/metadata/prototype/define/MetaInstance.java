@@ -9,18 +9,15 @@ package org.welisdoon.metadata.prototype.define;
 public class MetaInstance extends MetaPrototype {
 
     @Override
-    public int delete() {
-        super.delete();
+    public int remove() {
+        super.remove();
         return 0;
     }
 
     @Override
-    public int add() {
+    public int save() {
+        super.save();
         return 0;
     }
 
-    @Override
-    public int update() {
-        return 0;
-    }
 }

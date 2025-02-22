@@ -178,18 +178,15 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     }
 
     @Override
-    public int delete() {
-        super.delete();
+    public int remove() {
+        super.remove();
         return 0;
     }
 
     @Override
-    public int add() {
+    public int save() {
+        super.save();
         return 0;
     }
 
-    @Override
-    public int update() {
-        return 0;
-    }
 }

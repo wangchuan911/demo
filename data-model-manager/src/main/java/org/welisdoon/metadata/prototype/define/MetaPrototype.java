@@ -2,7 +2,7 @@ package org.welisdoon.metadata.prototype.define;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Stream;
 
 /**
@@ -81,23 +81,34 @@ public abstract class MetaPrototype {
     }
 
 
-    static Map<Class<? extends MetaPrototype>, Queue<MetaPrototype>> cache = new ConcurrentHashMap<>();
+    private static Map<Class<? extends MetaPrototype>, Deque<MetaPrototype>> cache = new ConcurrentHashMap<>();
 
-    public int delete() {
+    public int remove() {
         if (!cache.containsKey(this)) {
             synchronized (cache) {
                 if (!cache.containsKey(this)) {
-                    cache.put(this.getClass(), new LinkedBlockingQueue<>());
+                    cache.put(this.getClass(), new LinkedBlockingDeque<>());
                 }
             }
         }
-        cache.get(this.getClass()).offer(this);
+        cache.get(this.getClass()).offerFirst(this);
         return 0;
     }
 
-    abstract public int add();
-
-    abstract public int update();
+    public int save() {
+        if (this.getId() != null) {
+            return 0;
+        }
+        if (cache.get(this.getClass()) != null) {
+            synchronized (cache) {
+                MetaPrototype temp = cache.get(this.getClass()).pollFirst();
+                if (temp != null) {
+                    this.setId(temp.getId());
+                }
+            }
+        }
+        return 0;
+    }
 
     public interface Parent<T> {
         List<T> getChildren();
