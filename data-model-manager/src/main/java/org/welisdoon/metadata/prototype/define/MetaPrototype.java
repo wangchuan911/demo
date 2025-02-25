@@ -14,13 +14,14 @@ import java.util.stream.Stream;
 public abstract class MetaPrototype {
     Long id, typeId, parentId;
     String code, name;
-
+    boolean editing;
 
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
+        this.setEditing(this.id, id);
         this.id = id;
     }
 
@@ -29,6 +30,7 @@ public abstract class MetaPrototype {
     }
 
     public <T extends MetaPrototype> T setTypeId(Long typeId) {
+        this.setEditing(this.typeId, typeId);
         this.typeId = typeId;
         return (T) this;
     }
@@ -38,6 +40,7 @@ public abstract class MetaPrototype {
     }
 
     public <T extends MetaPrototype> T setParentId(Long parentId) {
+        this.setEditing(this.parentId, parentId);
         this.parentId = parentId;
         return (T) this;
     }
@@ -47,6 +50,7 @@ public abstract class MetaPrototype {
     }
 
     public void setCode(String code) {
+        this.setEditing(this.code, code);
         this.code = code;
     }
 
@@ -55,6 +59,7 @@ public abstract class MetaPrototype {
     }
 
     public void setName(String name) {
+        this.setEditing(this.name, name);
         this.name = name;
     }
 
@@ -108,6 +113,18 @@ public abstract class MetaPrototype {
             }
         }
         return 0;
+    }
+
+    public boolean isEditing() {
+        return editing;
+    }
+
+    protected void setEditing(boolean editing) {
+        this.editing = editing;
+    }
+
+    protected <T> void setEditing(T oldVal, T newVal) {
+        this.editing = this.editing || Objects.equals(oldVal, newVal);
     }
 
     public interface Parent<T> {

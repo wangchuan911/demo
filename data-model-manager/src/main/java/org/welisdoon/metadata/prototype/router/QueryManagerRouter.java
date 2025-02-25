@@ -255,6 +255,7 @@ public class QueryManagerRouter {
                         Assert.notNull(attribute.getObjectId(), "not object");
                         Assert.notNull(attribute.getCode(), "not code");
                         Assert.notNull(attribute.getName(), "not name");
+                        attribute.save();
                         switch (attribute.getType()) {
                             case Field:
                                 if (attribute.getParentId() != null)
@@ -287,18 +288,27 @@ public class QueryManagerRouter {
                                     }
                                     root.save();
                                     attribute.setParentId(root.getId());
-
+                                    attribute.save();
                                 }
                                 if (attrJSON.containsKey("colMapper")) {
                                     JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
                                     JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
+                                    List<MetaLink> colsOfLink = new LinkedList<>();
+                                    List<MetaLink> rowsOfLink = new LinkedList<>();
+
+                                    colsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0));
+                                    for (int i1 = 0; i1 < cols.size(); i1++) {
+                                        Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
+                                        colsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1));
+                                    }
                                     for (int i = 0; i < rows.size(); i++) {
                                         JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
                                         Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
                                         Long outCurrentAttrId = mapper.getLong("current");
+                                        rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(0));
                                         for (int i1 = 0; i1 < cols.size(); i1++) {
-                                            Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i), "attrId", Long.class);
                                             Long outRowAttrId = mapper.getLong(String.valueOf(i1));
+                                            rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i1 + 1));
                                         }
                                     }
                                 }
@@ -308,11 +318,6 @@ public class QueryManagerRouter {
                                 break;
                         }
 
-                        if (attribute.getId() != null) {
-                            metaAttributeDao.update(attribute);
-                        } else {
-                            metaAttributeDao.add(attribute);
-                        }
                         return attribute;
                     })
             ));
