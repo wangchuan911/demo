@@ -255,69 +255,68 @@ public class QueryManagerRouter {
                         Assert.notNull(attribute.getObjectId(), "not object");
                         Assert.notNull(attribute.getCode(), "not code");
                         Assert.notNull(attribute.getName(), "not name");
-                        attribute.save();
                         switch (attribute.getType()) {
                             case Field:
                                 if (attribute.getParentId() != null)
                                     MetaUtils.getInstance().getMetaLinkDao().get(attribute.getParentId()).remove();
                                 String attr = attrJSON.getString("attr");
-                                if (StringUtils.isNotEmpty(attr)) {
-                                    int index = 0;
-                                    MetaLink root = null, parent = null;
-                                    for (MetaPrototype metaPrototype : getAttrPath(attr, metaObject)) {
-                                        try {
-                                            if (metaPrototype instanceof MetaLink) {
-                                                MetaLink node = ((MetaLink) metaPrototype);
-                                                long linkId = node.getId() < 0 ? metaObject.getConstructId() : node.getId();
-                                                if (index == 0) {
-                                                    root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(node.getObjectId());
-                                                    root.setSequence(1);
-                                                } else {
-                                                    parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(parent.getId()).setObjectId(node.getObjectId());
-                                                    root.setChildren(ImmutableList.of(parent));
-                                                }
-                                            } else if (metaPrototype instanceof MetaObject.Attribute) {
-                                                if (index == 0) {
-                                                    root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId());
-                                                }
-                                                parent.setAttributeId(metaPrototype.getId());
+                                int index = 0;
+                                MetaLink root = null, parent = null;
+                                for (MetaPrototype metaPrototype : getAttrPath(attr, metaObject)) {
+                                    try {
+                                        if (metaPrototype instanceof MetaLink) {
+                                            MetaLink node = ((MetaLink) metaPrototype);
+                                            long linkId = node.getId() < 0 ? metaObject.getConstructId() : node.getId();
+                                            if (index == 0) {
+                                                root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(node.getObjectId());
+                                                root.setSequence(1);
+                                            } else {
+                                                parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(parent.getId()).setObjectId(node.getObjectId());
+                                                root.setChildren(ImmutableList.of(parent));
                                             }
-                                        } finally {
-                                            index++;
+                                        } else if (metaPrototype instanceof MetaObject.Attribute) {
+                                            if (index == 0) {
+                                                root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId());
+                                            }
+                                            parent.setAttributeId(metaPrototype.getId());
                                         }
+                                    } finally {
+                                        index++;
                                     }
-                                    root.save();
-                                    attribute.setParentId(root.getId());
-                                    attribute.save();
                                 }
-                                if (attrJSON.containsKey("colMapper")) {
-                                    JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
-                                    JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
-                                    List<MetaLink> colsOfLink = new LinkedList<>();
-                                    List<MetaLink> rowsOfLink = new LinkedList<>();
+                                root.save();
+                                attribute.setParentId(root.getId());
 
-                                    colsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0));
-                                    for (int i1 = 0; i1 < cols.size(); i1++) {
-                                        Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
-                                        colsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1));
-                                    }
-                                    for (int i = 0; i < rows.size(); i++) {
-                                        JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
-                                        Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
-                                        Long outCurrentAttrId = mapper.getLong("current");
-                                        rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(0));
-                                        for (int i1 = 0; i1 < cols.size(); i1++) {
-                                            Long outRowAttrId = mapper.getLong(String.valueOf(i1));
-                                            rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i1 + 1));
-                                        }
-                                    }
+                                JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
+                                JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
+                                List<MetaLink> rowsOfLink = new LinkedList<>();
+                                rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0));
+                                for (int i1 = 0; i1 < cols.size(); i1++) {
+                                    Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
+                                    rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1));
                                 }
+                                for (int i = 0; i < rows.size(); i++) {
+                                    List<MetaLink> cellOfLink = new LinkedList<>();
+                                    JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
+                                    Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
+                                    Long outCurrentAttrId = mapper.getLong("current");
+                                    cellOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(0));
+                                    for (int i1 = 0; i1 < cols.size(); i1++) {
+                                        Long outRowAttrId = mapper.getLong(String.valueOf(i1));
+                                        cellOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i1 + 1));
+                                    }
+                                    rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setChildren(cellOfLink).setSequence(i));
+                                }
+                                MetaLink foreignKey = new MetaLink().<MetaLink>setTypeId(LinkMetaType.ForeignKey.getId()).setChildren(rowsOfLink);
+                                foreignKey.setParentId(root.getId());
+                                foreignKey.save();
                                 break;
 
                             default:
                                 break;
                         }
 
+                        attribute.save();
                         return attribute;
                     })
             ));

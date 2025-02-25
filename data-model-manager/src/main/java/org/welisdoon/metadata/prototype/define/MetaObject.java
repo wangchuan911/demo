@@ -117,6 +117,11 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
     @Override
     public int save() {
+        if (!isEditing())
+            return 0;
+        else
+            setEditing(false);
+
         int update;
         if (getId() != null) {
             update = MetaUtils.getInstance().getMetaObjectDao().put(this);
@@ -125,8 +130,6 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
             update = MetaUtils.getInstance().getMetaObjectDao().add(this);
         }
         for (Attribute attribute : getAttributes()) {
-            if (attribute.getId() != null)
-                continue;
             attribute.setObjectId(this.getId());
             update += attribute.save();
         }
@@ -176,6 +179,11 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
         @Override
         public int save() {
+            if (!isEditing())
+                return 0;
+            else
+                setEditing(false);
+
             if (getId() != null) {
                 return MetaUtils.getInstance().getMetaAttributeDao().put(this);
             }

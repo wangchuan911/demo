@@ -214,6 +214,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     public MetaLink setLink(MetaLink link) {
         setEditing(this.link, link);
         this.link = link;
+        setLinkId(this.link == null ? null : this.link.getId());
         return this;
     }
 
@@ -230,6 +231,11 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     @Override
     public int save() {
+        if (!isEditing())
+            return 0;
+        else
+            setEditing(false);
+
         int update;
         if (getId() != null) {
             update = MetaUtils.getInstance().getMetaLinkDao().put(this);
@@ -240,6 +246,28 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         for (MetaLink child : getChildren()) {
             child.setParentId(this.id);
             update += child.save();
+        }
+
+        if (this.object != null) {
+            object.save();
+            objectId = object.getId();
+        }
+        if (this.attribute != null) {
+            attribute.save();
+            attributeId = attribute.getId();
+        }
+        if (this.value != null) {
+            value.save();
+            valueId = value.getId();
+        }
+
+        if (this.instance != null) {
+            instance.save();
+            instanceId = instance.getId();
+        }
+        if (this.link != null) {
+            link.save();
+            linkId = link.getId();
         }
         return update;
     }
