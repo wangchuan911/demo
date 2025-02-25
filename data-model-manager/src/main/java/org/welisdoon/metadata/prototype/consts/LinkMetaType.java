@@ -20,21 +20,29 @@ import java.util.stream.Collectors;
  */
 public enum LinkMetaType implements IMetaType {
     UNKNOWN(Long.MIN_VALUE, "未知"),
-    PrimaryKey(3000, "主键"),
-    ForeignKey(3001, "外键"),
     /*ObjectLinkSingleLineTable(3002, "对象与单行表的关系"),
     ObjectLinkMultiLineTable(3004, "对象与多行表的关系"),
     HeaderLinkAttributes(3005, "数据标题与属性的关系"),*/
     ObjConstructor(3006, "对象构造定义"),
+
     ObjToDataBase(3007, "对象构造定义(数据库)", ObjConstructor),
     ObjToTextData(3008, "对象构造定义(文本数据)", ObjConstructor),
     ObjExtendObj(3009, "对象构造定义(对象继承)", ObjConstructor),
+
     SqlToJoin(3010, "对象关联数据库的表", ObjToDataBase),
     SqlToSelect(3011, "对象关联的数据库字段", ObjToDataBase),
+
     SqlToJoinOfMultiDataRel(3012, "对象关联数据库的表(多对一)", SqlToJoin),
     SqlToJoinOfWeakRel(3013, "对象关联数据库的表(非强制关联)", SqlToJoin),
     SqlToJoinOfStrongRel(3014, "对象关联数据库的表(强制关联)", SqlToJoin),
+
     DataFuture(3015, "数据特征"),
+    Col(3016, "列"),
+    Row(3017, "行"),
+    Cell(3018, "单元", Row),
+    ForeignKey(3019, "外键", SqlToSelect),
+    PrimaryKey(3020, "主键", SqlToSelect),
+
     Sql(3198, "SQL"),
     SqlOperator(3199, "SQL语言关系符", Sql),
     Equal(3200, "等于", SqlOperator),

@@ -41,6 +41,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     }
 
     public void setValue(String value) {
+        setEditing(getValue(), value);
         int length = value.getBytes().length;
         if (bigFile && length <= 4000) {
             valueType = valueType();
@@ -81,6 +82,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     }
 
     public void setValueTypeId(Long valueTypeId) {
+        setEditing(this.valueTypeId, valueTypeId);
         try {
             this.valueTypeId = valueTypeId;
         } finally {
@@ -99,6 +101,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
 
     @Override
     public MetaValue setSequence(int sequence) {
+        setEditing(this.sequence, sequence);
         this.sequence = sequence;
         return this;
     }
@@ -159,6 +162,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     }
 
     public void setBigFile(boolean bigFile) {
+        setEditing(this.bigFile, bigFile);
         this.bigFile = bigFile;
     }
 
@@ -173,7 +177,9 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
 
     @Override
     public MetaValue setParent(MetaValue parent) {
+        setEditing(this.parent, parent);
         this.parent = parent;
+        this.parentId = this.parent == null ? null : this.parent.getId();
         return this;
     }
 

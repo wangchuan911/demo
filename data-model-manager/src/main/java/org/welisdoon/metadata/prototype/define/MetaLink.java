@@ -55,6 +55,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     @Override
     public MetaLink setSequence(int i) {
+        setEditing(this.sequence, i);
         this.sequence = i;
         return this;
     }
@@ -64,6 +65,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setObjectId(Long objectId) {
+        setEditing(this.objectId, objectId);
         this.objectId = objectId;
         return this;
     }
@@ -77,7 +79,9 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setObject(MetaObject object) {
+        setEditing(this.object, object);
         this.object = object;
+        setObjectId(this.object == null ? null : this.object.getId());
         return this;
     }
 
@@ -87,6 +91,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setAttributeId(Long attributeId) {
+        setEditing(this.attributeId, attributeId);
         this.attributeId = attributeId;
         return this;
     }
@@ -100,6 +105,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setAttribute(MetaObject.Attribute attribute) {
+        setEditing(this.attribute, attribute);
         this.attribute = attribute;
         return this;
     }
@@ -109,6 +115,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setInstanceId(Long instanceId) {
+        setEditing(this.instanceId, instanceId);
         this.instanceId = instanceId;
         return this;
     }
@@ -119,6 +126,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setInstance(MetaInstance instance) {
+        setEditing(this.instance, instance);
         this.instance = instance;
         return this;
     }
@@ -129,6 +137,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setValueId(Long valueId) {
+        setEditing(this.valueId, valueId);
         this.valueId = valueId;
         return this;
     }
@@ -143,6 +152,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setValue(MetaValue value) {
+        setEditing(this.value, value);
         this.value = value;
         return this;
     }
@@ -166,6 +176,8 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     @Override
     public MetaLink setParent(MetaLink parent) {
+        setEditing(this.parent, parent);
+        this.parent = parent;
         return this;
     }
 
@@ -190,6 +202,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setLinkId(Long linkId) {
+        setEditing(this.linkId, linkId);
         this.linkId = linkId;
         return this;
     }
@@ -199,6 +212,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setLink(MetaLink link) {
+        setEditing(this.link, link);
         this.link = link;
         return this;
     }
@@ -216,7 +230,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     @Override
     public int save() {
-        int update ;
+        int update;
         if (getId() != null) {
             update = MetaUtils.getInstance().getMetaLinkDao().put(this);
         } else {

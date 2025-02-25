@@ -27,6 +27,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     MetaObject parent;
 
     public void setAttributes(List<Attribute> attributes) {
+        setEditing(this.attributes, attributes);
         this.attributes = attributes;
     }
 
@@ -50,6 +51,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     }
 
     public MetaObject setConstructId(Long constructId) {
+        setEditing(this.constructId, constructId);
         this.constructId = constructId;
         return this;
     }
@@ -81,6 +83,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
     @Override
     public MetaObject setParent(MetaObject parent) {
+        setEditing(this.parent, parent);
         this.parent = parent;
         return this;
     }
@@ -145,6 +148,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         }
 
         public Attribute setObjectId(Long objectId) {
+            setEditing(this.objectId, objectId);
             this.objectId = objectId;
             return this;
         }
