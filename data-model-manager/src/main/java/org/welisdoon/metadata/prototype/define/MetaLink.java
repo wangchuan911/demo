@@ -79,7 +79,6 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setObject(MetaObject object) {
-        setEditing(this.object, object);
         this.object = object;
         setObjectId(this.object == null ? null : this.object.getId());
         return this;
@@ -105,8 +104,8 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setAttribute(MetaObject.Attribute attribute) {
-        setEditing(this.attribute, attribute);
         this.attribute = attribute;
+        setAttributeId(this.attribute == null ? null : this.attribute.getId());
         return this;
     }
 
@@ -126,8 +125,8 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setInstance(MetaInstance instance) {
-        setEditing(this.instance, instance);
         this.instance = instance;
+        setInstanceId(this.instance == null ? null : instance.getId());
         return this;
     }
 
@@ -176,8 +175,8 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     @Override
     public MetaLink setParent(MetaLink parent) {
-        setEditing(this.parent, parent);
         this.parent = parent;
+        setParentId(this.parent == null ? null : parent.getId());
         return this;
     }
 
@@ -212,7 +211,6 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink setLink(MetaLink link) {
-        setEditing(this.link, link);
         this.link = link;
         setLinkId(this.link == null ? null : this.link.getId());
         return this;

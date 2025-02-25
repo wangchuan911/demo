@@ -79,7 +79,7 @@ public class DataObject extends MetaObject {
     }
 
     @AttributeMetaType.MetaType(AttributeMetaType.Field)
-    public static class Field extends Attribute implements MetaPrototype.Child<MetaLink> {
+    public static class Field extends Attribute {
         List<DataBaseTable.Column> columns;
         List<RowMapper> mappers;
         MetaLink parent;
@@ -108,17 +108,6 @@ public class DataObject extends MetaObject {
         }
 
         public Field setMappers(MetaLink link) {
-            return this;
-        }
-
-        @Override
-        public MetaLink getParent() {
-            return parent;
-        }
-
-        @Override
-        public Child setParent(MetaLink parent) {
-            this.parent = parent;
             return this;
         }
 

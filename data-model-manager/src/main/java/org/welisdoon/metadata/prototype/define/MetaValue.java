@@ -177,7 +177,6 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
 
     @Override
     public MetaValue setParent(MetaValue parent) {
-        setEditing(this.parent, parent);
         this.parent = parent;
         this.parentId = this.parent == null ? null : this.parent.getId();
         return this;

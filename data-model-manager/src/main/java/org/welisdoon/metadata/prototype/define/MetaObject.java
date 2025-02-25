@@ -27,7 +27,6 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     MetaObject parent;
 
     public void setAttributes(List<Attribute> attributes) {
-        setEditing(this.attributes, attributes);
         this.attributes = attributes;
     }
 
@@ -83,8 +82,8 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
     @Override
     public MetaObject setParent(MetaObject parent) {
-        setEditing(this.parent, parent);
         this.parent = parent;
+        setParentId(this.parent == null ? null : parent.getId());
         return this;
     }
 
@@ -145,6 +144,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     public static class Attribute extends MetaPrototype implements ITypeEntity<AttributeMetaType> {
         Long objectId;
         AttributeMetaType type;
+        MetaLink parent;
 
         public Long getObjectId() {
             return objectId;
@@ -191,5 +191,17 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
             return MetaUtils.getInstance().getMetaAttributeDao().add(this);
         }
 
+        public Attribute setParent(MetaLink parent) {
+            this.parent = parent;
+            setParentId(this.parent == null ? null : this.parent.getId());
+            return this;
+        }
+
+        public MetaLink getParent() {
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(getParentId()), metaLink ->
+                    setParent(MetaUtils.getInstance().getMetaLinkDao().get(getParentId()))
+            );
+            return this.parent;
+        }
     }
 }
