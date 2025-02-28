@@ -38,6 +38,7 @@ public class MetaProtoResultInterceptor implements Interceptor {
             for (Object o1 : ((Collection) o)) {
                 setState(o1);
             }
+            return new MetaList<>((Collection) o);
         }
         return o;
 

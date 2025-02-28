@@ -1,5 +1,6 @@
 package org.welisdoon.metadata.prototype.define;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,13 +10,29 @@ import java.util.List;
  * @Author Septem
  * @Date 18:22
  */
-public class MetaList<T extends MetaPrototype> extends LinkedList<T> {
-    protected List<T> deleteMetaObjects = new LinkedList<>();
+public class MetaList<T> extends LinkedList<T> {
+    protected List<T> deleteObjects = new LinkedList<>();
+
+    public MetaList() {
+        super();
+    }
+
+    /**
+     * Constructs a list containing the elements of the specified
+     * collection, in the order they are returned by the collection's
+     * iterator.
+     *
+     * @param c the collection whose elements are to be placed into this list
+     * @throws NullPointerException if the specified collection is null
+     */
+    public MetaList(Collection<? extends T> c) {
+        super(c);
+    }
 
     @Override
     public boolean remove(Object o) {
         if (super.remove(o)) {
-            deleteMetaObjects.add((T) o);
+            deleteObjects.add((T) o);
             return true;
         }
         return false;
@@ -23,15 +40,11 @@ public class MetaList<T extends MetaPrototype> extends LinkedList<T> {
 
     @Override
     public void clear() {
-        deleteMetaObjects.addAll(this);
+        deleteObjects.addAll(this);
         super.clear();
     }
 
-    public void save() {
-        for (T deleteMetaObject : deleteMetaObjects) {
-            if (this.contains(deleteMetaObject)) continue;
-            deleteMetaObject.remove();
-        }
-        deleteMetaObjects.clear();
+    public List<T> getDeleteMetaObjects() {
+        return deleteObjects;
     }
 }

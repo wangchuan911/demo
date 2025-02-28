@@ -7,7 +7,6 @@ import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.consts.MetaUtils;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -37,7 +36,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     LinkMetaType type;
 
-    List<MetaLink> children;
+    MetaList<MetaLink> children;
     MetaLink parent;
 
     @Override
@@ -183,13 +182,13 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     @Override
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public List<MetaLink> getChildren() {
+    public MetaList<MetaLink> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink -> children = MetaUtils.getInstance().getChildrenLinks(getId()));
         return children;
     }
 
     @Override
-    public MetaLink setChildren(List<MetaLink> children) {
+    public MetaLink setChildren(MetaList<MetaLink> children) {
         this.children = children;
         if (children != null)
             this.children.forEach(this::bind);

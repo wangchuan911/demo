@@ -134,9 +134,9 @@ public abstract class MetaPrototype {
     }
 
     public interface Parent<T> {
-        List<T> getChildren();
+        MetaList<T> getChildren();
 
-        Parent setChildren(List<T> children);
+        Parent setChildren(MetaList<T> children);
 
         default void bind(T child) {
             if (child instanceof Child && this instanceof Parent) {
@@ -147,7 +147,7 @@ public abstract class MetaPrototype {
         default Parent addChildren(Stream<T> children) {
             if (children == null) return this;
             if (getChildren() == null) {
-                setChildren(new LinkedList<>());
+                setChildren(new MetaList<>());
             }
             children.forEach(t -> getChildren().add(t));
             return this;

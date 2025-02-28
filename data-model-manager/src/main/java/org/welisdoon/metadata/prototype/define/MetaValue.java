@@ -30,7 +30,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     KeyValueType valueType;
     int sequence;
     boolean bigFile;
-    List<MetaValue> children;
+    MetaList<MetaValue> children;
     MetaValue parent;
 
     public String getValue() {
@@ -146,15 +146,15 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     @Override
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public List<MetaValue> getChildren() {
+    public MetaList<MetaValue> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaValue -> Objects.nonNull(children), metaValue -> {
-            children = ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
+            children = (MetaList) ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
         });
         return children;
     }
 
     @Override
-    public MetaValue setChildren(List<MetaValue> children) {
+    public MetaValue setChildren(MetaList<MetaValue> children) {
         this.children = children;
         if (children != null)
             this.children.forEach(this::bind);
