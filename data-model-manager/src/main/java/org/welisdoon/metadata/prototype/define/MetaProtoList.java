@@ -8,10 +8,10 @@ import java.util.*;
  * @Author Septem
  * @Date 18:22
  */
-public class MetaList<T> extends LinkedList<T> {
+public class MetaProtoList<T> extends LinkedList<T> {
     protected List<T> removeObjects = new LinkedList<>();
 
-    public MetaList() {
+    public MetaProtoList() {
         super();
     }
 
@@ -23,7 +23,7 @@ public class MetaList<T> extends LinkedList<T> {
      * @param c the collection whose elements are to be placed into this list
      * @throws NullPointerException if the specified collection is null
      */
-    public MetaList(Collection<? extends T> c) {
+    public MetaProtoList(Collection<? extends T> c) {
         super(c);
     }
 
@@ -106,12 +106,12 @@ public class MetaList<T> extends LinkedList<T> {
         return removeObjects;
     }
 
-    public static final <T> MetaList<T> emptyList() {
+    public static final <T> MetaProtoList<T> emptyList() {
         return EmptyList.instance;
     }
 
 
-    final static class EmptyList<T> extends MetaList<T> {
+    final static class EmptyList<T> extends MetaProtoList<T> {
         static EmptyList instance = new EmptyList();
 
         @Override

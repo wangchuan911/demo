@@ -23,7 +23,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     ObjectMetaType type;
     Long constructId;
     MetaLink construct;
-    MetaList<MetaObject> children;
+    MetaProtoList<MetaObject> children;
     MetaObject parent;
 
     public void setAttributes(List<Attribute> attributes) {
@@ -89,9 +89,9 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public MetaList<MetaObject> getChildren() {
+    public MetaProtoList<MetaObject> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink ->
-                setChildren((MetaList) MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition().setParentId(this.getId())))
+                setChildren((MetaProtoList) MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition().setParentId(this.getId())))
         );
         return children;
     }

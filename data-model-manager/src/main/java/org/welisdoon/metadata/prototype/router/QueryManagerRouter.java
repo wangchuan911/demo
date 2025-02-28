@@ -253,7 +253,7 @@ public class QueryManagerRouter {
                         Assert.notNull(attribute.getName(), "not name");
                         if (attribute instanceof DataObject.Field) {
 //                            MetaList<MetaLink> exists = ((DataObject.Field) attribute).getColumnLinks();
-                            MetaList<MetaLink> create = new MetaList<>();
+                            MetaProtoList<MetaLink> create = new MetaProtoList<>();
                             String attr = attrJSON.getString("attr");
                             logger.info("处理parentId");
                             LinkedList<MetaPrototype> list = getAttrPath(attr, metaObject);
@@ -286,14 +286,14 @@ public class QueryManagerRouter {
                             logger.info("处理mapper");
                             JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
                             JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
-                            MetaList<MetaLink> rowsOfLink = new MetaList<>();
+                            MetaProtoList<MetaLink> rowsOfLink = new MetaProtoList<>();
                             rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0));
                             for (int i1 = 0; i1 < cols.size(); i1++) {
                                 Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
                                 rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1));
                             }
                             for (int i = 0; i < rows.size(); i++) {
-                                MetaList<MetaLink> cellOfLink = new MetaList<>();
+                                MetaProtoList<MetaLink> cellOfLink = new MetaProtoList<>();
                                 JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
                                 Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
                                 Long outCurrentAttrId = mapper.getLong("current");
@@ -571,7 +571,7 @@ public class QueryManagerRouter {
         if (Objects.isNull(metaLink) || Objects.isNull(metaLink.getId())) {
             return 0;
         }
-        (Optional.ofNullable(metaLink.getChildren()).orElse(MetaList.emptyList())).stream().filter(Objects::nonNull).forEach(metaLink1 -> {
+        (Optional.ofNullable(metaLink.getChildren()).orElse(MetaProtoList.emptyList())).stream().filter(Objects::nonNull).forEach(metaLink1 -> {
             delLink(metaLink1);
         });
         return metaLinkDao.delete(metaLink.getId());

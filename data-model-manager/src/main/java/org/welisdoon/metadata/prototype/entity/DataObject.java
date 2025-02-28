@@ -2,18 +2,13 @@ package org.welisdoon.metadata.prototype.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.collections4.CollectionUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
-import org.welisdoon.metadata.prototype.consts.IMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
-import org.welisdoon.metadata.prototype.define.MetaList;
+import org.welisdoon.metadata.prototype.define.MetaProtoList;
 import org.welisdoon.metadata.prototype.define.MetaObject;
-import org.welisdoon.metadata.prototype.define.MetaPrototype;
 
-import javax.xml.crypto.Data;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -84,13 +79,14 @@ public class DataObject extends MetaObject {
 
     @AttributeMetaType.MetaType(AttributeMetaType.Field)
     public static class Field extends Attribute {
-        MetaList<RowMapper> mappers;
-        MetaList<MetaLink> columnLinks;
+        //        MetaList<RowMapper> mappers;
+        MetaLink foreignKey;
+        MetaProtoList<MetaLink> columnLinks;
 
-        public MetaList<MetaLink> getColumnLinks() {
+        public MetaProtoList<MetaLink> getColumnLinks() {
             return ObjectUtils.synchronizedGet(this, field -> field.columnLinks, field -> {
                 MetaLink parent = getParent();
-                this.columnLinks = new MetaList<>();
+                this.columnLinks = new MetaProtoList<>();
                 if (parent != null) {
                     this.columnLinks.add(parent);
                     MetaLink node;
@@ -103,7 +99,13 @@ public class DataObject extends MetaObject {
             });
         }
 
-        public void setColumnLinks(MetaList<MetaLink> columnLinks) {
+        public MetaLink getForeignKey() {
+            return ObjectUtils.synchronizedGet(this, field -> field.foreignKey, field ->
+                    field.foreignKey = getParent().getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.ForeignKey).findFirst().orElse(null)
+            );
+        }
+
+        public void setColumnLinks(MetaProtoList<MetaLink> columnLinks) {
             ListIterator<MetaLink> current = getColumnLinks().listIterator();
             ListIterator<MetaLink> newLink = columnLinks.listIterator();
             MetaLink eNode, cNode;
@@ -142,7 +144,10 @@ public class DataObject extends MetaObject {
             return (DataObject) super.getObject();
         }
 
-        public MetaList<RowMapper> getMappers() {
+        public MetaProtoList getMappers() {
+
+        }
+        /*public MetaList<RowMapper> getMappers() {
             return mappers;
         }
 
@@ -160,16 +165,10 @@ public class DataObject extends MetaObject {
 
             public static class Row {
                 Long id;
-                RowType type;
                 Long typeId;
 
                 public void setTypeId(Long typeId) {
                     this.typeId = typeId;
-                    type = Arrays.stream(RowType.values()).filter(rowType -> rowType.getId() == typeId).findFirst().orElseThrow(() -> new IllegalStateException("未知属性"));
-                }
-
-                public RowType getType() {
-                    return type;
                 }
 
                 public Long getId() {
@@ -184,62 +183,6 @@ public class DataObject extends MetaObject {
             public List<Row> getRows() {
                 return rows;
             }
-
-            public static class AttrRow extends Row {
-                Long objectId;
-                Long attrId;
-
-                public Long getObjectId() {
-                    return objectId;
-                }
-
-                public Long getAttrId() {
-                    return attrId;
-                }
-
-                public Long getTypeId() {
-                    return typeId;
-                }
-
-                public void setObjectId(Long objectId) {
-                    this.objectId = objectId;
-                }
-
-                public void setAttrId(Long attrId) {
-                    this.attrId = attrId;
-                }
-            }
-
-            public static class KeyRow extends AttrRow {
-
-            }
-
-            public static class MapperRow extends Row {
-
-            }
-
-            public enum RowType implements IMetaType {
-                Key(2100, "主要关联项", KeyRow.class), Attr(2101, "属性关联", AttrRow.class), Condition(2102, "条件关联", MapperRow.class);
-                long id;
-                String name;
-                Class<? extends Row> rowType;
-
-                RowType(long id, String name, Class<? extends Row> rowType) {
-                    this.id = id;
-                    this.name = name;
-                    this.rowType = rowType;
-                }
-
-                @Override
-                public long getId() {
-                    return id;
-                }
-
-                @Override
-                public String getDesc() {
-                    return name;
-                }
-            }
-        }
+        }*/
     }
 }

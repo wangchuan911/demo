@@ -11,7 +11,6 @@ import org.welisdoon.metadata.prototype.consts.KeyValueType;
 import org.welisdoon.metadata.prototype.dao.MetaValueDao;
 import org.welisdoon.web.common.ApplicationContextProvider;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,7 +29,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     KeyValueType valueType;
     int sequence;
     boolean bigFile;
-    MetaList<MetaValue> children;
+    MetaProtoList<MetaValue> children;
     MetaValue parent;
 
     public String getValue() {
@@ -146,9 +145,9 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     @Override
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public MetaList<MetaValue> getChildren() {
+    public MetaProtoList<MetaValue> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaValue -> Objects.nonNull(children), metaValue -> {
-            children = (MetaList) ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
+            children = (MetaProtoList) ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
         });
         return children;
     }

@@ -36,7 +36,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     LinkMetaType type;
 
-    MetaList<MetaLink> children;
+    MetaProtoList<MetaLink> children;
     MetaLink parent;
 
     @Override
@@ -182,7 +182,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     @Override
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
-    public MetaList<MetaLink> getChildren() {
+    public MetaProtoList<MetaLink> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink -> children = MetaUtils.getInstance().getChildrenLinks(getId()));
         return children;
     }
