@@ -8,6 +8,7 @@ import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.IMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
+import org.welisdoon.metadata.prototype.define.MetaList;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaPrototype;
 
@@ -15,6 +16,7 @@ import javax.xml.crypto.Data;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Optional;
 
 /**
@@ -82,40 +84,68 @@ public class DataObject extends MetaObject {
 
     @AttributeMetaType.MetaType(AttributeMetaType.Field)
     public static class Field extends Attribute {
-        List<RowMapper> mappers;
-        List<MetaLink> columnLinks;
+        MetaList<RowMapper> mappers;
+        MetaList<MetaLink> columnLinks;
 
-        public List<MetaLink> getColumnLinks() {
+        public MetaList<MetaLink> getColumnLinks() {
             return ObjectUtils.synchronizedGet(this, field -> field.columnLinks, field -> {
                 MetaLink parent = getParent();
+                this.columnLinks = new MetaList<>();
                 if (parent != null) {
-
-                }
-                this.columnLinks = new LinkedList<>();
-                this.columnLinks.add(parent);
-                while (CollectionUtils.isNotEmpty(parent.getChildren())) {
-                    parent = parent.getChildren().get(0);
                     this.columnLinks.add(parent);
+                    while (CollectionUtils.isNotEmpty(parent.getChildren())) {
+                        parent = parent.getChildren().get(0);
+                        this.columnLinks.add(parent);
+                    }
                 }
                 return this.columnLinks;
             });
         }
 
-        public Field setColumns(List<DataBaseTable.Column> columns) {
-            this.columns = columns;
-            return this;
+        public void setColumnLinks(MetaList<MetaLink> columnLinks) {
+            ListIterator<MetaLink> current = getColumnLinks().listIterator();
+            ListIterator<MetaLink> newLink = columnLinks.listIterator();
+            MetaLink eNode, cNode;
+            while (current.hasNext()) {
+                eNode = current.next();
+                if (newLink.hasNext()) {
+                    cNode = newLink.next();
+                    if (!eNode.compareValues(cNode)) {
+                        while (current.hasNext()) {
+                            current.next().remove();
+                        }
+                        while (newLink.hasNext()) {
+                            current.add(newLink.next());
+                        }
+                        MetaLink node, pre = null;
+                        for (int i = 0; i < this.columnLinks.size(); i++) {
+                            node = this.columnLinks.get(i);
+                            if (i != 0) {
+                                pre.getChildren().clear();
+                                pre.getChildren().add(node);
+                            } else {
+                                setParent(node);
+                            }
+                            pre = node;
+                        }
+                        return;
+                    }
+                }
+            }
+            throw new IllegalStateException("错误的数据");
         }
+
 
         @Override
         public DataObject getObject() {
             return (DataObject) super.getObject();
         }
 
-        public List<RowMapper> getMappers() {
+        public MetaList<RowMapper> getMappers() {
             return mappers;
         }
 
-        public Field setMappers(List<RowMapper> mappers) {
+        public Field setMappers(MetaList<RowMapper> mappers) {
             this.mappers = mappers;
             return this;
         }

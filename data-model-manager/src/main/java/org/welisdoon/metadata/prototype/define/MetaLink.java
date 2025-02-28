@@ -220,9 +220,11 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         super.remove();
         int update = 0;
         if (getParentId() != null) {
-            update += getChildren().stream().map(MetaLink::remove).reduce(0, Integer::sum);
+            getChildren().clear();
+            update += getChildren().getRemovedObjects().stream().map(MetaLink::remove).reduce(0, Integer::sum);
         }
-        update += MetaUtils.getInstance().getMetaLinkDao().delete(this.getId());
+        if (this.getId() != null)
+            update += MetaUtils.getInstance().getMetaLinkDao().delete(this.getId());
         setState(LifeState.Delete);
         return update;
     }
@@ -269,4 +271,17 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         return update;
     }
 
+    public boolean compareValues(MetaLink newLink) {
+        MetaLink oldLink = this;
+        return compareValueIfNullIsEqual(oldLink.getObjectId(), newLink.getObjectId())
+                && compareValueIfNullIsEqual(oldLink.getLinkId(), newLink.getLinkId())
+                && compareValueIfNullIsEqual(oldLink.getAttributeId(), newLink.getAttributeId())
+                && compareValueIfNullIsEqual(oldLink.getValueId(), newLink.getValueId())
+                && compareValueIfNullIsEqual(oldLink.getSequence(), newLink.getSequence())
+                && compareValueIfNullIsEqual(oldLink.getInstanceId(), newLink.getInstanceId());
+    }
+
+    public boolean compareValueIfNullIsEqual(Object a, Object b) {
+        return (a == null && b == null) || Objects.equals(a, b);
+    }
 }

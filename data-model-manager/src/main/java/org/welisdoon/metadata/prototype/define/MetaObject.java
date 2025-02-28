@@ -91,7 +91,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     @JSONField(deserialize = false, serialize = false)
     public MetaList<MetaObject> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink ->
-                setChildren((MetaList)MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition().setParentId(this.getId())))
+                setChildren((MetaList) MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition().setParentId(this.getId())))
         );
         return children;
     }
@@ -201,7 +201,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         }
 
         public MetaLink getParent() {
-            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(getParentId()), metaLink ->
+            ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null || Objects.nonNull(getParentId()), metaLink ->
                     setParent(MetaUtils.getInstance().getMetaLinkDao().get(getParentId()))
             );
             return this.parent;

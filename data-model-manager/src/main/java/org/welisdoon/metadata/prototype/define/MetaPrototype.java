@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public abstract class MetaPrototype {
     Long id, typeId, parentId;
     String code, name;
-    LifeState state;
+    LifeState state = LifeState.Edit;
 
     public Long getId() {
         return id;
