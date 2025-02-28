@@ -73,7 +73,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     @JSONField(deserialize = false, serialize = false)
     public <T extends MetaObject> T getObject() {
         if (Objects.nonNull(objectId))
-            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(object), metaLink -> object = MetaUtils.getInstance().getObject(getObjectId()));
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(object) || getObjectId() == null, metaLink -> object = MetaUtils.getInstance().getObject(getObjectId()));
         return (T) object;
     }
 
@@ -98,7 +98,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     @JSONField(deserialize = false, serialize = false)
     public <T extends MetaObject.Attribute> T getAttribute() {
         if (Objects.nonNull(attributeId))
-            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(attribute), metaLink -> attribute = MetaUtils.getInstance().getAttribute(getAttributeId()));
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(attribute) || getAttributeId() == null, metaLink -> attribute = MetaUtils.getInstance().getAttribute(getAttributeId()));
         return (T) attribute;
     }
 
@@ -145,7 +145,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     @JSONField(deserialize = false, serialize = false)
     public MetaValue getValue() {
         if (Objects.nonNull(valueId))
-            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(value), metaLink -> value = MetaUtils.getInstance().getValue(getValueId()));
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(value) || getValueId() == null, metaLink -> value = MetaUtils.getInstance().getValue(getValueId()));
         return value;
     }
 
@@ -168,7 +168,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     @JSONField(deserialize = false, serialize = false)
     public MetaLink getParent() {
         if (Objects.nonNull(getParentId()))
-            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(parent), metaLink -> parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId()));
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(parent) || parentId == null, metaLink -> parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId()));
         return parent;
     }
 
@@ -185,14 +185,6 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     public MetaList<MetaLink> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(children), metaLink -> children = MetaUtils.getInstance().getChildrenLinks(getId()));
         return children;
-    }
-
-    @Override
-    public MetaLink setChildren(MetaList<MetaLink> children) {
-        this.children = children;
-        if (children != null)
-            this.children.forEach(this::bind);
-        return this;
     }
 
     public Long getLinkId() {

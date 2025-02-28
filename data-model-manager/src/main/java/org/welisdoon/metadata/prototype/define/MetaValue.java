@@ -153,14 +153,6 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
         return children;
     }
 
-    @Override
-    public MetaValue setChildren(MetaList<MetaValue> children) {
-        this.children = children;
-        if (children != null)
-            this.children.forEach(this::bind);
-        return this;
-    }
-
     public void setBigFile(boolean bigFile) {
         setEditing(this.bigFile, bigFile);
         this.bigFile = bigFile;

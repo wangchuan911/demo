@@ -97,14 +97,6 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     }
 
     @Override
-    public MetaObject setChildren(MetaList<MetaObject> children) {
-        this.children = children;
-        if (children != null)
-            this.children.forEach(this::bind);
-        return this;
-    }
-
-    @Override
     public int remove() {
         int update = getChildren().stream().map(MetaObject::remove).reduce(0, Integer::sum);
         super.remove();
@@ -201,7 +193,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         }
 
         public MetaLink getParent() {
-            ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null || Objects.nonNull(getParentId()), metaLink ->
+            ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null || this.parentId == null, metaLink ->
                     setParent(MetaUtils.getInstance().getMetaLinkDao().get(getParentId()))
             );
             return this.parent;

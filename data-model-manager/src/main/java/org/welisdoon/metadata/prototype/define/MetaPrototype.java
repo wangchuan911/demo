@@ -136,7 +136,15 @@ public abstract class MetaPrototype {
     public interface Parent<T> {
         MetaList<T> getChildren();
 
-        Parent setChildren(MetaList<T> children);
+        default Parent setChildren(MetaList<T> children) {
+            MetaList<T> list = getChildren();
+            list.clear();
+            if (children != null) {
+                list.addAll(children);
+                list.forEach(this::bind);
+            }
+            return this;
+        }
 
         default void bind(T child) {
             if (child instanceof Child && this instanceof Parent) {
