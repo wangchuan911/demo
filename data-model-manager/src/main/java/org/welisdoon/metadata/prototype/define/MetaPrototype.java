@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public abstract class MetaPrototype {
     Long id, typeId, parentId;
     String code, name;
-    boolean editing;
+    LifeState state;
 
     public Long getId() {
         return id;
@@ -116,15 +116,21 @@ public abstract class MetaPrototype {
     }
 
     public boolean isEditing() {
-        return editing;
+        return this.state == LifeState.Edit;
     }
 
-    protected void setEditing(boolean editing) {
-        this.editing = editing;
+    public LifeState getState() {
+        return this.state;
+    }
+
+    protected void setState(LifeState state) {
+        this.state = state;
     }
 
     protected <T> void setEditing(T oldVal, T newVal) {
-        this.editing = this.editing || Objects.equals(oldVal, newVal);
+        if (!Objects.equals(oldVal, newVal)) {
+            setState(LifeState.Edit);
+        }
     }
 
     public interface Parent<T> {
@@ -154,5 +160,9 @@ public abstract class MetaPrototype {
 
         Child setParent(T parent);
 
+    }
+
+    public enum LifeState {
+        Edit, Save, Delete
     }
 }

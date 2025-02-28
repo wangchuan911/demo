@@ -2,6 +2,8 @@ package org.welisdoon.metadata.prototype.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.collections4.CollectionUtils;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.IMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
@@ -80,12 +82,23 @@ public class DataObject extends MetaObject {
 
     @AttributeMetaType.MetaType(AttributeMetaType.Field)
     public static class Field extends Attribute {
-        List<DataBaseTable.Column> columns;
         List<RowMapper> mappers;
-        MetaLink parent;
+        List<MetaLink> columnLinks;
 
-        public List<DataBaseTable.Column> getColumns() {
-            return columns;
+        public List<MetaLink> getColumnLinks() {
+            return ObjectUtils.synchronizedGet(this, field -> field.columnLinks, field -> {
+                MetaLink parent = getParent();
+                if (parent != null) {
+
+                }
+                this.columnLinks = new LinkedList<>();
+                this.columnLinks.add(parent);
+                while (CollectionUtils.isNotEmpty(parent.getChildren())) {
+                    parent = parent.getChildren().get(0);
+                    this.columnLinks.add(parent);
+                }
+                return this.columnLinks;
+            });
         }
 
         public Field setColumns(List<DataBaseTable.Column> columns) {

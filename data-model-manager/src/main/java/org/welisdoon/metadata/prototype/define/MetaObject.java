@@ -118,8 +118,6 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     public int save() {
         if (!isEditing())
             return 0;
-        else
-            setEditing(false);
 
         int update;
         if (getId() != null) {
@@ -128,6 +126,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
             super.save();
             update = MetaUtils.getInstance().getMetaObjectDao().add(this);
         }
+        setState(LifeState.Save);
         for (Attribute attribute : getAttributes()) {
             attribute.setObjectId(this.getId());
             update += attribute.save();
@@ -181,14 +180,16 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         public int save() {
             if (!isEditing())
                 return 0;
-            else
-                setEditing(false);
-
+            int update;
             if (getId() != null) {
-                return MetaUtils.getInstance().getMetaAttributeDao().put(this);
+                update = MetaUtils.getInstance().getMetaAttributeDao().put(this);
+                setState(LifeState.Save);
+                return update;
             }
             super.save();
-            return MetaUtils.getInstance().getMetaAttributeDao().add(this);
+            update = MetaUtils.getInstance().getMetaAttributeDao().add(this);
+            setState(LifeState.Save);
+            return update;
         }
 
         public Attribute setParent(MetaLink parent) {

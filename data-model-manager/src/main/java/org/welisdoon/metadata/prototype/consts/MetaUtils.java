@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.dao.*;
 import org.welisdoon.metadata.prototype.define.*;
@@ -120,8 +121,9 @@ public class MetaUtils {
         return null;
     }
 
-    public MetaPrototype getType(@NonNull IMetaType iMetaType) {
-        return getType(iMetaType.getId());
+    public <T extends MetaPrototype> Class<T> getType(@NonNull IMetaType iMetaType) {
+        MetaPrototypeCreator metaPrototypeCreator = ApplicationContextProvider.getApplicationContext().getBean(LONG_KEY_VALUE_MAP_1.get(iMetaType.getClass()));
+        return (Class) ObjectUtils.getGenericTypes(metaPrototypeCreator.getClass(), MetaPrototypeCreator.class, 0);
     }
 
     public <T extends MetaObject> T getObject(@NonNull Long id) {

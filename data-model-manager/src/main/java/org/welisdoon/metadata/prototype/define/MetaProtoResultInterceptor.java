@@ -45,7 +45,8 @@ public class MetaProtoResultInterceptor implements Interceptor {
 
     void setState(Object state) {
         if (state instanceof MetaPrototype)
-            ((MetaPrototype) state).setEditing(false);
+            ((MetaPrototype) state).setState(MetaPrototype.LifeState.Save);
+        ;
     }
 
     @Override
