@@ -209,6 +209,8 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     @Override
     public int remove() {
+        if (getState() == LifeState.Delete)
+            return 0;
         super.remove();
         int update = 0;
         if (getParentId() != null) {

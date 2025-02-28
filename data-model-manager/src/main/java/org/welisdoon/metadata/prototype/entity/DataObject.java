@@ -93,9 +93,10 @@ public class DataObject extends MetaObject {
                 this.columnLinks = new MetaList<>();
                 if (parent != null) {
                     this.columnLinks.add(parent);
-                    while (CollectionUtils.isNotEmpty(parent.getChildren())) {
-                        parent = parent.getChildren().get(0);
-                        this.columnLinks.add(parent);
+                    MetaLink node;
+                    while ((node = parent.getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null)) != null) {
+                        this.columnLinks.add(node);
+                        parent = node;
                     }
                 }
                 return this.columnLinks;

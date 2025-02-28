@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
-import com.google.common.collect.ImmutableList;
 import com.hazelcast.shaded.org.jctools.queues.MessagePassingQueue;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,10 +26,7 @@ import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
 import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
-import org.welisdoon.metadata.prototype.define.ITypeEntity;
-import org.welisdoon.metadata.prototype.define.MetaLink;
-import org.welisdoon.metadata.prototype.define.MetaObject;
-import org.welisdoon.metadata.prototype.define.MetaPrototype;
+import org.welisdoon.metadata.prototype.define.*;
 import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilderHandler;
@@ -244,7 +240,7 @@ public class QueryManagerRouter {
                     transactionTemplate.execute(status -> {
                         long qid = Long.parseLong(routingContext.pathParam("id"));
                         JSONObject attrJSON = JSON.parseObject(routingContext.body().asString());
-                        MetaObject.Attribute attribute = attrJSON.toJavaObject(MetaObject.Attribute.class);
+                        MetaObject.Attribute attribute = attrJSON.toJavaObject(MetaUtils.getInstance().getType(MetaUtils.getInstance().getMetaType(attrJSON.getLong("typeId"))));
                         attribute.setObjectId(qid);
                         MetaObject metaObject = MetaUtils.getInstance().getObject(qid);
                         Arrays.stream(AttributeMetaType.values()).filter(attributeMetaType -> attributeMetaType.getObjectMetaType() == metaObject.getType()).findFirst().ifPresentOrElse(attributeMetaType -> {
@@ -255,66 +251,68 @@ public class QueryManagerRouter {
                         Assert.notNull(attribute.getObjectId(), "not object");
                         Assert.notNull(attribute.getCode(), "not code");
                         Assert.notNull(attribute.getName(), "not name");
-                        switch (attribute.getType()) {
-                            case Field:
-                                if (attribute.getParentId() != null)
-                                    MetaUtils.getInstance().getMetaLinkDao().get(attribute.getParentId()).remove();
-                                String attr = attrJSON.getString("attr");
-                                int index = 0;
-                                MetaLink root = null, parent = null;
-                                for (MetaPrototype metaPrototype : getAttrPath(attr, metaObject)) {
-                                    try {
+                        if (attribute instanceof DataObject.Field) {
+//                            MetaList<MetaLink> exists = ((DataObject.Field) attribute).getColumnLinks();
+                            MetaList<MetaLink> create = new MetaList<>();
+                            String attr = attrJSON.getString("attr");
+                            logger.info("处理parentId");
+                            LinkedList<MetaPrototype> list = getAttrPath(attr, metaObject);
+
+                            for (int i = 0, flag = 0; i < list.size(); i++, flag = i >= list.size() - 1 ? 2 : 1) {
+                                MetaPrototype metaPrototype = list.get(0);
+                                switch (flag) {
+                                    case 0:
                                         if (metaPrototype instanceof MetaLink) {
-                                            MetaLink node = ((MetaLink) metaPrototype);
-                                            long linkId = node.getId() < 0 ? metaObject.getConstructId() : node.getId();
-                                            if (index == 0) {
-                                                root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(node.getObjectId());
-                                                root.setSequence(1);
-                                            } else {
-                                                parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(parent.getId()).setObjectId(node.getObjectId());
-                                                root.setChildren(ImmutableList.of(parent));
-                                            }
+                                            long linkId = metaPrototype.getId() < 0 ? metaObject.getConstructId() : metaPrototype.getId();
+                                            create.add(new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(((MetaLink) metaPrototype).getObjectId()).setSequence(1));
                                         } else if (metaPrototype instanceof MetaObject.Attribute) {
-                                            if (index == 0) {
-                                                root = parent = new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId());
-                                            }
-                                            parent.setAttributeId(metaPrototype.getId());
+                                            create.add(new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId()));
                                         }
-                                    } finally {
-                                        index++;
-                                    }
+                                        break;
+                                    case 1:
+                                        Assert.isTrue(metaPrototype instanceof MetaLink, "错误的类型");
+                                        create.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.SqlToSelect.getId()).setObjectId(((MetaLink) metaPrototype).getObjectId()));
+                                        break;
+                                    case 2:
+                                        Assert.isTrue(metaPrototype instanceof MetaObject.Attribute, "错误的类型");
+                                        ((Deque<MetaLink>) create).peekLast().setAttributeId(metaPrototype.getId());
+                                        break;
+                                    default:
+                                        throw new IllegalArgumentException("错误的类型");
                                 }
-                                root.save();
-                                attribute.setParentId(root.getId());
+                            }
+                            ((DataObject.Field) attribute).setColumnLinks(create);
 
-                                JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
-                                JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
-                                List<MetaLink> rowsOfLink = new LinkedList<>();
-                                rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0));
+                            logger.info("处理mapper");
+                            JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
+                            JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
+                            MetaList<MetaLink> rowsOfLink = new MetaList<>();
+                            rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0));
+                            for (int i1 = 0; i1 < cols.size(); i1++) {
+                                Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
+                                rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1));
+                            }
+                            for (int i = 0; i < rows.size(); i++) {
+                                MetaList<MetaLink> cellOfLink = new MetaList<>();
+                                JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
+                                Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
+                                Long outCurrentAttrId = mapper.getLong("current");
+                                cellOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(0));
                                 for (int i1 = 0; i1 < cols.size(); i1++) {
-                                    Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
-                                    rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1));
+                                    Long outRowAttrId = mapper.getLong(String.valueOf(i1));
+                                    cellOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i1 + 1));
                                 }
-                                for (int i = 0; i < rows.size(); i++) {
-                                    List<MetaLink> cellOfLink = new LinkedList<>();
-                                    JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
-                                    Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
-                                    Long outCurrentAttrId = mapper.getLong("current");
-                                    cellOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(0));
-                                    for (int i1 = 0; i1 < cols.size(); i1++) {
-                                        Long outRowAttrId = mapper.getLong(String.valueOf(i1));
-                                        cellOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i1 + 1));
-                                    }
-                                    rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setChildren(cellOfLink).setSequence(i));
+                                rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).<MetaLink>setChildren(cellOfLink).setSequence(i));
+                            }
+                            MetaLink foreignKey = new MetaLink().<MetaLink>setTypeId(LinkMetaType.ForeignKey.getId()).setChildren(rowsOfLink);
+                            attribute.getParent().getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.ForeignKey).forEach(metaLink -> {
+                                if (!metaLink.compareValues(foreignKey)) {
+                                    attribute.getParent().getChildren().remove(metaLink);
+                                    attribute.getParent().getChildren().add(foreignKey);
                                 }
-                                MetaLink foreignKey = new MetaLink().<MetaLink>setTypeId(LinkMetaType.ForeignKey.getId()).setChildren(rowsOfLink);
-                                foreignKey.setParentId(root.getId());
-                                foreignKey.save();
-                                break;
-
-                            default:
-                                break;
+                            });
                         }
+
 
                         attribute.save();
                         return attribute;
@@ -322,6 +320,7 @@ public class QueryManagerRouter {
             ));
         });
     }
+
 
     @VertxRouter(path = "\\/obj\\/attrs\\/(?<id>\\d+)",
             method = "DELETE",
@@ -572,7 +571,7 @@ public class QueryManagerRouter {
         if (Objects.isNull(metaLink) || Objects.isNull(metaLink.getId())) {
             return 0;
         }
-        (Optional.ofNullable(metaLink.getChildren()).orElse(Collections.emptyList())).stream().filter(Objects::nonNull).forEach(metaLink1 -> {
+        (Optional.ofNullable(metaLink.getChildren()).orElse(MetaList.emptyList())).stream().filter(Objects::nonNull).forEach(metaLink1 -> {
             delLink(metaLink1);
         });
         return metaLinkDao.delete(metaLink.getId());
@@ -654,7 +653,7 @@ public class QueryManagerRouter {
     public void attrBindObj(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             String path = (String) JsonUtils.getKeyValue(JSONObject.parseObject(routingContext.body().asString()), "path");
-            Deque<MetaPrototype> list = getAttrPath(path, MetaUtils.getInstance().getObject(Long.parseLong(routingContext.pathParam("id"))));
+            LinkedList<MetaPrototype> list = getAttrPath(path, MetaUtils.getInstance().getObject(Long.parseLong(routingContext.pathParam("id"))));
             Assert.isTrue(list.peekLast() instanceof MetaObject.Attribute/*notNull(attribute*/, () -> String.format("没有找到对应字段:%s", path));
 //            logger.info("{},{},{}", object, table, attribute);
             logger.info("{},{}", path, list.stream().map(Objects::toString).collect(Collectors.joining(",")));
@@ -662,8 +661,8 @@ public class QueryManagerRouter {
         });
     }
 
-    protected Deque<MetaPrototype> getAttrPath(String path, MetaObject metaObject) {
-        Deque<MetaPrototype> list = new LinkedList<>();
+    protected LinkedList<MetaPrototype> getAttrPath(String path, MetaObject metaObject) {
+        LinkedList<MetaPrototype> list = new LinkedList<>();
         list.add(/*DataObject object =*/ metaObject);
             /*DataBaseTable table = null;
             MetaObject.Attribute attribute = null;*/

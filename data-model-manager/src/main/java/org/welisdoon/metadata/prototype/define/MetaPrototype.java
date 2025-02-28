@@ -136,14 +136,14 @@ public abstract class MetaPrototype {
     public interface Parent<T> {
         MetaList<T> getChildren();
 
-        default Parent setChildren(MetaList<T> children) {
+        default <P extends Parent> P setChildren(MetaList<T> children) {
             MetaList<T> list = getChildren();
             list.clear();
             if (children != null) {
                 list.addAll(children);
                 list.forEach(this::bind);
             }
-            return this;
+            return (P) this;
         }
 
         default void bind(T child) {
@@ -152,13 +152,17 @@ public abstract class MetaPrototype {
             }
         }
 
-        default Parent addChildren(Stream<T> children) {
-            if (children == null) return this;
+        default <P extends Parent> P addChildren(Stream<T> children) {
+            if (children == null) return (P) this;
             if (getChildren() == null) {
                 setChildren(new MetaList<>());
             }
-            children.forEach(t -> getChildren().add(t));
-            return this;
+            MetaList<T> list = getChildren();
+            children.forEach(t -> {
+                list.add(t);
+                this.bind(t);
+            });
+            return (P) this;
         }
     }
 
