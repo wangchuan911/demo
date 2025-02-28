@@ -139,8 +139,8 @@ public class MetaUtils {
         return Objects.isNull(keyValue) ? null : (T) keyValue;
     }
 
-    public MetaList<MetaLink> getChildrenLinks(@NonNull Long parentId) {
-        return (MetaList) metaLinkDao.list(new MetaLinkCondition().setParentId(parentId));
+    public MetaProtoList<MetaLink> getChildrenLinks(@NonNull Long parentId) {
+        return (MetaProtoList) metaLinkDao.list(new MetaLinkCondition().setParentId(parentId));
     }
 
 

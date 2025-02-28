@@ -30,8 +30,8 @@ public interface JsonUtils {
     }
 
     static <T> T getKeyValueToBean(JSON json, String longKey, Class<T> type) {
-        Optional<Object> optional = Optional.ofNullable(getKeyValue(json, longKey));
-        return optional.isEmpty() ? null : TypeUtils.castToJavaBean(optional.get(), type);
+        Object val = getKeyValue(json, longKey);
+        return val == null ? null : TypeUtils.castToJavaBean(val, type);
     }
 
     static <T> T toBean(@NotNull JSON json, Class<T> type) {
