@@ -11,6 +11,7 @@ public class MetaInstance extends MetaPrototype {
     @Override
     public int remove() {
         super.remove();
+        setState(LifeState.Delete);
         return 0;
     }
 

@@ -111,6 +111,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         if (getConstructId() != null) {
             update += MetaUtils.getInstance().getMetaLinkDao().get(getConstructId()).remove();
         }
+        setState(LifeState.Delete);
         return update;
     }
 
@@ -173,6 +174,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
             if (getParentId() != null) {
                 update += MetaUtils.getInstance().getMetaLinkDao().get(getParentId()).remove();
             }
+            setState(LifeState.Delete);
             return update;
         }
 

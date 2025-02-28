@@ -185,6 +185,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     @Override
     public int remove() {
         super.remove();
+        setState(LifeState.Delete);
         return 0;
     }
 
