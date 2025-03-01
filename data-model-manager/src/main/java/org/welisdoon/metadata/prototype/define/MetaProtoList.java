@@ -36,6 +36,14 @@ public class MetaProtoList<T> extends LinkedList<T> {
         return false;
     }
 
+    public static <T> MetaProtoList<T> of(T... ts) {
+        return new MetaProtoList(Arrays.asList(ts));
+    }
+
+    public static <T> MetaProtoList<T> of(List<T> list) {
+        return new MetaProtoList(list);
+    }
+
     public ListIterator<T> listIterator(final int index) {
         return new MetaListIterator(super.listIterator(index));
     }

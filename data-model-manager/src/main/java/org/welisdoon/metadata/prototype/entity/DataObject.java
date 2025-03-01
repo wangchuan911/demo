@@ -2,6 +2,8 @@ package org.welisdoon.metadata.prototype.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.util.Assert;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
@@ -81,23 +83,6 @@ public class DataObject extends MetaObject {
     public static class Field extends Attribute {
         //        MetaList<RowMapper> mappers;
         MetaLink foreignKey;
-        MetaProtoList<MetaLink> columnLinks;
-
-        public MetaProtoList<MetaLink> getColumnLinks() {
-            return ObjectUtils.synchronizedGet(this, field -> field.columnLinks, field -> {
-                MetaLink parent = getParent();
-                this.columnLinks = new MetaProtoList<>();
-                if (parent != null) {
-                    this.columnLinks.add(parent);
-                    MetaLink node;
-                    while ((node = parent.getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null)) != null) {
-                        this.columnLinks.add(node);
-                        parent = node;
-                    }
-                }
-                return this.columnLinks;
-            });
-        }
 
         public MetaLink getForeignKey() {
             return ObjectUtils.synchronizedGet(this, field -> field.foreignKey, field ->
@@ -105,47 +90,38 @@ public class DataObject extends MetaObject {
             );
         }
 
-        public void setColumnLinks(MetaProtoList<MetaLink> columnLinks) {
-            ListIterator<MetaLink> current = getColumnLinks().listIterator();
-            ListIterator<MetaLink> newLink = columnLinks.listIterator();
-            MetaLink eNode, cNode;
-            while (current.hasNext()) {
-                eNode = current.next();
-                if (newLink.hasNext()) {
-                    cNode = newLink.next();
-                    if (!eNode.compareValues(cNode)) {
-                        while (current.hasNext()) {
-                            current.next().remove();
-                        }
-                        while (newLink.hasNext()) {
-                            current.add(newLink.next());
-                        }
-                        MetaLink node, pre = null;
-                        for (int i = 0; i < this.columnLinks.size(); i++) {
-                            node = this.columnLinks.get(i);
-                            if (i != 0) {
-                                pre.getChildren().clear();
-                                pre.getChildren().add(node);
-                            } else {
-                                setParent(node);
-                            }
-                            pre = node;
-                        }
-                        return;
-                    }
-                }
+        public void setColumn(MetaLink column) {
+            if (changeColumn(getParent(), column)) {
+                setParent(column);
             }
-            throw new IllegalStateException("错误的数据");
         }
 
+        protected boolean changeColumn(MetaLink self, MetaLink create) {
+            if (!self.compareValues(create)) {
+                return true;
+            }
+            MetaProtoList<MetaLink> selfLinks = self.getChildren(), createLinks = create.getChildren();
+            Assert.isTrue(CollectionUtils.isEmpty(self.getChildren()) && CollectionUtils.isNotEmpty(createLinks), "错误的数据");
+            Assert.isTrue(CollectionUtils.isNotEmpty(self.getChildren()) && CollectionUtils.isEmpty(createLinks), "错误的数据");
+            if (CollectionUtils.isNotEmpty(self.getChildren()) && CollectionUtils.isNotEmpty(createLinks) && changeColumn(selfLinks.getFirst(), createLinks.getFirst())) {
+                self.getChildren().clear();
+                self.getChildren().add(create);
+            }
+            return false;
+        }
 
         @Override
         public DataObject getObject() {
             return (DataObject) super.getObject();
         }
 
-        public MetaProtoList getMappers() {
+        public MetaGrid getMappers() {
 
+        }
+
+        public static class MetaGrid {
+            MetaProtoList<MetaLink> columns;
+            MetaProtoList<MetaProtoList<Link>> foreignColumns;
         }
         /*public MetaList<RowMapper> getMappers() {
             return mappers;

@@ -253,35 +253,39 @@ public class QueryManagerRouter {
                         Assert.notNull(attribute.getName(), "not name");
                         if (attribute instanceof DataObject.Field) {
 //                            MetaList<MetaLink> exists = ((DataObject.Field) attribute).getColumnLinks();
-                            MetaProtoList<MetaLink> create = new MetaProtoList<>();
+//                            MetaProtoList<MetaLink> create = new MetaProtoList<>();
                             String attr = attrJSON.getString("attr");
                             logger.info("处理parentId");
-                            LinkedList<MetaPrototype> list = getAttrPath(attr, metaObject);
-
-                            for (int i = 0, flag = 0; i < list.size(); i++, flag = i >= list.size() - 1 ? 2 : 1) {
-                                MetaPrototype metaPrototype = list.get(0);
-                                switch (flag) {
+                            ListIterator<MetaPrototype> iterator = getAttrPath(attr, metaObject).listIterator();
+                            MetaLink root = null, prev = null, next = null;
+                            for (; iterator.hasNext(); ) {
+                                MetaPrototype metaPrototype = iterator.next();
+                                switch (iterator.hasPrevious() ? 0 : (iterator.hasNext() ? 1 : 2)) {
                                     case 0:
                                         if (metaPrototype instanceof MetaLink) {
                                             long linkId = metaPrototype.getId() < 0 ? metaObject.getConstructId() : metaPrototype.getId();
-                                            create.add(new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(((MetaLink) metaPrototype).getObjectId()).setSequence(1));
+                                            root = next = (new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(((MetaLink) metaPrototype).getObjectId()).setSequence(1));
                                         } else if (metaPrototype instanceof MetaObject.Attribute) {
-                                            create.add(new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId()));
+                                            root = next = (new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId()));
                                         }
                                         break;
                                     case 1:
                                         Assert.isTrue(metaPrototype instanceof MetaLink, "错误的类型");
-                                        create.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.SqlToSelect.getId()).setObjectId(((MetaLink) metaPrototype).getObjectId()));
+                                        next = (new MetaLink().<MetaLink>setTypeId(LinkMetaType.SqlToSelect.getId()).setObjectId(((MetaLink) metaPrototype).getObjectId()));
                                         break;
                                     case 2:
                                         Assert.isTrue(metaPrototype instanceof MetaObject.Attribute, "错误的类型");
-                                        ((Deque<MetaLink>) create).peekLast().setAttributeId(metaPrototype.getId());
+                                        prev.setAttributeId(metaPrototype.getId());
                                         break;
                                     default:
                                         throw new IllegalArgumentException("错误的类型");
                                 }
+                                if (prev != null) {
+                                    prev.setChildren(MetaProtoList.of(next));
+                                }
+                                prev = next;
                             }
-                            ((DataObject.Field) attribute).setColumnLinks(create);
+                            ((DataObject.Field) attribute).setColumn(root);
 
                             logger.info("处理mapper");
                             JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
