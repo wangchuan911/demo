@@ -29,11 +29,57 @@ public class MetaProtoList<T> extends LinkedList<T> {
 
     @Override
     public boolean remove(Object o) {
-        if (super.remove(o)) {
-            removeObjects.add((T) o);
-            return true;
+        return addRemoveObject(super.remove(o), o);
+    }
+
+    @Override
+    public boolean removeLastOccurrence(Object o) {
+        return addRemoveObject(super.removeLastOccurrence(o), o);
+    }
+
+    @Override
+    public boolean removeFirstOccurrence(Object o) {
+        return addRemoveObject(super.removeFirstOccurrence(o), o);
+    }
+
+    @Override
+    public T removeFirst() {
+        return addRemoveObject(super.removeFirst());
+    }
+
+    @Override
+    public T removeLast() {
+        return addRemoveObject(super.removeLast());
+    }
+
+    @Override
+    public T poll() {
+        return addRemoveObject(super.poll());
+    }
+
+    @Override
+    public T pollFirst() {
+        return addRemoveObject(super.pollFirst());
+    }
+
+    @Override
+    public T pollLast() {
+        return addRemoveObject(super.pollLast());
+    }
+
+
+    protected T addRemoveObject(T o) {
+        if (o != null) {
+            removeObjects.add(o);
         }
-        return false;
+        return o;
+    }
+
+    protected boolean addRemoveObject(boolean remove, Object o) {
+        if (remove) {
+            removeObjects.add((T) o);
+        }
+        return remove;
     }
 
     public static <T> MetaProtoList<T> of(T... ts) {
