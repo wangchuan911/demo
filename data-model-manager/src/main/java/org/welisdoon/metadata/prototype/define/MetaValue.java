@@ -29,7 +29,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     KeyValueType valueType;
     int sequence;
     boolean bigFile;
-    MetaProtoList<MetaValue> children;
+    MetaProtoList<MetaValue> children = new MetaProtoList<>();
     MetaValue parent;
 
     public String getValue() {
@@ -146,8 +146,9 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
     public MetaProtoList<MetaValue> getChildren() {
-        ObjectUtils.synchronizedInitial(this, metaValue -> Objects.nonNull(children), metaValue -> {
-            children = (MetaProtoList) ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId()));
+        ObjectUtils.synchronizedInitial(children, metaValue -> children.getState() == LifeState.Edit, metaValue -> {
+            children.setState(LifeState.Save);
+            setChildren(ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId())));
         });
         return children;
     }

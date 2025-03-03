@@ -1,6 +1,9 @@
 package org.welisdoon.metadata.prototype.define;
 
-import java.util.*;
+import java.util.Deque;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Stream;
@@ -134,10 +137,10 @@ public abstract class MetaPrototype {
     }
 
     public interface Parent<T> {
-        MetaProtoList<T> getChildren();
+        List<T> getChildren();
 
-        default <P extends Parent> P setChildren(MetaProtoList<T> children) {
-            MetaProtoList<T> list = getChildren();
+        default <P extends Parent> P setChildren(List<T> children) {
+            List<T> list = getChildren();
             list.clear();
             if (children != null) {
                 list.addAll(children);
@@ -154,10 +157,7 @@ public abstract class MetaPrototype {
 
         default <P extends Parent> P addChildren(Stream<T> children) {
             if (children == null) return (P) this;
-            if (getChildren() == null) {
-                setChildren(new MetaProtoList<>());
-            }
-            MetaProtoList<T> list = getChildren();
+            List<T> list = getChildren();
             children.forEach(t -> {
                 list.add(t);
                 this.bind(t);

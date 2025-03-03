@@ -38,7 +38,6 @@ public class MetaProtoResultInterceptor implements Interceptor {
             for (Object o1 : ((Collection) o)) {
                 setState(o1);
             }
-            return new MetaProtoList<>((Collection) o);
         }
         return o;
 
@@ -47,7 +46,6 @@ public class MetaProtoResultInterceptor implements Interceptor {
     void setState(Object state) {
         if (state instanceof MetaPrototype)
             ((MetaPrototype) state).setState(MetaPrototype.LifeState.Save);
-        ;
     }
 
     @Override

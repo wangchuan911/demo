@@ -10,7 +10,8 @@ import java.util.*;
  * @Author Septem
  * @Date 18:22
  */
-public class MetaProtoList<T> extends CacheLinkedList<T> {
+public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
+    MetaPrototype.LifeState state = MetaPrototype.LifeState.Edit;
 
     public MetaProtoList() {
     }
@@ -27,20 +28,28 @@ public class MetaProtoList<T> extends CacheLinkedList<T> {
 
     }
 
+    public void setState(MetaPrototype.LifeState state) {
+        this.state = state;
+    }
+
+    public MetaPrototype.LifeState getState() {
+        return state;
+    }
+
     public List<T> getRemovedObjects() {
         return deleted;
     }
 
-    public static <T> MetaProtoList<T> of(T... ts) {
+    public static <T extends MetaPrototype> MetaProtoList<T> of(T... ts) {
         return new MetaProtoList<>(Arrays.asList(ts));
     }
 
-    public static final <T> MetaProtoList<T> emptyList() {
+    public static final <T extends MetaPrototype> MetaProtoList<T> emptyList() {
         return EmptyList.instance;
     }
 
 
-    final static class EmptyList<T> extends MetaProtoList<T> {
+    final static class EmptyList<T extends MetaPrototype> extends MetaProtoList<T> {
         static EmptyList instance = new EmptyList();
 
         @Override
