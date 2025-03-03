@@ -21,11 +21,24 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
     }
 
     void save() {
-
+        for (T t : this) {
+            t.save();
+        }
+        for (T t : deleted) {
+            deleted.remove();
+        }
+        deleted.clear();
+        added.clear();
+        state = MetaPrototype.LifeState.Save;
     }
 
     void delete() {
-
+        for (T t : this) {
+            t.remove();
+        }
+        deleted.clear();
+        added.clear();
+        state = MetaPrototype.LifeState.Delete;
     }
 
     public void setState(MetaPrototype.LifeState state) {

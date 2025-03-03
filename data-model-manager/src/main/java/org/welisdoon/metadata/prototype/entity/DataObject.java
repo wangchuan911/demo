@@ -11,10 +11,7 @@ import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaProtoList;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @Classname DataObject
@@ -91,9 +88,17 @@ public class DataObject extends MetaObject {
         }
 
         public void setColumn(MetaLink column) {
-            if (changeColumn(getParent(), column)) {
-                setParent(column);
+            ListIterator<MetaLink> iterator = getParent().getChildren().listIterator();
+            while (iterator.hasNext()) {
+                MetaLink metaLink = iterator.next();
+                if (metaLink.getType() == LinkMetaType.SqlToSelect) {
+                    if (changeColumn(metaLink, column)) {
+                        iterator.set(column);
+                    }
+                    return;
+                }
             }
+            getParent().getChildren().add(column);
         }
 
         protected boolean changeColumn(MetaLink self, MetaLink create) {
@@ -115,14 +120,7 @@ public class DataObject extends MetaObject {
             return (DataObject) super.getObject();
         }
 
-        public MetaGrid getMappers() {
 
-        }
-
-        public static class MetaGrid {
-            MetaProtoList<MetaLink> columns;
-            MetaProtoList<MetaProtoList<Link>> foreignColumns;
-        }
         /*public MetaList<RowMapper> getMappers() {
             return mappers;
         }

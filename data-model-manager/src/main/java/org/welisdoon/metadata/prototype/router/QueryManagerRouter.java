@@ -290,7 +290,7 @@ public class QueryManagerRouter {
                             logger.info("处理mapper");
                             JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
                             JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
-                            MetaProtoList<MetaLink> rowsOfLink = new MetaProtoList<>();
+                            /*MetaProtoList<MetaLink> rowsOfLink = new MetaProtoList<>();
                             rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0));
                             for (int i1 = 0; i1 < cols.size(); i1++) {
                                 Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
@@ -307,8 +307,27 @@ public class QueryManagerRouter {
                                     cellOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i1 + 1));
                                 }
                                 rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).<MetaLink>setChildren(cellOfLink).setSequence(i));
+                            }*/
+
+                            List<MetaLink> rowLinks = new LinkedList<>();
+                            rowLinks.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(attribute.getId()).<MetaLink>addChildren(Stream.of(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0))).setSequence(0));
+                            for (int i1 = 0; i1 < cols.size(); i1++) {
+                                Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
+                                rowLinks.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(attribute.getId()).<MetaLink>addChildren(Stream.of(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1))).setSequence(i1 + 1));
                             }
-                            MetaLink foreignKey = new MetaLink().<MetaLink>setTypeId(LinkMetaType.ForeignKey.getId()).setChildren(rowsOfLink);
+                            for (int i = 0; i < rows.size(); i++) {
+                                MetaProtoList<MetaLink> cellOfLink = new MetaProtoList<>();
+                                JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
+                                Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
+                                Long outCurrentAttrId = mapper.getLong("current");
+                                rowLinks.get(0).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(0));
+                                for (int i1 = 0; i1 < cols.size(); i1++) {
+                                    Long outRowAttrId = mapper.getLong(String.valueOf(i1));
+                                    rowLinks.get(i1 + 1).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i1 + 1));
+                                }
+                            }
+
+                            MetaLink foreignKey = new MetaLink().<MetaLink>setTypeId(LinkMetaType.ForeignKey.getId()).setChildren(rowLinks);
                             attribute.getParent().getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.ForeignKey).forEach(metaLink -> {
                                 if (!metaLink.compareValues(foreignKey)) {
                                     attribute.getParent().getChildren().remove(metaLink);

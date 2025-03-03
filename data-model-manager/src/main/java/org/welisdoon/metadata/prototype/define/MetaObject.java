@@ -4,9 +4,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
-import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
-import org.welisdoon.metadata.prototype.consts.MetaUtils;
-import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
+import org.welisdoon.metadata.prototype.consts.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -199,9 +197,13 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         }
 
         public MetaLink getParent() {
-            ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null || this.parentId == null, metaLink ->
-                    setParent(MetaUtils.getInstance().getMetaLinkDao().get(getParentId()))
-            );
+            ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null || this.parentId == null, metaLink -> {
+                MetaLink parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId());
+                if (parent == null) {
+                    parent = new MetaLink().setTypeId(LinkMetaType.AttrConstructor.getId());
+                }
+                setParent(parent);
+            });
             return this.parent;
         }
     }

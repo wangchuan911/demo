@@ -36,6 +36,8 @@ public enum LinkMetaType implements IMetaType {
     SqlToJoinOfWeakRel(3013, "对象关联数据库的表(非强制关联)", SqlToJoin),
     SqlToJoinOfStrongRel(3014, "对象关联数据库的表(强制关联)", SqlToJoin),
 
+    AttrConstructor(3015, "属性构造定义"),
+
     DataFuture(3015, "数据特征"),
     Col(3016, "列"),
     Row(3017, "行"),
