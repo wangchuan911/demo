@@ -20,25 +20,70 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
         super(c);
     }
 
-    void save() {
+    int save() {
+        if (state != MetaPrototype.LifeState.Delete) {
+            return 0;
+        }
+        int update = 0;
         for (T t : this) {
             t.save();
         }
         for (T t : deleted) {
-            deleted.remove();
+            update += t.remove();
         }
         deleted.clear();
         added.clear();
         state = MetaPrototype.LifeState.Save;
+        return update;
     }
 
-    void delete() {
+    int delete() {
+        if (state == MetaPrototype.LifeState.Delete) {
+            return 0;
+        }
+        int update = 0;
         for (T t : this) {
-            t.remove();
+            update += t.remove();
         }
         deleted.clear();
         added.clear();
         state = MetaPrototype.LifeState.Delete;
+        return update;
+    }
+
+    @Override
+    protected T delObject(T o) {
+        state = MetaPrototype.LifeState.Edit;
+        return super.delObject(o);
+    }
+
+    @Override
+    protected boolean delObject(boolean remove, Object o) {
+        state = MetaPrototype.LifeState.Edit;
+        return super.delObject(remove, o);
+    }
+
+    @Override
+    protected void delObject(Collection<? extends T> o) {
+        state = MetaPrototype.LifeState.Edit;
+        super.delObject(o);
+    }
+
+    @Override
+    protected T addObject(T o) {
+        state = MetaPrototype.LifeState.Edit;
+        return super.addObject(o);
+    }
+
+    @Override
+    protected void addObject(Collection<? extends T> o) {
+        state = MetaPrototype.LifeState.Edit;
+        super.addObject(o);
+    }
+
+    @Override
+    protected boolean addObject(boolean remove, Object o) {
+        return super.addObject(remove, o);
     }
 
     public void setState(MetaPrototype.LifeState state) {
