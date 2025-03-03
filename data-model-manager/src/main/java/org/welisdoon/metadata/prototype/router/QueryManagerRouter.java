@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
+import com.google.common.collect.ImmutableList;
 import com.hazelcast.shaded.org.jctools.queues.MessagePassingQueue;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,10 +20,7 @@ import org.welisdoon.common.JsonUtils;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
 import org.welisdoon.metadata.prototype.condition.Page;
-import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
-import org.welisdoon.metadata.prototype.consts.LinkMetaType;
-import org.welisdoon.metadata.prototype.consts.MetaUtils;
-import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
+import org.welisdoon.metadata.prototype.consts.*;
 import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
@@ -617,7 +615,7 @@ public class QueryManagerRouter {
         if (link == null || link.getObject() == null) {
             return null;
         }
-        String seqNext = (StringUtils.isNotEmpty(seq) ? (seq + "@") : "") + "LINK" + link.getId();
+        String seqNext = (StringUtils.isNotEmpty(seq) ? (seq + ",") : "[") + JSON.toJSONString(ImmutableList.of(link.getTypeId(), link.getId()));
         switch (link.getObject().getType()) {
             case Object:
                 List<MetaLink> list2 = getLinks(link.getObject().getId());
@@ -634,7 +632,7 @@ public class QueryManagerRouter {
                             entries.add(Map.entry("rootInstanceId", root.getInstanceId()));
                         if (parent != null)
                             entries.add(Map.entry("objectId", parent.getId()));
-                        entries.add(Map.entry("seq", seqNext + "@ATTR" + attribute.getId()));
+                        entries.add(Map.entry("seq", seqNext + "," + JSON.toJSONString(ImmutableList.of(attribute.getTypeId(), attribute.getId())) + "]"));
                         entries.add(Map.entry("instanceId", link.getInstanceId()));
                     });
                 }).collect(Collectors.toList()), entries -> {
@@ -689,17 +687,19 @@ public class QueryManagerRouter {
         list.add(/*DataObject object =*/ metaObject);
             /*DataBaseTable table = null;
             MetaObject.Attribute attribute = null;*/
-
-        for (String s : path.split("@")) {
-            if (s.startsWith("ATTR")) {
+        JSONArray array = JSON.parseArray(path);
+        for (int i = 0; i < array.size(); i++) {
+            JSONArray s = array.getJSONArray(i);
+            IMetaType iMetaType = MetaUtils.getInstance().getMetaType(s.getLong(0));
+            if (iMetaType instanceof AttributeMetaType) {
                 Assert.notNull(/*table*/list.peekLast(), () -> String.format("错误的路径:%s,分片：%s", path, s));
-                long attrId = Long.parseLong(s.substring(4));
+                long attrId = s.getLong(1);
                 list.add(/*attribute =*/ ((DataBaseTable) list.peekLast()).getAttributes().stream().filter(attribute1 -> Objects.equals(attribute1.getId(), attrId)).findFirst().orElseThrow(() -> new IllegalStateException(String.format("表:[%s]没有找到对应字段:%s", path))));
                 break;
             }
 //                Assert.isNull(table, () -> String.format("错误的路径:%s,分片：%s", path, s));
-            if (s.startsWith("LINK")) {
-                long linkId = Long.parseLong(s.substring(4));
+            if (iMetaType instanceof LinkMetaType) {
+                long linkId = s.getLong(1);
                 for (MetaLink constructorLink : ((DataObject) list.peekLast()).getConstructorLinks()) {
                     if (Objects.equals(constructorLink.getId(), linkId)) {
                         if (constructorLink.getObject() != null) {

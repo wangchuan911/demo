@@ -216,9 +216,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
             return 0;
         super.remove();
         int update = 0;
-        if (getParentId() != null) {
-            update += getChildren().delete();
-        }
+        update += getChildren().delete();
         if (this.getId() != null)
             update += MetaUtils.getInstance().getMetaLinkDao().delete(this.getId());
         setState(LifeState.Delete);
