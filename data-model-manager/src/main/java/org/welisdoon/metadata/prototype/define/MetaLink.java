@@ -225,8 +225,6 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     @Override
     public int save() {
-        if (!isEditing())
-            return 0;
 
         int update;
         if (getId() != null) {
@@ -236,6 +234,9 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
             update = MetaUtils.getInstance().getMetaLinkDao().add(this);
         }
         setState(LifeState.Save);
+        for (MetaLink child : children)
+            child.setParentId(this.getId());
+
         children.save();
 
         if (this.object != null) {

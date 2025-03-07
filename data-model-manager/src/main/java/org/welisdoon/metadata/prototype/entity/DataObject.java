@@ -10,6 +10,7 @@ import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaProtoList;
 import org.welisdoon.metadata.prototype.define.MetaObject;
+import org.welisdoon.metadata.prototype.define.MirrorList;
 
 import java.util.*;
 
@@ -28,21 +29,30 @@ public class DataObject extends MetaObject {
         return (List) getAttributes();
     }
 
+    @Override
+    public MetaLink getConstruct() {
+        if (getConstructId() == null) {
+            MetaLink link = new MetaLink().setObjectId(this.getId()).setParentId(0L).setTypeId(LinkMetaType.ObjToDataBase.getId());
+            setConstruct(link);
+            return link;
+        }
+        return super.getConstruct();
+    }
+
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
     public List<MetaLink> getConstructorLinks() {
         List<MetaLink> list = new LinkedList<>();
-        Optional.ofNullable(getConstruct()).ifPresent(construct -> {
-            Optional.ofNullable(this.getParentId()).ifPresent(aLong -> {
-                MetaLink metaLink = new MetaLink();
-                metaLink.setObjectId(aLong);
-                metaLink.setId(-1 * this.getId());
-                metaLink.setTypeId(LinkMetaType.ObjConstructor.getId());
-                metaLink.setInstanceId(1L);
-                list.add(metaLink);
-            });
-            construct.getChildren().stream().filter(metaLink -> metaLink.getType().getParent() == LinkMetaType.SqlToJoin).forEach(list::add);
+        Optional.ofNullable(this.getParentId()).ifPresent(aLong -> {
+            MetaLink metaLink = new MetaLink();
+            metaLink.setObjectId(aLong);
+            metaLink.setId(-1 * this.getId());
+            metaLink.setTypeId(LinkMetaType.ObjConstructor.getId());
+            metaLink.setInstanceId(1L);
+            list.add(metaLink);
         });
+        getConstruct().getChildren().stream().filter(metaLink -> metaLink.getType().getParent() == LinkMetaType.SqlToJoin).forEach(list::add);
+
         return list;
         /*return Optional.ofNullable(constructorLinks).orElseGet(() -> {
             MetaLinkDao metaLinkDao = MetaUtils.getInstance().getMetaLinkDao();

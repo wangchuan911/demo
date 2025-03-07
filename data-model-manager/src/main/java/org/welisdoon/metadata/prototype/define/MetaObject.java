@@ -64,6 +64,12 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         );
     }
 
+    public MetaObject setConstruct(MetaLink construct) {
+        this.construct = construct;
+        this.setConstructId(construct.getId());
+        return this;
+    }
+
     @Override
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
@@ -126,6 +132,8 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
             attribute.setObjectId(this.getId());
             update += attribute.save();
         }
+        getConstruct().setObjectId(this.getId());
+        update += getConstruct().save();
         return update;
     }
 

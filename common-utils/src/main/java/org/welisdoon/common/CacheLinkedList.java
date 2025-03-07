@@ -182,7 +182,7 @@ public class CacheLinkedList<E> extends LinkedList<E> {
         @Override
         public void remove() {
             if (current != null)
-                CacheLinkedList.this.deleted.add(current);
+                CacheLinkedList.this.delObject(current);
             iterator.remove();
         }
 
@@ -190,11 +190,11 @@ public class CacheLinkedList<E> extends LinkedList<E> {
         public void set(E t) {
             iterator.set(t);
             if (current != null) {
-                CacheLinkedList.this.deleted.add(current);
+                CacheLinkedList.this.delObject(current);
                 current = t;
             }
             if (t != null)
-                CacheLinkedList.this.added.add(t);
+                CacheLinkedList.this.addObject(t);
         }
 
         @Override

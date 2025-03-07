@@ -26,6 +26,7 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
         }
         int update = 0;
         for (T t : deleted) {
+            if (this.contains(t)) continue;
             update += t.remove();
         }
         for (T t : this) {
