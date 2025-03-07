@@ -184,6 +184,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     @JSONField(deserialize = false, serialize = false)
     public MetaProtoList<MetaLink> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> children.getState() != MetaProtoList.LifeState.Initial, metaLink -> {
+            children.setState(MetaProtoList.LifeState.Loading);
             setChildren(MetaUtils.getInstance().getChildrenLinks(getId()));
             children.setState(MetaProtoList.LifeState.Loaded);
         });

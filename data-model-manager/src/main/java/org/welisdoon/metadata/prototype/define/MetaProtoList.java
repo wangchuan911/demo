@@ -109,7 +109,7 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
     }
 
     public enum LifeState {
-        Initial, Edit, Loaded, Delete
+        Initial, Loading, Edit, Loaded, Delete
     }
 
     final static class EmptyList<T extends MetaPrototype> extends MetaProtoList<T> {

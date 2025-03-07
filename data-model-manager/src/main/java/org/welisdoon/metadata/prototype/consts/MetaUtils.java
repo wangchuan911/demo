@@ -140,7 +140,7 @@ public class MetaUtils {
     }
 
     public List<MetaLink> getChildrenLinks(@NonNull Long parentId) {
-        return metaLinkDao.list(new MetaLinkCondition().setParentId(parentId));
+        return parentId == null ? Collections.emptyList() : metaLinkDao.list(new MetaLinkCondition().setParentId(parentId));
     }
 
 

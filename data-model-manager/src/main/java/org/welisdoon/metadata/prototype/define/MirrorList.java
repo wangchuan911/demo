@@ -11,8 +11,8 @@ public class MirrorList<E> extends CacheLinkedList<E> {
 
     public MirrorList(List<E> init, List<E> mirror) {
         super();
-        this.mirror = mirror;
         this.addAll(init);
+        this.mirror = mirror;
     }
 
     public MirrorList(List<E> mirror) {
@@ -21,7 +21,7 @@ public class MirrorList<E> extends CacheLinkedList<E> {
 
     @Override
     protected boolean delObject(boolean remove, Object o) {
-        if (remove) {
+        if (remove && this.mirror != null) {
             mirror.remove(o);
         }
         return remove;
@@ -29,7 +29,7 @@ public class MirrorList<E> extends CacheLinkedList<E> {
 
     @Override
     protected E delObject(E o) {
-        if (o != null) {
+        if (o != null && this.mirror != null) {
             mirror.remove(o);
         }
         return o;
@@ -37,14 +37,14 @@ public class MirrorList<E> extends CacheLinkedList<E> {
 
     @Override
     protected void delObject(Collection<? extends E> o) {
-        if (o != null) {
+        if (o != null && this.mirror != null) {
             mirror.removeAll(o);
         }
     }
 
     @Override
     protected boolean addObject(boolean remove, Object o) {
-        if (remove) {
+        if (remove && this.mirror != null) {
             mirror.add((E) o);
         }
         return remove;
@@ -52,7 +52,7 @@ public class MirrorList<E> extends CacheLinkedList<E> {
 
     @Override
     protected E addObject(E o) {
-        if (o != null) {
+        if (o != null && this.mirror != null) {
             mirror.add(o);
         }
         return o;
@@ -60,7 +60,7 @@ public class MirrorList<E> extends CacheLinkedList<E> {
 
     @Override
     protected void addObject(Collection<? extends E> o) {
-        if (o != null) {
+        if (o != null && this.mirror != null) {
             mirror.addAll(o);
         }
     }

@@ -147,6 +147,7 @@ public class MetaValue extends MetaPrototype implements ISequenceEntity, ITypeEn
     @JSONField(deserialize = false, serialize = false)
     public MetaProtoList<MetaValue> getChildren() {
         ObjectUtils.synchronizedInitial(children, metaValue -> children.getState() != MetaProtoList.LifeState.Initial, metaValue -> {
+            children.setState(MetaProtoList.LifeState.Loading);
             setChildren(ApplicationContextProvider.getBean(MetaValueDao.class).list(new MetaValue().setParentId(this.getId())));
             children.setState(MetaProtoList.LifeState.Loaded);
         });

@@ -95,6 +95,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     @JSONField(deserialize = false, serialize = false)
     public MetaProtoList<MetaObject> getChildren() {
         ObjectUtils.synchronizedInitial(this, metaLink -> children.getState() != MetaProtoList.LifeState.Initial, metaLink -> {
+                    children.setState(MetaProtoList.LifeState.Loading);
                     setChildren(MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition().setParentId(this.getId())));
                     children.setState(MetaProtoList.LifeState.Loaded);
                 }
@@ -117,16 +118,15 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
     @Override
     public int save() {
-        if (!isEditing())
-            return 0;
 
-        int update;
-        if (getId() != null) {
-            update = MetaUtils.getInstance().getMetaObjectDao().put(this);
-        } else {
-            super.save();
-            update = MetaUtils.getInstance().getMetaObjectDao().add(this);
-        }
+        int update = 0;
+        if (isEditing())
+            if (getId() != null) {
+                update += MetaUtils.getInstance().getMetaObjectDao().put(this);
+            } else {
+                super.save();
+                update += MetaUtils.getInstance().getMetaObjectDao().add(this);
+            }
         setState(LifeState.Save);
         for (Attribute attribute : getAttributes()) {
             attribute.setObjectId(this.getId());
