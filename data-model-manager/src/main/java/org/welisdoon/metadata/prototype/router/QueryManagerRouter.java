@@ -316,10 +316,10 @@ public class QueryManagerRouter {
                                 JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
                                 Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
                                 Long outCurrentAttrId = mapper.getLong("current");
-                                rowLinks.get(0).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(0));
+                                rowLinks.get(0).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(i));
                                 for (int i1 = 0; i1 < cols.size(); i1++) {
                                     Long outRowAttrId = mapper.getLong(String.valueOf(i1));
-                                    rowLinks.get(i1 + 1).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i1 + 1));
+                                    rowLinks.get(i1 + 1).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i));
                                 }
                             }
 
