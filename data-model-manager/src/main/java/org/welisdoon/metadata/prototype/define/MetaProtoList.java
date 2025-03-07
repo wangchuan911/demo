@@ -25,11 +25,11 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
             return 0;
         }
         int update = 0;
-        for (T t : this) {
-            t.save();
-        }
         for (T t : deleted) {
             update += t.remove();
+        }
+        for (T t : this) {
+            t.save();
         }
         deleted.clear();
         added.clear();
