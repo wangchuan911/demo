@@ -227,17 +227,17 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     @Override
     public int save() {
 
-        int update;
-        if (getId() != null) {
-            update = MetaUtils.getInstance().getMetaLinkDao().put(this);
-        } else {
-            super.save();
-            update = MetaUtils.getInstance().getMetaLinkDao().add(this);
-        }
+        int update = 0;
+        if (isEditing())
+            if (getId() != null) {
+                update += MetaUtils.getInstance().getMetaLinkDao().put(this);
+            } else {
+                super.save();
+                update += MetaUtils.getInstance().getMetaLinkDao().add(this);
+            }
         setState(LifeState.Save);
         for (MetaLink child : children)
             child.setParentId(this.getId());
-
         children.save();
 
         if (this.object != null) {

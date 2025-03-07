@@ -142,6 +142,11 @@ public class CacheLinkedList<E> extends LinkedList<E> {
         return remove;
     }
 
+    @Override
+    public ListIterator<E> listIterator(int index) {
+        return new CacheLinkedListIterator(super.listIterator(index));
+    }
+
     private class CacheLinkedListIterator implements ListIterator<E> {
         ListIterator<E> iterator;
         E current;
@@ -201,7 +206,7 @@ public class CacheLinkedList<E> extends LinkedList<E> {
         @Override
         public void add(E t) {
             iterator.add(t);
-            added.add(t);
+            CacheLinkedList.this.addObject(t);
         }
     }
 

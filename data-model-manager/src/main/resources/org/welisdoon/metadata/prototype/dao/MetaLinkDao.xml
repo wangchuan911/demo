@@ -58,6 +58,12 @@
                #{attributeId,jdbcType=NUMERIC}, #{sequence,jdbcType=NUMERIC}, #{valueId,jdbcType=NUMERIC},
                #{linkId,jdbcType=NUMERIC})
     </insert>
+    <update id="put" parameterType="org.welisdoon.metadata.prototype.define.MetaLink">
+        update MD_LINK set TYPE_ID=#{typeId}, `DESC`=#{name}, PARENT_ID=#{parentId,jdbcType=NUMERIC}, OBJECT_ID=#{objectId,jdbcType=NUMERIC},
+                           INSTANCE_ID=#{instanceId,jdbcType=NUMERIC}, ATTRIBUTE_ID=#{attributeId,jdbcType=NUMERIC}, SEQUENCE=#{sequence,jdbcType=NUMERIC},
+                           VALUE_ID=#{valueId,jdbcType=NUMERIC}, LINK_ID=#{linkId,jdbcType=NUMERIC}
+        where ID=#{id}
+    </update>
     <delete id="delete" parameterType="long">
         delete from MD_LINK where id=#{value}
     </delete>

@@ -110,9 +110,7 @@ public class QueryManagerRouter {
     public void objAttr(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            MetaObject object = new MetaObject();
-            object.setId(qid);
-            routingContext.end(JSON.toJSONString(object.getAttributes()));
+            routingContext.end(JSON.toJSONString(MetaUtils.getInstance().getMetaAttributeDao().list(new MetaObject.Attribute().setObjectId(qid))));
         });
     }
 
@@ -438,14 +436,13 @@ public class QueryManagerRouter {
     public void objectAddLinkRel(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             transactionTemplate.execute(status -> {
-                try {
-                    long objectId = Long.parseLong(routingContext.pathParam("objectId"));
-                    JSONObject body = JSONObject.parseObject(routingContext.body().asString());
+                long objectId = Long.parseLong(routingContext.pathParam("objectId"));
+                JSONObject body = JSONObject.parseObject(routingContext.body().asString());
 
-                    Long object = body.getLong("object");
-                    Long parent = body.getLong("parent");
-                    Long typeId = body.getLong("type");
-                    MetaLink link0 = null;
+                Long object = body.getLong("object");
+                Long parent = body.getLong("parent");
+                Long typeId = body.getLong("type");
+                    /*MetaLink link0 = null;
                     boolean start = false, stop = false;
                     List<MetaLink> links = getLinks(objectId);
                     for (MetaLink link : links) {
@@ -482,11 +479,31 @@ public class QueryManagerRouter {
                     for (int i = 0; i < rel.size(); i++) {
                         objectAddLinkRel(link0, link0, rel.getJSONObject(i));
                     }
-                    status.flush();
-                } catch (Throwable e) {
-                    logger.error(e.getMessage(), e);
-                    status.setRollbackOnly();
+                    status.flush();*/
+                MetaObject object1 = MetaUtils.getInstance().getObject(objectId);
+                MetaLink current = null;
+                if (CollectionUtils.isEmpty(object1.getConstruct().getChildren())) {
+                    object1.getConstruct().getChildren()
+                            .add(current = new MetaLink().setObjectId(object).<MetaLink>setTypeId(typeId).setInstanceId(getNextInstanceId(objectId)).setSequence(1));
+                } else {
+                    ListIterator<MetaLink> iterator = new MirrorList<>(object1.getConstruct().getChildren().stream().filter(metaLink -> metaLink.getType().getParent() == LinkMetaType.SqlToJoin).collect(Collectors.toList()), object1.getConstruct().getChildren()).listIterator();
+                    while (iterator.hasNext()) {
+                        if (Objects.equals(iterator.next().getInstanceId(), parent)) {
+                            iterator.add(current = new MetaLink().setObjectId(object).<MetaLink>setTypeId(typeId).setInstanceId(getNextInstanceId(objectId)).setSequence(iterator.nextIndex()));
+                            break;
+                        }
+                    }
+                    while (iterator.hasNext()) {
+                        iterator.next().setInstanceId((long) iterator.nextIndex());
+                    }
                 }
+                Assert.notNull(current, "初始化失败");
+                JSONArray rel = body.getJSONArray("rel");
+                for (int i = 0; i < rel.size(); i++) {
+                    objectAddLinkRel(current.getInstanceId(), current, rel.getJSONObject(i));
+                }
+                object1.save();
+                logger.info("{}", object1);
                 return null;
             });
 
@@ -495,7 +512,7 @@ public class QueryManagerRouter {
         });
     }
 
-    public void objectAddLinkRel(MetaLink root, MetaLink parent, JSONObject link) {
+    public void objectAddLinkRel(Long instanceId, MetaLink parent, JSONObject link) {
 
         MetaLink metaLink = new MetaLink();
         metaLink.setTypeId(link.getLong("linkTypeId"));
@@ -504,12 +521,12 @@ public class QueryManagerRouter {
         metaLink.setParentId(parent.getId());
         metaLink.setObjectId(link.getLong("objectId"));
         if (StringUtils.isNotEmpty(instanceIdStr)) {
-            metaLink.setInstanceId(StringUtils.isNumeric(instanceIdStr) ? Long.parseLong(instanceIdStr) : root.getInstanceId());
+            metaLink.setInstanceId(StringUtils.isNumeric(instanceIdStr) ? Long.parseLong(instanceIdStr) : instanceId);
         }
-        metaLinkDao.add(metaLink);
+        parent.getChildren().add(metaLink);
         Optional.ofNullable(link.getJSONArray("children")).ifPresent(objects -> {
             for (int i1 = 0; i1 < objects.size(); i1++) {
-                objectAddLinkRel(root, metaLink, objects.getJSONObject(i1));
+                objectAddLinkRel(instanceId, metaLink, objects.getJSONObject(i1));
             }
         });
     }
