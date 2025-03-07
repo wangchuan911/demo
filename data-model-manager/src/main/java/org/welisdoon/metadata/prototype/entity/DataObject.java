@@ -91,6 +91,8 @@ public class DataObject extends MetaObject {
         //        MetaList<RowMapper> mappers;
         MetaLink foreignKey;
 
+        @JsonIgnore
+        @JSONField(deserialize = false, serialize = false)
         public MetaLink getForeignKey() {
             return ObjectUtils.synchronizedGet(this, field -> field.foreignKey, field ->
                     field.foreignKey = getParent().getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.ForeignKey).findFirst().orElse(null)
@@ -125,6 +127,8 @@ public class DataObject extends MetaObject {
             return false;
         }
 
+        @JsonIgnore
+        @JSONField(deserialize = false, serialize = false)
         @Override
         public DataObject getObject() {
             return (DataObject) super.getObject();

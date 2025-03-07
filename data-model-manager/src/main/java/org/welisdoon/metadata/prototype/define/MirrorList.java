@@ -10,8 +10,9 @@ public class MirrorList<E> extends CacheLinkedList<E> {
     final List<E> mirror;
 
     public MirrorList(List<E> init, List<E> mirror) {
-        super(init);
+        super();
         this.mirror = mirror;
+        this.addAll(init);
     }
 
     public MirrorList(List<E> mirror) {

@@ -24,16 +24,9 @@ public class DataBaseTable extends MetaObject {
 
     @AttributeMetaType.MetaType(AttributeMetaType.Column)
     public static class Column extends Attribute {
-        boolean primary;
 
-        public boolean isPrimary() {
-            return primary;
-        }
-
-        public void setPrimary(boolean primary) {
-            this.primary = primary;
-        }
-
+        @JsonIgnore
+        @JSONField(deserialize = false, serialize = false)
         @Override
         public DataBaseTable getObject() {
             return (DataBaseTable) super.getObject();

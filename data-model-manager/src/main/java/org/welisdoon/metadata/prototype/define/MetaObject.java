@@ -32,7 +32,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     @JSONField(deserialize = false, serialize = false)
     public List<Attribute> getAttributes() {
         return Optional.ofNullable(attributes).orElseGet(() ->
-                attributes = MetaUtils.getInstance().getMetaAttributeDao().list(new Attribute().setObjectId(this.getId()))
+                attributes = new MetaProtoList<>(MetaUtils.getInstance().getMetaAttributeDao().list(new Attribute().setObjectId(this.getId())))
         );
     }
 
@@ -94,9 +94,9 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     @JsonIgnore
     @JSONField(deserialize = false, serialize = false)
     public MetaProtoList<MetaObject> getChildren() {
-        ObjectUtils.synchronizedInitial(this, metaLink -> children.getState() != LifeState.Edit, metaLink -> {
-                    children.setState(LifeState.Save);
+        ObjectUtils.synchronizedInitial(this, metaLink -> children.getState() != MetaProtoList.LifeState.Initial, metaLink -> {
                     setChildren(MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition().setParentId(this.getId())));
+                    children.setState(MetaProtoList.LifeState.Loaded);
                 }
         );
         return children;
@@ -158,6 +158,8 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
             return this;
         }
 
+        @JsonIgnore
+        @JSONField(deserialize = false, serialize = false)
         public MetaObject getObject() {
             return MetaUtils.getInstance().getObject(id);
         }
@@ -204,6 +206,8 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
             return this;
         }
 
+        @JsonIgnore
+        @JSONField(deserialize = false, serialize = false)
         public MetaLink getParent() {
             ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null || this.parentId == null, metaLink -> {
                 MetaLink parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId());

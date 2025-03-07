@@ -11,9 +11,10 @@ import java.util.*;
  * @Date 18:22
  */
 public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
-    MetaPrototype.LifeState state = MetaPrototype.LifeState.Edit;
+    LifeState state = LifeState.Initial;
 
     public MetaProtoList() {
+        super();
     }
 
     public MetaProtoList(Collection<? extends T> c) {
@@ -21,7 +22,7 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
     }
 
     int save() {
-        if (state != MetaPrototype.LifeState.Delete) {
+        if (state == LifeState.Delete || state == LifeState.Initial) {
             return 0;
         }
         int update = 0;
@@ -34,12 +35,12 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
         }
         deleted.clear();
         added.clear();
-        state = MetaPrototype.LifeState.Save;
+        state = LifeState.Loaded;
         return update;
     }
 
     int delete() {
-        if (state == MetaPrototype.LifeState.Delete) {
+        if (state == LifeState.Initial) {
             return 0;
         }
         int update = 0;
@@ -48,37 +49,37 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
         }
         deleted.clear();
         added.clear();
-        state = MetaPrototype.LifeState.Delete;
+        state = LifeState.Delete;
         return update;
     }
 
     @Override
     protected T delObject(T o) {
-        state = MetaPrototype.LifeState.Edit;
+        state = LifeState.Edit;
         return super.delObject(o);
     }
 
     @Override
     protected boolean delObject(boolean remove, Object o) {
-        state = MetaPrototype.LifeState.Edit;
+        state = LifeState.Edit;
         return super.delObject(remove, o);
     }
 
     @Override
     protected void delObject(Collection<? extends T> o) {
-        state = MetaPrototype.LifeState.Edit;
+        state = LifeState.Edit;
         super.delObject(o);
     }
 
     @Override
     protected T addObject(T o) {
-        state = MetaPrototype.LifeState.Edit;
+        state = LifeState.Edit;
         return super.addObject(o);
     }
 
     @Override
     protected void addObject(Collection<? extends T> o) {
-        state = MetaPrototype.LifeState.Edit;
+        state = LifeState.Edit;
         super.addObject(o);
     }
 
@@ -87,11 +88,11 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
         return super.addObject(remove, o);
     }
 
-    public void setState(MetaPrototype.LifeState state) {
+    public void setState(LifeState state) {
         this.state = state;
     }
 
-    public MetaPrototype.LifeState getState() {
+    public LifeState getState() {
         return state;
     }
 
@@ -107,6 +108,9 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
         return EmptyList.instance;
     }
 
+    public enum LifeState {
+        Initial, Edit, Loaded, Delete
+    }
 
     final static class EmptyList<T extends MetaPrototype> extends MetaProtoList<T> {
         static EmptyList instance = new EmptyList();

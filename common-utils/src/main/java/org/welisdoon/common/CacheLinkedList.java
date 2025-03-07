@@ -1,5 +1,6 @@
 package org.welisdoon.common;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -11,15 +12,15 @@ import java.util.ListIterator;
  * @Date 9:19
  */
 public class CacheLinkedList<E> extends LinkedList<E> {
-    protected LinkedList<E> deleted = new LinkedList<>();
-    protected LinkedList<E> added = new LinkedList<>();
+    final protected LinkedList<E> deleted = new LinkedList<>();
+    final protected LinkedList<E> added = new LinkedList<>();
 
     public CacheLinkedList() {
-        super();
     }
 
     public CacheLinkedList(Collection<? extends E> c) {
-        super(c);
+        this();
+        addAll((c instanceof CacheLinkedList) ? new LinkedList<>(c) : c);
     }
 
     @Override
