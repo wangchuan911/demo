@@ -435,13 +435,12 @@ public class QueryManagerRouter {
             method = "POST", mode = VertxRouteType.PathRegex)
     public void objectAddLinkRel(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            transactionTemplate.execute(status -> {
-                long objectId = Long.parseLong(routingContext.pathParam("objectId"));
-                JSONObject body = JSONObject.parseObject(routingContext.body().asString());
+            long objectId = Long.parseLong(routingContext.pathParam("objectId"));
+            JSONObject body = JSONObject.parseObject(routingContext.body().asString());
 
-                Long object = body.getLong("object");
-                Long parent = body.getLong("parent");
-                Long typeId = body.getLong("type");
+            Long object = body.getLong("object");
+            Long parent = body.getLong("parent");
+            Long typeId = body.getLong("type");
                     /*MetaLink link0 = null;
                     boolean start = false, stop = false;
                     List<MetaLink> links = getLinks(objectId);
@@ -480,33 +479,32 @@ public class QueryManagerRouter {
                         objectAddLinkRel(link0, link0, rel.getJSONObject(i));
                     }
                     status.flush();*/
-                MetaObject object1 = MetaUtils.getInstance().getObject(objectId);
-                MetaLink current = null;
-                if (CollectionUtils.isEmpty(object1.getConstruct().getChildren())) {
-                    object1.getConstruct().getChildren()
-                            .add(current = new MetaLink().setObjectId(object).<MetaLink>setTypeId(typeId).setInstanceId(getNextInstanceId(objectId)).setSequence(1));
-                } else {
-                    ListIterator<MetaLink> iterator = new MirrorList<>(object1.getConstruct().getChildren().stream().filter(metaLink -> metaLink.getType().getParent() == LinkMetaType.SqlToJoin).collect(Collectors.toList()), object1.getConstruct().getChildren()).listIterator();
-                    while (iterator.hasNext()) {
-                        if (Objects.equals(iterator.next().getInstanceId(), parent)) {
-                            iterator.add(current = new MetaLink().setObjectId(object).<MetaLink>setTypeId(typeId).setInstanceId(getNextInstanceId(objectId)).setSequence(iterator.nextIndex()));
-                            break;
-                        }
-                    }
-                    while (iterator.hasNext()) {
-                        iterator.next().setInstanceId((long) iterator.nextIndex());
+            MetaObject object1 = MetaUtils.getInstance().getObject(objectId);
+            MetaLink current = null;
+            if (CollectionUtils.isEmpty(object1.getConstruct().getChildren())) {
+                object1.getConstruct().getChildren()
+                        .add(current = new MetaLink().setObjectId(object).<MetaLink>setTypeId(typeId).setInstanceId(getNextInstanceId(objectId)).setSequence(1));
+            } else {
+                ListIterator<MetaLink> iterator = new MirrorList<>(object1.getConstruct().getChildren().stream().filter(metaLink -> metaLink.getType().getParent() == LinkMetaType.SqlToJoin).collect(Collectors.toList()), object1.getConstruct().getChildren()).listIterator();
+                while (iterator.hasNext()) {
+                    if (Objects.equals(iterator.next().getInstanceId(), parent)) {
+                        iterator.add(current = new MetaLink().setObjectId(object).<MetaLink>setTypeId(typeId).setInstanceId(getNextInstanceId(objectId)).setSequence(iterator.nextIndex()));
+                        break;
                     }
                 }
-                Assert.notNull(current, "初始化失败");
-                JSONArray rel = body.getJSONArray("rel");
-                for (int i = 0; i < rel.size(); i++) {
-                    objectAddLinkRel(current.getInstanceId(), current, rel.getJSONObject(i));
+                while (iterator.hasNext()) {
+                    iterator.next().setInstanceId((long) iterator.nextIndex());
                 }
-                object1.save();
-                logger.info("{}", object1);
-                return null;
-            });
+            }
+            Assert.notNull(current, "初始化失败");
+            JSONArray rel = body.getJSONArray("rel");
+            for (int i = 0; i < rel.size(); i++) {
+                objectAddLinkRel(current.getInstanceId(), current, rel.getJSONObject(i));
+            }
 
+            transactionTemplate.execute(status -> object1.save());
+
+            logger.info("{}", object1);
             logger.info(routingContext.body().asString());
             routingContext.end();
         });
