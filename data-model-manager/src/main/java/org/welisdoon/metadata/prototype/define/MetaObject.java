@@ -209,10 +209,11 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         @JsonIgnore
         @JSONField(deserialize = false, serialize = false)
         public MetaLink getParent() {
-            ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null || this.parentId == null, metaLink -> {
-                MetaLink parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId());
-                if (parent == null) {
+            ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null, metaLink -> {
+                if (this.parentId == null) {
                     parent = new MetaLink().setTypeId(LinkMetaType.AttrConstructor.getId());
+                } else {
+                    parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId());
                 }
                 setParent(parent);
             });

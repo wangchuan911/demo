@@ -36,6 +36,7 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
+import javax.xml.crypto.Data;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -725,7 +726,7 @@ public class QueryManagerRouter {
 
     protected LinkedList<MetaPrototype> getAttrPath(String path, MetaObject metaObject) {
         LinkedList<MetaPrototype> list = new LinkedList<>();
-        list.add( metaObject);
+//        list.add( metaObject);
         JSONArray array = JSON.parseArray(path);
         for (int i = 0; i < array.size(); i++) {
             JSONArray s = array.getJSONArray(i);
@@ -737,7 +738,7 @@ public class QueryManagerRouter {
             }
             if (iMetaType instanceof LinkMetaType) {
                 long linkId = s.getLong(1);
-                for (MetaLink constructorLink : ((DataObject) list.peekLast()).getConstructorLinks()) {
+                for (MetaLink constructorLink : ((DataObject) (list.peekLast() == null ? metaObject : ((MetaLink) list.peekLast()).getObject())).getConstructorLinks()) {
                     if (Objects.equals(constructorLink.getId(), linkId)) {
                         list.add(constructorLink);
                     }
