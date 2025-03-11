@@ -236,7 +236,8 @@ public class QueryManagerRouter {
                     transactionTemplate.execute(status -> {
                         long qid = Long.parseLong(routingContext.pathParam("id"));
                         JSONObject attrJSON = JSON.parseObject(routingContext.body().asString());
-                        MetaObject.Attribute attribute = attrJSON.toJavaObject(MetaUtils.getInstance().getType(MetaUtils.getInstance().getMetaType(attrJSON.getLong("typeId"))));
+
+                        MetaObject.Attribute attribute = attrJSON.toJavaObject(((MetaObject.Attribute) MetaUtils.getInstance().getType(MetaUtils.getInstance().getMetaType(attrJSON.getLong("typeId")))).getClass());
                         attribute.setObjectId(qid);
                         MetaObject metaObject = MetaUtils.getInstance().getObject(qid);
                         Arrays.stream(AttributeMetaType.values()).filter(attributeMetaType -> attributeMetaType.getObjectMetaType() == metaObject.getType()).findFirst().ifPresentOrElse(attributeMetaType -> {
@@ -254,20 +255,46 @@ public class QueryManagerRouter {
                             logger.info("处理parentId");
                             ListIterator<MetaPrototype> iterator = getAttrPath(attr, metaObject).listIterator();
                             MetaLink root = null, prev = null, next = null;
-                            for (; iterator.hasNext(); ) {
+
+
+                            MetaPrototype metaPrototype;
+                            if (iterator.hasNext()) {
+                                metaPrototype = iterator.next();
+                                if (metaPrototype instanceof MetaLink) {
+                                    long linkId = metaPrototype.getId() < 0 ? metaObject.getConstructId() : metaPrototype.getId();
+                                    root = next = (new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(((MetaLink) metaPrototype).getObjectId()).setInstanceId(((MetaLink) metaPrototype).getInstanceId()).setSequence(1));
+                                } else if (metaPrototype instanceof MetaObject.Attribute) {
+                                    root = next = (new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId()).setInstanceId(((MetaLink) metaPrototype).getInstanceId()));
+                                }
+                                prev = next;
+                            }
+                            while (iterator.hasNext()) {
+                                metaPrototype = iterator.next();
+                                if (metaPrototype instanceof MetaLink) {
+                                    next = (new MetaLink().<MetaLink>setTypeId(LinkMetaType.SqlToSelect.getId()).setObjectId(((MetaLink) metaPrototype).getObjectId()).setInstanceId(((MetaLink) metaPrototype).getInstanceId()));
+                                } else if (metaPrototype instanceof MetaObject.Attribute) {
+                                    prev.setAttributeId(metaPrototype.getId());
+                                    Assert.isTrue(!iterator.hasNext(), "错误的类型");
+                                    break;
+                                }
+                                prev.setChildren(MetaProtoList.of(next));
+                                prev = next;
+                            }
+
+                            /*for (; iterator.hasNext(); ) {
                                 MetaPrototype metaPrototype = iterator.next();
                                 switch (iterator.hasPrevious() ? 0 : (iterator.hasNext() ? 1 : 2)) {
                                     case 0:
                                         if (metaPrototype instanceof MetaLink) {
                                             long linkId = metaPrototype.getId() < 0 ? metaObject.getConstructId() : metaPrototype.getId();
-                                            root = next = (new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(((MetaLink) metaPrototype).getObjectId()).setSequence(1));
+                                            root = next = (new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(linkId).setObjectId(((MetaLink) metaPrototype).getObjectId()).setInstanceId(((MetaLink) metaPrototype).getInstanceId()).setSequence(1));
                                         } else if (metaPrototype instanceof MetaObject.Attribute) {
-                                            root = next = (new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId()));
+                                            root = next = (new MetaLink().setTypeId(LinkMetaType.SqlToSelect.getId()).<MetaLink>setParentId(metaObject.getConstructId()).setObjectId(((MetaObject.Attribute) metaPrototype).getObjectId()).setInstanceId(((MetaLink) metaPrototype).getInstanceId()));
                                         }
                                         break;
                                     case 1:
                                         Assert.isTrue(metaPrototype instanceof MetaLink, "错误的类型");
-                                        next = (new MetaLink().<MetaLink>setTypeId(LinkMetaType.SqlToSelect.getId()).setObjectId(((MetaLink) metaPrototype).getObjectId()));
+                                        next = (new MetaLink().<MetaLink>setTypeId(LinkMetaType.SqlToSelect.getId()).setObjectId(((MetaLink) metaPrototype).getObjectId()).setInstanceId(((MetaLink) metaPrototype).getInstanceId()));
                                         break;
                                     case 2:
                                         Assert.isTrue(metaPrototype instanceof MetaObject.Attribute, "错误的类型");
@@ -280,7 +307,7 @@ public class QueryManagerRouter {
                                     prev.setChildren(MetaProtoList.of(next));
                                 }
                                 prev = next;
-                            }
+                            }*/
                             ((DataObject.Field) attribute).setColumn(root);
 
                             logger.info("处理mapper");
@@ -312,7 +339,6 @@ public class QueryManagerRouter {
                                 rowLinks.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(attribute.getId()).<MetaLink>addChildren(Stream.of(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1))).setSequence(i1 + 1));
                             }
                             for (int i = 0; i < rows.size(); i++) {
-                                MetaProtoList<MetaLink> cellOfLink = new MetaProtoList<>();
                                 JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
                                 Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
                                 Long outCurrentAttrId = mapper.getLong("current");
@@ -333,7 +359,7 @@ public class QueryManagerRouter {
                         }
 
 
-                        attribute.save();
+//                        attribute.save();
                         return attribute;
                     })
             ));
@@ -699,33 +725,21 @@ public class QueryManagerRouter {
 
     protected LinkedList<MetaPrototype> getAttrPath(String path, MetaObject metaObject) {
         LinkedList<MetaPrototype> list = new LinkedList<>();
-        list.add(/*DataObject object =*/ metaObject);
-            /*DataBaseTable table = null;
-            MetaObject.Attribute attribute = null;*/
+        list.add( metaObject);
         JSONArray array = JSON.parseArray(path);
         for (int i = 0; i < array.size(); i++) {
             JSONArray s = array.getJSONArray(i);
             IMetaType iMetaType = MetaUtils.getInstance().getMetaType(s.getLong(0));
             if (iMetaType instanceof AttributeMetaType) {
-                Assert.notNull(/*table*/list.peekLast(), () -> String.format("错误的路径:%s,分片：%s", path, s));
                 long attrId = s.getLong(1);
-                list.add(/*attribute =*/ ((DataBaseTable) list.peekLast()).getAttributes().stream().filter(attribute1 -> Objects.equals(attribute1.getId(), attrId)).findFirst().orElseThrow(() -> new IllegalStateException(String.format("表:[%s]没有找到对应字段:%s", path))));
+                list.add(((MetaLink) list.peekLast()).getObject().getAttributes().stream().filter(attribute1 -> Objects.equals(attribute1.getId(), attrId)).findFirst().orElseThrow(() -> new IllegalStateException(String.format("表:[%s]没有找到对应字段:%s", path))));
                 break;
             }
-//                Assert.isNull(table, () -> String.format("错误的路径:%s,分片：%s", path, s));
             if (iMetaType instanceof LinkMetaType) {
                 long linkId = s.getLong(1);
                 for (MetaLink constructorLink : ((DataObject) list.peekLast()).getConstructorLinks()) {
                     if (Objects.equals(constructorLink.getId(), linkId)) {
-                        if (constructorLink.getObject() != null) {
-                            list.add(constructorLink.getObject());
-                        }/*if (constructorLink.getObject() instanceof DataBaseTable) {
-                               table = constructorLink.getObject();
-                            } else if (constructorLink.getObject() instanceof DataObject) {
-                                object = constructorLink.getObject();
-                            }*/ else {
-                            throw new IllegalStateException(String.format("错误的路径:%s,分片：%s", path, s));
-                        }
+                        list.add(constructorLink);
                     }
                 }
                 continue;

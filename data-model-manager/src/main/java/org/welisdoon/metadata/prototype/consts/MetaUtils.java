@@ -121,9 +121,9 @@ public class MetaUtils {
         return null;
     }
 
-    public <T extends MetaPrototype> Class<T> getType(@NonNull IMetaType iMetaType) {
+    public <T extends MetaPrototype> T getType(@NonNull IMetaType iMetaType) {
         MetaPrototypeCreator metaPrototypeCreator = ApplicationContextProvider.getApplicationContext().getBean(LONG_KEY_VALUE_MAP_1.get(iMetaType.getClass()));
-        return (Class) ObjectUtils.getGenericTypes(metaPrototypeCreator.getClass(), MetaPrototypeCreator.class, 0);
+        return (T) metaPrototypeCreator.generate(iMetaType.getId());
     }
 
     public <T extends MetaObject> T getObject(@NonNull Long id) {
