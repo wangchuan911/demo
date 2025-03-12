@@ -5,8 +5,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
-import com.google.common.collect.ImmutableList;
 import com.hazelcast.shaded.org.jctools.queues.MessagePassingQueue;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 import org.welisdoon.common.JsonUtils;
 import org.welisdoon.metadata.prototype.condition.MetaLinkCondition;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
@@ -25,7 +24,6 @@ import org.welisdoon.metadata.prototype.dao.MetaAttributeDao;
 import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
 import org.welisdoon.metadata.prototype.define.*;
-import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilderHandler;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
@@ -36,8 +34,6 @@ import org.welisdoon.web.vertx.annotation.VertxRouter;
 import org.welisdoon.web.vertx.enums.VertxRouteType;
 import org.welisdoon.web.vertx.utils.RoutingContextChain;
 
-import javax.xml.crypto.Data;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -657,7 +653,7 @@ public class QueryManagerRouter {
         if (link == null || link.getObject() == null) {
             return null;
         }
-        String seqNext = (StringUtils.isNotEmpty(seq) ? (seq + ",") : "[") + JSON.toJSONString(ImmutableList.of(link.getTypeId(), link.getId()));
+        String seqNext = (StringUtils.isNotEmpty(seq) ? (seq + ",") : "[") + path(link);
         switch (link.getObject().getType()) {
             case Object:
                 List<MetaLink> list2 = getLinks(link.getObject().getId());
@@ -674,7 +670,7 @@ public class QueryManagerRouter {
                             entries.add(Map.entry("rootInstanceId", root.getInstanceId()));
                         if (parent != null)
                             entries.add(Map.entry("objectId", parent.getId()));
-                        entries.add(Map.entry("seq", seqNext + "," + JSON.toJSONString(ImmutableList.of(attribute.getTypeId(), attribute.getId())) + "]"));
+                        entries.add(Map.entry("seq", seqNext + "," + path(attribute) + "]"));
                         entries.add(Map.entry("instanceId", link.getInstanceId()));
                     });
                 }).collect(Collectors.toList()), entries -> {
@@ -684,6 +680,10 @@ public class QueryManagerRouter {
             default:
                 return null;
         }
+    }
+
+    protected String path(MetaPrototype metaPrototype) {
+        return JSON.toJSONString(List.of(metaPrototype.getTypeId(), metaPrototype.getId()));
     }
 
     protected Map<String, Object> toTreeNode(MetaPrototype obj, List<Map<String, Object>> list) {

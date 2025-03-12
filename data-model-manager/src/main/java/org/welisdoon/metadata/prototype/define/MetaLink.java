@@ -202,6 +202,8 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
     public MetaLink getLink() {
+        if (Objects.nonNull(getParentId()))
+            ObjectUtils.synchronizedInitial(this, metaLink -> Objects.nonNull(link) || linkId == null, metaLink -> link = MetaUtils.getInstance().getMetaLinkDao().get(linkId));
         return link;
     }
 

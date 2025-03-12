@@ -186,17 +186,18 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
         @Override
         public int save() {
-            if (!isEditing())
-                return 0;
-            int update;
-            if (getId() != null) {
-                update = MetaUtils.getInstance().getMetaAttributeDao().put(this);
-                setState(LifeState.Save);
-                return update;
+            int update = 0;
+            if (isEditing()) {
+                if (getId() != null) {
+                    update = MetaUtils.getInstance().getMetaAttributeDao().put(this);
+                    setState(LifeState.Save);
+                } else {
+                    super.save();
+                    update = MetaUtils.getInstance().getMetaAttributeDao().add(this);
+                    setState(LifeState.Save);
+                }
             }
-            super.save();
-            update = MetaUtils.getInstance().getMetaAttributeDao().add(this);
-            setState(LifeState.Save);
+            getParent().save();
             return update;
         }
 

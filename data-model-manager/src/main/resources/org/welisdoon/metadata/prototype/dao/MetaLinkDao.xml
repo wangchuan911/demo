@@ -10,6 +10,7 @@
         <result column="value_id" property="valueId"></result>
         <result column="attribute_id" property="attributeId"></result>
         <result column="instance_id" property="instanceId"></result>
+        <result column="link_id" property="linkId"></result>
         <result column="SEQUENCE" property="sequence"></result>
     </resultMap>
     <select id="list"

@@ -52,18 +52,20 @@ public abstract class MetaPrototype {
         return code;
     }
 
-    public void setCode(String code) {
+    public <T extends MetaPrototype> T setCode(String code) {
         this.setEditing(this.code, code);
         this.code = code;
+        return (T) this;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public <T extends MetaPrototype> T setName(String name) {
         this.setEditing(this.name, name);
         this.name = name;
+        return (T) this;
     }
 
 

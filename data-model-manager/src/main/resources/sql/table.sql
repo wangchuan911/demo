@@ -10,7 +10,8 @@ create table MD_LINK
     SEQUENCE int(3) null,
     ATTRIBUTE_ID int null,
     PARENT_ID int default 0 null,
-    `DESC` varchar(200) null
+    `DESC` varchar(200) null,
+    CRETE_TIME TIMESTAMP DEFAULT NOW() NULL
 );
 
 create table MD_OBJECT
@@ -21,7 +22,8 @@ create table MD_OBJECT
     NAME varchar(20) null,
     PARENT_ID int null,
     TYPE_ID int null,
-    CONSTRUCT_LINK_ID int null
+    CONSTRUCT_LINK_ID int null,
+    CRETE_TIME TIMESTAMP DEFAULT NOW() NULL
 );
 
 create table MD_OBJECT_ATTR
@@ -32,7 +34,8 @@ create table MD_OBJECT_ATTR
     CODE varchar(200) null,
     NAME varchar(200) null,
     PARENT_ID int null,
-    TYPE_ID int not null
+    TYPE_ID int not null,
+    CRETE_TIME TIMESTAMP DEFAULT NOW() NULL
 );
 
 create table MD_VALUE
@@ -44,6 +47,19 @@ create table MD_VALUE
     SEQUNECE int(3) default 0 null,
     VALUE_TYPE_ID int null,
     `DESC` varchar(200) null,
-    PARENT_ID int null
+    PARENT_ID int null,
+    CRETE_TIME TIMESTAMP DEFAULT NOW() NULL
 );
+
+create table MD_INSTANCE
+(
+    ID int auto_increment
+        primary key,
+    CODE varchar(200) null,
+    NAME varchar(200) null,
+    OBJECT_ID int null,
+    PARENT_ID int null,
+    CREATE_TIME timestamp default CURRENT_TIMESTAMP null
+);
+
 
