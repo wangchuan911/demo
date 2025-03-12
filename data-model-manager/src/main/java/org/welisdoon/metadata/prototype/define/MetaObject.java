@@ -120,20 +120,22 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
     public int save() {
 
         int update = 0;
-        if (isEditing())
-            if (getId() != null) {
-                update += MetaUtils.getInstance().getMetaObjectDao().put(this);
-            } else {
-                super.save();
-                update += MetaUtils.getInstance().getMetaObjectDao().add(this);
-            }
-        setState(LifeState.Save);
+        if (isEditing() && getId() == null) {
+            super.save();
+            update += MetaUtils.getInstance().getMetaObjectDao().add(this);
+            setState(LifeState.Save);
+        }
         for (Attribute attribute : getAttributes()) {
             attribute.setObjectId(this.getId());
             update += attribute.save();
         }
         getConstruct().setObjectId(this.getId());
         update += getConstruct().save();
+        setConstructId(getConstruct().getId());
+        if (isEditing()) {
+            MetaUtils.getInstance().getMetaObjectDao().put(this);
+            setState(LifeState.Save);
+        }
         return update;
     }
 
@@ -187,17 +189,17 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         @Override
         public int save() {
             int update = 0;
+            getParent().save();
+            setParentId(getParent().getId());
             if (isEditing()) {
                 if (getId() != null) {
                     update = MetaUtils.getInstance().getMetaAttributeDao().put(this);
-                    setState(LifeState.Save);
                 } else {
                     super.save();
                     update = MetaUtils.getInstance().getMetaAttributeDao().add(this);
-                    setState(LifeState.Save);
                 }
+                setState(LifeState.Save);
             }
-            getParent().save();
             return update;
         }
 

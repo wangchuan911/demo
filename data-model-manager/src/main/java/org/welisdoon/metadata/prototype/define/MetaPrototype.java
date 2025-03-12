@@ -23,9 +23,10 @@ public abstract class MetaPrototype {
         return id;
     }
 
-    public void setId(Long id) {
+    public <T extends MetaPrototype> T setId(Long id) {
         this.setEditing(this.id, id);
         this.id = id;
+        return (T) this;
     }
 
     public Long getTypeId() {

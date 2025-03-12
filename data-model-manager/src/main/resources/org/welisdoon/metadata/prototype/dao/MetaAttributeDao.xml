@@ -38,8 +38,8 @@
 
     <insert id="add" parameterType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute"
             useGeneratedKeys="true" keyProperty="id">
-        insert into MD_OBJECT_ATTR(id, type_id, code, name, object_id)
-        values (#{id}, #{typeId}, #{code}, #{name}, #{objectId})
+        insert into MD_OBJECT_ATTR(id, type_id, code, name, object_id,parent_id)
+        values (#{id}, #{typeId}, #{code}, #{name}, #{objectId},#{parentId,jdbcType=NUMERIC})
     </insert>
 
     <delete id="delete" parameterType="long">
@@ -52,7 +52,7 @@
         select #{value} type_id from dual
     </select>
     <insert id="put" parameterType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute" >
-        update MD_OBJECT_ATTR set type_id= #{typeId}, code=#{code}, name=#{name}, object_id=#{objectId}
+        update MD_OBJECT_ATTR set type_id= #{typeId}, code=#{code}, name=#{name}, object_id=#{objectId}, parent_id=#{parentId,jdbcType=NUMERIC}
         where id=#{id}
     </insert>
     <update id="update" parameterType="org.welisdoon.metadata.prototype.define.MetaObject$Attribute">

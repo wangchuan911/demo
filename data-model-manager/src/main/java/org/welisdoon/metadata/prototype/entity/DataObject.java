@@ -94,10 +94,15 @@ public class DataObject extends MetaObject {
         @JsonIgnore
         @JSONField(deserialize = false, serialize = false)
         public MetaLink getForeignKey() {
-            return ObjectUtils.synchronizedGet(this, field -> field.foreignKey, field ->
-                    field.foreignKey = getParent().getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.ForeignKey).findFirst().orElseGet(() -> {
-                        return new MetaLink().<MetaLink>setTypeId(LinkMetaType.ForeignKey.getId());
-                    })
+            return ObjectUtils.synchronizedGet(this, field -> field.foreignKey, field -> {
+                        getParent().getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.ForeignKey).findFirst().ifPresentOrElse(metaLink -> {
+                            this.foreignKey = metaLink;
+                        }, () -> {
+                            this.foreignKey = new MetaLink().<MetaLink>setTypeId(LinkMetaType.ForeignKey.getId());
+                            getParent().getChildren().add(this.foreignKey);
+                        });
+                        return this.foreignKey;
+                    }
             );
         }
 
