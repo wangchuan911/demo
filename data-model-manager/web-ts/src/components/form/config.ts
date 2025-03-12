@@ -3,6 +3,7 @@ import MySelect from '@/components/form/input/MySelect.vue';
 import MyTreeSelect from '@/components/form/input/MyTreeSelect.vue';
 import MyEasySearch from '@/components/form/input/MyEasySearch.vue';
 import {DrawersContent, FormContent} from "@/components/config";
+import {reactive} from "vue";
 
 export declare type ContentGetter = () => FormContent;
 
@@ -38,7 +39,7 @@ export abstract class InputItem implements ItemConfig<InputItem> {
     protected constructor(code: string, label: string, config: ItemConfig<InputItem>) {
         this.code = code;
         this.label = label;
-        this.prop = {};
+        this.prop = reactive({} as Record<any, any>);
         this.contentGetter = () => null as unknown as FormContent;
         this.config = config;
         const _this = this._self();

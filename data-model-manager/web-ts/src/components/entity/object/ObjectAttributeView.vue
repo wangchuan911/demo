@@ -97,13 +97,23 @@ class AttrAddDrawersContent extends FormDrawersContent {
             };
             input.setOptions(...format(data));
           },
-          async inputChangeHandler(input: SelectTreeItem, changeInput: InputItem, value: any, content: FormContent): Promise<void> {
+          async dataToValue(input: SelectTreeItem, value: any, content: FormContent): Promise<void> {
+            if (value.id) {
+              const {data}: { data: Array<any> } = await $http.get(`attr/path/${value.id}`);
+              const seq = JSON.stringify(data);
+              console.log(data, seq)
+              content.form[input.code] = seq;
+              return
+            }
+            content.form[input.code] = value[input.code];
+          },
+          /*async inputChangeHandler(input: SelectTreeItem, changeInput: InputItem, value: any, content: FormContent): Promise<void> {
             console.log(value)
             const {data}: { data: Array<any> } = await $http.post(`attr/bind/obj/${props.id}`, {
               path: value
             });
             content.form["attrId"] = data;
-          }
+          }*/
         } as ItemConfig<SelectTreeItem>).andThen(item => {
           item.prop.defaultExpandAll = true;
         }),
@@ -112,6 +122,17 @@ class AttrAddDrawersContent extends FormDrawersContent {
             input.prop.cols.length = 0;
             input.prop.rows.length = 0;
             input.prop.objectId = props.id;
+          },
+          async dataToValue(input: AttrObjMapperItem, value: any, content: FormContent): Promise<void> {
+            if (value.id) {
+              const {data}: { data: { cols: Array<Record<any, any>>, rows: Array<Record<any, any>> } } = await $http.get(`attr/mapper/${value.id}`);
+              console.log(data)
+              console.log(input.prop)
+              input.prop.cols.push(...data.cols.filter((value1, index) => index != 0).map((value1) => ({attrId: value1.attributeId})));
+              console.log(input.prop)
+              return;
+            }
+            content.form[input.code] = value[input.code];
           },
           async valueToData(input: AttrObjMapperItem, form: Record<any, any>, content: FormContent): Promise<void> {
             form[input.code] = {
