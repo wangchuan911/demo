@@ -100,10 +100,12 @@ class AttrAddDrawersContent extends FormDrawersContent {
           async dataToValue(input: SelectTreeItem, value: any, content: FormContent): Promise<void> {
             if (value.id) {
               const {data}: { data: Array<any> } = await $http.get(`attr/path/${value.id}`);
-              const seq = JSON.stringify(data);
-              console.log(data, seq)
-              content.form[input.code] = seq;
-              return
+              if (data.length > 0) {
+                const seq = JSON.stringify(data);
+                console.log(data, seq)
+                content.form[input.code] = seq;
+                return
+              }
             }
             content.form[input.code] = value[input.code];
           },
@@ -129,15 +131,16 @@ class AttrAddDrawersContent extends FormDrawersContent {
               console.log(data)
               console.log(input.prop)
               input.prop.cols.push(...data.cols.filter((value1, index) => index != 0).map((value1) => ({attrId: value1.attributeId})));
-              console.log(input.prop)
-              const rows: Array<Record<any, any>> = []
+              console.log(input.prop);
+              const rows: Array<Record<any, any>> = [];
               data.rows.forEach((row, index) => {
                 rows[index] = rows[index] || {
                   mapper: {
                     current: row[0].attributeId
                   },
                   objectId: row[0].objectId,
-                  attrs: []
+                  attrs: [],
+                  objs: []
                 };
                 for (let i = 1; i < row.length; i++) {
                   rows[index].mapper[`${i - 1}`] = row[i].attributeId;

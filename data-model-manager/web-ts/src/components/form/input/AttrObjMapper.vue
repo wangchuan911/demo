@@ -12,13 +12,13 @@
             filterable
             remote
             placeholder="Please enter a keyword"
-            :remote-method="queryObj"
+            :remote-method="(key)=>queryObj(key,scope.row)"
             :loading="dialog.obj.loading"
             @change="(value)=>objectChange(scope.row,value)"
             style="width: 240px"
         >
           <el-option
-              v-for="item in options"
+              v-for="item in scope.row.objs"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -196,7 +196,7 @@ const add = (key: string) => {
       break;
     case "row":
       // dialog.obj.show = true;
-      rows.value.push({mapper: {}, attrs: []});
+      rows.value.push({mapper: {}, attrs: [], objs: []});
       break;
   }
 };
@@ -227,10 +227,10 @@ const del = (key: string, index: number) => {
   }
 
 };
-const options: any[] = reactive([]);
 
-const queryObj = async (query: string) => {
+const queryObj = async (query: string, row: any) => {
   if (query) {
+    const options: Array<any> = row.objs;
     if (options.find(option => (option.label || "").toUpperCase().indexOf((query || "").toUpperCase()) >= 0) != null) {
       return;
     }
