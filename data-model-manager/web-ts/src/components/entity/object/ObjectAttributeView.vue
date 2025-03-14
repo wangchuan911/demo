@@ -136,12 +136,17 @@ class AttrAddDrawersContent extends FormDrawersContent {
                   mapper: {
                     current: row[0].attributeId
                   },
-                  objectId: row[0].objectId
+                  objectId: row[0].objectId,
+                  attrs: []
                 };
                 for (let i = 1; i < row.length; i++) {
                   rows[index].mapper[`${i - 1}`] = row[i].attributeId;
                 }
               });
+              for (let row of rows) {
+                const {data} = await $http.get(`obj/attrs/${row.objectId}`);
+                row.attrs.push(...data);
+              }
               input.prop.rows.push(...rows);
               console.log(rows);
               return;
