@@ -161,8 +161,8 @@ console.log(cols)
 console.log(rows)
 console.log(objectId)
 
-const attrs = reactive([]);
-const setAttr = (attrs: [], value: number) => {
+const attrs: Array<Record<any, any>> = reactive([]);
+const setAttr = (attrs: Array<Record<any, any>>, value: number) => {
   $http.get(`obj/attrs/${value}`)
       .then(({data}: { data: Array<Record<any, any>> }) => {
         attrs.length = 0;
