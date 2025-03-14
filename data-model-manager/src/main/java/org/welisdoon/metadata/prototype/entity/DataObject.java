@@ -108,16 +108,19 @@ public class DataObject extends MetaObject {
 
         public void setColumn(MetaLink column) {
             ListIterator<MetaLink> iterator = getParent().getChildren().listIterator();
-            while (iterator.hasNext()) {
-                MetaLink metaLink = iterator.next();
-                if (metaLink.getType() == LinkMetaType.SqlToSelect) {
-                    if (changeColumn(metaLink, column)) {
-                        iterator.set(column);
+            if (iterator.hasNext()) {
+                while (iterator.hasNext()) {
+                    MetaLink metaLink = iterator.next();
+                    if (metaLink.getType() == LinkMetaType.SqlToSelect) {
+                        if (changeColumn(metaLink, column)) {
+                            iterator.set(column);
+                        }
+                        return;
                     }
-                    return;
                 }
+            } else {
+                getParent().getChildren().add(column);
             }
-            getParent().getChildren().add(column);
         }
 
         protected boolean changeColumn(MetaLink self, MetaLink create) {
@@ -125,8 +128,9 @@ public class DataObject extends MetaObject {
                 return true;
             }
             MetaProtoList<MetaLink> selfLinks = self.getChildren(), createLinks = create.getChildren();
-            Assert.isTrue(CollectionUtils.isEmpty(self.getChildren()) && CollectionUtils.isNotEmpty(createLinks), "错误的数据");
-            Assert.isTrue(CollectionUtils.isNotEmpty(self.getChildren()) && CollectionUtils.isEmpty(createLinks), "错误的数据");
+            boolean flag = (CollectionUtils.isEmpty(self.getChildren()) && CollectionUtils.isNotEmpty(createLinks))
+                    || (CollectionUtils.isNotEmpty(self.getChildren()) && CollectionUtils.isEmpty(createLinks));
+            Assert.isTrue(flag, "错误的数据");
             if (CollectionUtils.isNotEmpty(self.getChildren()) && CollectionUtils.isNotEmpty(createLinks) && changeColumn(selfLinks.getFirst(), createLinks.getFirst())) {
                 self.getChildren().clear();
                 self.getChildren().add(create);
