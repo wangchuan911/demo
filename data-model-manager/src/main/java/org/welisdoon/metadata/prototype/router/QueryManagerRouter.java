@@ -360,7 +360,7 @@ public class QueryManagerRouter {
                             ((DataObject.Field) attribute).getForeignKey().getChildren().clear();
                             ((DataObject.Field) attribute).getForeignKey().setChildren(rowLinks);
                         }
-                        attribute.save();
+//                        attribute.save();
                         return attribute;
                     })
             ));
@@ -766,10 +766,12 @@ public class QueryManagerRouter {
                 MetaLink foreignKey = ((DataObject.Field) attribute).getForeignKey();
                 List<Map.Entry<String, Object>> list = new LinkedList<>();
                 for (MetaLink child : foreignKey.getChildren()) {
-                    for (MetaLink childChild : child.getChildren()) {
+                    MetaLink childChild;
+                    for (int i = 0; i < child.getChildren().size(); i++) {
+                        childChild = child.getChildren().get(i);
                         list.clear();
                         this.addEntry(list, "id", childChild.getId());
-                        this.addEntry(list, "attributeId", childChild.getId());
+                        this.addEntry(list, "attributeId", childChild.getAttributeId());
                         this.addEntry(list, "objectId", childChild.getObjectId());
                         this.addEntry(list, "instanceId", childChild.getInstanceId());
                         switch (childChild.getType()) {
@@ -779,15 +781,13 @@ public class QueryManagerRouter {
                                         "objectId", childChild.getObjectId(),
                                         "instanceId", childChild.getInstanceId()));*/
                                 cols.add(Map.ofEntries(list.toArray(new Map.Entry[0])));
-                                rows.add(new LinkedList<>());
+//                                rows.add(new LinkedList<>());
                                 break;
                             case Cell:
-                                rows.get(cols.size() - 1)
-                                        /*.add(Map.of("id", childChild.getId(),
-                                                "attributeId", childChild.getId(),
-                                                "objectId", childChild.getObjectId(),
-                                                "instanceId", childChild.getInstanceId()))*/
-                                        .add(Map.ofEntries(list.toArray(new Map.Entry[0])));
+                                if (rows.size() < i)
+                                    rows.add(new LinkedList<>());
+                                rows.get(i - 1).add(Map.ofEntries(list.toArray(new Map.Entry[0])));
+                                break;
                         }
                     }
                 }

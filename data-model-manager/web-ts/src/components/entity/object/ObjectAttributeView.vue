@@ -119,17 +119,31 @@ class AttrAddDrawersContent extends FormDrawersContent {
         }),
         new AttrObjMapperItem('colMapper', "属性映射", {
           async inputLoadHandler(input: AttrObjMapperItem, content: FormContent): Promise<void> {
-            input.prop.cols.length = 0;
-            input.prop.rows.length = 0;
             input.prop.objectId = props.id;
           },
           async dataToValue(input: AttrObjMapperItem, value: any, content: FormContent): Promise<void> {
+            input.prop.cols.length = 0;
+            input.prop.rows.length = 0;
             if (value.id) {
-              const {data}: { data: { cols: Array<Record<any, any>>, rows: Array<Record<any, any>> } } = await $http.get(`attr/mapper/${value.id}`);
+              const {data}: { data: { cols: Array<Record<any, any>>, rows: Array<Array<Record<any, any>>> } } = await $http.get(`attr/mapper/${value.id}`);
               console.log(data)
               console.log(input.prop)
               input.prop.cols.push(...data.cols.filter((value1, index) => index != 0).map((value1) => ({attrId: value1.attributeId})));
               console.log(input.prop)
+              const rows: Array<Record<any, any>> = []
+              data.rows.forEach((row, index) => {
+                rows[index] = rows[index] || {
+                  mapper: {
+                    current: row[0].attributeId
+                  },
+                  objectId: row[0].objectId
+                };
+                for (let i = 1; i < row.length; i++) {
+                  rows[index].mapper[`${i - 1}`] = row[i].attributeId;
+                }
+              });
+              input.prop.rows.push(...rows);
+              console.log(rows);
               return;
             }
             content.form[input.code] = value[input.code];
