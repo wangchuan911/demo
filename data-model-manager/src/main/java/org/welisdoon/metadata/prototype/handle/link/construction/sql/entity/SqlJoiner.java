@@ -1,5 +1,6 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataBaseTable;
@@ -57,8 +58,16 @@ public class SqlJoiner extends Sql {
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
-        else
-            return subJoiners.stream().map(SqlJoiner::format).collect(Collectors.joining(" "));
+        else {
+            boolean weak = getType() == LinkMetaType.SqlToJoinOfWeakRel;
+            return subJoiners.stream().map(sqlJoiner -> {
+                String s = sqlJoiner.format();
+                if (weak && s.startsWith(" join ")) {
+                    return " left" + s;
+                }
+                return s;
+            }).collect(Collectors.joining(" "));
+        }
     }
 
     @Override

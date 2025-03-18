@@ -18,7 +18,7 @@ public class SqlListJoiner extends SqlJoiner {
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
-        else
-            return subJoiners.stream().map(SqlJoiner::format).collect(Collectors.joining(" "));
+
+        return super.format();
     }
 }
