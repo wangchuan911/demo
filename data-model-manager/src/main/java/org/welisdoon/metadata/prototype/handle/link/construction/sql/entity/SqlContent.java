@@ -29,21 +29,16 @@ public class SqlContent extends MetaLink {
     }
 
     public String format() {
-        StringBuilder sql = new StringBuilder();
+        String from = ((SqlJoiner) getChildren().get(0)).formatFirst();
+        StringBuilder join = new StringBuilder();
         if (getChildren().size() > 1) {
             ListIterator<SqlJoiner> iterator = (ListIterator) getChildren().listIterator(1);
             SqlJoiner sqlJoiner;
             while (iterator.hasNext()) {
                 sqlJoiner = iterator.next();
-                sql.append(sqlJoiner.format());
+                join.append(sqlJoiner.format());
             }
         }
-        String first = ((SqlJoiner) getChildren().get(0)).format();
-        int offset1 = first.indexOf(" join ") + 6;
-        int offset2 = first.indexOf(" on ");
-        sql.insert(0, first.substring(offset1, offset2));
-        sql.insert(0, " from ");
-        sql.append(first.substring(offset2 + 4));
-        return sql.toString();
+        return from.replace(SqlJoiner.OTHER, join.toString());
     }
 }

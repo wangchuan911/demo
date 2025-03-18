@@ -21,6 +21,7 @@ public class SqlJoiner extends Sql {
     List<SqlRelationExpression> condition;
     List<SqlJoiner> subJoiners = new LinkedList<>();
     boolean leaf;
+    static final String OTHER = "{other}";
 
     protected void build() {
         this.readonly();
@@ -68,6 +69,22 @@ public class SqlJoiner extends Sql {
             }).collect(Collectors.joining(" "));
         }
     }
+
+    protected String formatFirst() {
+        if (leaf)
+            switch (getType()) {
+                case ObjConstructor:
+                case SqlToJoinOfStrongRel:
+                    return String.format(" from %s %s %s where %s 1=1", table.getTarget(), table.getAlias(), OTHER, condition.stream().map(sql -> sql.format() + " and ").collect(Collectors.joining("")));
+                default:
+                    throw new IllegalStateException("不支持的操作：" + getType().name());
+            }
+        else {
+            return subJoiners.get(0).formatFirst().replace(OTHER,
+                    (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(SqlJoiner::format).collect(Collectors.joining(" "))) + OTHER);
+        }
+    }
+
 
     protected boolean isWeakRelation() {
         return getType() == LinkMetaType.SqlToJoinOfWeakRel;
