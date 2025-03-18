@@ -125,11 +125,19 @@ public abstract class MetaPrototype {
         return this.state == LifeState.Edit;
     }
 
+    public boolean isDelete() {
+        return this.state == LifeState.Delete;
+    }
+
+
     public LifeState getState() {
         return this.state;
     }
 
     protected void setState(LifeState state) {
+        if (this.state == LifeState.Readonly) {
+            return;
+        }
         this.state = state;
     }
 
@@ -178,6 +186,6 @@ public abstract class MetaPrototype {
     }
 
     public enum LifeState {
-        Edit, Save, Delete
+        Edit, Save, Delete, Readonly
     }
 }

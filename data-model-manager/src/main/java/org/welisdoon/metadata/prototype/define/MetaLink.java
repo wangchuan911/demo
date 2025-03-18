@@ -112,6 +112,10 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         return instanceId;
     }
 
+    public long getInstanceIdAsLongValue() {
+        return instanceId != null ? instanceId : 0;
+    }
+
     public MetaLink setInstanceId(Long instanceId) {
         setEditing(this.instanceId, instanceId);
         this.instanceId = instanceId;
@@ -215,7 +219,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
 
     @Override
     public int remove() {
-        if (getState() == LifeState.Delete)
+        if (this.isDelete())
             return 0;
         super.remove();
         int update = 0;

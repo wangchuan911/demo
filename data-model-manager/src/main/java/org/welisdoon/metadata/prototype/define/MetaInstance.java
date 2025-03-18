@@ -10,7 +10,7 @@ public class MetaInstance extends MetaPrototype {
 
     @Override
     public int remove() {
-        if (getState() == LifeState.Delete)
+        if (this.isDelete())
             return 0;
         super.remove();
         setState(LifeState.Delete);

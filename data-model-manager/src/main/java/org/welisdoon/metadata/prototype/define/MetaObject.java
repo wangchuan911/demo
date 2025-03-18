@@ -105,7 +105,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
     @Override
     public int remove() {
-        if (getState() == LifeState.Delete)
+        if (this.isDelete())
             return 0;
         int update = getChildren().stream().map(MetaObject::remove).reduce(0, Integer::sum);
         super.remove();
@@ -175,7 +175,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
 
         @Override
         public int remove() {
-            if (getState() == LifeState.Delete)
+            if (this.isDelete())
                 return 0;
             super.remove();
             int update = MetaUtils.getInstance().getMetaObjectDao().delete(this.getId());
