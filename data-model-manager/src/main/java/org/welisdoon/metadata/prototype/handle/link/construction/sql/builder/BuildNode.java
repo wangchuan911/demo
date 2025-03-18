@@ -9,6 +9,7 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
  * @Author Septem
  * @Date 9:15
  */
+@Deprecated
 public interface BuildNode {
 
     long getInstanceId();

@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 @Component
 @LinkMetaType.LinkHandle(LinkMetaType.OR)
 @Order(0)
+@Deprecated
 public class SqlORHandler implements ISqlBuilderHandler {
 
     @Override

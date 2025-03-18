@@ -10,12 +10,10 @@ import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaProtoList;
+import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlJoiner;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @Classname DataObject
@@ -124,6 +122,20 @@ public class DataObject extends MetaObject {
             } else {
                 getParent().getChildren().add(column);
             }
+        }
+
+        public List<MetaLink> getColumnMapper() {
+            List<MetaLink> list = new LinkedList<>();
+            MetaLink next = this.getParent().getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
+            while (next != null) {
+                if (next.getLinkId() < 0) {
+                    list.add(new SqlJoiner().<MetaLink>setId(next.getLinkId()).setAttributeId(next.getAttributeId()).setTypeId(LinkMetaType.ObjConstructor.getId()));
+                } else {
+                    list.add(next.getLink());
+                }
+                next = next.getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
+            }
+            return list;
         }
 
         protected boolean changeColumn(MetaLink self, MetaLink create) {

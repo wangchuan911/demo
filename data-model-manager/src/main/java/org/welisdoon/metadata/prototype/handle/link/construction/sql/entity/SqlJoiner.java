@@ -26,7 +26,7 @@ public class SqlJoiner extends Sql {
         MetaObject object = getObject();
         if (object instanceof DataBaseTable) {
             leaf = true;
-            table = new SqlAlias(getPrefix() + "_" + getInstanceIdAsLongValue(), object.getCode());
+            table = new SqlAlias(getPrefix(), object.getCode());
             condition = new LinkedList<>();
             for (MetaLink child : getChildren()) {
                 if (child instanceof SqlRelationExpression) {
@@ -61,5 +61,14 @@ public class SqlJoiner extends Sql {
             }
         else
             return subJoiners.stream().map(SqlJoiner::format).collect(Collectors.joining(" "));
+    }
+
+    @Override
+    String getPrefix() {
+        SqlJoiner metaLink1 = findParent(SqlJoiner.class);
+        if (metaLink1 == null) {
+            return "T" + getInstanceIdAsLongValue();
+        }
+        return metaLink1.getPrefix() + "_" + getInstanceIdAsLongValue();
     }
 }

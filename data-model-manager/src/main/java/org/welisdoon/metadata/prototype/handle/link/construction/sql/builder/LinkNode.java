@@ -17,6 +17,7 @@ import java.util.stream.Stream;
  * @Author Septem
  * @Date 9:16
  */
+@Deprecated
 public class LinkNode implements BuildNode {
     MetaLink link;
     boolean main;

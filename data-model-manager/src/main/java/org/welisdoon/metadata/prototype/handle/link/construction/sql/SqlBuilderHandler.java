@@ -22,6 +22,7 @@ import java.util.Objects;
  */
 @LinkMetaType.LinkHandle(LinkMetaType.ObjToDataBase)
 @Component
+@Deprecated
 public class SqlBuilderHandler implements LinkHandle<SqlContent> {
 
 

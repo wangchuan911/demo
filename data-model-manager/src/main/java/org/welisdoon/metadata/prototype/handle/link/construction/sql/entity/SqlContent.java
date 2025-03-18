@@ -14,15 +14,15 @@ import java.util.ListIterator;
  * @Author Septem
  * @Date 15:57
  */
-public class SqlContent {
-    List<SqlJoiner> joiners = new LinkedList<>();
+public class SqlContent extends MetaLink {
 
     public SqlContent(MetaObject metaObject) {
         if (metaObject instanceof DataObject) {
             for (MetaLink constructorLink : ((DataObject) metaObject).getConstructorLinks()) {
                 if (constructorLink instanceof Sql) {
+                    constructorLink.setParent(this);
                     ((SqlJoiner) constructorLink).build();
-                    joiners.add((SqlJoiner) constructorLink);
+                    getChildren().add(constructorLink);
                 }
             }
         }
@@ -30,15 +30,15 @@ public class SqlContent {
 
     public String format() {
         StringBuilder sql = new StringBuilder();
-        if (joiners.size() > 1) {
-            ListIterator<SqlJoiner> iterator = joiners.listIterator(1);
+        if (getChildren().size() > 1) {
+            ListIterator<SqlJoiner> iterator = (ListIterator) getChildren().listIterator(1);
             SqlJoiner sqlJoiner;
             while (iterator.hasNext()) {
                 sqlJoiner = iterator.next();
                 sql.append(sqlJoiner.format());
             }
         }
-        String first = joiners.get(0).format();
+        String first = ((SqlJoiner) getChildren().get(0)).format();
         int offset1 = first.indexOf(" join ") + 6;
         int offset2 = first.indexOf(" on ");
         sql.insert(0, first.substring(offset1, offset2));

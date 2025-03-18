@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 0:03
  */
+@Deprecated
 public class SubSqlContentNode extends SqlContentNode {
     MetaLink link;
 

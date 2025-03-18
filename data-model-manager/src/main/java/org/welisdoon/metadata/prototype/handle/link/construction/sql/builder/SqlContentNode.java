@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 9:16
  */
+@Deprecated
 public class SqlContentNode extends SqlContent implements BuildNode {
     SqlContent upperContent;
     long instanceId;

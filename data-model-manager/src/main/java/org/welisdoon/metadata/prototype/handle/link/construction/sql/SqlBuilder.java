@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 21:36
  */
+@Deprecated
 public interface SqlBuilder {
 
     default String build(SqlContent content) {

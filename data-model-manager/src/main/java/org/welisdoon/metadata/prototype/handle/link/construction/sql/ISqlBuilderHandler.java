@@ -15,6 +15,7 @@ import java.util.Objects;
  * @Author Septem
  * @Date 16:48
  */
+@Deprecated
 public interface ISqlBuilderHandler {
     Map<LinkMetaType, ISqlBuilderHandler> handlerMap = new HashMap<>();
 

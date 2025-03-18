@@ -61,7 +61,8 @@ public enum LinkMetaType implements IMetaType {
     Value(3211, "sql最小项", SqlOperator),
     Values(3212, "sql最小项集", SqlOperator),
     GreatEqual(3213, "大于等于", SqlOperator),
-    LessEqual(3214, "小于等于", SqlOperator),;
+    LessEqual(3214, "小于等于", SqlOperator),
+    ;
 
     long id;
     String name;
@@ -110,6 +111,7 @@ public enum LinkMetaType implements IMetaType {
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.RUNTIME)
     @Meta
+    @Deprecated
     public @interface LinkHandle {
         LinkMetaType[] value();
     }

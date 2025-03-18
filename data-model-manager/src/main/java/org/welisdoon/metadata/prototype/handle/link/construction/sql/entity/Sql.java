@@ -2,6 +2,8 @@ package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
 import org.welisdoon.metadata.prototype.define.MetaLink;
 
+import java.util.Objects;
+
 /**
  * @Classname Sql
  * @Description TODO
@@ -12,10 +14,9 @@ public abstract class Sql extends MetaLink {
 
     String getPrefix() {
         MetaLink metaLink = getParent();
-        if (metaLink == null || !(metaLink instanceof Sql))
-            return "T";
-
-        return ((Sql) metaLink).getPrefix();
+        if (metaLink instanceof Sql)
+            return ((Sql) metaLink).getPrefix();
+        return "";
     }
 
     protected void readonly() {

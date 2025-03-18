@@ -17,6 +17,7 @@ import java.util.Objects;
 
 @Component
 @LinkMetaType.LinkHandle({LinkMetaType.Value})
+@Deprecated
 public class SqlValueHandler implements ISqlBuilderHandler {
     @Override
     public String toSql(MetaLink metaLink, SqlContent content) {

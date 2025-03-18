@@ -10,6 +10,7 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilder;
  * @Date 21:40
  */
 @Component
+@Deprecated
 public class SqlShowBuilder implements SqlBuilder {
 
 }

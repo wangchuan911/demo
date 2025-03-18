@@ -24,6 +24,7 @@ import java.util.Optional;
  * @Author Septem
  * @Date 16:47
  */
+@Deprecated
 public class SqlContent implements HandleContext {
     final static Logger logger = LoggerFactory.getLogger(SqlContent.class);
     protected List<BuildNode> links = new LinkedList<>();

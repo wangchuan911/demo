@@ -14,6 +14,7 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
  */
 @Component
 @LinkMetaType.LinkHandle({LinkMetaType.Equal, LinkMetaType.NotEqual, LinkMetaType.GreatThan, LinkMetaType.LessThan})
+@Deprecated
 public class SqEqualHandler implements ISqlBuilderHandler {
 
     @Override

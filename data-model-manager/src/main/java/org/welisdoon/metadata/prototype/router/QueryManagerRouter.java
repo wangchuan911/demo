@@ -216,6 +216,7 @@ public class QueryManagerRouter {
     public void show(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
+            logger.info(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format());
             SqlContent context = new SqlContent();
             routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
                 sqlBuilderHandler.handler(context, construct);
@@ -809,7 +810,7 @@ public class QueryManagerRouter {
             MetaObject.Attribute attribute = MetaUtils.getInstance().getAttribute(Long.parseLong(routingContext.pathParam("id")));
             List<MetaLink> list = new LinkedList<>();
             if (attribute instanceof DataObject.Field) {
-                MetaLink next = attribute.getParent().getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
+                /*MetaLink next = attribute.getParent().getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
                 while (next != null) {
                     if (next.getLinkId() < 0) {
                         list.add(new MetaLink().<MetaLink>setId(next.getLinkId()).setAttributeId(next.getAttributeId()).setTypeId(LinkMetaType.ObjConstructor.getId()));
@@ -817,7 +818,8 @@ public class QueryManagerRouter {
                         list.add(next.getLink());
                     }
                     next = next.getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
-                }
+                }*/
+                list.addAll(((DataObject.Field) attribute).getColumnMapper());
             }
             ListIterator<MetaLink> listIterator = list.listIterator();
             MetaLink metaLink;

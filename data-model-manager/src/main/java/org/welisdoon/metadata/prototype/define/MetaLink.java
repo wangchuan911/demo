@@ -283,4 +283,17 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     public boolean compareValueIfNullIsEqual(Object a, Object b) {
         return (a == null && b == null) || Objects.equals(a, b);
     }
+
+
+    public <T extends MetaLink> T findParent(Class<T> aClass) {
+        MetaLink metaLink = getParent();
+        if (metaLink != null) {
+            if (aClass.isAssignableFrom(metaLink.getClass())) {
+                return (T) metaLink;
+            } else {
+                return metaLink.findParent(aClass);
+            }
+        }
+        return null;
+    }
 }

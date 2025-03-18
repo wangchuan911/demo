@@ -14,6 +14,7 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
  */
 @Component
 @LinkMetaType.LinkHandle({LinkMetaType.NotContain, LinkMetaType.Contain})
+@Deprecated
 public class SqlContainHandler implements ISqlBuilderHandler {
     @Override
     public String toSql(MetaLink metaLink, SqlContent content) {
