@@ -126,9 +126,12 @@ public abstract class MetaPrototype {
     }
 
     public boolean isDelete() {
-        return this.state == LifeState.Delete;
+        return this.state == LifeState.Delete || isReadonly();
     }
 
+    public boolean isReadonly() {
+        return this.state == LifeState.Readonly;
+    }
 
     public LifeState getState() {
         return this.state;

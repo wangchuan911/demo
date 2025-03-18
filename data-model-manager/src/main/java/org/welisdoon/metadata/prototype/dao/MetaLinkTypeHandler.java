@@ -38,11 +38,13 @@ public class MetaLinkTypeHandler implements TypeHandler<String> {
             LinkMetaType type = ((LinkMetaType) iMetaType);
             if (this.matched(type, LinkMetaType.Value, 0)) {
                 type = LinkMetaType.Value;
+            } else if (this.matched(type, LinkMetaType.Values, 0)) {
+                type = LinkMetaType.Values;
             } else if (this.matched(type, LinkMetaType.SqlOperator, 1)) {
                 type = LinkMetaType.SqlOperator;
             } else if (this.matched(type, LinkMetaType.SqlToJoin, 1)) {
                 type = LinkMetaType.SqlToJoin;
-            } else if (this.matched(type, LinkMetaType.SqlToSelect, 1)) {
+            } else if (this.matched(type, LinkMetaType.SqlToSelect, 0)) {
                 type = LinkMetaType.SqlToSelect;
             }
             return type.name();
@@ -50,9 +52,9 @@ public class MetaLinkTypeHandler implements TypeHandler<String> {
         throw new IllegalStateException("不知持的type");
     }
 
-    boolean matched(final LinkMetaType type, final LinkMetaType target, final int parent) {
+    boolean matched(final LinkMetaType type, final LinkMetaType target, final int deep) {
         LinkMetaType type1 = type;
-        for (int i = parent; i >= 0; i--) {
+        for (int i = deep; i >= 0; i--) {
             if (type1 == target) {
                 return true;
             }

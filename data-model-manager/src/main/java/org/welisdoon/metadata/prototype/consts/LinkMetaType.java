@@ -59,7 +59,9 @@ public enum LinkMetaType implements IMetaType {
     NotExists(3209, "不存在", SqlOperator),
     ItemOfParent(3210, "由上级LINK决定处理方式"),
     Value(3211, "sql最小项", SqlOperator),
-    Values(3212, "sql最小项集", SqlOperator);
+    Values(3212, "sql最小项集", SqlOperator),
+    GreatEqual(3213, "大于等于", SqlOperator),
+    LessEqual(3214, "小于等于", SqlOperator),;
 
     long id;
     String name;

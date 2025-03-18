@@ -8,11 +8,14 @@ import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
-import org.welisdoon.metadata.prototype.define.MetaProtoList;
 import org.welisdoon.metadata.prototype.define.MetaObject;
-import org.welisdoon.metadata.prototype.define.MirrorList;
+import org.welisdoon.metadata.prototype.define.MetaProtoList;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlJoiner;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Optional;
 
 /**
  * @Classname DataObject
@@ -44,7 +47,7 @@ public class DataObject extends MetaObject {
     public List<MetaLink> getConstructorLinks() {
         List<MetaLink> list = new LinkedList<>();
         Optional.ofNullable(this.getParentId()).ifPresent(aLong -> {
-            MetaLink metaLink = new MetaLink();
+            MetaLink metaLink = new SqlJoiner();
             metaLink.setObjectId(aLong);
             metaLink.setId(-1 * this.getId());
             metaLink.setTypeId(LinkMetaType.ObjConstructor.getId());

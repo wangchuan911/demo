@@ -12,6 +12,14 @@
         <result column="instance_id" property="instanceId"></result>
         <result column="link_id" property="linkId"></result>
         <result column="SEQUENCE" property="sequence"></result>
+
+        <discriminator column="type_id" javaType="long" typeHandler="org.welisdoon.metadata.prototype.dao.MetaLinkTypeHandler">
+            <case value="SqlOperator" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlRelationExpression"></case>
+            <case value="Value" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlItem"></case>
+            <case value="Values" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlItems"></case>
+            <case value="SqlToJoin" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlJoiner"></case>
+            <case value="SqlToSelect" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlColumn"></case>
+        </discriminator>
     </resultMap>
     <select id="list"
             parameterType="org.welisdoon.metadata.prototype.condition.MetaLinkCondition"
