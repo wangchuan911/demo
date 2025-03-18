@@ -18,6 +18,7 @@
             <case value="Value" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlItem"></case>
             <case value="Values" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlItems"></case>
             <case value="SqlToJoin" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlJoiner"></case>
+            <case value="SqlToJoinOfMultiDataRel" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlListJoiner"></case>
             <case value="SqlToSelect" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlColumn"></case>
         </discriminator>
     </resultMap>

@@ -54,8 +54,6 @@ public class SqlJoiner extends Sql {
                     return String.format(" join %s %s on %s /*line*/", table.getTarget(), table.getAlias(), condition.stream().map(SqlRelationExpression::format).collect(Collectors.joining(" and ")));
                 case SqlToJoinOfWeakRel:
                     return String.format(" left join %s %s on %s /*line*/", table.getTarget(), table.getAlias(), condition.stream().map(SqlRelationExpression::format).collect(Collectors.joining(" and ")));
-                case SqlToJoinOfMultiDataRel:
-                    return String.format("/*multi*/ left join %s %s on %s /*line*/", table.getTarget(), table.getAlias(), condition.stream().map(SqlRelationExpression::format).collect(Collectors.joining(" and ")));
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }

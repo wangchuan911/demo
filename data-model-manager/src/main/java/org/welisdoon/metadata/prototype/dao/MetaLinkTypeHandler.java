@@ -40,12 +40,14 @@ public class MetaLinkTypeHandler implements TypeHandler<String> {
                 type = LinkMetaType.Value;
             } else if (this.matched(type, LinkMetaType.Values, 0)) {
                 type = LinkMetaType.Values;
+            } else if (this.matched(type, LinkMetaType.SqlToSelect, 0)) {
+                type = LinkMetaType.SqlToSelect;
+            } else if (this.matched(type, LinkMetaType.SqlToJoinOfMultiDataRel, 0)) {
+                type = LinkMetaType.SqlToJoinOfMultiDataRel;
             } else if (this.matched(type, LinkMetaType.SqlOperator, 1)) {
                 type = LinkMetaType.SqlOperator;
             } else if (this.matched(type, LinkMetaType.SqlToJoin, 1)) {
                 type = LinkMetaType.SqlToJoin;
-            } else if (this.matched(type, LinkMetaType.SqlToSelect, 0)) {
-                type = LinkMetaType.SqlToSelect;
             }
             return type.name();
         }
