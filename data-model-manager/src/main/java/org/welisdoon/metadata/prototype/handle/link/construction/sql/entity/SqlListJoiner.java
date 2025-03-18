@@ -1,5 +1,7 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+
 import java.util.stream.Collectors;
 
 /**
@@ -20,5 +22,10 @@ public class SqlListJoiner extends SqlJoiner {
             }
 
         return super.format();
+    }
+
+    @Override
+    protected boolean isWeakRelation() {
+        return super.isWeakRelation() || getType() == LinkMetaType.SqlToJoinOfMultiDataRel;
     }
 }

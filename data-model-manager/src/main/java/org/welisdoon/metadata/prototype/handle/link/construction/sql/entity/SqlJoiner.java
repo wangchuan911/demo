@@ -59,15 +59,18 @@ public class SqlJoiner extends Sql {
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
         else {
-            boolean weak = getType() == LinkMetaType.SqlToJoinOfWeakRel;
             return subJoiners.stream().map(sqlJoiner -> {
                 String s = sqlJoiner.format();
-                if (weak && s.startsWith(" join ")) {
+                if (isWeakRelation() && s.startsWith(" join ")) {
                     return " left" + s;
                 }
                 return s;
             }).collect(Collectors.joining(" "));
         }
+    }
+
+    protected boolean isWeakRelation() {
+        return getType() == LinkMetaType.SqlToJoinOfWeakRel;
     }
 
     @Override
