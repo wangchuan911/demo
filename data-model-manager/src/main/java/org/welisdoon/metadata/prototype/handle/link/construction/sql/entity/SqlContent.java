@@ -12,9 +12,18 @@ import java.util.ListIterator;
  * @Author Septem
  * @Date 15:57
  */
-public class SqlContent extends MetaLink {
+public class SqlContent extends Sql {
+    MetaObject metaObject;
 
     public SqlContent(MetaObject metaObject) {
+        this.metaObject = metaObject;
+        this.build();
+    }
+
+
+    @Override
+    protected void build() {
+        readonly();
         if (metaObject instanceof DataObject) {
             for (MetaLink constructorLink : ((DataObject) metaObject).getConstructorLinks()) {
                 if (constructorLink instanceof Sql) {
