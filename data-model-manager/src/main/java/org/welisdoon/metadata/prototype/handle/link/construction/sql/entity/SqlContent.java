@@ -4,8 +4,6 @@ import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.ListIterator;
 
 /**

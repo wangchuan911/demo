@@ -59,7 +59,9 @@ public class SqlItem extends SqlRelationExpression {
     }
 
     String getPrefix(SqlJoiner sqlJoiner) {
-        Assert.notNull(sqlJoiner, "匹配失败");
+        if (sqlJoiner == null) {
+            return "";
+        }
         if (matched(sqlJoiner)) {
             return sqlJoiner.getPrefix();
         } else {
@@ -74,7 +76,7 @@ public class SqlItem extends SqlRelationExpression {
                 }
             }
         }
-        return getPrefix(sqlJoiner);
+        return getPrefix(sqlJoiner.findParent(SqlJoiner.class));
     }
 
     protected boolean matched(SqlJoiner sqlJoiner) {
