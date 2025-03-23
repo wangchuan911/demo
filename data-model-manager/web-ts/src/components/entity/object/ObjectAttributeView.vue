@@ -140,7 +140,7 @@ class AttrAddDrawersContent extends FormDrawersContent {
                   objectId: row[0].objectId,
                   attrs: [],
                   objs: [],
-                  his: [],
+                  dataIndex: index,
                 };
                 for (let i = 1; i < row.length; i++) {
                   rows[index].mapper[`${i - 1}`] = row[i].attributeId;
@@ -154,7 +154,8 @@ class AttrAddDrawersContent extends FormDrawersContent {
                 const {data} = await $http.get(`obj/${row.objectId}`);
                 row.objs.push({value: data.id, label: `[${data.name}]${data.code}`});
               }
-              input.prop.cols.push(...data.cols.filter((value1, index) => index != 0).map((value1) => ({attrId: value1.attributeId})));
+              input.prop.cols.push(...data.cols.filter((value1, index) => index != 0)
+                  .map((value1) => ({attrId: value1.attributeId, linkId: value.id})));
               input.prop.rows.push(...rows);
               console.log(rows);
               return;
