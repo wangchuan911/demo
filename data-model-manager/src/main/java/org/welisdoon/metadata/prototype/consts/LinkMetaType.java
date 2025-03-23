@@ -39,9 +39,10 @@ public enum LinkMetaType implements IMetaType {
     AttrConstructor(3021, "属性构造定义"),
 
     DataFuture(3015, "数据特征"),
-    Col(3016, "列"),
-    Row(3017, "行"),
-    Cell(3018, "单元", Row),
+    Grid(3022, "网格"),
+    Col(3017, "列", Grid),
+    Head(3016, "头", Grid),
+    Cell(3018, "单元", Grid),
     ForeignKey(3019, "外键", SqlToSelect),
     PrimaryKey(3020, "主键", SqlToSelect),
 

@@ -342,24 +342,24 @@ public class QueryManagerRouter {
                                 rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).<MetaLink>setChildren(cellOfLink).setSequence(i));
                             }*/
 
-                            List<MetaLink> rowLinks = new LinkedList<>();
-                            rowLinks.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(attribute.getId()).<MetaLink>addChildren(Stream.of(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0))).setSequence(0));
+                            List<MetaLink> colLinks = new LinkedList<>();
+                            colLinks.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).<MetaLink>addChildren(Stream.of(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Head.getId()).setAttributeId(attribute.getId()).setSequence(0))).setSequence(0));
                             for (int i1 = 0; i1 < cols.size(); i1++) {
                                 Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
-                                rowLinks.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).setAttributeId(attribute.getId()).<MetaLink>addChildren(Stream.of(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1))).setSequence(i1 + 1));
+                                colLinks.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).<MetaLink>addChildren(Stream.of(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Head.getId()).setAttributeId(selfColAttrId).setSequence(i1 + 1))).setSequence(i1 + 1));
                             }
                             for (int i = 0; i < rows.size(); i++) {
                                 JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
                                 Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
                                 Long outCurrentAttrId = mapper.getLong("current");
-                                rowLinks.get(0).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(i));
+                                colLinks.get(0).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outCurrentAttrId).setObjectId(outObjectId).setSequence(i));
                                 for (int i1 = 0; i1 < cols.size(); i1++) {
                                     Long outRowAttrId = mapper.getLong(String.valueOf(i1));
-                                    rowLinks.get(i1 + 1).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i));
+                                    colLinks.get(i1 + 1).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i));
                                 }
                             }
                             ((DataObject.Field) attribute).getForeignKey().getChildren().clear();
-                            ((DataObject.Field) attribute).getForeignKey().setChildren(rowLinks);
+                            ((DataObject.Field) attribute).getForeignKey().setChildren(colLinks);
                         }
 //                        attribute.save();
                         return attribute;
@@ -776,7 +776,7 @@ public class QueryManagerRouter {
                         this.addEntry(list, "objectId", childChild.getObjectId());
                         this.addEntry(list, "instanceId", childChild.getInstanceId());
                         switch (childChild.getType()) {
-                            case Col:
+                            case Head:
                                 /*cols.add(Map.of("id", childChild.getId(),
                                         "attributeId", childChild.getId(),
                                         "objectId", childChild.getObjectId(),

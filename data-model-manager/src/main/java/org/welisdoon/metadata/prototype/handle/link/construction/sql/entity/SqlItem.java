@@ -42,7 +42,7 @@ public class SqlItem extends SqlRelationExpression {
             }
             ((Sql) list.get(0)).build();
             Sql last = (Sql) list.get(list.size() - 1);
-            sqlAlias = new SqlAlias(last.getPrefix(), last.getAttribute().getCode());
+            sqlAlias = new SqlAlias(getPrefix() + "_" + last.getPrefix(), last.getAttribute().getCode());
         } else
             sqlAlias = new SqlAlias(getPrefix(), getAttribute().getCode());
     }

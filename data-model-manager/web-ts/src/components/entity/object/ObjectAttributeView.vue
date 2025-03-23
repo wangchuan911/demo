@@ -139,7 +139,8 @@ class AttrAddDrawersContent extends FormDrawersContent {
                   },
                   objectId: row[0].objectId,
                   attrs: [],
-                  objs: []
+                  objs: [],
+                  his: [],
                 };
                 for (let i = 1; i < row.length; i++) {
                   rows[index].mapper[`${i - 1}`] = row[i].attributeId;
