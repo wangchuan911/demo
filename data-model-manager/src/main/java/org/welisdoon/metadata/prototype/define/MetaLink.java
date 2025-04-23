@@ -296,4 +296,41 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         }
         return null;
     }
+
+
+
+    public void update(MetaLink link) {
+        if (this.compareValues(link)) {
+            this.copyValueTo(link);
+        }
+        for (int i = 0, length = Math.max(link.getChildren().size(), this.getChildren().size()); i < length; i++) {
+            if (link.getChildren().size() <= i) {
+                break;
+            }
+            if (this.getChildren().size() <= i) {
+                this.getChildren().add(link.getChildren().get(i));
+                continue;
+            }
+            if (!this.compareValues(this.getChildren().get(i))) {
+                this.copyTo(this.getChildren().get(i));
+            }
+        }
+    }
+
+    public void copyValueTo(MetaLink metaLink) {
+        super.copyTo(metaLink);
+        this.setLinkId(metaLink.getLinkId());
+        this.setInstanceId(metaLink.getInstanceId());
+        this.setObjectId(metaLink.getObjectId());
+        this.setAttributeId(metaLink.getAttributeId());
+        this.setValueId(metaLink.getValueId());
+        this.setSequence(metaLink.getSequence());
+    }
+
+    public void test(){
+        for (MetaLink child : this.getChildren()) {
+            child.getType();
+            child.test();
+        }
+    }
 }

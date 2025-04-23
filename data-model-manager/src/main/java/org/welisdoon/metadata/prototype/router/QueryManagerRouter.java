@@ -323,6 +323,10 @@ public class QueryManagerRouter {
                             logger.info("处理mapper");
                             JSONArray rows = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.rows", JSONArray.class);
                             JSONArray cols = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.cols", JSONArray.class);
+                            JSONArray del = JsonUtils.getKeyValueToBean(attrJSON, "colMapper.dels", JSONArray.class);
+                            if (del != null) {
+                                ((DataObject.Field) attribute).getForeignKey().del(del.toJavaList(String[].class));
+                            }
                             /*MetaProtoList<MetaLink> rowsOfLink = new MetaProtoList<>();
                             rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).setSequence(0));
                             for (int i1 = 0; i1 < cols.size(); i1++) {
@@ -358,8 +362,7 @@ public class QueryManagerRouter {
                                     colLinks.get(i1 + 1).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i));
                                 }
                             }
-                            ((DataObject.Field) attribute).getForeignKey().getChildren().clear();
-                            ((DataObject.Field) attribute).getForeignKey().setChildren(colLinks);
+                            ((DataObject.Field) attribute).getForeignKey().append(colLinks);
                         }
 //                        attribute.save();
                         return attribute;
@@ -819,7 +822,7 @@ public class QueryManagerRouter {
                     }
                     next = next.getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
                 }*/
-                list.addAll(((DataObject.Field) attribute).getColumnMapper());
+                list.addAll(((DataObject.Field) attribute).columnMapper());
             }
             ListIterator<MetaLink> listIterator = list.listIterator();
             MetaLink metaLink;

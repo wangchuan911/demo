@@ -87,19 +87,74 @@ public class DataObject extends MetaObject {
         });*/
     }
 
+    public static class ForeignKey extends MetaLink {
+        public ForeignKey del(List<String[]> list) {
+            test();
+            for (String[] strings : list) {
+                switch (strings[0]) {
+                    case "col":
+                        switch (strings[1]) {
+                            case "link":
+                                Long linkId = Long.parseLong(strings[2]);
+                                getChildren().removeIf(col -> {
+                                    return col.getChildren().stream().anyMatch(head -> head.getType() == LinkMetaType.Head && Objects.equals(head.getId(), linkId));
+                                });
+                                break;
+                            default:
+                                throw new IllegalStateException("错误标识" + strings[1]);
+                        }
+                        break;
+                    case "row":
+                        switch (strings[1]) {
+                            case "seq":
+                                ListIterator<MetaLink> iterator = getChildren().listIterator();
+                                int seq = Integer.parseInt(strings[2]);
+                                while (iterator.hasNext()) {
+                                    MetaLink col = iterator.next();
+                                    col.getChildren().removeIf(row -> row.getType() == LinkMetaType.Cell && Objects.equals(row.getSequence(), seq));
+                                }
+                                break;
+                            default:
+                                throw new IllegalStateException("错误标识" + strings[1]);
+                        }
+                        break;
+                }
+            }
+            return this;
+        }
+
+        public ForeignKey append(List<MetaLink> cols) {
+            ListIterator<MetaLink> newCols = cols.listIterator();
+            ListIterator<MetaLink> current = this.getChildren().listIterator();
+            int currentLength = this.getChildren().size();
+            while (newCols.hasNext()) {
+                if (currentLength <= newCols.nextIndex()) {
+                    current.add(newCols.next());
+                    continue;
+                }
+                MetaLink currentCol = current.next();
+                MetaLink newCol = newCols.next();
+                currentCol.update(newCol);
+            }
+            return this;
+        }
+
+
+    }
+
     @AttributeMetaType.MetaType(AttributeMetaType.Field)
     public static class Field extends Attribute {
         //        MetaList<RowMapper> mappers;
-        MetaLink foreignKey;
+        ForeignKey foreignKey;
 
         @JsonIgnore
         @JSONField(deserialize = false, serialize = false)
-        public MetaLink getForeignKey() {
+        public ForeignKey getForeignKey() {
             return ObjectUtils.synchronizedGet(this, field -> field.foreignKey, field -> {
                         getParent().getChildren().stream().filter(metaLink -> metaLink.getType() == LinkMetaType.ForeignKey).findFirst().ifPresentOrElse(metaLink -> {
-                            this.foreignKey = metaLink;
+                            this.foreignKey = (ForeignKey) metaLink;
                         }, () -> {
-                            this.foreignKey = new MetaLink().<MetaLink>setTypeId(LinkMetaType.ForeignKey.getId());
+                            this.foreignKey = new ForeignKey().setTypeId(LinkMetaType.ForeignKey.getId());
                             getParent().getChildren().add(this.foreignKey);
                         });
                         return this.foreignKey;
@@ -124,7 +179,7 @@ public class DataObject extends MetaObject {
             }
         }
 
-        public List<MetaLink> getColumnMapper() {
+        public List<MetaLink> columnMapper() {
             List<MetaLink> list = new LinkedList<>();
             MetaLink next = this.getParent().getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
             while (next != null) {
@@ -144,7 +199,8 @@ public class DataObject extends MetaObject {
             }
             MetaProtoList<MetaLink> selfLinks = self.getChildren(), createLinks = create.getChildren();
             boolean flag = (CollectionUtils.isEmpty(self.getChildren()) && CollectionUtils.isNotEmpty(createLinks))
-                    || (CollectionUtils.isNotEmpty(self.getChildren()) && CollectionUtils.isEmpty(createLinks));
+                    || (CollectionUtils.isNotEmpty(self.getChildren()) && CollectionUtils.isEmpty(createLinks))
+                    || (CollectionUtils.isEmpty(self.getChildren()) && CollectionUtils.isEmpty(createLinks));
             Assert.isTrue(flag, "错误的数据");
             if (CollectionUtils.isNotEmpty(self.getChildren()) && CollectionUtils.isNotEmpty(createLinks) && changeColumn(selfLinks.getFirst(), createLinks.getFirst())) {
                 self.getChildren().clear();
@@ -198,5 +254,17 @@ public class DataObject extends MetaObject {
                 return rows;
             }
         }*/
+    }
+
+    public static class Col extends MetaLink {
+
+    }
+
+    public static class Head extends MetaLink {
+
+    }
+
+    public static class Cell extends MetaLink {
+
     }
 }

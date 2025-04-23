@@ -20,6 +20,10 @@
             <case value="SqlToJoin" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlJoiner"></case>
             <case value="SqlToJoinOfMultiDataRel" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlListJoiner"></case>
             <case value="SqlToSelect" resultType="org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlColumn"></case>
+            <case value="ForeignKey" resultType="org.welisdoon.metadata.prototype.entity.DataObject$ForeignKey"></case>
+            <case value="Col" resultType="org.welisdoon.metadata.prototype.entity.DataObject$Col"></case>
+            <case value="Cell" resultType="org.welisdoon.metadata.prototype.entity.DataObject$Cell"></case>
+            <case value="Head" resultType="org.welisdoon.metadata.prototype.entity.DataObject$Head"></case>
         </discriminator>
     </resultMap>
     <select id="list"

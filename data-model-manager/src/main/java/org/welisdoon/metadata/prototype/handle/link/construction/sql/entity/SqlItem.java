@@ -1,11 +1,7 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.util.Assert;
-import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
-import org.welisdoon.metadata.prototype.define.MetaPrototype;
-import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 
 import java.util.*;
@@ -29,7 +25,7 @@ public class SqlItem extends SqlRelationExpression {
             return;
         }
         if (getAttribute() instanceof DataObject.Field) {
-            List<MetaLink> list = ((DataObject.Field) getAttribute()).getColumnMapper();
+            List<MetaLink> list = ((DataObject.Field) getAttribute()).columnMapper();
             ListIterator<MetaLink> listIterator = list.listIterator();
             MetaLink parent = listIterator.next(), current;
             while (listIterator.hasNext()) {

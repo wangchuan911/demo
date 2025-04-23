@@ -19,6 +19,7 @@ export class AttrObjMapperItem extends InputItem {
         this.prop.value = {};
         this.prop.cols = [];
         this.prop.rows = [];
+        this.prop.dels = [];
         this.prop.objectId = -1;
         this.comp = AttrObjMapper;
     }

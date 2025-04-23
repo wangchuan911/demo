@@ -146,9 +146,10 @@ import {MyOption} from "@/components/form/config";
 const values = defineModel<Record<any, any>>();
 const {proxy} = getCurrentInstance() as ComponentInternalInstance;
 const {$http} = proxy as ComponentCustomProperties;
-const props = defineProps<{ cols: Array<any>, rows: Array<any>, objectId: number }>();
+const props = defineProps<{ cols: Array<Record<any, any>>, rows: Array<Record<any, any>>, objectId: number, dels: Array<string[]> }>();
 const cols = computed(() => props.cols);
 const rows = computed(() => props.rows);
+const dels = computed(() => props.dels);
 const objectId = computed(() => props.objectId);
 watch(cols, (value, oldValue, onCleanup) => {
   console.log(value);
@@ -184,7 +185,7 @@ watch(objectId, (value, oldValue, onCleanup) => {
 });
 const initValue = () => {
   if (!values.value) {
-    values.value = {cols, rows};
+    values.value = {cols, rows, dels};
   }
 }
 initValue();
@@ -209,7 +210,11 @@ const dialog = reactive({
 
 const del = (key: string, index: number) => {
   switch (key) {
-    case "col":
+    case "col": {
+      const linkId = cols.value[index].linkId;
+      if (linkId != null) {
+        dels.value.push(["col", "link", linkId]);
+      }
       cols.value.splice(index, 1);
       rows.value.forEach(row => {
         delete row.mapper[index];
@@ -220,9 +225,15 @@ const del = (key: string, index: number) => {
           idx++;
         }
       });
+    }
       break;
-    case "row":
+    case "row": {
+      const seq = rows.value[index].dataIndex
+      if (seq != null) {
+        dels.value.push(["row", "seq", seq])
+      }
       rows.value.splice(index, 1);
+    }
       break;
   }
 
