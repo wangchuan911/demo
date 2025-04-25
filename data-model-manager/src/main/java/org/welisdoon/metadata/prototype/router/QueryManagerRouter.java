@@ -346,7 +346,7 @@ public class QueryManagerRouter {
                                 rowsOfLink.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Row.getId()).<MetaLink>setChildren(cellOfLink).setSequence(i));
                             }*/
 
-                            List<MetaLink> colLinks = new LinkedList<>();
+                            /*List<MetaLink> colLinks = new LinkedList<>();
                             colLinks.add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Col.getId()).setAttributeId(attribute.getId()).<MetaLink>addChildren(Stream.of(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Head.getId()).setAttributeId(attribute.getId()).setSequence(0))).setSequence(0));
                             for (int i1 = 0; i1 < cols.size(); i1++) {
                                 Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
@@ -361,10 +361,11 @@ public class QueryManagerRouter {
                                     Long outRowAttrId = mapper.getLong(String.valueOf(i1));
                                     colLinks.get(i1 + 1).getChildren().add(new MetaLink().<MetaLink>setTypeId(LinkMetaType.Cell.getId()).setAttributeId(outRowAttrId).setObjectId(outObjectId).setSequence(i));
                                 }
-                            }
+                            }*/
+                            List<DataObject.Col> colLinks = DataObject.Col.append((DataObject.Field) attribute, rows, cols);
                             ((DataObject.Field) attribute).getForeignKey().append(colLinks);
                         }
-//                        attribute.save();
+                        attribute.save();
                         return attribute;
                     })
             ));

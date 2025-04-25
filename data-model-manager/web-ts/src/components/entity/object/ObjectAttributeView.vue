@@ -126,6 +126,7 @@ class AttrAddDrawersContent extends FormDrawersContent {
           async dataToValue(input: AttrObjMapperItem, value: any, content: FormContent): Promise<void> {
             input.prop.cols.length = 0;
             input.prop.rows.length = 0;
+            input.prop.dels.length = 0;
             if (value.id) {
               const {data}: { data: { cols: Array<Record<any, any>>, rows: Array<Array<Record<any, any>>> } } = await $http.get(`attr/mapper/${value.id}`);
               console.log(data)
@@ -155,7 +156,7 @@ class AttrAddDrawersContent extends FormDrawersContent {
                 row.objs.push({value: data.id, label: `[${data.name}]${data.code}`});
               }
               input.prop.cols.push(...data.cols.filter((value1, index) => index != 0)
-                  .map((value1) => ({attrId: value1.attributeId, linkId: value.id})));
+                  .map((value1) => ({attrId: value1.attributeId, linkId: value1.id})));
               input.prop.rows.push(...rows);
               console.log(rows);
               return;
@@ -165,7 +166,8 @@ class AttrAddDrawersContent extends FormDrawersContent {
           async valueToData(input: AttrObjMapperItem, form: Record<any, any>, content: FormContent): Promise<void> {
             form[input.code] = {
               rows: content.form[input.code].rows,
-              cols: content.form[input.code].cols
+              cols: content.form[input.code].cols,
+              dels: content.form[input.code].dels,
             };
           }
         } as ItemConfig<AttrObjMapperItem>));

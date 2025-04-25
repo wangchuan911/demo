@@ -298,27 +298,31 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     }
 
 
-
     public void update(MetaLink link) {
-        if (this.compareValues(link)) {
+        if (!this.compareValues(link)) {
             this.copyValueTo(link);
         }
+        MetaLink current, newLink;
         for (int i = 0, length = Math.max(link.getChildren().size(), this.getChildren().size()); i < length; i++) {
-            if (link.getChildren().size() <= i) {
+            current = this.getChildren().size() > i ? this.getChildren().get(i) : null;
+            newLink = link.getChildren().size() > i ? link.getChildren().get(i) : null;
+            if (newLink == null) {
                 break;
             }
-            if (this.getChildren().size() <= i) {
-                this.getChildren().add(link.getChildren().get(i));
+            if (current == null) {
+                this.getChildren().add(newLink);
                 continue;
             }
-            if (!this.compareValues(this.getChildren().get(i))) {
-                this.copyTo(this.getChildren().get(i));
+            if (!current.compareValues(newLink)) {
+                current.update(newLink);
             }
         }
     }
 
     public void copyValueTo(MetaLink metaLink) {
-        super.copyTo(metaLink);
+        this.code = metaLink.code;
+        this.name = metaLink.name;
+        this.typeId = metaLink.typeId;
         this.setLinkId(metaLink.getLinkId());
         this.setInstanceId(metaLink.getInstanceId());
         this.setObjectId(metaLink.getObjectId());
@@ -327,7 +331,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         this.setSequence(metaLink.getSequence());
     }
 
-    public void test(){
+    public void test() {
         for (MetaLink child : this.getChildren()) {
             child.getType();
             child.test();

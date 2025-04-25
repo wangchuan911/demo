@@ -47,7 +47,14 @@ public class MetaProtoList<T extends MetaPrototype> extends CacheLinkedList<T> {
         for (T t : this) {
             update += t.remove();
         }
+        this.clear();
+        for (T t : deleted) {
+            update += t.remove();
+        }
         deleted.clear();
+        for (T t : added) {
+            update += t.remove();
+        }
         added.clear();
         state = LifeState.Delete;
         return update;

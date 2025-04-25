@@ -1,9 +1,12 @@
 package org.welisdoon.metadata.prototype.entity;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.util.Assert;
+import org.welisdoon.common.JsonUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
@@ -14,6 +17,7 @@ import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlJoiner;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * @Classname DataObject
@@ -87,9 +91,9 @@ public class DataObject extends MetaObject {
         });*/
     }
 
-    public static class ForeignKey extends MetaLink {
+    public static class ForeignKey extends FieldSubLink {
         public ForeignKey del(List<String[]> list) {
-            test();
+//            test();
             for (String[] strings : list) {
                 switch (strings[0]) {
                     case "col":
@@ -123,19 +127,20 @@ public class DataObject extends MetaObject {
             return this;
         }
 
-        public ForeignKey append(List<MetaLink> cols) {
-            ListIterator<MetaLink> newCols = cols.listIterator();
-            ListIterator<MetaLink> current = this.getChildren().listIterator();
-            int currentLength = this.getChildren().size();
-            while (newCols.hasNext()) {
-                if (currentLength <= newCols.nextIndex()) {
-                    current.add(newCols.next());
-                    continue;
+        public ForeignKey append(List<Col> newCols) {
+            List<MetaLink> currentLinks = this.getChildren();
+            MetaLink curLink, newLink;
+            List<MetaLink> list = new LinkedList<>();
+            for (int i = 0; i < Math.max(newCols.size(), currentLinks.size()); i++) {
+                curLink = currentLinks.size() > i ? currentLinks.get(i) : null;
+                newLink = newCols.size() > i ? newCols.get(i) : null;
+                if (curLink == null && newLink != null) {
+                    list.add(newLink);
+                } else if (curLink != null && newLink != null) {
+                    curLink.update(newLink);
                 }
-                MetaLink currentCol = current.next();
-                MetaLink newCol = newCols.next();
-                currentCol.update(newCol);
             }
+            this.getChildren().addAll(list);
             return this;
         }
 
@@ -256,15 +261,80 @@ public class DataObject extends MetaObject {
         }*/
     }
 
-    public static class Col extends MetaLink {
+    protected static class FieldSubLink extends MetaLink {
+        public FieldSubLink() {
+            super();
+        }
+
+        public FieldSubLink(Long attrId, int index) {
+            setAttributeId(attrId);
+            setSequence(index);
+        }
+
+        @Override
+        public void update(MetaLink link) {
+            Assert.isTrue(Objects.equals(this.getTypeId(), link.getTypeId()), "类型必须相等");
+            super.update(link);
+        }
+    }
+
+    public static class Col extends FieldSubLink {
+        public Col() {
+            super();
+        }
+
+        public Col(Long attrId, int index) {
+            super(attrId, index);
+            setTypeId(LinkMetaType.Col.getId());
+        }
+
+        public static List<Col> append(Field field, JSONArray cols) {
+            List<Col> colLinks = new LinkedList<>();
+            colLinks.add(new Col(field.getId(), 0).<Col>addChildren(Stream.of(new Head(field.getId(), 0))));
+            for (int i1 = 0; i1 < cols.size(); i1++) {
+                Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
+                colLinks.add(new Col(field.getId(), i1 + 1).<Col>addChildren(Stream.of(new Head(selfColAttrId, i1 + 1))));
+            }
+            return colLinks;
+        }
+
+        public static List<Col> append(Field field, JSONArray rows, JSONArray cols) {
+            List<Col> colLinks = append(field, cols);
+            for (int i = 0; i < rows.size(); i++) {
+                JSONObject mapper = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "mapper", JSONObject.class);
+                Long outObjectId = JsonUtils.getKeyValueToBean(rows.getJSONObject(i), "objectId", Long.class);
+                Long outCurrentAttrId = mapper.getLong("current");
+                colLinks.get(0).getChildren().add(new Cell(outCurrentAttrId, outObjectId, i));
+                for (int i1 = 0; i1 < cols.size(); i1++) {
+                    Long outRowAttrId = mapper.getLong(String.valueOf(i1));
+                    colLinks.get(i1 + 1).getChildren().add(new Cell(outRowAttrId, outObjectId, i));
+                }
+            }
+            return colLinks;
+        }
+    }
+
+    public static class Head extends FieldSubLink {
+        public Head() {
+            super();
+        }
+
+        public Head(Long attrId, int index) {
+            super(attrId, index);
+            setTypeId(LinkMetaType.Head.getId());
+        }
 
     }
 
-    public static class Head extends MetaLink {
+    public static class Cell extends FieldSubLink {
+        public Cell() {
+            super();
+        }
 
-    }
-
-    public static class Cell extends MetaLink {
-
+        public Cell(Long attrId, Long objectId, int index) {
+            super(attrId, index);
+            setTypeId(LinkMetaType.Cell.getId());
+            setObjectId(objectId);
+        }
     }
 }
