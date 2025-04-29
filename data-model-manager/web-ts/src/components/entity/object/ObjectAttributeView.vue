@@ -159,6 +159,7 @@ class AttrAddDrawersContent extends FormDrawersContent {
                   .map((value1) => ({attrId: value1.attributeId, linkId: value1.id})));
               input.prop.rows.push(...rows);
               console.log(rows);
+              content.form[input.code] = content.form[input.code] || {rows: input.prop.rows, cols: input.prop.cols, dels: input.prop.dels}
               return;
             }
             content.form[input.code] = value[input.code];
