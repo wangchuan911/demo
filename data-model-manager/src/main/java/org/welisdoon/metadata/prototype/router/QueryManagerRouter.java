@@ -216,12 +216,12 @@ public class QueryManagerRouter {
     public void show(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            logger.info(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format());
-            SqlContent context = new SqlContent();
-            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
-                sqlBuilderHandler.handler(context, construct);
-                return sqlShowBuilder.build(context);
-            }).orElse("未配置关联,无法生成展示!"));
+            routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format());
+//            SqlContent context = new SqlContent();
+//            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
+//                sqlBuilderHandler.handler(context, construct);
+//                return sqlShowBuilder.build(context);
+//            }).orElse("未配置关联,无法生成展示!"));
         });
     }
 

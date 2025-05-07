@@ -1,10 +1,14 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 
+import java.text.MessageFormat;
 import java.util.ListIterator;
+import java.util.stream.Collectors;
 
 /**
  * @Classname SqlContent
@@ -46,6 +50,10 @@ public class SqlContent extends Sql {
                 join.append(sqlJoiner.format());
             }
         }
-        return from.replace(SqlJoiner.OTHER, join.toString());
+        String column = ((DataObject) this.metaObject).getFields().stream().filter(field -> field.getParent().getChildren().stream().anyMatch(child -> child.getType() == LinkMetaType.SqlToSelect)).map(field -> {
+            Sql last = SqlItem.format(field);
+            return MessageFormat.format("{0}.{1}", last.getPrefix(), last.getAttribute().getCode());
+        }).collect(Collectors.joining(","));
+        return MessageFormat.format("select {0} {1}", column, from.replace(SqlJoiner.OTHER, join.toString()));
     }
 }
