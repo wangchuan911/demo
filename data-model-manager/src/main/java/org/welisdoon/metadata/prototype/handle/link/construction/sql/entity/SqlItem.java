@@ -25,22 +25,26 @@ public class SqlItem extends SqlRelationExpression {
             return;
         }
         if (getAttribute() instanceof DataObject.Field) {
-            List<MetaLink> list = ((DataObject.Field) getAttribute()).columnMapper();
-            ListIterator<MetaLink> listIterator = list.listIterator();
-            MetaLink parent = listIterator.next(), current;
-            while (listIterator.hasNext()) {
-                current = listIterator.next();
-                Assert.isTrue(current instanceof Sql, String.format("属性定义配置异常!%s", parent.getId()));
-                parent.getChildren().clear();
-                parent.getChildren().add(current);
-                current.setParent(parent);
-                parent = current;
-            }
-            ((Sql) list.get(0)).build();
-            Sql last = (Sql) list.get(list.size() - 1);
+            Sql last = format(getAttribute());
             sqlAlias = new SqlAlias(getPrefix() + "_" + last.getPrefix(), last.getAttribute().getCode());
         } else
             sqlAlias = new SqlAlias(getPrefix(), getAttribute().getCode());
+    }
+
+    public static Sql format(DataObject.Field field) {
+        List<MetaLink> list = field.columnMapper();
+        ListIterator<MetaLink> listIterator = list.listIterator();
+        MetaLink parent = listIterator.next(), current;
+        while (listIterator.hasNext()) {
+            current = listIterator.next();
+            Assert.isTrue(current instanceof Sql, String.format("属性定义配置异常!%s", parent.getId()));
+            parent.getChildren().clear();
+            parent.getChildren().add(current);
+            current.setParent(parent);
+            parent = current;
+        }
+        ((Sql) list.get(0)).build();
+        return (Sql) list.get(list.size() - 1);
     }
 
     @Override

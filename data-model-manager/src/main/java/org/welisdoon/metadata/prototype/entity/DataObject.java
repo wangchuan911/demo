@@ -189,7 +189,7 @@ public class DataObject extends MetaObject {
             MetaLink next = this.getParent().getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
             while (next != null) {
                 if (next.getLinkId() < 0) {
-                    list.add(new SqlJoiner().<MetaLink>setId(next.getLinkId()).setAttributeId(next.getAttributeId()).setTypeId(LinkMetaType.ObjConstructor.getId()));
+                    list.add(new SqlJoiner().<MetaLink>setId(next.getLinkId()).setInstanceId(1L).setAttributeId(next.getAttributeId()).setTypeId(LinkMetaType.ObjConstructor.getId()));
                 } else {
                     list.add(next.getLink());
                 }
