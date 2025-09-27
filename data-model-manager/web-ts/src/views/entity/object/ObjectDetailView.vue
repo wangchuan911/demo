@@ -6,6 +6,9 @@
     <el-tab-pane label="对象管理" name="obj">
       <object-combination-view :id="objId"></object-combination-view>
     </el-tab-pane>
+    <el-tab-pane label="对象搜索模板" name="search">
+      <object-query-template-view :id="objId"></object-query-template-view>
+    </el-tab-pane>
   </el-tabs>
 
 

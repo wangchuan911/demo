@@ -305,4 +305,125 @@ export class SelectTreeItem extends InputItem {
     value: string | undefined
     showValue: string | undefined
 }*/
+export class KeyVal {
+    key: string;
+    val: string
+
+    constructor(key: string, val: string) {
+        this.key = key;
+        this.val = val;
+    }
+}
+
+export class SearchFilterInputItem {
+    value: string | null;
+    displayValue: string | null;
+    type: InputType;
+    readonly: boolean;
+    checked: boolean;
+    code: string;
+    name: string;
+    id: number;
+    operator: KeyVal;
+
+    constructor(id: number, code: string, name: string, type: InputType, operator: OperatorType, readonly1 = false, checked1 = false) {
+        this.type = type;
+        this.readonly = readonly1;
+        this.checked = checked1;
+        this.code = code;
+        let typeDes
+        switch (type) {
+            case InputType.text:
+                typeDes = "文本";
+                break;
+            case InputType.decimal:
+                typeDes = "小数";
+                break;
+            case InputType.int:
+                typeDes = "整数";
+                break;
+            case InputType.time:
+                typeDes = "时间";
+                break;
+            case InputType.boolean:
+                typeDes = "布尔";
+                break;
+            default:
+                typeDes = "未知";
+                break;
+        }
+        this.name = `[${typeDes}]${name}`;
+        this.id = id;
+        this.operator = this.findOperator(operator);
+        this.value = null;
+        this.displayValue = null
+    }
+
+    setValue(value: string | null = null, displayValue: string | null = null): this {
+        this.value = value;
+        if (value != null) {
+            this.displayValue = displayValue || value;
+        } else {
+            this.displayValue = null;
+        }
+        return this;
+    }
+
+    setReadonly(value: boolean): this {
+        this.readonly = value;
+        return this;
+    }
+
+    setChecked(value: boolean): this {
+        this.checked = value;
+        return this;
+    }
+
+    setOperator(value: OperatorType): this {
+        this.operator = this.findOperator(value);
+        return this;
+    }
+
+    findOperator(value: OperatorType): KeyVal {
+        return new KeyVal(value, FilterOperators.find(value1 => value1.id == value)?.name || ('未知' + value))
+    }
+}
+
+export enum OperatorType {
+    equal = "equal",
+    startWith = "startWith",
+    endWith = "endWith",
+    contain = "contain",
+    greatThan = "greatThan",
+    lessThan = "lessThan",
+    range = "range",
+    true = "true",
+    false = "false"
+
+}
+
+export enum InputType {
+    text = "text",
+    decimal = "decimal",
+    int = "int",
+    time = "time",
+    boolean = "boolean"
+}
+
+export const FilterOperators = [
+    {name: "等于", id: OperatorType.equal, type: [InputType.text, InputType.decimal, InputType.int]},
+    {name: "起始于", id: OperatorType.startWith, type: [InputType.text]},
+    {name: "结束于", id: OperatorType.endWith, type: [InputType.text]},
+    {name: "包含", id: OperatorType.contain, type: [InputType.text]},
+    {name: "大于", id: OperatorType.greatThan, type: [InputType.decimal, InputType.int, InputType.time]},
+    {name: "小于", id: OperatorType.lessThan, type: [InputType.decimal, InputType.int, InputType.time]},
+    {name: "范围", id: OperatorType.range, type: [InputType.decimal, InputType.int, InputType.time]},
+    {name: "是", id: OperatorType.true, type: [InputType.boolean]},
+    {name: "否", id: OperatorType.false, type: [InputType.boolean]}
+]
+
+
+
+
+
 

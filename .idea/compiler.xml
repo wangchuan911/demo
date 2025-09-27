@@ -6,12 +6,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="order-flow" />
+        <module name="xml-task" />
+        <module name="my-wxoa" />
         <module name="data-model-manager" />
         <module name="common-utils" />
         <module name="car-service" />
-        <module name="order-flow" />
         <module name="service-market" />
-        <module name="my-wxoa" />
       </profile>
       <profile name="Annotation profile for micro-server-demo" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -21,12 +22,5 @@
         <module name="web-server" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="carservice" target="11" />
-      <module name="info-map" target="11.0.2" />
-      <module name="micro-center" target="11" />
-      <module name="web-interface" target="11" />
-      <module name="webserver" target="11" />
-    </bytecodeTargetLevel>
   </component>
 </project>
