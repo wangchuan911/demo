@@ -260,7 +260,7 @@ export class FormDrawersContent extends DrawersContent {
 export class MyTreeOption {
     value: any;
     label: string;
-    children?: Array<MyTreeOption>
+    children?: Array<MyTreeOption>;
 
     constructor(value: any, label: string, children?: Array<MyTreeOption>) {
         this.label = label;
@@ -307,7 +307,7 @@ export class SelectTreeItem extends InputItem {
 }*/
 export class KeyVal {
     key: string;
-    val: string
+    val: string;
 
     constructor(key: string, val: string) {
         this.key = key;
@@ -316,22 +316,24 @@ export class KeyVal {
 }
 
 export class SearchFilterInputItem {
-    value: string | null;
+    value: any | null;
     displayValue: string | null;
     type: InputType;
     readonly: boolean;
     checked: boolean;
+    enable: boolean;
     code: string;
     name: string;
     id: number;
     operator: KeyVal;
 
-    constructor(id: number, code: string, name: string, type: InputType, operator: OperatorType, readonly1 = false, checked1 = false) {
+    constructor(id: number, code: string, name: string, type: InputType, operator: OperatorType, readonly1 = false, checked1 = false, enable1 = true) {
         this.type = type;
         this.readonly = readonly1;
         this.checked = checked1;
+        this.enable = enable1;
         this.code = code;
-        let typeDes
+        let typeDes;
         switch (type) {
             case InputType.text:
                 typeDes = "文本";
@@ -356,10 +358,10 @@ export class SearchFilterInputItem {
         this.id = id;
         this.operator = this.findOperator(operator);
         this.value = null;
-        this.displayValue = null
+        this.displayValue = null;
     }
 
-    setValue(value: string | null = null, displayValue: string | null = null): this {
+    setValue(value: any | null = null, displayValue: string | null = null): this {
         this.value = value;
         if (value != null) {
             this.displayValue = displayValue || value;
@@ -381,11 +383,31 @@ export class SearchFilterInputItem {
 
     setOperator(value: OperatorType): this {
         this.operator = this.findOperator(value);
+        switch (value) {
+            case OperatorType.range:
+                this.value = [];
+                break;
+            case OperatorType.true:
+            case OperatorType.false:
+                this.value = (value == OperatorType.true);
+                break;
+            default:
+                switch (this.type) {
+                    case InputType.int:
+                    case InputType.decimal:
+                        this.value = 0;
+                        break;
+                    default:
+                        this.value = "";
+                        break;
+                }
+                break;
+        }
         return this;
     }
 
     findOperator(value: OperatorType): KeyVal {
-        return new KeyVal(value, FilterOperators.find(value1 => value1.id == value)?.name || ('未知' + value))
+        return new KeyVal(value, FilterOperators.find(value1 => value1.id == value)?.name || ('未知' + value));
     }
 }
 
@@ -420,7 +442,7 @@ export const FilterOperators = [
     {name: "范围", id: OperatorType.range, type: [InputType.decimal, InputType.int, InputType.time]},
     {name: "是", id: OperatorType.true, type: [InputType.boolean]},
     {name: "否", id: OperatorType.false, type: [InputType.boolean]}
-]
+];
 
 
 
