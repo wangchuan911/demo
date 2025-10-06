@@ -29,25 +29,25 @@ const routes: Array<RouteRecordRaw> = [
     {
         path: '/index',
         name: 'index',
-        component: () => import(/* webpackChunkName: "about" */ '../views/MainIndex.vue'),
+        component: () => import( '../views/MainIndex.vue'),
         children: [
             {
                 path: 'about',
-                component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
+                component: () => import( '../views/AboutView.vue'),
                 meta: {
                     standalone: true
                 }
             },
             {
                 path: 'object-detail/:id(\\d+)',
-                component: () => import(/* webpackChunkName: "about" */ '../views/entity/object/ObjectDetailView.vue'),
+                component: () => import( '../views/entity/object/ObjectDetailView.vue'),
                 meta: {
                     standalone: true
                 }
             },
             {
                 path: 'object-query',
-                component: () => import(/* webpackChunkName: "about" */ '../views/entity/object/ObjectQueryView.vue'),
+                component: () => import( '../views/entity/object/ObjectQueryView.vue'),
                 meta: {
                     standalone: true
                 }

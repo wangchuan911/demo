@@ -3,33 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "serve": "vite preview",
+    "build": "vite build",
+    "dev": "vite",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src"
   },
   "dependencies": {
     "axios": "^1.7.3",
-    "core-js": "^3.38.0",
-    "element-plus": "^2.8.0",
-    "vue": "^3.4.37",
-    "vue-class-component": "^8.0.0-0",
+    "element-plus": "^2.9.11",
+    "vue": "^3.5.22",
     "vue-router": "^4.4.3"
   },
   "devDependencies": {
     "@element-plus/icons-vue": "^2.3.1",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "@typescript-eslint/parser": "^5.62.0",
-    "@vue/cli-plugin-babel": "~5.0.0",
-    "@vue/cli-plugin-eslint": "~5.0.0",
-    "@vue/cli-plugin-router": "~5.0.0",
-    "@vue/cli-plugin-typescript": "~5.0.0",
-    "@vue/cli-service": "~5.0.0",
-    "@vue/eslint-config-typescript": "^9.1.0",
-    "eslint": "^7.32.0",
-    "eslint-plugin-vue": "^8.0.3",
-    "typescript": "~4.5.5",
+    "eslint": "^8.57.1",
+    "eslint-plugin-vue": "^8.7.1",
     "unplugin-auto-import": "^0.13.0",
-    "unplugin-vue-components": "^0.23.0"
+    "unplugin-vue-components": "^0.23.0",
+    "@types/node": "^24.6.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vue-tsc": "^3.1.0"
   },
   "eslintConfig": {
     "root": true,

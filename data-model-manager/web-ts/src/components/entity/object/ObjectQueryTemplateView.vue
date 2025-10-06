@@ -13,7 +13,7 @@
             </el-button>
           </template>
           <template #append>
-            <el-button :icon="Search" @click="search">查询</el-button>
+            <el-button :icon="Search" @click="search(1)">查询</el-button>
           </template>
         </el-input>
       </el-col>
@@ -121,11 +121,26 @@
         </div>
       </el-col>
     </el-row>
+    <el-table :data="tableData" style="width: 100%;height: 70vh" v-infinite-scroll="pageNext" >
+      <el-table-column prop="date" label="Date" width="180"/>
+      <el-table-column prop="name" label="Name" width="180"/>
+      <el-table-column prop="address" label="Address"/>
+      <template #append >
+        <div >hehe</div>
+      </template>
+    </el-table>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {ComponentCustomProperties, ComponentInternalInstance, getCurrentInstance, reactive} from 'vue';
+import {
+  ComponentCustomProperties,
+  ComponentInternalInstance,
+  computed,
+  defineProps,
+  getCurrentInstance,
+  reactive, watch
+} from 'vue';
 import {FilterOperators, InputType, OperatorType, SearchFilterInputItem} from "@/components/form/config";
 import {
   ArrowDown,
@@ -142,9 +157,6 @@ const filter = reactive({
   enable: false,
   inputs: new Array<SearchFilterInputItem>()
 });
-const search = () => {
-  console.log(1);
-};
 
 const allInputs = reactive<Array<SearchFilterInputItem>>([
   new SearchFilterInputItem(1, "key1", "输入项1", InputType.text, OperatorType.equal),
@@ -154,7 +166,38 @@ const allInputs = reactive<Array<SearchFilterInputItem>>([
   new SearchFilterInputItem(5, "key5", "输入项5", InputType.boolean, OperatorType.true),
 ]);
 const operators = reactive(FilterOperators);
-
+const props = defineProps<{ id: number }>();
+console.log(props.id);
+const objectId = computed(() => props.id);
+// watch(objectId, (value, oldValue, onCleanup) => {
+//   console.log(value);
+//   if (value < 0) {
+//     loading.value = true;
+//   } else {
+//     load(value as number);
+//   }
+// });
+const pager = reactive({page: 1, size: 20, loading: false, nomore: true});
+const search = async (page: number) => {
+  pager.page = page;
+  pager.nomore = false;
+  console.log(1);
+  const params: any = {};
+  allInputs.filter((item) => item.checked).forEach(item => {
+    params[item.code] = item.value;
+  });
+  console.log(params);
+  const {data} = await $http.post(`obj/template/query/${objectId.value}`, {params, pager});
+  pager.nomore = (data.length < pager.size);
+  tableData.push(...data);
+};
+const tableData = reactive<Array<any>>([]);
+const pageNext = () => {
+  if (pager.nomore) {
+    return;
+  }
+  search(pager.page + 1);
+};
 
 const addFilter = (item: SearchFilterInputItem) => {
   if (item.checked) {
