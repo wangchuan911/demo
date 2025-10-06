@@ -13,7 +13,7 @@
             </el-button>
           </template>
           <template #append>
-            <el-button :icon="Search" @click="search">查询</el-button>
+            <el-button :icon="Search" @click="search(1)">查询</el-button>
           </template>
         </el-input>
       </el-col>
@@ -61,7 +61,7 @@
               >
                 <template #reference>
                   <el-link v-if="input.value == '' || input.value == null" type="danger">未输入条件</el-link>
-                  <el-link v-else type="success" style="min-width: 70px;">{{input.value}}</el-link>
+                  <el-link v-else type="success" style="min-width: 70px;">{{ input.value }}</el-link>
                 </template>
                 <div>
                   <template v-if="input.operator.key=='range'">
@@ -121,20 +121,31 @@
         </div>
       </el-col>
     </el-row>
+    <el-table :data="tableData" style="width: 100%;height: calc(100vh - 300px)" v-elTableScroll="pageNext"
+              ref="table">
+      <el-table-column prop="date" label="Date" width="180"/>
+      <el-table-column prop="name" label="Name" width="180"/>
+      <el-table-column prop="address" label="Address"/>
+      <template #append>
+        <div v-if="pager.loading">加载中...</div>
+      </template>
+    </el-table>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {ComponentCustomProperties, ComponentInternalInstance, getCurrentInstance, reactive} from 'vue';
-import {FilterOperators, InputType, OperatorType, SearchFilterInputItem} from "@/components/form/config";
 import {
-  ArrowDown,
-  Check,
-  CircleCheck,
-  CirclePlus,
-  CirclePlusFilled,
-  Plus,
-} from '@element-plus/icons-vue';
+  ComponentCustomProperties,
+  ComponentInternalInstance,
+  computed,
+  defineProps,
+  getCurrentInstance,
+  reactive,
+  ref
+} from 'vue';
+import {FilterOperators, InputType, OperatorType, SearchFilterInputItem} from "@/components/form/config";
+import {TableInstance} from "element-plus";
+import Directives from "@/config/Directives";
 
 const {proxy} = getCurrentInstance() as ComponentInternalInstance;
 const {$http} = proxy as ComponentCustomProperties;
@@ -142,9 +153,6 @@ const filter = reactive({
   enable: false,
   inputs: new Array<SearchFilterInputItem>()
 });
-const search = () => {
-  console.log(1);
-};
 
 const allInputs = reactive<Array<SearchFilterInputItem>>([
   new SearchFilterInputItem(1, "key1", "输入项1", InputType.text, OperatorType.equal),
@@ -154,7 +162,50 @@ const allInputs = reactive<Array<SearchFilterInputItem>>([
   new SearchFilterInputItem(5, "key5", "输入项5", InputType.boolean, OperatorType.true),
 ]);
 const operators = reactive(FilterOperators);
-
+const props = defineProps<{ id: number }>();
+console.log(props.id);
+const objectId = computed(() => props.id);
+// watch(objectId, (value, oldValue, onCleanup) => {
+//   console.log(value);
+//   if (value < 0) {
+//     loading.value = true;
+//   } else {
+//     load(value as number);
+//   }
+// });
+const pager = reactive({page: 1, size: 20, loading: false, nomore: false});
+const search = async (page: number) => {
+  pager.page = page;
+  pager.nomore = false;
+  console.log(1);
+  const params: any = {};
+  allInputs.filter((item) => item.checked).forEach(item => {
+    params[item.code] = item.value;
+  });
+  console.log(params);
+  pager.loading = true;
+  try {
+    const {data} = await $http.post(`obj/template/query/${objectId.value}`, {params, pager});
+    pager.nomore = (data.length < pager.size);
+    if (page == 1) {
+      tableData.length = 0;
+    }
+    tableData.push(...data);
+  } finally {
+    pager.loading = false;
+  }
+  if (Directives.TableScrollConfig.canLoadMore(table.value.$el)) {
+    await search(page + 1);
+  }
+};
+const table = ref<TableInstance>();
+const tableData = reactive<Array<any>>([]);
+const pageNext = () => {
+  if (pager.nomore) {
+    return;
+  }
+  search(pager.page + 1);
+};
 
 const addFilter = (item: SearchFilterInputItem) => {
   if (item.checked) {

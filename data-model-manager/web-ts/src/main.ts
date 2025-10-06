@@ -1,10 +1,8 @@
 import {createApp} from 'vue'
 import App from '@/App.vue'
-import Http from "@/config/Http";
+import Config from "@/config/Config";
 import router from '@/router'
-import Import from "@/components/Import";
 
 const app = createApp(App).use(router)
-Http.config(app)
-Import.config(app)
+Config.config(app)
 app.mount('#app')
