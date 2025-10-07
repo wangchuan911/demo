@@ -61,7 +61,7 @@
               >
                 <template #reference>
                   <el-link v-if="input.value == '' || input.value == null" type="danger">未输入条件</el-link>
-                  <el-link v-else type="success" style="min-width: 70px;">{{ input.value }}</el-link>
+                  <el-link v-else type="success" style="min-width: 70px;">{{input.value}}</el-link>
                 </template>
                 <div>
                   <template v-if="input.operator.key=='range'">
@@ -140,10 +140,18 @@ import {
   computed,
   defineProps,
   getCurrentInstance,
-  reactive,
+  reactive, watch
   ref
 } from 'vue';
 import {FilterOperators, InputType, OperatorType, SearchFilterInputItem} from "@/components/form/config";
+import {
+  ArrowDown,
+  Check,
+  CircleCheck,
+  CirclePlus,
+  CirclePlusFilled,
+  Plus,
+} from '@element-plus/icons-vue';
 import {TableInstance} from "element-plus";
 import Directives from "@/config/Directives";
 
