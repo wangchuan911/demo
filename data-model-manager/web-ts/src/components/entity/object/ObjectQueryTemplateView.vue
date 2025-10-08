@@ -140,7 +140,7 @@ import {
   computed,
   defineProps,
   getCurrentInstance,
-  reactive, watch
+  reactive, watch,
   ref
 } from 'vue';
 import {FilterOperators, InputType, OperatorType, SearchFilterInputItem} from "@/components/form/config";

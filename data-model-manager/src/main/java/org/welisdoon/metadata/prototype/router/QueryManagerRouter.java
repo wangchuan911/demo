@@ -3,6 +3,7 @@ package org.welisdoon.metadata.prototype.router;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.github.pagehelper.PageInfo;
 import com.hazelcast.shaded.org.jctools.queues.MessagePassingQueue;
@@ -838,4 +839,27 @@ public class QueryManagerRouter {
             routingContext.end(String.format("[%s]", list1.stream().collect(Collectors.joining(","))));
         });
     }
+
+    @VertxRouter(path = "\\/obj\\/template\\/(?<type>\\w+)\\/(?<id>\\d+)",
+            method = "POST",
+            mode = VertxRouteType.PathRegex)
+    public void template(RoutingContextChain chain) {
+        chain.handler(event -> {
+            logger.info(event.body().asString());
+            switch (event.pathParam("type")) {
+                case "query":
+                    List<Object> data = new LinkedList<>();
+                    for (int i = 0; i < 21; i++) {
+                        data.add(Map.of());
+                    }
+                    event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
+                    break;
+                default:
+                    event.response().setStatusCode(500).end("error");
+                    break;
+            }
+
+        });
+    }
+
 }
