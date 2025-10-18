@@ -190,6 +190,8 @@ public class DataObject extends MetaObject {
             while (next != null) {
                 if (next.getLinkId() < 0) {
                     list.add(new SqlJoiner().<MetaLink>setId(next.getLinkId()).setInstanceId(1L).setAttributeId(next.getAttributeId()).setTypeId(LinkMetaType.ObjConstructor.getId()));
+                } else if (next.getLink().getType().getParent() == LinkMetaType.SqlToJoin) {
+                    list.add(new SqlJoiner().<MetaLink>setId(next.getLinkId()).setInstanceId(1L).setAttributeId(next.getAttributeId()).setTypeId(next.getLink().getType().getId()));
                 } else {
                     list.add(next.getLink());
                 }

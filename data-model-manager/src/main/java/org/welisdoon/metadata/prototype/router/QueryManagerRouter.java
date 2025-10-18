@@ -236,9 +236,15 @@ public class QueryManagerRouter {
                         long qid = Long.parseLong(routingContext.pathParam("id"));
                         JSONObject attrJSON = JSON.parseObject(routingContext.body().asString());
 
-                        MetaObject.Attribute attribute = attrJSON.toJavaObject(((MetaObject.Attribute) MetaUtils.getInstance().getType(MetaUtils.getInstance().getMetaType(attrJSON.getLong("typeId")))).getClass());
-                        attribute.setObjectId(qid);
                         MetaObject metaObject = MetaUtils.getInstance().getObject(qid);
+                        MetaObject.Attribute attribute = attrJSON.toJavaObject(((MetaObject.Attribute) MetaUtils.getInstance().getType(Optional.ofNullable(attrJSON.getLong("typeId")).map(MetaUtils.getInstance()::getMetaType).orElseGet(() -> {
+                            if (metaObject instanceof DataObject) {
+                                return AttributeMetaType.Field;
+                            } else {
+                                return AttributeMetaType.Column;
+                            }
+                        }))).getClass());
+                        attribute.setObjectId(qid);
                         Arrays.stream(AttributeMetaType.values()).filter(attributeMetaType -> attributeMetaType.getObjectMetaType() == metaObject.getType()).findFirst().ifPresentOrElse(attributeMetaType -> {
                             attribute.setTypeId(attributeMetaType.getId());
                         }, () -> {
