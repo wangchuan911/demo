@@ -26,7 +26,7 @@ public class SqlItem extends SqlRelationExpression {
         }
         if (getAttribute() instanceof DataObject.Field) {
             Sql last = format(getAttribute());
-            sqlAlias = new SqlAlias(getPrefix() + "_" + last.getPrefix(), last.getAttribute().getCode());
+            sqlAlias = new SqlAlias((getPrefix() + "_" + last.getPrefix()).replace("_T", "_"), last.getAttribute().getCode());
         } else
             sqlAlias = new SqlAlias(getPrefix(), getAttribute().getCode());
     }
@@ -65,10 +65,15 @@ public class SqlItem extends SqlRelationExpression {
         if (matched(sqlJoiner)) {
             return sqlJoiner.getPrefix();
         } else {
-            for (MetaLink child : sqlJoiner.getParent().getChildren()) {
-                if (child == sqlJoiner) {
-                    break;
-                }
+            List<MetaLink> metaLinks;
+            boolean isChild = false;
+            if (sqlJoiner.getParent() instanceof SqlJoiner) {
+                metaLinks = (List) ((SqlJoiner) sqlJoiner.getParent()).subJoiners;
+                isChild = true;
+            } else {
+                metaLinks = sqlJoiner.getParent().getChildren();
+            }
+            for (MetaLink child : metaLinks) {
                 if (child instanceof SqlJoiner) {
                     if (matched((SqlJoiner) child)) {
                         return ((SqlJoiner) child).getPrefix();

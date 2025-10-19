@@ -37,11 +37,23 @@ public class SqlJoiner extends Sql {
                 }
             }
         } else if (object instanceof DataObject) {
+            boolean first = true;
             for (MetaLink constructorLink : ((DataObject) object).getConstructorLinks()) {
                 if (constructorLink instanceof SqlJoiner) {
                     constructorLink.setParent(this);
                     ((SqlJoiner) constructorLink).build();
                     subJoiners.add((SqlJoiner) constructorLink);
+                    if (first) {
+                        first = false;
+                        for (MetaLink child : getChildren()) {
+                            if (child instanceof SqlRelationExpression) {
+                                child.setParent(constructorLink);
+                                ((SqlRelationExpression) child).build();
+                                ((SqlJoiner) constructorLink).condition.add((SqlRelationExpression) child);
+
+                            }
+                        }
+                    }
                 }
             }
         }
