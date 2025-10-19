@@ -186,6 +186,14 @@ public abstract class MetaPrototype {
 
         Child setParent(T parent);
 
+        default Child setParent(T parent, boolean updateParentOfChildren) {
+            setParent(parent);
+            if (updateParentOfChildren && parent instanceof Parent) {
+                Parent<Child> tParent = (Parent) parent;
+                tParent.getChildren().add(this);
+            }
+            return this;
+        }
     }
 
     public enum LifeState {
