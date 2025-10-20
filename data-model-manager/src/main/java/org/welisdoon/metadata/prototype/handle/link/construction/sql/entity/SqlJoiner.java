@@ -60,40 +60,43 @@ public class SqlJoiner extends Sql {
     }
 
     @Override
-    protected String format() {
-        if (leaf)
+    protected String format(Format format) {
+        if (leaf) {
             switch (getType()) {
                 case ObjConstructor:
-                case SqlToJoinOfStrongRel:
-                    return String.format(" join %s %s on %s /*line*/", table.getTarget(), table.getAlias(), condition.stream().map(SqlRelationExpression::format).collect(Collectors.joining(" and ")));
                 case SqlToJoinOfWeakRel:
-                    return String.format(" left join %s %s on %s /*line*/", table.getTarget(), table.getAlias(), condition.stream().map(SqlRelationExpression::format).collect(Collectors.joining(" and ")));
+                case SqlToJoinOfStrongRel:
+                    return String.format(" %s join %s %s on %s ", isWeakRelation() ? "left" : "", table.getTarget(), table.getAlias(), condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)).collect(Collectors.joining(" and ")));
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
-        else {
-            return subJoiners.stream().map(sqlJoiner -> {
-                String s = sqlJoiner.format();
-                if (isWeakRelation() && s.startsWith(" join ")) {
-                    return " left" + s;
-                }
-                return s;
-            }).collect(Collectors.joining(" "));
+        } else {
+            MetaObject object = getObject();
+            return String.format("/*%s*/ %s /*%s*/",
+                    object.getName(),
+                    subJoiners.stream().map(sqlJoiner -> {
+                        String s = sqlJoiner.format(format);
+                        if (isWeakRelation() && s.startsWith(" join ")) {
+                            return " left" + s;
+                        }
+                        return s;
+                    }).collect(Collectors.joining(" ")),
+                    object.getName());
         }
     }
 
-    protected String formatFirst() {
+    protected String formatFirst(Format format) {
         if (leaf)
             switch (getType()) {
                 case ObjConstructor:
                 case SqlToJoinOfStrongRel:
-                    return String.format(" from %s %s %s where %s 1=1", table.getTarget(), table.getAlias(), OTHER, condition.stream().map(sql -> sql.format() + " and ").collect(Collectors.joining("")));
+                    return String.format(" from %s %s %s where %s 1=1", table.getTarget(), table.getAlias(), OTHER, condition.stream().map(sql -> sql.format(format) + " and ").collect(Collectors.joining("")));
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
         else {
-            return subJoiners.get(0).formatFirst().replace(OTHER,
-                    (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(SqlJoiner::format).collect(Collectors.joining(" "))) + OTHER);
+            return subJoiners.get(0).formatFirst(format).replace(OTHER,
+                    (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
         }
     }
 
@@ -110,4 +113,15 @@ public class SqlJoiner extends Sql {
         }
         return metaLink1.getPrefix() + "_" + getInstanceIdAsLongValue();
     }
+
+
+    public List<SqlAlias> findInputs() {
+        if (getParent() instanceof SqlJoiner) {
+            return ((SqlJoiner) getParent()).findInputs();
+        } else if (getParent() instanceof SqlContent) {
+            return ((SqlContent) getParent()).findInputs();
+        }
+        return List.of();
+    }
+
 }

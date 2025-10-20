@@ -7,6 +7,7 @@ import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
@@ -39,21 +40,27 @@ public class SqlContent extends Sql {
         }
     }
 
-    public String format() {
-        String from = ((SqlJoiner) getChildren().get(0)).formatFirst();
+    public String format(Format format) {
+        String from = ((SqlJoiner) getChildren().get(0)).formatFirst(format);
         StringBuilder join = new StringBuilder();
         if (getChildren().size() > 1) {
             ListIterator<SqlJoiner> iterator = (ListIterator) getChildren().listIterator(1);
             SqlJoiner sqlJoiner;
             while (iterator.hasNext()) {
                 sqlJoiner = iterator.next();
-                join.append(sqlJoiner.format());
+                join.append(sqlJoiner.format(format));
             }
         }
-        String column = ((DataObject) this.metaObject).getFields().stream().filter(field -> field.getParent().getChildren().stream().anyMatch(child -> child.getType() == LinkMetaType.SqlToSelect)).map(field -> {
-            Sql last = SqlItem.format(field);
-            return MessageFormat.format("{0}.{1}", last.getPrefix(), last.getAttribute().getCode());
+        String column = findInputs().stream().map(field -> {
+            return MessageFormat.format("{0}.{1}", field.alias, field.target);
         }).collect(Collectors.joining(","));
         return MessageFormat.format("select {0} {1}", column, from.replace(SqlJoiner.OTHER, join.toString()));
+    }
+
+    public List<SqlAlias> findInputs() {
+        return ((DataObject) this.metaObject).getFields().stream().filter(field -> field.getParent().getChildren().stream().anyMatch(child -> child.getType() == LinkMetaType.SqlToSelect)).map(field -> {
+            Sql last = SqlItem.format(field);
+            return new SqlAlias(last.getPrefix(), last.getAttribute().getCode());
+        }).collect(Collectors.toList());
     }
 }

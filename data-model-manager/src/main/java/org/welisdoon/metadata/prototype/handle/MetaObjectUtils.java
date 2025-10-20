@@ -14,30 +14,30 @@ import java.util.Objects;
  * @Author Septem
  * @Date 16:55
  */
-@Component
+@Deprecated
 public class MetaObjectUtils {
 
-    static MetaObjectDao metaObjectDao;
-
-    @Autowired
-    public void setMetaObjectDao(MetaObjectDao metaObjectDao) {
-        this.metaObjectDao = metaObjectDao;
-    }
-
-    public static MetaObject getParent(MetaObject metaObject) {
-        if (Objects.isNull(metaObject.getParentId()))
-            return null;
-        if (Objects.isNull(metaObject.getParent()))
-            metaObject.setParent(metaObjectDao.get(metaObject.getParentId()));
-
-        return metaObject.getParent();
-    }
-
-    public static MetaObject getParent(MetaObject metaObject, ObjectMetaType metaType) {
-        MetaObject parent = getParent(metaObject);
-        while (parent != null && !Objects.equals(parent.getTypeId(), metaType.getId()))
-            parent = getParent(parent);
-
-        return parent;
-    }
+//    static MetaObjectDao metaObjectDao;
+//
+//    @Autowired
+//    public void setMetaObjectDao(MetaObjectDao metaObjectDao) {
+//        this.metaObjectDao = metaObjectDao;
+//    }
+//
+//    public static MetaObject getParent(MetaObject metaObject) {
+//        if (Objects.isNull(metaObject.getParentId()))
+//            return null;
+//        if (Objects.isNull(metaObject.getParent()))
+//            metaObject.setParent(metaObjectDao.get(metaObject.getParentId()));
+//
+//        return metaObject.getParent();
+//    }
+//
+//    public static MetaObject getParent(MetaObject metaObject, ObjectMetaType metaType) {
+//        MetaObject parent = getParent(metaObject);
+//        while (parent != null && !Objects.equals(parent.getTypeId(), metaType.getId()))
+//            parent = getParent(parent);
+//
+//        return parent;
+//    }
 }

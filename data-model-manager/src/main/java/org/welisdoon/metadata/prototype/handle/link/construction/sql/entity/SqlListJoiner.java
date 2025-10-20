@@ -12,16 +12,16 @@ import java.util.stream.Collectors;
  */
 public class SqlListJoiner extends SqlJoiner {
     @Override
-    protected String format() {
+    protected String format(Format format) {
         if (leaf)
             switch (getType()) {
                 case SqlToJoinOfMultiDataRel:
-                    return String.format("/*multi*/ left join %s %s on %s /*line*/", table.getTarget(), table.getAlias(), condition.stream().map(SqlRelationExpression::format).collect(Collectors.joining(" and ")));
+                    return String.format("/*multi*/ left join %s %s on %s /*multi*/", table.getTarget(), table.getAlias(), condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)).collect(Collectors.joining(" and ")));
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
 
-        return super.format();
+        return super.format(format);
     }
 
     @Override

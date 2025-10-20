@@ -25,5 +25,9 @@ public abstract class Sql extends MetaLink {
 
     abstract protected void build();
 
-    abstract protected String format();
+    abstract protected String format(Format format);
+
+    public enum Format {
+        Show, Template;
+    }
 }

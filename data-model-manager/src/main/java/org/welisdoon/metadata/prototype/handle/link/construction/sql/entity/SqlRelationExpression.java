@@ -30,34 +30,34 @@ public class SqlRelationExpression extends Sql {
     }
 
     @Override
-    protected String format() {
+    protected String format(Format format) {
 //        Assert.isTrue(getType().getParent() == LinkMetaType.SqlOperator, "错误的操作符:" + getType().name());
 
         switch (getType()) {
             case Equal:
-                return String.format(" %s = %s ", left.format(), right.format());
+                return String.format(" %s = %s ", left.format(format), right.format(format));
             case NotEqual:
-                return String.format(" %s != %s ", left.format(), right.format());
+                return String.format(" %s != %s ", left.format(format), right.format(format));
             case GreatThan:
-                return String.format(" %s > %s ", left.format(), right.format());
+                return String.format(" %s > %s ", left.format(format), right.format(format));
             case LessThan:
-                return String.format(" %s < %s ", left.format(), right.format());
+                return String.format(" %s < %s ", left.format(format), right.format(format));
             case GreatEqual:
-                return String.format(" %s >= %s ", left.format(), right.format());
+                return String.format(" %s >= %s ", left.format(format), right.format(format));
             case LessEqual:
-                return String.format(" %s <= %s ", left.format(), right.format());
+                return String.format(" %s <= %s ", left.format(format), right.format(format));
             case Contain:
-                return String.format(" %s in %s ", left.format(), right.format());
+                return String.format(" %s in %s ", left.format(format), right.format(format));
             case NotContain:
-                return String.format(" %s not in %s ", left.format(), right.format());
+                return String.format(" %s not in %s ", left.format(format), right.format(format));
             case OR:
-                return String.format("( %s or %s )", left.format(), right.format());
+                return String.format("( %s or %s )", left.format(format), right.format(format));
             case AND:
-                return String.format("( %s and %s )", left.format(), right.format());
+                return String.format("( %s and %s )", left.format(format), right.format(format));
             case Exists:
-                return String.format(" exists ( %s and %s)", left.format(), right.format());
+                return String.format(" exists ( %s and %s)", left.format(format), right.format(format));
             case NotExists:
-                return String.format(" not exists ( %s and %s)", left.format(), right.format());
+                return String.format(" not exists ( %s and %s)", left.format(format), right.format(format));
 //            case Value:
 //            case Values:
             default:

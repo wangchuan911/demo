@@ -48,7 +48,7 @@ public class SqlItem extends SqlRelationExpression {
     }
 
     @Override
-    protected String format() {
+    protected String format(Format format) {
         return String.format("%s%s%s", sqlAlias.alias, constValue ? "" : ".", sqlAlias.getTarget());
     }
 

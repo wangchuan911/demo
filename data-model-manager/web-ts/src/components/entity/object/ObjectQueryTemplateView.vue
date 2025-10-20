@@ -57,7 +57,7 @@
               </el-dropdown>
               &nbsp;
               <el-popover
-                  placement="top" :width="300"
+                  placement="top" :width="300" trigger="click"
               >
                 <template #reference>
                   <el-link v-if="input.value == '' || input.value == null" type="danger">未输入条件</el-link>
@@ -96,7 +96,7 @@
                                      class="filter-item-input"/>
                   </template>
                   <el-input v-if="input.type=='text'" v-model="input.value"
-                            class="filter-item-input"
+                            class="filter-item-input" :clearable="true"
                             placeholder="Please input"/>
                 </div>
               </el-popover>

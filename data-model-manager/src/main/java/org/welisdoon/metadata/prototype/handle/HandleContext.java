@@ -6,6 +6,7 @@ package org.welisdoon.metadata.prototype.handle;
  * @Author Septem
  * @Date 18:15
  */
+@Deprecated
 public interface HandleContext {
 
 }

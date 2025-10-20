@@ -22,7 +22,7 @@ public class SqlItems extends SqlRelationExpression {
     }
 
     @Override
-    protected String format() {
-        return String.format("(%s)", getChildren().stream().filter(metaLink -> metaLink instanceof Sql).map(metaLink -> ((Sql) metaLink).format()));
+    protected String format(Format format) {
+        return String.format("(%s)", getChildren().stream().filter(metaLink -> metaLink instanceof Sql).map(metaLink -> ((Sql) metaLink).format(format)));
     }
 }

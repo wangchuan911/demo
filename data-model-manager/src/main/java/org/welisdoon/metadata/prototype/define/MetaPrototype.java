@@ -186,9 +186,9 @@ public abstract class MetaPrototype {
 
         Child setParent(T parent);
 
-        default Child setParent(T parent, boolean updateParentOfChildren) {
+        default Child bindParent(T parent) {
             setParent(parent);
-            if (updateParentOfChildren && parent instanceof Parent) {
+            if (parent instanceof Parent) {
                 Parent<Child> tParent = (Parent) parent;
                 tParent.getChildren().add(this);
             }

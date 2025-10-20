@@ -27,8 +27,8 @@ import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
 import org.welisdoon.metadata.prototype.define.*;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlBuilderHandler;
-import org.welisdoon.metadata.prototype.handle.link.construction.sql.SqlContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.builder.SqlShowBuilder;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.Sql;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -54,15 +54,15 @@ public class QueryManagerRouter {
     MetaObjectDao metaObjectDao;
     MetaLinkDao metaLinkDao;
     MetaAttributeDao metaAttributeDao;
-    SqlBuilderHandler sqlBuilderHandler;
+//    SqlBuilderHandler sqlBuilderHandler;
     TransactionTemplate transactionTemplate;
-    SqlShowBuilder sqlShowBuilder;
+//    SqlShowBuilder sqlShowBuilder;
     boolean lazy = false;
 
-    @Autowired
-    public void setSqlBuilderHandler(SqlBuilderHandler sqlBuilderHandler) {
-        this.sqlBuilderHandler = sqlBuilderHandler;
-    }
+//    @Autowired
+//    public void setSqlBuilderHandler(SqlBuilderHandler sqlBuilderHandler) {
+//        this.sqlBuilderHandler = sqlBuilderHandler;
+//    }
 
     @Autowired
     public void setMetaObjectDao(MetaObjectDao metaObjectDao) {
@@ -84,10 +84,10 @@ public class QueryManagerRouter {
         this.transactionTemplate = transactionTemplate;
     }
 
-    @Autowired
-    public void setSqlShowBuilder(SqlShowBuilder sqlShowBuilder) {
-        this.sqlShowBuilder = sqlShowBuilder;
-    }
+//    @Autowired
+//    public void setSqlShowBuilder(SqlShowBuilder sqlShowBuilder) {
+//        this.sqlShowBuilder = sqlShowBuilder;
+//    }
 
     @VertxRouter(path = "\\/obj\\/(?<id>\\d+)",
             method = "GET",
@@ -217,7 +217,7 @@ public class QueryManagerRouter {
     public void show(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format());
+            routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(Sql.Format.Show));
 //            SqlContent context = new SqlContent();
 //            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
 //                sqlBuilderHandler.handler(context, construct);
