@@ -1,9 +1,6 @@
 package org.welisdoon.metadata.prototype.define;
 
-import java.util.Deque;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Stream;
@@ -154,28 +151,37 @@ public abstract class MetaPrototype {
         List<T> getChildren();
 
         default <P extends Parent> P setChildren(List<T> children) {
-            List<T> list = getChildren();
+            /*List<T> list = getChildren();
             list.clear();
             if (children != null) {
                 list.addAll(children);
                 list.forEach(this::bind);
-            }
+            }*/
+            getChildren().clear();
+            this.bind(children == null ? Stream.of() : children.stream());
             return (P) this;
         }
 
-        default void bind(T child) {
-            if (child instanceof Child && this instanceof Parent) {
-                ((Child) child).setParent(this);
+        default void bind(Stream<T> children) {
+            List<T> list = getChildren();
+            if (children == null) {
+                return;
             }
+            children.forEach(child -> {
+                if (child instanceof Child) {
+                    ((Child) child).setParent(this);
+                }
+                list.add(child);
+            });
         }
 
-        default <P extends Parent> P addChildren(Stream<T> children) {
-            if (children == null) return (P) this;
-            List<T> list = getChildren();
-            children.forEach(t -> {
-                list.add(t);
-                this.bind(t);
-            });
+        default <P extends Parent> P addChildren(T... children) {
+            this.bind(Arrays.stream(children));
+            return (P) this;
+        }
+
+        default <P extends Parent> P addChildren(List<T> children) {
+            this.bind(children == null ? Stream.of() : children.stream());
             return (P) this;
         }
     }

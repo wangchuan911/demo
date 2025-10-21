@@ -292,10 +292,10 @@ public class DataObject extends MetaObject {
 
         public static List<Col> append(Field field, JSONArray cols) {
             List<Col> colLinks = new LinkedList<>();
-            colLinks.add(new Col(field.getId(), 0).<Col>addChildren(Stream.of(new Head(field.getId(), 0))));
+            colLinks.add(new Col(field.getId(), 0).<Col>addChildren(new Head(field.getId(), 0)));
             for (int i1 = 0; i1 < cols.size(); i1++) {
                 Long selfColAttrId = JsonUtils.getKeyValueToBean(cols.getJSONObject(i1), "attrId", Long.class);
-                colLinks.add(new Col(field.getId(), i1 + 1).<Col>addChildren(Stream.of(new Head(selfColAttrId, i1 + 1))));
+                colLinks.add(new Col(field.getId(), i1 + 1).<Col>addChildren(new Head(selfColAttrId, i1 + 1)));
             }
             return colLinks;
         }
