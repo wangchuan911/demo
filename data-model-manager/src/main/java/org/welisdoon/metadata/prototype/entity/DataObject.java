@@ -10,6 +10,7 @@ import org.welisdoon.common.JsonUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.consts.MetaUtils;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaProtoList;
@@ -191,7 +192,7 @@ public class DataObject extends MetaObject {
                 if (next.getLinkId() < 0) {
                     list.add(new SqlJoiner().<MetaLink>setId(next.getLinkId()).setInstanceId(1L).setAttributeId(next.getAttributeId()).setTypeId(LinkMetaType.ObjConstructor.getId()));
                 } else if (next.getLink().getType().getParent() == LinkMetaType.SqlToJoin) {
-                    list.add(next.getLink().setAttributeId(next.getAttributeId()));
+                    list.add(MetaUtils.getInstance().<MetaLink>getType(next.getLink().getType()).copyValueTo(next.getLink()).setAttributeId(next.getAttributeId()));
                 } else {
                     list.add(next.getLink());
                 }

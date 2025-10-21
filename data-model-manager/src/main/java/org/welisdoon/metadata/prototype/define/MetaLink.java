@@ -319,7 +319,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         }
     }
 
-    public void copyValueTo(MetaLink metaLink) {
+    public <T extends MetaLink> T copyValueTo(MetaLink metaLink) {
         this.code = metaLink.code;
         this.name = metaLink.name;
         this.typeId = metaLink.typeId;
@@ -329,6 +329,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         this.setAttributeId(metaLink.getAttributeId());
         this.setValueId(metaLink.getValueId());
         this.setSequence(metaLink.getSequence());
+        return (T) this;
     }
 
     public void test() {

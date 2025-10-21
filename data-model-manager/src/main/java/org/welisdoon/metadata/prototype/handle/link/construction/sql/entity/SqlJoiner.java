@@ -1,14 +1,19 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 
+import java.text.MessageFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Classname SqlContent
@@ -66,7 +71,17 @@ public class SqlJoiner extends Sql {
                 case ObjConstructor:
                 case SqlToJoinOfWeakRel:
                 case SqlToJoinOfStrongRel:
-                    return String.format(" %s join %s %s on %s ", isWeakRelation() ? "left" : "", table.getTarget(), table.getAlias(), condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)).collect(Collectors.joining(" and ")));
+                    return String.format(" %s join %s %s on %s ",
+                            isWeakRelation() ? "left" : "",
+                            table.getTarget(),
+                            table.getAlias(),
+                            Stream.<Stream<String>>of(
+                                    condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)),
+                                    Format.Template == format ? findInputs().stream().map(field -> {
+                                        Sql last = SqlItem.format(field);
+                                        return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
+                                    }) : Stream.<String>of()
+                            ).flatMap(stringStream -> stringStream).filter(StringUtils::isNoneBlank).collect(Collectors.joining(" and ")));
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
@@ -90,7 +105,20 @@ public class SqlJoiner extends Sql {
             switch (getType()) {
                 case ObjConstructor:
                 case SqlToJoinOfStrongRel:
-                    return String.format(" from %s %s %s where %s 1=1", table.getTarget(), table.getAlias(), OTHER, condition.stream().map(sql -> sql.format(format) + " and ").collect(Collectors.joining("")));
+                    return String.format(" from %s %s %s where %s",
+                            table.getTarget(),
+                            table.getAlias(),
+                            OTHER,
+                            Optional.of(
+                                    Stream.<Stream<String>>of(
+                                            condition.stream().map(sql -> sql.format(format)),
+                                            Format.Template == format ? findInputs().stream().map(field -> {
+                                                Sql last = SqlItem.format(field);
+                                                return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
+                                            }) : Stream.<String>of()
+                                    ).flatMap(stringStream -> stringStream).filter(StringUtils::isNotEmpty).collect(Collectors.joining(" and "))
+                            ).filter(StringUtils::isNoneBlank).orElse("1=1")
+                    );
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
@@ -115,7 +143,7 @@ public class SqlJoiner extends Sql {
     }
 
 
-    public List<SqlAlias> findInputs() {
+    protected List<DataObject.Field> findInputs() {
         if (getParent() instanceof SqlJoiner) {
             return ((SqlJoiner) getParent()).findInputs();
         } else if (getParent() instanceof SqlContent) {
@@ -123,5 +151,6 @@ public class SqlJoiner extends Sql {
         }
         return List.of();
     }
+
 
 }

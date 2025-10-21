@@ -52,15 +52,13 @@ public class SqlContent extends Sql {
             }
         }
         String column = findInputs().stream().map(field -> {
-            return MessageFormat.format("{0}.{1}", field.alias, field.target);
+            Sql last = SqlItem.format(field);
+            return MessageFormat.format("{0}.{1}", last.getPrefix(), last.getAttribute().getCode());
         }).collect(Collectors.joining(","));
         return MessageFormat.format("select {0} {1}", column, from.replace(SqlJoiner.OTHER, join.toString()));
     }
 
-    public List<SqlAlias> findInputs() {
-        return ((DataObject) this.metaObject).getFields().stream().filter(field -> field.getParent().getChildren().stream().anyMatch(child -> child.getType() == LinkMetaType.SqlToSelect)).map(field -> {
-            Sql last = SqlItem.format(field);
-            return new SqlAlias(last.getPrefix(), last.getAttribute().getCode());
-        }).collect(Collectors.toList());
+    protected List<DataObject.Field> findInputs() {
+        return ((DataObject) this.metaObject).getFields().stream().filter(field -> field.getParent().getChildren().stream().anyMatch(child -> child.getType() == LinkMetaType.SqlToSelect)).collect(Collectors.toList());
     }
 }
