@@ -1,6 +1,7 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
@@ -8,10 +9,7 @@ import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 
 import java.text.MessageFormat;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,67 +62,125 @@ public class SqlJoiner extends Sql {
         }
     }
 
+//    @Override
+//    protected String format(Format format) {
+//        if (leaf) {
+//            switch (getType()) {
+//                case ObjConstructor:
+//                case SqlToJoinOfWeakRel:
+//                case SqlToJoinOfStrongRel:
+//                    return String.format(" %s join %s %s on %s ",
+//                            isWeakRelation() ? "left" : "",
+//                            table.getTarget(),
+//                            table.getAlias(),
+//                            Stream.<Stream<String>>of(
+//                                    condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)),
+//                                    Format.Template == format ? findInputs().stream().map(field -> {
+//                                        Sql last = SqlItem.format(field);
+//                                        return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
+//                                    }) : Stream.<String>of()
+//                            ).flatMap(stringStream -> stringStream).filter(StringUtils::isNoneBlank).collect(Collectors.joining(" and ")));
+//                default:
+//                    throw new IllegalStateException("不支持的操作：" + getType().name());
+//            }
+//        } else {
+//            MetaObject object = getObject();
+//            return String.format("/*%s*/ %s /*%s*/",
+//                    object.getName(),
+//                    subJoiners.stream().map(sqlJoiner -> {
+//                        String s = sqlJoiner.format(format);
+//                        if (isWeakRelation() && s.startsWith(" join ")) {
+//                            return " left" + s;
+//                        }
+//                        return s;
+//                    }).collect(Collectors.joining(" ")),
+//                    object.getName());
+//        }
+//    }
+//
+//    protected String formatFirst(Format format) {
+//        if (leaf)
+//            switch (getType()) {
+//                case ObjConstructor:
+//                case SqlToJoinOfStrongRel:
+//                    return String.format(" from %s %s %s where %s",
+//                            table.getTarget(),
+//                            table.getAlias(),
+//                            OTHER,
+//                            Optional.of(
+//                                    Stream.<Stream<String>>of(
+//                                            condition.stream().map(sql -> sql.format(format)),
+//                                            Format.Template == format ? findInputs().stream().map(field -> {
+//                                                Sql last = SqlItem.format(field);
+//                                                return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
+//                                            }) : Stream.<String>of()
+//                                    ).flatMap(stringStream -> stringStream).filter(StringUtils::isNotEmpty).collect(Collectors.joining(" and "))
+//                            ).filter(StringUtils::isNoneBlank).orElse("1=1")
+//                    );
+//                default:
+//                    throw new IllegalStateException("不支持的操作：" + getType().name());
+//            }
+//        else {
+//            return subJoiners.get(0).formatFirst(format).replace(OTHER,
+//                    (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
+//        }
+//    }
+
     @Override
     protected String format(Format format) {
-        if (leaf) {
-            switch (getType()) {
-                case ObjConstructor:
-                case SqlToJoinOfWeakRel:
-                case SqlToJoinOfStrongRel:
-                    return String.format(" %s join %s %s on %s ",
-                            isWeakRelation() ? "left" : "",
-                            table.getTarget(),
-                            table.getAlias(),
-                            Stream.<Stream<String>>of(
-                                    condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)),
-                                    Format.Template == format ? findInputs().stream().map(field -> {
-                                        Sql last = SqlItem.format(field);
-                                        return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
-                                    }) : Stream.<String>of()
-                            ).flatMap(stringStream -> stringStream).filter(StringUtils::isNoneBlank).collect(Collectors.joining(" and ")));
-                default:
-                    throw new IllegalStateException("不支持的操作：" + getType().name());
-            }
-        } else {
-            MetaObject object = getObject();
-            return String.format("/*%s*/ %s /*%s*/",
-                    object.getName(),
-                    subJoiners.stream().map(sqlJoiner -> {
-                        String s = sqlJoiner.format(format);
-                        if (isWeakRelation() && s.startsWith(" join ")) {
-                            return " left" + s;
-                        }
-                        return s;
-                    }).collect(Collectors.joining(" ")),
-                    object.getName());
-        }
+        return format(format, false);
     }
 
-    protected String formatFirst(Format format) {
-        if (leaf)
+    protected String format(Format format, boolean isFirst) {
+        if (leaf) {
             switch (getType()) {
+                case SqlToJoinOfWeakRel:
+                    Assert.isTrue(!isFirst, "不支持的操作：" + getType().name());
                 case ObjConstructor:
                 case SqlToJoinOfStrongRel:
-                    return String.format(" from %s %s %s where %s",
-                            table.getTarget(),
-                            table.getAlias(),
-                            OTHER,
-                            Optional.of(
-                                    Stream.<Stream<String>>of(
-                                            condition.stream().map(sql -> sql.format(format)),
-                                            Format.Template == format ? findInputs().stream().map(field -> {
-                                                Sql last = SqlItem.format(field);
-                                                return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
-                                            }) : Stream.<String>of()
-                                    ).flatMap(stringStream -> stringStream).filter(StringUtils::isNotEmpty).collect(Collectors.joining(" and "))
-                            ).filter(StringUtils::isNoneBlank).orElse("1=1")
+                    List<String> list = new ArrayList<>(8);
+                    list.add(table.getTarget());
+                    list.add(table.getAlias());
+                    list.add(Stream.<Stream<String>>of(
+                            condition.stream().map(sql -> sql.format(format)),
+                            Format.Template == format ? findInputs().stream().map(field -> {
+                                Sql last = SqlItem.format(field);
+                                return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
+                            }) : Stream.<String>of()
+                    ).flatMap(stringStream -> stringStream).filter(StringUtils::isNotEmpty).collect(Collectors.joining(" and ")));
+                    String template;
+                    if (isFirst) {
+                        template = " from %s %s %s where %s";
+                        list.set(2, Optional.ofNullable(list.get(2)).filter(StringUtils::isNoneBlank).orElse("1=1"));
+                        list.add(2, OTHER);
+                    } else {
+                        template = " %s join %s %s on %s ";
+                        list.add(0, isWeakRelation() ? "left" : "");
+                    }
+                    return String.format(template,
+                            list.toArray()
                     );
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
-        else {
-            return subJoiners.get(0).formatFirst(format).replace(OTHER,
-                    (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
+        } else {
+            if (isFirst)
+                return subJoiners.get(0).format(format, true).replace(OTHER,
+                        (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
+            else {
+                MetaObject object = getObject();
+                return String.format("/*%s*/ %s /*%s*/",
+                        object.getName(),
+                        subJoiners.stream().map(sqlJoiner -> {
+                            String s = sqlJoiner.format(format);
+                            if (isWeakRelation() && s.startsWith(" join ")) {
+                                return " left" + s;
+                            }
+                            return s;
+                        }).collect(Collectors.joining(" ")),
+                        object.getName());
+            }
+
         }
     }
 
