@@ -40,8 +40,8 @@ public class SqlContent extends Sql {
         }
     }
 
-    public String format(Format format) {
-        String from = ((SqlJoiner) getChildren().get(0)).format(format, true);
+    public String format(IFormatContent format) {
+        String from = ((SqlJoiner) getChildren().get(0)).format(format);
         StringBuilder join = new StringBuilder();
         if (getChildren().size() > 1) {
             ListIterator<SqlJoiner> iterator = (ListIterator) getChildren().listIterator(1);

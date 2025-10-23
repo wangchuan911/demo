@@ -25,7 +25,7 @@ public class SqlItem extends SqlRelationExpression {
             return;
         }
         if (getAttribute() instanceof DataObject.Field) {
-            Sql last = format(getAttribute());
+            Sql last = format(this.<DataObject.Field>getAttribute());
             sqlAlias = new SqlAlias((getPrefix() + "_" + last.getPrefix()).replace("_T", "_"), last.getAttribute().getCode());
         } else
             sqlAlias = new SqlAlias(getPrefix(), getAttribute().getCode());
@@ -48,7 +48,7 @@ public class SqlItem extends SqlRelationExpression {
     }
 
     @Override
-    protected String format(Format format) {
+    protected String format(IFormatContent format) {
         return String.format("%s%s%s", sqlAlias.alias, constValue ? "" : ".", sqlAlias.getTarget());
     }
 

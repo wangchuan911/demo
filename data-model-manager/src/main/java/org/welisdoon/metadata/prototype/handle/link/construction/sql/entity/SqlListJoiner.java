@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  */
 public class SqlListJoiner extends SqlJoiner {
     @Override
-    protected String format(Format format) {
+    protected String format(IFormatContent format) {
         if (leaf)
             switch (getType()) {
                 case SqlToJoinOfMultiDataRel:

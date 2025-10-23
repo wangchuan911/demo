@@ -25,9 +25,17 @@ public abstract class Sql extends MetaLink {
 
     abstract protected void build();
 
-    abstract protected String format(Format format);
+    abstract protected String format(IFormatContent content);
 
-    public enum Format {
-        Show, Template;
+    public static abstract class IFormatContent {
+        int tableCount = 0;
+
+        public int getTableCount() {
+            return tableCount;
+        }
+
+        public int countTable() {
+            return ++tableCount;
+        }
     }
 }

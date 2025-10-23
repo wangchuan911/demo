@@ -7,6 +7,7 @@ import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -127,12 +128,9 @@ public class SqlJoiner extends Sql {
 //    }
 
     @Override
-    protected String format(Format format) {
-        return format(format, false);
-    }
-
-    protected String format(Format format, boolean isFirst) {
+    protected String format(IFormatContent format) {
         if (leaf) {
+            boolean isFirst = format.countTable() == 1;
             switch (getType()) {
                 case SqlToJoinOfWeakRel:
                     Assert.isTrue(!isFirst, "不支持的操作：" + getType().name());
@@ -143,7 +141,7 @@ public class SqlJoiner extends Sql {
                     list.add(table.getAlias());
                     list.add(Stream.<Stream<String>>of(
                             condition.stream().map(sql -> sql.format(format)),
-                            Format.Template == format ? findInputs().stream().map(field -> {
+                            format instanceof TemplateFormatContent ? findInputs().stream().map(field -> {
                                 Sql last = SqlItem.format(field);
                                 return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
                             }) : Stream.<String>of()
@@ -164,8 +162,8 @@ public class SqlJoiner extends Sql {
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
         } else {
-            if (isFirst)
-                return subJoiners.get(0).format(format, true).replace(OTHER,
+            if (format.getTableCount() == 0)
+                return subJoiners.get(0).format(format).replace(OTHER,
                         (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
             else {
                 MetaObject object = getObject();

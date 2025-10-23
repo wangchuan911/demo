@@ -15,6 +15,7 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @Classname MetaUtils
@@ -34,36 +35,46 @@ public class MetaUtils {
     MetaObjectDao metaObjectDao;
     MetaLinkDao metaLinkDao;
     MetaValueDao metaValueDao;
-    static MetaUtils instance;
+    final static AtomicReference<MetaUtils> instance = new AtomicReference<>();
 
-    @Autowired
-    public void setMetaObjectDao(MetaObjectDao metaObjectDao) {
-        this.metaObjectDao = metaObjectDao;
-    }
-
-    @Autowired
-    public void setMetaAttributeDao(MetaAttributeDao metaAttributeDao) {
+    public MetaUtils(MetaAttributeDao metaAttributeDao, MetaObjectDao metaObjectDao, MetaLinkDao metaLinkDao, MetaValueDao metaValueDao, Reflections reflections) {
         this.metaAttributeDao = metaAttributeDao;
-    }
-
-    @Autowired
-    public void setMetaLinkDao(MetaLinkDao metaLinkDao) {
+        this.metaObjectDao = metaObjectDao;
         this.metaLinkDao = metaLinkDao;
+        this.metaValueDao = metaValueDao;
+        this.reflections = reflections;
+        this.loadMetaType();
+        instance.set(this);
     }
 
-    @Autowired
-    public void setMetaKeyValueDao(MetaValueDao metaValueDao) {
-        this.metaValueDao = metaValueDao;
-    }
+//    @Autowired
+//    public void setMetaObjectDao(MetaObjectDao metaObjectDao) {
+//        this.metaObjectDao = metaObjectDao;
+//    }
+//
+//    @Autowired
+//    public void setMetaAttributeDao(MetaAttributeDao metaAttributeDao) {
+//        this.metaAttributeDao = metaAttributeDao;
+//    }
+//
+//    @Autowired
+//    public void setMetaLinkDao(MetaLinkDao metaLinkDao) {
+//        this.metaLinkDao = metaLinkDao;
+//    }
+//
+//    @Autowired
+//    public void setMetaKeyValueDao(MetaValueDao metaValueDao) {
+//        this.metaValueDao = metaValueDao;
+//    }
 
     Reflections reflections;
 
-    @Autowired
-    public void setReflections(Reflections reflections, SqlSessionFactory sqlSessionFactory) {
-        this.reflections = reflections;
-        this.loadMetaType();
-
-    }
+//    @Autowired
+//    public void setReflections(Reflections reflections, SqlSessionFactory sqlSessionFactory) {
+//        this.reflections = reflections;
+//        this.loadMetaType();
+//
+//    }
 
     void loadMetaType() {
         reflections.getSubTypesOf(IMetaType.class).stream().filter(Class::isEnum).flatMap(aClass -> {
@@ -144,9 +155,7 @@ public class MetaUtils {
 
 
     public static MetaUtils getInstance() {
-        return Optional.ofNullable(instance).orElseGet(() -> {
-            return instance = ApplicationContextProvider.getBean(MetaUtils.class);
-        });
+        return instance.get();
     }
 
     public MetaObjectDao getMetaObjectDao() {
