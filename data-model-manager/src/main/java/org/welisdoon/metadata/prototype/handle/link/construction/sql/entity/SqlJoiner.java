@@ -129,23 +129,21 @@ public class SqlJoiner extends Sql {
 
     @Override
     protected String format(FormatContent format) {
+        boolean isFirst = format.getTableCount() == 0;
         if (leaf) {
-            boolean isFirst = format.countTable() == 1;
             switch (getType()) {
                 case SqlToJoinOfWeakRel:
                     Assert.isTrue(!isFirst, "不支持的操作：" + getType().name());
                 case ObjConstructor:
                 case SqlToJoinOfStrongRel:
+                    List<String> cond = condition.stream().map(sql -> sql.format(format)).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
+                    FormatContent.Part part = new FormatContent.Part(format).setSqlAlias(table).setWeak(isWeakRelation()).setCondition(cond);
+                    format.addPart(part);
+
                     List<String> list = new ArrayList<>(8);
                     list.add(table.getTarget());
                     list.add(table.getAlias());
-                    list.add(Stream.<Stream<String>>of(
-                            condition.stream().map(sql -> sql.format(format)),
-                            format instanceof TemplateFormatContent ? findInputs().stream().map(field -> {
-                                Sql last = SqlItem.format(field);
-                                return !Objects.equals(last.getPrefix(), table.getAlias()) ? "" : MessageFormat.format("{0}.{1} = #'{'{2},jdbcType=VARCHAR'}'", last.getPrefix(), last.getAttribute().getCode(), field.getCode());
-                            }) : Stream.<String>of()
-                    ).flatMap(stringStream -> stringStream).filter(StringUtils::isNotEmpty).collect(Collectors.joining(" and ")));
+                    list.add(cond.stream().collect(Collectors.joining(" and ")));
                     String template;
                     if (isFirst) {
                         template = " from %s %s %s where %s";
@@ -162,23 +160,27 @@ public class SqlJoiner extends Sql {
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
         } else {
-            if (format.getTableCount() == 0)
-                return subJoiners.get(0).format(format).replace(OTHER,
-                        (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
-            else {
-                MetaObject object = getObject();
-                return String.format("/*%s*/ %s /*%s*/",
-                        object.getName(),
-                        subJoiners.stream().map(sqlJoiner -> {
-                            String s = sqlJoiner.format(format);
-                            if (isWeakRelation() && s.startsWith(" join ")) {
-                                return " left" + s;
-                            }
-                            return s;
-                        }).collect(Collectors.joining(" ")),
-                        object.getName());
+            try {
+                format.deep();
+                if (isFirst)
+                    return subJoiners.get(0).format(format).replace(OTHER,
+                            (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
+                else {
+                    MetaObject object = getObject();
+                    return String.format("/*%s*/ %s /*%s*/",
+                            object.getName(),
+                            subJoiners.stream().map(sqlJoiner -> {
+                                String s = sqlJoiner.format(format);
+                                if (isWeakRelation() && s.startsWith(" join ")) {
+                                    return " left" + s;
+                                }
+                                return s;
+                            }).collect(Collectors.joining(" ")),
+                            object.getName());
+                }
+            } finally {
+                format.shallow();
             }
-
         }
     }
 
