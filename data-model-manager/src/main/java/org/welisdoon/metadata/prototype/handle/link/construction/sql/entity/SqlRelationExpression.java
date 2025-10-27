@@ -30,7 +30,7 @@ public class SqlRelationExpression extends Sql {
     }
 
     @Override
-    protected String format(IFormatContent format) {
+    protected String format(FormatContent format) {
 //        Assert.isTrue(getType().getParent() == LinkMetaType.SqlOperator, "错误的操作符:" + getType().name());
 
         switch (getType()) {

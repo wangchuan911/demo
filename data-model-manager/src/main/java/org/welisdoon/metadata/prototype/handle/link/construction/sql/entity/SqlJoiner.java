@@ -128,7 +128,7 @@ public class SqlJoiner extends Sql {
 //    }
 
     @Override
-    protected String format(IFormatContent format) {
+    protected String format(FormatContent format) {
         if (leaf) {
             boolean isFirst = format.countTable() == 1;
             switch (getType()) {

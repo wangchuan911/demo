@@ -14,7 +14,7 @@ import javax.xml.parsers.ParserConfigurationException;
  * @Author Septem
  * @Date 16:28
  */
-public abstract class TemplateFormatContent extends Sql.IFormatContent {
+public abstract class TemplateFormatContent extends Sql.FormatContent {
     final static ThreadLocal<Element> LOCAL = new InheritableThreadLocal<>();
     final static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     private TemplateFormatContent() {

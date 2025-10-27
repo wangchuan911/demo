@@ -2,8 +2,6 @@ package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
 import org.welisdoon.metadata.prototype.define.MetaLink;
 
-import java.util.Objects;
-
 /**
  * @Classname Sql
  * @Description TODO
@@ -25,9 +23,9 @@ public abstract class Sql extends MetaLink {
 
     abstract protected void build();
 
-    abstract protected String format(IFormatContent content);
+    abstract protected String format(FormatContent content);
 
-    public static abstract class IFormatContent {
+    public static class FormatContent {
         int tableCount = 0;
 
         public int getTableCount() {

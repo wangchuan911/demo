@@ -1,6 +1,5 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
@@ -40,7 +39,7 @@ public class SqlContent extends Sql {
         }
     }
 
-    public String format(IFormatContent format) {
+    public String format(FormatContent format) {
         String from = ((SqlJoiner) getChildren().get(0)).format(format);
         StringBuilder join = new StringBuilder();
         if (getChildren().size() > 1) {

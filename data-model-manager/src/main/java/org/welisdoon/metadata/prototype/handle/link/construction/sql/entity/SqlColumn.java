@@ -14,7 +14,7 @@ public class SqlColumn extends Sql{
     }
 
     @Override
-    protected String format(IFormatContent format) {
+    protected String format(FormatContent format) {
         return null;
     }
 }
