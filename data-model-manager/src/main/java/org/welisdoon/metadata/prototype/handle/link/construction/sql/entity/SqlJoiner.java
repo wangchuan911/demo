@@ -1,5 +1,6 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
@@ -7,12 +8,10 @@ import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
-import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
 
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @Classname SqlContent
@@ -129,6 +128,10 @@ public class SqlJoiner extends Sql {
 
     @Override
     protected String format(FormatContent format) {
+        return format(format, LinkMetaType.ObjConstructor);
+    }
+
+    protected String format(FormatContent format, LinkMetaType parentType) {
         boolean isFirst = format.getTableCount() == 0;
         if (leaf) {
             switch (getType()) {
@@ -137,25 +140,22 @@ public class SqlJoiner extends Sql {
                 case ObjConstructor:
                 case SqlToJoinOfStrongRel:
                     List<String> cond = condition.stream().map(sql -> sql.format(format)).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
-                    FormatContent.Part part = new FormatContent.Part(format).setSqlAlias(table).setWeak(isWeakRelation()).setCondition(cond);
-                    format.addPart(part);
+                    format.addTablePart(new FormatContent.Part(format).setSqlAlias(table).setParentType(parentType).setType(getType()).setCondition(cond));
 
-                    List<String> list = new ArrayList<>(8);
-                    list.add(table.getTarget());
-                    list.add(table.getAlias());
-                    list.add(cond.stream().collect(Collectors.joining(" and ")));
+                    Object[] args = new String[5];
+                    args[1] = table.getTarget();
+                    args[2] = table.getAlias();
+                    args[4] = cond.stream().collect(Collectors.joining(" and "));
                     String template;
                     if (isFirst) {
-                        template = " from %s %s %s where %s";
-                        list.set(2, Optional.ofNullable(list.get(2)).filter(StringUtils::isNoneBlank).orElse("1=1"));
-                        list.add(2, OTHER);
+                        template = " from {1} {2} {3} where {4}";
+                        args[3] = OTHER;
+                        args[4] = Optional.ofNullable((String) args[4]).filter(StringUtils::isNoneBlank).orElse("1=1");
                     } else {
-                        template = " %s join %s %s on %s ";
-                        list.add(0, isWeakRelation() ? "left" : "");
+                        template = " {0} join {1} {2} on {4} ";
+                        args[0] = isWeakRelation(parentType) || isWeakRelation(getType()) ? "left" : "";
                     }
-                    return String.format(template,
-                            list.toArray()
-                    );
+                    return MessageFormat.format(template, args);
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
@@ -169,13 +169,7 @@ public class SqlJoiner extends Sql {
                     MetaObject object = getObject();
                     return String.format("/*%s*/ %s /*%s*/",
                             object.getName(),
-                            subJoiners.stream().map(sqlJoiner -> {
-                                String s = sqlJoiner.format(format);
-                                if (isWeakRelation() && s.startsWith(" join ")) {
-                                    return " left" + s;
-                                }
-                                return s;
-                            }).collect(Collectors.joining(" ")),
+                            subJoiners.stream().map(sqlJoiner -> sqlJoiner.format(format, getType())).collect(Collectors.joining(" ")),
                             object.getName());
                 }
             } finally {
@@ -185,8 +179,8 @@ public class SqlJoiner extends Sql {
     }
 
 
-    protected boolean isWeakRelation() {
-        return getType() == LinkMetaType.SqlToJoinOfWeakRel;
+    protected boolean isWeakRelation(LinkMetaType type) {
+        return type == LinkMetaType.SqlToJoinOfWeakRel;
     }
 
     @Override

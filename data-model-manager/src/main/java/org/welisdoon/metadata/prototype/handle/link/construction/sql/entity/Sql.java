@@ -1,9 +1,12 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
+import org.welisdoon.metadata.prototype.entity.DataObject;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Classname Sql
@@ -29,7 +32,8 @@ public abstract class Sql extends MetaLink {
     abstract protected String format(FormatContent content);
 
     public static class FormatContent {
-        List<Part> parts = new LinkedList<>();
+        List<Part> tableParts = new LinkedList<>();
+        List<FormatColumn> columnParts = new LinkedList<>();
         int level = 0;
 
         public void deep() {
@@ -41,15 +45,29 @@ public abstract class Sql extends MetaLink {
         }
 
         public int getTableCount() {
-            return parts.size();
+            return tableParts.size();
         }
 
-        public void addPart(Part part) {
-            parts.add(part);
+        public void addTablePart(Part part) {
+            tableParts.add(part);
+        }
+
+        public void addColumnPart(FormatColumn sqlAlias) {
+            columnParts.add(sqlAlias);
+        }
+
+        public static class FormatColumn extends SqlAlias {
+            DataObject.Field field;
+
+            public FormatColumn(String alias, String target, DataObject.Field field) {
+                super(alias, target);
+                this.field = field;
+            }
         }
 
         public static class Part {
-            boolean weak;
+            LinkMetaType parentType;
+            LinkMetaType type;
             SqlAlias sqlAlias;
             List<String> condition = new LinkedList<>();
             int level;
@@ -68,8 +86,13 @@ public abstract class Sql extends MetaLink {
                 return this;
             }
 
-            public Part setWeak(boolean weak) {
-                this.weak = weak;
+            public Part setType(LinkMetaType type) {
+                this.type = type;
+                return this;
+            }
+
+            public Part setParentType(LinkMetaType parentType) {
+                this.parentType = parentType;
                 return this;
             }
         }

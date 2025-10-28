@@ -52,7 +52,10 @@ public class SqlContent extends Sql {
         }
         String column = findInputs().stream().map(field -> {
             Sql last = SqlItem.format(field);
-            return MessageFormat.format("{0}.{1}", last.getPrefix(), last.getAttribute().getCode());
+            String alias = last.getPrefix(),
+                    target = last.getAttribute().getCode();
+            format.addColumnPart(new FormatContent.FormatColumn(alias, target, field));
+            return MessageFormat.format("{0}.{1}", alias, target);
         }).collect(Collectors.joining(","));
         return MessageFormat.format("select {0} {1}", column, from.replace(SqlJoiner.OTHER, join.toString()));
     }
