@@ -140,20 +140,20 @@ public class SqlJoiner extends Sql {
                 case ObjConstructor:
                 case SqlToJoinOfStrongRel:
                     List<String> cond = condition.stream().map(sql -> sql.format(format)).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
-                    format.addTablePart(new FormatContent.Part(format).setSqlAlias(table).setParentType(parentType).setType(getType()).setCondition(cond));
+                    format.addTablePart(new FormatContent.Part(format, table, cond).setParentType(parentType).setType(getType()));
 
-                    Object[] args = new String[5];
-                    args[1] = table.getTarget();
-                    args[2] = table.getAlias();
-                    args[4] = cond.stream().collect(Collectors.joining(" and "));
+                    Object[] args = new String[4];
+                    args[0] = table.getTarget();
+                    args[1] = table.getAlias();
+                    args[2] = cond.stream().collect(Collectors.joining(" and "));
                     String template;
                     if (isFirst) {
-                        template = " from {1} {2} {3} where {4}";
+                        template = " from {0} {1} {3} where {2}";
                         args[3] = OTHER;
-                        args[4] = Optional.ofNullable((String) args[4]).filter(StringUtils::isNoneBlank).orElse("1=1");
+                        args[2] = StringUtils.isNoneBlank((String) args[2]) ? args[2] : "1=1";
                     } else {
-                        template = " {0} join {1} {2} on {4} ";
-                        args[0] = isWeakRelation(parentType) || isWeakRelation(getType()) ? "left" : "";
+                        template = " {3} join {0} {1} on {2} ";
+                        args[3] = isWeakRelation(parentType) || isWeakRelation(getType()) ? "left" : "";
                     }
                     return MessageFormat.format(template, args);
                 default:

@@ -21,7 +21,7 @@ public class SqlListJoiner extends SqlJoiner {
                 case SqlToJoinOfMultiDataRel:
                     List<String> cond = condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)).collect(Collectors.toList());
 
-                    format.addTablePart(new FormatContent.Part(format).setSqlAlias(table).setParentType(parentType).setType(getType()).setCondition(cond));
+                    format.addTablePart(new FormatContent.Part(format, table, cond).setParentType(parentType).setType(getType()));
 
                     Object[] args = new String[3];
                     args[0] = table.getTarget();

@@ -63,28 +63,32 @@ public abstract class Sql extends MetaLink {
                 super(alias, target);
                 this.field = field;
             }
+
+            public DataObject.Field getField() {
+                return field;
+            }
         }
 
-        public static class Part {
+        protected List<FormatColumn> getColumnParts() {
+            return columnParts;
+        }
+
+        protected List<Part> getTableParts() {
+            return tableParts;
+        }
+
+        public static class Part extends SqlAlias {
             LinkMetaType parentType;
             LinkMetaType type;
-            SqlAlias sqlAlias;
-            List<String> condition = new LinkedList<>();
+            List<String> condition;
             int level;
 
-            public Part(FormatContent content) {
+            public Part(FormatContent content, SqlAlias sqlAlias, List<String> condition) {
+                super(sqlAlias.getAlias(), sqlAlias.getTarget());
                 this.level = content.level;
+                this.condition = condition == null ? List.of() : condition;
             }
 
-            public Part setCondition(List<String> condition) {
-                this.condition = condition;
-                return this;
-            }
-
-            public Part setSqlAlias(SqlAlias sqlAlias) {
-                this.sqlAlias = sqlAlias;
-                return this;
-            }
 
             public Part setType(LinkMetaType type) {
                 this.type = type;
@@ -94,6 +98,22 @@ public abstract class Sql extends MetaLink {
             public Part setParentType(LinkMetaType parentType) {
                 this.parentType = parentType;
                 return this;
+            }
+
+            public LinkMetaType getParentType() {
+                return parentType;
+            }
+
+            public int getLevel() {
+                return level;
+            }
+
+            public LinkMetaType getType() {
+                return type;
+            }
+
+            public List<String> getCondition() {
+                return condition;
             }
         }
     }
