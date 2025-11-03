@@ -13,6 +13,8 @@
           <el-button type="primary">查看SQL</el-button>
         </template>
       </el-popover>
+
+      <el-button @click="showTemplate" type="primary">下载模板</el-button>
     </div>
 
     <el-table :data="attrs" style="width: 100%" border v-loading="loading" max-height="calc(100vh - 197px)" row-key="id"
@@ -22,22 +24,22 @@
               :tree-props="lazy?{ children: 'children', hasChildren: 'hasChildren' }:{}">
       <el-table-column label="对象描述">
         <template #default="scope">
-          {{scope.row.object?.name}}
+          {{ scope.row.object?.name }}
           <template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>
-          {{scope.row.attribute?.name}}
+          {{ scope.row.attribute?.name }}
         </template>
       </el-table-column>
       <el-table-column prop="typeDesc" label="关联方式"/>
       <el-table-column label="对象标识">
-        <template #default="scope">{{scope.row.object?.code}}
+        <template #default="scope">{{ scope.row.object?.code }}
           <template v-if="scope.row.object!=null && scope.row.attribute!=null">.</template>
-          {{scope.row.attribute?.code}}
+          {{ scope.row.attribute?.code }}
         </template>
       </el-table-column>
       <el-table-column label="对象类型">
-        <template #default="scope">{{scope.row.object?.typeDesc}}
+        <template #default="scope">{{ scope.row.object?.typeDesc }}
           <template v-if="scope.row.object!=null && scope.row.attribute!=null">-</template>
-          {{scope.row.attribute?.typeDesc}}
+          {{ scope.row.attribute?.typeDesc }}
         </template>
       </el-table-column>
       <el-table-column prop="instanceId" label="对象实例ID"/>
@@ -61,7 +63,7 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item :icon="Plus" @click.prevent="operation(0,scope.row)">
-                  向[{{scope.row.object.name}}]后添加关联对象
+                  向[{{ scope.row.object.name }}]后添加关联对象
                 </el-dropdown-item>
                 <!--<el-dropdown-item :icon="CirclePlusFilled" @click.prevent="operation(2,scope.row)">
                   Action 2
@@ -407,6 +409,20 @@ class ChoiceParentDrawersContent extends LinkAddDrawersContent {
       });
     }
   }
+}
+
+const showTemplate = () => {
+  loading.value = false;
+  $http.get(`obj/template/download/${props.id}`)
+      .then(({data}: { data: Record<any, any>[] }) => {
+        console.log(data);
+        console.log(data)
+      })
+      .then(() => {
+        loading.value = false;
+      }, () => {
+        loading.value = false;
+      });
 }
 </script>
 

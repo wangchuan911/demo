@@ -27,6 +27,8 @@ import org.welisdoon.metadata.prototype.dao.MetaLinkDao;
 import org.welisdoon.metadata.prototype.dao.MetaObjectDao;
 import org.welisdoon.metadata.prototype.define.*;
 import org.welisdoon.metadata.prototype.entity.DataObject;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.XmlTemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.Sql;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
@@ -218,6 +220,22 @@ public class QueryManagerRouter {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(new Sql.FormatContent()));
+//            SqlContent context = new SqlContent();
+//            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
+//                sqlBuilderHandler.handler(context, construct);
+//                return sqlShowBuilder.build(context);
+//            }).orElse("未配置关联,无法生成展示!"));
+        });
+    }
+
+    @VertxRouter(path = "\\/link\\/template\\/(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
+    public void getTemplate(RoutingContextChain chain) {
+        chain.handler(routingContext -> {
+            long qid = Long.parseLong(routingContext.pathParam("id"));
+            TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent();
+            new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(templateFormatContent);
+            templateFormatContent.build();
+            routingContext.response().putHeader("content-type", "application/xml").end(templateFormatContent.getValue().toString());
 //            SqlContent context = new SqlContent();
 //            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
 //                sqlBuilderHandler.handler(context, construct);
@@ -847,18 +865,25 @@ public class QueryManagerRouter {
     }
 
     @VertxRouter(path = "\\/obj\\/template\\/(?<type>\\w+)\\/(?<id>\\d+)",
-            method = "POST",
+            method = {"POST", "GET"},
             mode = VertxRouteType.PathRegex)
     public void template(RoutingContextChain chain) {
         chain.handler(event -> {
-            logger.info(event.body().asString());
+            long qid = Long.parseLong(event.pathParam("id"));
             switch (event.pathParam("type")) {
                 case "query":
+                    logger.info(event.body().asString());
                     List<Object> data = new LinkedList<>();
                     for (int i = 0; i < 21; i++) {
                         data.add(Map.of());
                     }
                     event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
+                    break;
+                case "download":
+                    TemplateFormatContent content=new XmlTemplateFormatContent();
+                    new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(content);
+                    content.build();
+                    event.end(String.valueOf(content.getValue()));
                     break;
                 default:
                     event.response().setStatusCode(500).end("error");
@@ -867,5 +892,6 @@ public class QueryManagerRouter {
 
         });
     }
+
 
 }
