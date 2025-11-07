@@ -5,7 +5,7 @@ import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.dao.ConfigDao;
-import org.welisdoom.task.xml.handler.SAXParserHandler;
+import org.welisdoom.task.xml.handler.XmlParserHandler;
 import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoom.task.xml.intf.type.Executable;
 
@@ -33,13 +33,13 @@ public class SubTask extends Unit implements Executable {
         try {
             switch (config.getMode()) {
                 case classpath:
-                    task = SAXParserHandler.loadTask(config.getPath());
+                    task = XmlParserHandler.loadTask(config.getPath());
                     break;
                 case path:
-                    task = SAXParserHandler.loadTask(new File(config.getPath()));
+                    task = XmlParserHandler.loadTask(new File(config.getPath()));
                     break;
                 case db:
-                    task = SAXParserHandler.loadTask(new ByteArrayInputStream(ApplicationContextProvider.getApplicationContext().getBean(ConfigDao.class).getTaskXML(Long.valueOf(config.getPath())).getBytes("utf-8")));
+                    task = XmlParserHandler.loadTask(new ByteArrayInputStream(ApplicationContextProvider.getApplicationContext().getBean(ConfigDao.class).getTaskXML(Long.valueOf(config.getPath())).getBytes("utf-8")));
                     break;
                 default:
                     throw new RuntimeException("未知的操作");

@@ -2,7 +2,7 @@ package org.welisdoom.task.xml.entity;
 
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
-import org.welisdoom.task.xml.handler.SAXParserHandler;
+import org.welisdoom.task.xml.handler.XmlParserHandler;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Initialize;
 import org.welisdoom.task.xml.intf.type.Root;
@@ -33,7 +33,7 @@ public class Instance extends Unit implements Initialize {
 
     public Class<? extends Unit> getInstanceType(Unit parent) {
         try {
-            return SAXParserHandler.getTag(parent, attributes.get("tag"));
+            return XmlParserHandler.getTag(parent, attributes.get("tag"));
         } catch (Throwable e) {
             throw new RuntimeException(e.getMessage(), e);
         }

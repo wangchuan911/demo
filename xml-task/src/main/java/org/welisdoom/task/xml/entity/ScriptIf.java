@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "if", parentTagTypes = {Script.class}, desc = "条件判断,返回脚本内容")
 @Attr(name = "test", require = true, desc = "表达式")
-public class ScriptIf extends Unit implements Script, Copyable {
+public class ScriptIf extends Unit implements Script<TaskInstance>, Copyable {
     @Override
     public String getScript(TaskInstance request, String s) {
         if (If.test(attributes.get("test"), request.getOgnlContext(), request.getBus())) {
@@ -34,7 +34,7 @@ public class ScriptIf extends Unit implements Script, Copyable {
     }
 
     @Tag(value = "choice", parentTagTypes = Script.class, desc = "if else")
-    public static class Choice extends Unit implements Script {
+    public static class Choice extends Unit implements Script<TaskInstance> {
 
         @Override
         public String getScript(TaskInstance request, String split) {
@@ -55,7 +55,7 @@ public class ScriptIf extends Unit implements Script, Copyable {
         }
 
         @Tag(value = "when", parentTagTypes = Choice.class, desc = "if else")
-        public static class When extends Unit implements Script {
+        public static class When extends Unit implements Script<TaskInstance> {
             @Override
             public String getScript(TaskInstance request, String split) {
                 try {
@@ -70,7 +70,7 @@ public class ScriptIf extends Unit implements Script, Copyable {
         }
 
         @Tag(value = "otherwise", parentTagTypes = Choice.class, desc = "if else")
-        public static class Otherwise extends Unit implements Script {
+        public static class Otherwise extends Unit implements Script<TaskInstance> {
             @Override
             public String getScript(TaskInstance request, String split) {
                 return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split));

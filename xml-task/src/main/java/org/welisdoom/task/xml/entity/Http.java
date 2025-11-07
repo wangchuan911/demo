@@ -11,7 +11,7 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
-import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoom.task.xml.intf.type.BaseUnit;
 import org.welisdoon.common.LogUtils;
 import org.welisdoon.common.ObjectUtils;
 
@@ -79,7 +79,7 @@ public class Http extends Unit implements Executable, Copyable {
         }
     }*/
     protected String getUrl(TaskInstance data) {
-        return UnitType.textFormat(data, attributes.get("url"));
+        return BaseUnit.textFormat(data, attributes.get("url"));
     }
 
     @Override
@@ -246,7 +246,7 @@ public class Http extends Unit implements Executable, Copyable {
     public static class Body extends Unit implements Script, Copyable {
 
         public String getScript(TaskInstance request, String split) {
-            return UnitType.textFormat(request, children.stream()
+            return BaseUnit.textFormat(request, children.stream()
                     .filter(unit -> unit instanceof Script)
                     .map(unit -> ((Script) unit).getScript(request, split).trim()).collect(Collectors.joining(split)));
         }

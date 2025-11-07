@@ -8,7 +8,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
-import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoom.task.xml.intf.type.BaseUnit;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
 import org.xml.sax.Attributes;
@@ -96,8 +96,8 @@ public class Iterator extends Unit implements Executable {
     }
 
     @Override
-    protected synchronized void printTag(boolean highLight) {
-        super.printTag(highLight);
+    protected synchronized void printTag(boolean highLight, LogPosition mode) {
+        super.printTag(highLight, mode);
         String str = String.format("@{{%s}}", Thread.currentThread().getName());
         System.out.print(highLight ? LogUtils.styleString("", ((hashCode() + 1) % 5) + 31, 1, str) : str);
     }
@@ -133,7 +133,7 @@ public class Iterator extends Unit implements Executable {
     }
 
     public static Future<Object> iterator(Unit unit, TaskInstance data, Object item) {
-        return unit.startChildUnit(data, item, UnitType.typeMatched(Iterator.class));
+        return unit.startChildUnit(data, item, BaseUnit.typeMatched(Iterator.class));
     }
 
     @Override

@@ -36,7 +36,7 @@ public class ForEach extends Iterator {
         String collectionName = attributes.get("collection");
         this.itemName = (attributes.containsKey("item")) ? attributes.get("item") : this.itemName;
         this.itemIndex = (attributes.containsKey("index")) ? attributes.get("index") : this.itemIndex;
-        Object o = OgnlUtils.getValue(collectionName, data.ognlContext, data.getBus(), Object.class);
+        Object o = OgnlUtils.getValue(collectionName, data.getOgnlContext(), data.getBus(), Object.class);
         Stream<Object> stream;
         AtomicLong index = new AtomicLong(0);
         if (o.getClass().isArray()) {

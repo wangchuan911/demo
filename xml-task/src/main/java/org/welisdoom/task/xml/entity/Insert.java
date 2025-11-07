@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "insert", parentTagTypes = Executable.class, desc = "sql写入")
 @Attr(name = "id", desc = "唯一标识")
-public class Insert extends Unit implements Script, Copyable {
+public class Insert extends Unit implements Script<TaskInstance>, Copyable {
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         System.out.println(getScript(data.getBus(), " "));

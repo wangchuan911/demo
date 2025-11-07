@@ -10,7 +10,7 @@ import org.welisdoom.task.xml.entity.TaskInstance;
  * @Author Septem
  * @Date 9:39
  */
-public interface Stream<WRITER extends Stream.Writer> extends UnitType {
+public interface Stream<WRITER extends Stream.Writer> {
 
     Future<Object> read(TaskInstance request);
 
@@ -20,7 +20,7 @@ public interface Stream<WRITER extends Stream.Writer> extends UnitType {
 
     Future<Object> write(TaskInstance request, WRITER writer);
 
-    interface Writer extends UnitType {
+    interface Writer {
 
     }
 }

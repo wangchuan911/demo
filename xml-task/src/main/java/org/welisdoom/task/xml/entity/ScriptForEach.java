@@ -22,14 +22,14 @@ import java.util.stream.Collectors;
 @Attr(name = "open")
 @Attr(name = "separator")
 @Attr(name = "close")
-public class ScriptForEach extends Unit implements Script {
+public class ScriptForEach extends Unit implements Script<TaskInstance> {
     static String itemName = "item";
 
     @Override
     public String getScript(TaskInstance request, String split) {
         String collectionName = attributes.get("collection");
         String itemName = (attributes.containsKey("item")) ? attributes.get("item") : ScriptForEach.itemName;
-        Object o = OgnlUtils.getValue(collectionName, request.ognlContext, request.getBus(), Object.class);
+        Object o = OgnlUtils.getValue(collectionName, request.getOgnlContext(), request.getBus(), Object.class);
         int size;
         String express;
         if (o.getClass().isArray()) {

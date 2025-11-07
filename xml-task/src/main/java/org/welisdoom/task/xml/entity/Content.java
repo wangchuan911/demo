@@ -4,7 +4,7 @@ import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Script;
-import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoom.task.xml.intf.type.BaseUnit;
 
 /**
  * @Classname Content
@@ -13,9 +13,9 @@ import org.welisdoom.task.xml.intf.type.UnitType;
  * @Date 15:07
  */
 
-@Tag(value = "content", parentTagTypes = UnitType.class, desc = "单纯的文本内容")
+@Tag(value = "content", parentTagTypes = BaseUnit.class, desc = "单纯的文本内容")
 @Attr(name = "content", desc = "文本内容")
-public class Content extends Unit implements Script, Copyable {
+public class Content extends Unit implements Script<TaskInstance>, Copyable {
     String content;
 
     public Content setContent(String content) {

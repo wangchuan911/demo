@@ -21,22 +21,24 @@ import java.util.regex.Pattern;
  * @Author Septem
  * @Date 9:30
  */
-public interface UnitType {
+public interface BaseUnit<U> {
     String getId();
 
-    <T extends Unit> List<T> getChild(Class<T> tClass);
+    default <T extends U> List<T> getChild(Class<T> tClass) {
+        return getChild(u -> tClass==u.getClass());
+    }
 
-    <T extends Unit> List<T> getChild(Predicate<Unit> predicate);
+    <T extends U> List<T> getChild(Predicate<U> predicate);
 
-    <T extends Unit> List<T> getChildren(Class<T> tClass);
+    <T extends U> List<T> getChildren(Class<T> tClass);
 
-    <T extends Unit> T getParent(Class<T> tClass);
+    <T extends U> T getParent(Class<T> tClass);
 
-    <T extends Unit> List<T> getParents(Class<T> tClass);
+    <T extends U> List<T> getParents(Class<T> tClass);
 
-    <T extends Unit> T getParent(Predicate<Class<?>> predicate);
+    <T extends U> T getParent(Predicate<Class<?>> predicate);
 
-    <T extends Unit> List<T> getParents(Predicate<Class<?>> predicate);
+    <T extends U> List<T> getParents(Predicate<Class<?>> predicate);
 
 
     static Predicate<Unit> typeMatched(Class<?>... classes) {
@@ -49,7 +51,7 @@ public interface UnitType {
     String sign = "%@#VALUE#@%";
 
 
-    static String textFormat(TaskInstance request, String text) {
+    static String textFormat(Context request, String text) {
         if (StringUtils.isEmpty(text)) return "";
         if (text.indexOf("{{") == -1) return text;
         List<Map.Entry<String, Object>> list = new LinkedList<>();

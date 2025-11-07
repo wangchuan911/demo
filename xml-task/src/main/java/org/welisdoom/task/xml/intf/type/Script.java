@@ -8,8 +8,8 @@ import org.welisdoom.task.xml.entity.TaskInstance;
  * @Author Septem
  * @Date 9:34
  */
-public interface Script extends UnitType {
-    default String getScript(TaskInstance request, String split) {
+public interface Script <T extends Context> {
+    default String getScript(T request, String split) {
         return " ";
     }
 

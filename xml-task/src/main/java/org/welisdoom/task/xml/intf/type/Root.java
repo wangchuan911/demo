@@ -6,5 +6,5 @@ package org.welisdoom.task.xml.intf.type;
  * @Author Septem
  * @Date 9:33
  */
-public interface Root extends UnitType {
+public interface Root {
 }

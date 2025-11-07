@@ -1,7 +1,5 @@
 package org.welisdoom.task.xml.annotations;
 
-import org.welisdoom.task.xml.intf.type.UnitType;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -19,7 +17,7 @@ import java.lang.annotation.Target;
 public @interface Tag {
     String value();
 
-    Class<? extends UnitType>[] parentTagTypes();
+    Class<?>[] parentTagTypes();
 
     String desc() default "";
 

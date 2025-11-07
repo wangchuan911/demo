@@ -17,7 +17,7 @@ import java.util.function.Function;
  * @Author Septem
  * @Date 15:29
  */
-public interface Iterable<T> extends UnitType {
+public interface Iterable<T> {
 
     default Future<Object> iterator(TaskInstance data, Item<T> item) {
         return Iterator.iterator((Unit) this, data, item);
@@ -79,7 +79,7 @@ public interface Iterable<T> extends UnitType {
     }
 
     default Future<Object> loopEnd(TaskInstance data) {
-        Optional<Unit> iterator = this.getChild(UnitType.typeMatched(Iterator.class)).stream().findFirst();
+        Optional<Unit> iterator = ((BaseUnit) this).getChild(BaseUnit.typeMatched(Iterator.class)).stream().findFirst();
         if (iterator.isPresent())
             return ((Iterator) iterator.get()).iterateFinish(data);
         return Future.succeededFuture();

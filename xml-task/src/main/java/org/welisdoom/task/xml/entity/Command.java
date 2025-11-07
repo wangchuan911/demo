@@ -1,13 +1,12 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoom.task.xml.intf.type.BaseUnit;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,7 +31,7 @@ public class Command extends Unit implements Executable {
     @Override
     protected Future<Object> start(TaskInstance data, Object preUnitResult) {
         try {
-            Process process = Runtime.getRuntime().exec(UnitType.textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" "))));
+            Process process = Runtime.getRuntime().exec(BaseUnit.textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" "))));
             /*TimeoutStream timerStream = Task.getVertx().timerStream(MapUtils.getLong(attributes, "timeout", 5 * 1000L));*/
             data.cache(this, process);
             /*AtomicBoolean exeFin = new AtomicBoolean(true);

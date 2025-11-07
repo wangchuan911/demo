@@ -1,16 +1,11 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
-import org.welisdoom.task.xml.consts.Model;
 import org.welisdoom.task.xml.intf.Copyable;
-import org.welisdoom.task.xml.intf.type.UnitType;
+import org.welisdoom.task.xml.intf.type.BaseUnit;
 import org.welisdoon.common.LogUtils;
-import org.welisdoon.common.data.IData;
 import org.xml.sax.Attributes;
 
 import java.time.LocalDateTime;
@@ -25,7 +20,7 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 17:22
  */
-public class Unit implements UnitType, IData<String, Model> {
+public class Unit implements BaseUnit<Unit> {
     String id;
     Unit parent;
     List<Unit> children = new LinkedList<>();
@@ -40,16 +35,6 @@ public class Unit implements UnitType, IData<String, Model> {
 
     public Unit setId(String id) {
         this.id = id;
-        return this;
-    }
-
-    @Override
-    public Model getDataMarker() {
-        return Model.Unit;
-    }
-
-    @Override
-    public IData setDataMarker(Model model) {
         return this;
     }
 
@@ -102,7 +87,9 @@ public class Unit implements UnitType, IData<String, Model> {
 
     protected Future<Void> hook(TaskInstance taskInstance) {
         return this.destroy(taskInstance).transform(event ->
-                taskInstance.getChildrenRequest() == null ? (Future) Future.join(Arrays.stream(taskInstance.getChildrenRequest()).map(taskRequest1 -> this.hook(taskInstance)).collect(Collectors.toList())) : Future.succeededFuture()
+                Optional.ofNullable(taskInstance.getChildrenRequest())
+                        .map(taskInstances -> (Future) Future.join(Arrays.stream(taskInstance.getChildrenRequest()).map(this::hook).collect(Collectors.toList())))
+                        .orElseGet(Future::succeededFuture)
         );
     }
 
@@ -111,7 +98,7 @@ public class Unit implements UnitType, IData<String, Model> {
     }
 
     public <T extends Unit> List<T> getChild(Predicate<Unit> predicate) {
-        return (List) children.stream().filter(predicate).collect(Collectors.toList());
+        return (List) children.<T>stream().filter(predicate).collect(Collectors.toList());
     }
 
 
@@ -171,7 +158,7 @@ public class Unit implements UnitType, IData<String, Model> {
         long cost = System.currentTimeMillis();
 
         System.out.println();
-        unit.log(String.format(">>>>>>>>>>开始[%s]>>>>>>>>>>>", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+        unit.log(String.format("_____________开始[%s]_____________", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)), LogPosition.START);
         Future<Object> future;
         try {
             future = unit.start(data, value);
@@ -181,7 +168,7 @@ public class Unit implements UnitType, IData<String, Model> {
         return future.onComplete(objectAsyncResult -> {
             if (objectAsyncResult.failed())
                 unit.log(LogUtils.styleString("", 41, 3, "失败:" + objectAsyncResult.cause().getMessage()));
-            unit.log(String.format("<<<<<<<<<<结束[%s][耗时:%s秒]<<<<<<<<<<<", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d));
+            unit.log(String.format("--------------结束[%s][耗时:%s秒]--------------", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d), LogPosition.END);
             System.out.println();
         });
     }
@@ -190,14 +177,19 @@ public class Unit implements UnitType, IData<String, Model> {
         System.out.print(o);
     }
 
-    protected synchronized void logInline(Object o) {
-        printTag(true);
+    protected synchronized void logInline(Object o, LogPosition mode) {
+        printTag(true, mode);
         System.out.print(":");
         System.out.print(o);
     }
 
     protected synchronized void log(Object o) {
-        logInline(o);
+        logInline(o, LogPosition.MID);
+        System.out.println();
+    }
+
+    protected synchronized void log(Object o, LogPosition mode) {
+        logInline(o, mode);
         System.out.println();
     }
 
@@ -209,11 +201,26 @@ public class Unit implements UnitType, IData<String, Model> {
         this.log(String.format(str.replaceAll("\\{\\}", "%s"), os));
     }
 
-    protected synchronized void printTag(boolean highLight) {
+    protected synchronized void printTag(boolean highLight, LogPosition mode) {
         if (this.parent != null) {
-            this.parent.printTag(false);
+            this.parent.printTag(false, mode == LogPosition.END ? LogPosition.START : mode);
         }
-        String str = String.format("==>[%s%s]", this.getClass().getSimpleName(), !StringUtils.isEmpty(this.id) ? (":" + this.id) : "");
+        String str = "";
+        if (this.parent != null) {
+            switch (mode) {
+                case START:
+                    str = ">>";
+                    break;
+                case END:
+                    str = "<<";
+                    break;
+                default:
+                    str = "==";
+                    break;
+            }
+        }
+
+        str = String.format("%s[%s%s]", str, this.getClass().getSimpleName(), !StringUtils.isEmpty(this.id) ? (":" + this.id) : "");
         System.out.print(highLight ? LogUtils.styleString("", (hashCode() % 5) + 31, 1, str) : str);
     }
 
@@ -238,7 +245,7 @@ public class Unit implements UnitType, IData<String, Model> {
 
 
     protected String getAttrFormatValue(String name, TaskInstance data) {
-        return UnitType.textFormat(data, attributes.get(name));
+        return BaseUnit.textFormat(data, attributes.get(name));
     }
 
 
@@ -250,5 +257,9 @@ public class Unit implements UnitType, IData<String, Model> {
                             findFirst().orElseThrow();
             return attr.options()[attr.defaultOption()];
         });
+    }
+
+    public enum LogPosition {
+        START, MID, END
     }
 }
