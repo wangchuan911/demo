@@ -125,7 +125,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         for (Row row : rows) {
             List<Map.Entry> list = rowToEntry(row);
             future = future.compose(o ->
-                    CompositeFuture.all(
+                    Future.all(
                             getChild(SubQuery.class).stream()
                                     .map(columnResultSet ->
                                             startChildUnit(data, entryToMap(list), columnResultSet)

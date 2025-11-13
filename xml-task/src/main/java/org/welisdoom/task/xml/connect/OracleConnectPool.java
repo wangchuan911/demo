@@ -1,8 +1,9 @@
 package org.welisdoom.task.xml.connect;
 
+import io.vertx.oracleclient.OracleBuilder;
 import io.vertx.oracleclient.OracleConnectOptions;
 import io.vertx.oracleclient.OracleConnection;
-import io.vertx.oracleclient.OraclePool;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,8 @@ import java.util.Map;
  */
 @Component
 @Db("oracle")
-public class OracleConnectPool implements DataBaseConnectPool<OraclePool, OracleConnection> {
-    volatile Map<String, OraclePool> pools;
+public class OracleConnectPool implements DataBaseConnectPool<Pool, OracleConnection> {
+    volatile Map<String, Pool> pools;
 
     ConfigDao configDao;
 
@@ -41,11 +42,11 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
 
 // Create the pool from the data object
         if (getPools().containsKey(config.getName())) return;
-        getPools().put(config.getName(), OraclePool.pool(Task.getVertx(), connectOptions, poolOptions));
+        getPools().put(config.getName(), OracleBuilder.pool().connectingTo(connectOptions).with(poolOptions).using(Task.getVertx()).build());
     }
 
     @Override
-    public synchronized OraclePool getPool(String name) {
+    public synchronized Pool getPool(String name) {
         if (!getPools().containsKey(name)) {
             setInstance(this.configDao.getDatabase(name));
         }
@@ -53,7 +54,7 @@ public class OracleConnectPool implements DataBaseConnectPool<OraclePool, Oracle
     }
 
     @Override
-    public Map<String, OraclePool> getPools() {
+    public Map<String, Pool> getPools() {
         if (pools == null) {
             synchronized (this) {
                 if (pools == null) {

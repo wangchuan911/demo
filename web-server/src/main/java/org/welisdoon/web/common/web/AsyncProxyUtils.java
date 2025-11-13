@@ -19,7 +19,8 @@ public interface AsyncProxyUtils {
         T bean = ApplicationContextProvider.getBean(type);
         new ServiceBinder(vertx).setAddress(address = name(type, address))
                 .register(type, bean)
-                .completionHandler(Promise.promise());
+                .completion()
+                .onComplete(Promise.promise());
         LoggerFactory.getLogger(type).info(String.format("create ServiceBinder:%s", address));
         return bean;
     }

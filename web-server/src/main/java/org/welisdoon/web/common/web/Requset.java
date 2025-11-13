@@ -156,7 +156,7 @@ public class Requset {
             case SIMPLE_REQUEST: {
                 method = multiMap.get(option.getMethodNameKey());
                 method = method != null && !"null".equals(method) && method.length() != 0 ? method : "handle";
-                body = context.getBodyAsString();
+                body = context.body().asString();
             }
             break;
             case UPLOAD_FILES: {

@@ -212,7 +212,7 @@ public class InviteRebateOrderRouter {
         chain.blockingHandler(routingContext -> {
             boolean delete = "un".equals(routingContext.pathParam("del"));
             try {
-                StaffCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), StaffCondition.class);
+                StaffCondition condition = JSONObject.parseObject(routingContext.body().asString(), StaffCondition.class);
                 condition.setRegionId(450000L);
                 condition.setRoleId(3L);
                 Set<Long> staffIds = Arrays.stream(condition.getStaffIds()).collect(Collectors.toSet());
@@ -240,7 +240,7 @@ public class InviteRebateOrderRouter {
     public void promoteJoin(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             try {
-                JSONObject input = JSONObject.parseObject(routingContext.getBodyAsString());
+                JSONObject input = JSONObject.parseObject(routingContext.body().asString());
                 inviteRebateOrderService.promoteJoin(input.getJSONObject("user").toJavaObject(UserCondition.class),
                         input.getJSONObject("regist").toJavaObject(InviteRebateRegistVO.class));
                 routingContext.end("成功");

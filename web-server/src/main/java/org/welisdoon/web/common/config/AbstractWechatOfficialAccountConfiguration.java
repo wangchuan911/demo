@@ -32,9 +32,9 @@ public abstract class AbstractWechatOfficialAccountConfiguration extends Abstrac
                 return;
             }
 
-            Buffer requestbuffer = routingContext.getBody();
+            Buffer requestbuffer = routingContext.body().buffer();
             requestbuffer = Buffer.buffer(wxBizMsgCrypt.decryptMsg(signature, timeStamp, nonce, requestbuffer.toString()));
-            routingContext.setBody(requestbuffer);
+            routingContext.body().buffer().setBuffer(0, requestbuffer);
 
         } catch (AesException e) {
             e.printStackTrace();
@@ -44,7 +44,7 @@ public abstract class AbstractWechatOfficialAccountConfiguration extends Abstrac
     }
 
     public void wechatEncryptMsg(RoutingContext routingContext) {
-        Buffer requestbuffer = routingContext.getBody();
+        Buffer requestbuffer = routingContext.body().buffer();
         try {
 
             HttpServerRequest httpServerRequest = routingContext.request();

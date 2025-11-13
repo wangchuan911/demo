@@ -70,7 +70,7 @@ public class HtmlTemplateWebRouter {
     }
 
     public void toPage(RoutingContext routingContext, JsonObject jsonObject, String page) {
-        this.engine.render(jsonObject, String.format("templates/%s.html", page), res -> {
+        this.engine.render(jsonObject, String.format("templates/%s.html", page)).onComplete(res -> {
             if (res.succeeded()) {
                 routingContext.response().putHeader("Content-Type", "text/html").end(res.result());
             } else {
@@ -119,7 +119,7 @@ public class HtmlTemplateWebRouter {
       templateResolver.setSuffix(".html");*/
             templateResolver.setTemplateMode("HTML");
             templateResolver.setCharacterEncoding("utf-8");
-            org.thymeleaf.TemplateEngine templateEngine = this.engine.unwrap();
+            org.thymeleaf.TemplateEngine templateEngine = (org.thymeleaf.TemplateEngine) this.engine.unwrap();
             templateEngine.setTemplateResolver(templateResolver);
         }
     }

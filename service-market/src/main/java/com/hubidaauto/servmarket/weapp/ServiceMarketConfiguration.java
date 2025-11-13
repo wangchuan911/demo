@@ -45,7 +45,7 @@ public class ServiceMarketConfiguration extends AbstractWechatMiniProgramsConfig
             SharedData sharedData = vertx1.sharedData();
             Handler<Long> longHandler = aLong -> {
                 /*集群锁，防止重复处理和锁表*/
-                sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
+                sharedData.getLock(URL_TOCKEN_LOCK).onComplete(lockAsyncResult -> {
                     if (lockAsyncResult.succeeded()) {
                         try {
 //                            requestService.toBeContinue();

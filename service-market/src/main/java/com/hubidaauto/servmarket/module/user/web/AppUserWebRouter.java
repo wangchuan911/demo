@@ -122,7 +122,7 @@ public class AppUserWebRouter {
             mode = VertxRouteType.PathRegex)
     public void listUser(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            UserCondition userCondition = JsonUtils.jsonToObject(routingContext.getBodyAsString(), UserCondition.class, () -> null);
+            UserCondition userCondition = JsonUtils.jsonToObject(routingContext.body().asString(), UserCondition.class, () -> null);
             if (userCondition == null) {
                 routingContext.response().setStatusCode(404).end("没有数据");
                 return;
@@ -148,7 +148,7 @@ public class AppUserWebRouter {
             method = "POST")
     public void listAddr(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            UserCondition userCondition = JsonUtils.jsonToObject(routingContext.getBodyAsString(), UserCondition.class, () -> null);
+            UserCondition userCondition = JsonUtils.jsonToObject(routingContext.body().asString(), UserCondition.class, () -> null);
             if (userCondition == null) {
                 routingContext.response().setStatusCode(404).end("没有数据");
                 return;
@@ -161,7 +161,7 @@ public class AppUserWebRouter {
             method = "PUT")
     public void updateAddr(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            AddressVO addressVO = JsonUtils.jsonToObject(routingContext.getBodyAsString(), AddressVO.class, () -> null);
+            AddressVO addressVO = JsonUtils.jsonToObject(routingContext.body().asString(), AddressVO.class, () -> null);
             if (addressVO == null || addressDao.put(addressVO) == 0) {
                 routingContext.response().setStatusCode(404).end("没有数据");
                 return;
@@ -174,7 +174,7 @@ public class AppUserWebRouter {
             method = "POST")
     public void addAddr(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            AddressVO addressVO = JsonUtils.jsonToObject(routingContext.getBodyAsString(), AddressVO.class, () -> null);
+            AddressVO addressVO = JsonUtils.jsonToObject(routingContext.body().asString(), AddressVO.class, () -> null);
             if (addressVO == null || addressDao.add(addressVO) == 0) {
                 routingContext.response().setStatusCode(404).end("没有数据");
                 return;
@@ -187,7 +187,7 @@ public class AppUserWebRouter {
             method = "POST")
     public void wxLogin(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            String code = routingContext.getBodyAsJson().getString("code");
+            String code = routingContext.body().asJsonObject().getString("code");
             abstractWechatConfiguration
                     .getWeChatCode2session(code, appUserService)
                     .onSuccess(entries -> {
@@ -234,7 +234,7 @@ public class AppUserWebRouter {
     public void workers(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             try {
-                StaffCondition staffCondition = JSONObject.parseObject(routingContext.getBodyAsString(), StaffCondition.class);
+                StaffCondition staffCondition = JSONObject.parseObject(routingContext.body().asString(), StaffCondition.class);
                 staffCondition.page(Integer.valueOf(routingContext.pathParam("page")));
                 routingContext.end(JSONObject.toJSONString(staffDao.list(staffCondition)));
             } catch (Throwable e) {
@@ -347,7 +347,7 @@ public class AppUserWebRouter {
         chain.blockingHandler(routingContext -> {
             boolean delete = "un".equals(routingContext.pathParam("del"));
             try {
-                StaffCondition condition = JSONObject.parseObject(routingContext.getBodyAsString(), StaffCondition.class);
+                StaffCondition condition = JSONObject.parseObject(routingContext.body().asString(), StaffCondition.class);
                 condition.setRegionId(450000L);
                 condition.setRoleId(3L);
                 Set<Long> staffIds = Arrays.stream(condition.getStaffIds()).collect(Collectors.toSet());

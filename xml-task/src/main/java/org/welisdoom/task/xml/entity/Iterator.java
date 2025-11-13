@@ -82,13 +82,13 @@ public class Iterator extends Unit implements Executable {
                 idles.add(taskInstance);
             }));
             if (futures.size() >= count)
-                return (Future) CompositeFuture.any(futures);
+                return (Future) Future.any((List) futures);
             else
                 return Future.succeededFuture();
         }
 
         synchronized Future<Object> flush() {
-            Future future = CompositeFuture.all(futures);
+            Future future = Future.all((List)futures);
             futures.clear();
             return future;
         }

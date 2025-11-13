@@ -182,14 +182,14 @@ public class WeChatServiceConfiguration extends AbstractWechatOfficialAccountCon
     void wxPost(RoutingContextChain chain) {
         chain.handler(this::wechatDecryptMsg)
                 .handler(routingContext -> {
-                    Buffer requestbuffer = routingContext.getBody();
+                    Buffer requestbuffer = routingContext.body().buffer();
                     commonAsynService.callService(new Requset()
                             .setService("weChatService")
                             .setBody(requestbuffer.toString())
-                            .setMode(Requset.WECHAT), responseAsyncResult -> {
+                            .setMode(Requset.WECHAT)).onComplete(responseAsyncResult -> {
                         if (responseAsyncResult.succeeded()) {
                             Buffer buffer = Buffer.buffer(responseAsyncResult.result().getResult().toString());
-                            routingContext.setBody(buffer);
+                            routingContext.body().buffer().setBuffer (0,buffer);
                             routingContext.next();
                         } else {
                             logger.error(responseAsyncResult.cause().getMessage(), responseAsyncResult.cause());

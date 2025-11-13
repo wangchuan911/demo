@@ -1,8 +1,9 @@
 package org.welisdoom.task.xml.connect;
 
+import io.vertx.pgclient.PgBuilder;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgConnection;
-import io.vertx.pgclient.PgPool;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.Tuple;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,8 @@ import java.util.Map;
  */
 @Component
 @Db("postgresql")
-public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConnection> {
-    volatile Map<String, PgPool> pools;
+public class PostgreSQLConnectPool implements DataBaseConnectPool<Pool, PgConnection> {
+    volatile Map<String, Pool> pools;
 
     ConfigDao configDao;
 
@@ -34,7 +35,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     }
 
     @Override
-    public synchronized PgPool getPool(String name) {
+    public synchronized Pool getPool(String name) {
         if (!getPools().containsKey(name)) {
             setInstance(this.configDao.getDatabase(name));
         }
@@ -42,7 +43,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
     }
 
     @Override
-    public Map<String, PgPool> getPools() {
+    public Map<String, Pool> getPools() {
         if (pools == null) {
             synchronized (this) {
                 if (pools == null) {
@@ -62,7 +63,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<PgPool, PgConn
 
 // Create the client pool
         if (getPools().containsKey(config.getName())) return;
-        getPools().put(config.getName(), PgPool.pool(Task.getVertx(), connectOptions, poolOptions));
+        getPools().put(config.getName(), PgBuilder.pool().using(Task.getVertx()).connectingTo( connectOptions).with(poolOptions).build());
     }
 
     /*public Future<PgConnection> getConnect(String name) {

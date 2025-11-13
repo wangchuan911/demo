@@ -80,7 +80,7 @@ public class CommonWebRouter {
             method = "POST")
     public void img(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            CompositeFuture
+            Future
                     .all(routingContext.fileUploads()
                             .stream()
                             .filter(fileUpload -> !fileUpload.cancel())
@@ -157,7 +157,7 @@ public class CommonWebRouter {
     public void text(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             try {
-                TextContentVO vo = JSONObject.parseObject(routingContext.getBodyAsString(), TextContentVO.class);
+                TextContentVO vo = JSONObject.parseObject(routingContext.body().asString(), TextContentVO.class);
                 if (vo.getId() != null) {
                     textContentDao.put(vo);
                 } else {

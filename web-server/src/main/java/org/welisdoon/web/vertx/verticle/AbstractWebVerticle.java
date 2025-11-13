@@ -56,13 +56,13 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
             httpServerOptions.setSsl(true);
             switch (this.sslKeyType.toLowerCase()) {
                 case "pem":
-                    httpServerOptions.setPemKeyCertOptions(new PemKeyCertOptions().setCertPath(sslKeyStore).setKeyPath(sslKeyPath));
+                    httpServerOptions.setKeyCertOptions(new PemKeyCertOptions().setCertPath(sslKeyStore).setKeyPath(sslKeyPath));
                     break;
                 case "jks":
                     httpServerOptions.setKeyCertOptions(new JksOptions().setPath(sslKeyStore).setPassword(sslPassword));
                     break;
                 case "pfx":
-                    httpServerOptions.setPfxKeyCertOptions(new PfxOptions().setPath(sslKeyStore).setPassword(sslPassword));
+                    httpServerOptions.setKeyCertOptions(new PfxOptions().setPath(sslKeyStore).setPassword(sslPassword));
                     break;
                 default:
                     SelfSignedCertificate certificate = SelfSignedCertificate.create();
@@ -72,14 +72,14 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
         }
         this.vertx.createHttpServer(httpServerOptions)
                 .requestHandler(router)
-                .listen(port, httpServerAsyncResult -> {
-                    if (httpServerAsyncResult.succeeded()) {
-                        promise.complete();
-                        logger.info("HTTP server started on {}://localhost:{}", sslEnable ? "https" : "http", port);
-                    } else {
-                        promise.fail(httpServerAsyncResult.cause());
-                    }
-                });
+                .listen(port).onComplete(httpServerAsyncResult -> {
+            if (httpServerAsyncResult.succeeded()) {
+                promise.complete();
+                logger.info("HTTP server started on {}://localhost:{}", sslEnable ? "https" : "http", port);
+            } else {
+                promise.fail(httpServerAsyncResult.cause());
+            }
+        });
 
     }
 

@@ -2,11 +2,7 @@ package org.welisdoon.web.config;
 
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
-import io.vertx.core.impl.NoStackTraceThrowable;
+import io.vertx.core.*;
 import io.vertx.core.spi.VerticleFactory;
 import org.reflections.Reflections;
 import org.reflections.util.ClasspathHelper;
@@ -99,7 +95,7 @@ public class VertxInSpringConfiguration {
                                     new DeploymentOptions()
                                             .setMaxWorkerExecuteTime(vertxOptions.getMaxWorkerExecuteTime())
                                             .setWorkerPoolSize(vertxOptions.getWorkerPoolSize())
-                                            .setWorker(aClass.getAnnotation(Verticle.class).worker())
+                                            .setThreadingModel(aClass.getAnnotation(Verticle.class).worker() ? ThreadingModel.WORKER : ThreadingModel.EVENT_LOOP)
                     ));
         return getDeployOptions();
     }
@@ -172,30 +168,12 @@ public class VertxInSpringConfiguration {
             promise.fail("no vertx config! vertx don't boot!");
             return;
         }
-        ICluster[] clusters = ApplicationContextProvider.getApplicationContext().getBeansOfType(ICluster.class).entrySet().stream().map(Map.Entry::getValue).toArray(ICluster[]::new);
-        switch (clusters.length) {
-            case 0:
-                promise.complete(Vertx.vertx(this.vertxOptions));
-                logger.info("service is running with single instance.");
-                break;
-            case 1:
-                Vertx.clusteredVertx(
-                        this.vertxOptions.setClusterManager(clusters[0].create()),
-                        result -> {
-                            if (result.succeeded()) {
-                                promise.complete(result.result());
-                                logger.info("service is running with cluster by {}.", clusters[0].name());
-                            } else {
-                                promise.fail(result.cause());
-                                logger.error("cluster running with error: "
-                                        + result.cause().getMessage());
-                            }
-                        });
-                break;
-            default:
-                promise.fail(new NoStackTraceThrowable("too many clusters!"));
-
-        }
+        VertxBuilder builder = Vertx.builder().with(this.vertxOptions);
+        ApplicationContextProvider.getApplicationContext().getBeansOfType(ICluster.class).entrySet().stream().map(Map.Entry::getValue).findFirst().ifPresent(iCluster -> {
+            logger.info("service is running with cluster by {}.", iCluster.name());
+            builder.withClusterManager(iCluster.create());
+        });
+        promise.complete(builder.build());
     }
 
     protected void deployVerticles(Vertx vertx) {

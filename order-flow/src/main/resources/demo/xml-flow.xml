@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flow>
+    <step id="xxx">
+        <race winer="3">
+            <step id="xxx" api=""></step>
+            <step id="xxx" api=""></step>
+            <step id="xxx" api=""></step>
+            <step id="xxx" api=""></step>
+            <step id="xxx" api=""></step>
+        </race>
+        <switch id="xxx">
+            <case id="xxx" when="">
+                <step id="xxx" api=""></step>
+                <step id="xxx" api=""></step>
+                <step id="xxx" api=""></step>
+                <step id="xxx" api=""></step>
+            </case>
+            <case id="xxx" when=""></case>
+            <case id="xxx" when=""></case>
+            <case id="xxx" when=""></case>
+            <case id="xxx" when=""></case>
+            <default>
+                <virtual></virtual>
+            </default>
+        </switch>
+    </step>
+</flow>

@@ -1,4 +1,4 @@
-@ModuleGen(groupPackage = "org.welisdoon.web.vertx.proxy", name = "proxy", useFutures = true)
+@ModuleGen(groupPackage = "org.welisdoon.web.vertx.proxy", name = "proxy")
 
 package org.welisdoon.web.vertx.proxy;
 

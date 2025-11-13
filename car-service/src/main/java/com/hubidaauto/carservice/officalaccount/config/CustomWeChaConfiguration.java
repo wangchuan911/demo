@@ -6,9 +6,11 @@ import com.hubidaauto.carservice.officalaccount.entity.UserVO;
 import com.hubidaauto.carservice.wxapp.core.config.CustomWeChatAppConfiguration;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.RequestBody;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.impl.RequestBodyImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -72,14 +74,14 @@ public class CustomWeChaConfiguration extends AbstractWechatOfficialAccountConfi
 
             router.post(this.getPath().getPush()).handler(bodyHandler).handler(this::wechatDecryptMsg)
                     .handler(routingContext -> {
-                        Buffer requestbuffer = routingContext.getBody();
+                        Buffer requestbuffer = routingContext.body().buffer();
                         commonAsynService.callService(new Requset()
                                 .setService("customWeChatOfficalAccountService")
                                 .setBody(requestbuffer.toString())
-                                .setMode(Requset.WECHAT), stringAsyncResult -> {
+                                .setMode(Requset.WECHAT)).onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
                                 Buffer buffer = Buffer.buffer(stringAsyncResult.result().getResult().toString());
-                                routingContext.setBody(buffer);
+                                ((RequestBodyImpl) routingContext.body()).setBuffer(buffer);
                                 routingContext.next();
                             } else {
                                 stringAsyncResult.cause().printStackTrace();
@@ -92,8 +94,8 @@ public class CustomWeChaConfiguration extends AbstractWechatOfficialAccountConfi
             });
             router.post(this.getPath().getPush() + "/p").handler(bodyHandler).handler(routingContext -> {
                 try {
-                    logger.info(routingContext.getBodyAsString());
-                    JSONObject jsonObject = JSONObject.parseObject(routingContext.getBodyAsString());
+                    logger.info(routingContext.body().asString());
+                    JSONObject jsonObject = JSONObject.parseObject(routingContext.body().asString());
                     send(jsonObject.getString("code"), jsonObject.getString("templateId"), jsonObject.getObject("params", Map.class));
                     routingContext.end("");
                 } catch (Throwable e) {

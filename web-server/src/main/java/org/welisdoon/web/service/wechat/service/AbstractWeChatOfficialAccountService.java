@@ -1,9 +1,7 @@
 package org.welisdoon.web.service.wechat.service;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.impl.NoStackTraceThrowable;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,7 +141,7 @@ public abstract class AbstractWeChatOfficialAccountService<T extends AbstractWec
     protected Future<Map.Entry<Integer, Object>> matched(List<MesseageHandler>[] tasks, int index, RequestMesseage message) {
         if (tasks.length >= index)
             return Future.failedFuture("解析失败");
-        return CompositeFuture.all(tasks[index].stream().map(messeageHandler -> messeageHandler.matched(message)).collect(Collectors.toList()))
+        return Future.all((List) tasks[index].stream().map(messeageHandler -> messeageHandler.matched(message)).collect(Collectors.toList()))
                 .compose(compositeFuture -> {
                     List<Boolean> list = compositeFuture.list();
                     for (int i = 0; i < list.size(); i++) {
@@ -213,7 +211,7 @@ public abstract class AbstractWeChatOfficialAccountService<T extends AbstractWec
 
     public void receive(RoutingContext routingContext) {
         try {
-            this.receive(RequestMesseageBody.toInstance(routingContext.getBodyAsString()))
+            this.receive(RequestMesseageBody.toInstance(routingContext.body().asString()))
                     .onSuccess(responseMesseage -> {
                         try {
                             if (responseMesseage instanceof NoReplyMesseage) {
@@ -221,7 +219,7 @@ public abstract class AbstractWeChatOfficialAccountService<T extends AbstractWec
                                 return;
                             }
                             routingContext.response().setChunked(true);
-                            routingContext.setBody(Buffer.buffer(responseMesseage.toXMLString()));
+                            routingContext.body().buffer().setBuffer(0, Buffer.buffer(responseMesseage.toXMLString()));
                             routingContext.next();
                         } catch (Throwable e) {
                             logger.error(e.getMessage(), e);

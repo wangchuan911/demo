@@ -100,7 +100,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                 .toArray(Entry[]::new);
 
         vertx.registerVerticleFactory(options.getFactory());
-        return CompositeFuture
+        return Future
                 .all(options.getDeployOptions(true).entrySet()
                         .stream()
                         .map(entry -> {
@@ -111,12 +111,13 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                                             JSON.toJavaObject((JSONObject) JSON.toJSON(options.getVertxOptions()), DeploymentOptions.class);
 
                             String verticleName = String.format("%s:%s", options.getFactory().prefix(), entry.getKey().getName());
-                            deploymentOptions.setWorker(verticle.worker());
+//                            deploymentOptions.setWorker(verticle.worker());
+                            deploymentOptions.setThreadingModel(verticle.worker() ? ThreadingModel.WORKER : ThreadingModel.EVENT_LOOP);
                             // As worker verticles are never executed concurrently by Vert.x by more than one thread,
                             // deploy multiple instances to avoid serializing requests.
 
                             Promise<Void> promise = Promise.promise();
-                            vertx.deployVerticle(verticleName, deploymentOptions, event -> {
+                            vertx.deployVerticle(verticleName, deploymentOptions).onComplete(event -> {
                                 promise.complete();
                                 if (event.succeeded())
                                     logger.info("deploy success!{}", verticleName);

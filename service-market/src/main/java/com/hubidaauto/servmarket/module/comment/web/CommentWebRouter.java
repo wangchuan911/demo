@@ -51,7 +51,7 @@ public class CommentWebRouter {
             method = "POST")
     public void add(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
-            JSONObject jsonObject = JSONObject.parseObject(routingContext.getBodyAsString());
+            JSONObject jsonObject = JSONObject.parseObject(routingContext.body().asString());
             OrderCommentVO evaluateVO = jsonObject.toJavaObject(OrderCommentVO.class);
             if (evaluateVO == null || orderCommentDao.add(evaluateVO) == 0) {
                 routingContext.response().setStatusCode(404).end("没有数据");
@@ -80,7 +80,7 @@ public class CommentWebRouter {
         chain.blockingHandler(routingContext -> {
 
             try {
-                OrderCommentCondition evaluateVO = JSONObject.parseObject(routingContext.getBodyAsString(), OrderCommentCondition.class);
+                OrderCommentCondition evaluateVO = JSONObject.parseObject(routingContext.body().asString(), OrderCommentCondition.class);
                 evaluateVO.page(Integer.parseInt(routingContext.pathParam("page")));
                 routingContext.end(JSON.toJSONString(orderCommentDao.list(evaluateVO)));
             } catch (Throwable e) {

@@ -40,9 +40,9 @@ spring:
       strict: false #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
       datasource:
         master:
-          url: jdbc:mysql://123.207.114.46/hubidaauto?&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&tinyInt1isBit=true
-          username: hubidaauto
-          password: Mengyan209810$$
+          url:
+          username:
+          password:
           driver-class-name: com.mysql.jdbc.Driver # 3.2.0开始支持SPI可省略此配置
           #连接池类型
           type: com.alibaba.druid.pool.DruidDataSource

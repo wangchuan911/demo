@@ -645,7 +645,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             ServiceClassOrderCondition unpayTimeOut = new ServiceClassOrderCondition();
             unpayTimeOut.setQuery("timeout_pay");
             unpayTimeOut.page(1);
-            vertx1.periodicStream(10 * 60 * 1000).handler(aLong -> {
+            vertx1.setPeriodic(10 * 60 * 1000, aLong -> {
                 sharedData.getLock(String.format("%s_%s", ServiceClassOrderService.class.getName(), unpayTimeOut.getQuery()))
                         .onSuccess(lock -> {
                             long timer = vertx1.setTimer(9 * 60 * 1000, aLong1 -> {
@@ -669,7 +669,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             timeoutUserFinish.page(1);
             ServiceClassWorkOrderCondition timeoutUserFinish2 = new ServiceClassWorkOrderCondition();
             timeoutUserFinish2.setQuery("timeout_user_finish");
-            vertx1.periodicStream(1 * 60 * 60 * 1000).handler(aLong -> {
+            vertx1.setPeriodic(1 * 60 * 60 * 1000,aLong -> {
                 sharedData.getLock(String.format("%s_%s", ServiceClassOrderService.class.getName(), timeoutUserFinish2.getQuery()))
                         .onSuccess(lock -> {
                             long timer = vertx1.setTimer(59 * 60 * 1000, aLong1 -> {

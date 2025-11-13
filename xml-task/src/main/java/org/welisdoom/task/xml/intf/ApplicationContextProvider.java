@@ -4,22 +4,25 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class ApplicationContextProvider implements ApplicationContextAware {
     /**
      * 上下文对象实例
      */
-    private static ApplicationContext applicationContext;
+    private final static AtomicReference<ApplicationContext> applicationContext = new AtomicReference<>();
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        if (ApplicationContextProvider.applicationContext == null)
-            ApplicationContextProvider.applicationContext = applicationContext;
+        this.applicationContext.set(applicationContext);
     }
 
     /**
@@ -28,8 +31,9 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @return
      */
     public static ApplicationContext getApplicationContext() {
-        return applicationContext;
+        return applicationContext.get();
     }
+
 
     /**
      * 通过name获取 Bean.

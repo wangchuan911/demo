@@ -58,7 +58,7 @@ public class Task extends Unit implements Root {
                             })
                     .transform(objectAsyncResult -> {
                         tasks.remove(data);
-                        return CompositeFuture
+                        return Future
                                 .all(data.cache.entrySet()
                                         .stream()
                                         .map(unitObjectEntry -> {
@@ -89,7 +89,7 @@ public class Task extends Unit implements Root {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                CompositeFuture
+                Future
                         .all(new HashSet<>(tasks).stream()
                                 .map(taskRequest -> {
                                     tasks.remove(taskRequest);

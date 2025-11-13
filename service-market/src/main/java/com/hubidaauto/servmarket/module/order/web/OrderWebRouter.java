@@ -157,8 +157,8 @@ public class OrderWebRouter {
             method = "POST")
     public void order(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            System.out.println(routingContext.getBodyAsString());
-            orderService.order(routingContext.getBodyAsString()).onSuccess(value -> {
+            System.out.println(routingContext.body().asString());
+            orderService.order(routingContext.body().asString()).onSuccess(value -> {
                 routingContext.end(JSONObject.toJSONString(value));
             }).onFailure(throwable -> {
                 logger.error(throwable.getMessage(), throwable);
@@ -174,7 +174,7 @@ public class OrderWebRouter {
         context.handler(routingContext -> {
             try {
                 orderService
-                        .workOrder(routingContext.getBodyAsString())
+                        .workOrder(routingContext.body().asString())
                         .onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
                                 routingContext.end("成功");
@@ -197,7 +197,7 @@ public class OrderWebRouter {
         context.handler(routingContext -> {
             try {
                 orderService
-                        .start(routingContext.getBodyAsString())
+                        .start(routingContext.body().asString())
                         .onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
                                 routingContext.end("成功");
@@ -218,7 +218,7 @@ public class OrderWebRouter {
         context.handler(routingContext -> {
             try {
                 OrderCondition condition = JSONObject
-                        .parseObject(routingContext.getBodyAsString())
+                        .parseObject(routingContext.body().asString())
                         .toJavaObject(OrderCondition.class);
                 condition.page(Integer.parseInt(routingContext.pathParam("page")));
                 orderService
@@ -242,7 +242,7 @@ public class OrderWebRouter {
         context.handler(routingContext -> {
             try {
                 orderService
-                        .getWorkOrder(routingContext.getBodyAsString())
+                        .getWorkOrder(routingContext.body().asString())
                         .onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
                                 routingContext.end(JSONArray.toJSONString(stringAsyncResult.result()));
@@ -262,7 +262,7 @@ public class OrderWebRouter {
         context.handler(routingContext -> {
             try {
                 orderService
-                        .getWorkOrders(routingContext.getBodyAsString())
+                        .getWorkOrders(routingContext.body().asString())
                         .onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
                                 routingContext.end(JSONArray.toJSONString(stringAsyncResult.result()));
@@ -322,7 +322,7 @@ public class OrderWebRouter {
         context.handler(routingContext -> {
             try {
                 orderService
-                        .modifyOrder(routingContext.getBodyAsString())
+                        .modifyOrder(routingContext.body().asString())
                         .onComplete(stringAsyncResult -> {
                             if (stringAsyncResult.succeeded()) {
                                 routingContext.end("成功");
@@ -417,7 +417,7 @@ public class OrderWebRouter {
     public void getWorkingUser(RoutingContextChain context) {
         context.handler(routingContext -> {
             try {
-                JSONArray objects = JSONArray.parseArray(routingContext.getBodyAsString());
+                JSONArray objects = JSONArray.parseArray(routingContext.body().asString());
                 if (CollectionUtils.isEmpty(staffJobDao.list(new StaffCondition().setStaffId(objects.getLong(1)).setRoleId(7L)))) {
                     routingContext.response().setStatusCode(404).end();
                     return;

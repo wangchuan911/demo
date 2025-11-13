@@ -57,7 +57,7 @@ public class GoodsWebRouter {
     public void listItem(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             try {
-                ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+                ItemCondition itemCondition = routingContext.body().asPojo(ItemCondition.class);
                 itemCondition.page(Integer.parseInt(routingContext.pathParam("page")));
                 routingContext.end(Json.encodeToBuffer(itemService.listItem(itemCondition)));
             } catch (Throwable e) {
@@ -73,7 +73,7 @@ public class GoodsWebRouter {
     public void listTypes(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             try {
-                ItemCondition itemCondition = routingContext.getBodyAsJson().mapTo(ItemCondition.class);
+                ItemCondition itemCondition = routingContext.body().asPojo(ItemCondition.class);
                 routingContext.end(Json.encodeToBuffer(itemService.listTypes(itemCondition)));
             } catch (Throwable e) {
                 logger.error(e.getMessage(), e);
@@ -86,7 +86,7 @@ public class GoodsWebRouter {
             method = "POST")
     public void listAddedValue(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            AddedValueVO addedValueVO = JsonUtils.jsonToObject(routingContext.getBodyAsString(), AddedValueVO.class, () -> null);
+            AddedValueVO addedValueVO = JsonUtils.jsonToObject(routingContext.body().asString(), AddedValueVO.class, () -> null);
             routingContext.end(Json.encodeToBuffer(itemService.listAddedValue(addedValueVO)));
         });
     }
@@ -96,7 +96,7 @@ public class GoodsWebRouter {
             method = "PUT")
     public void put(RoutingContextChain chain) {
         chain.handler(routingContext -> {
-            routingContext.end(Json.encodeToBuffer(itemDao.put(routingContext.getBodyAsJson().mapTo(ItemVO.class))));
+            routingContext.end(Json.encodeToBuffer(itemDao.put(routingContext.body().asPojo().mapTo(ItemVO.class))));
         });
     }*/
 

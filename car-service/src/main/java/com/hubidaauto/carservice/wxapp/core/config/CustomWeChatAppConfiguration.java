@@ -17,6 +17,7 @@ import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.FileSystemAccess;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.impl.Utils;
 import org.springframework.beans.factory.annotation.Value;
@@ -113,7 +114,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
 		return vertxConsumer;
 	}*/
 
-//    @VertxRegister(WorkerVerticle.class)
+    //    @VertxRegister(WorkerVerticle.class)
     public Consumer<Vertx> createAsyncService() {
 
         final String KEY = ApplicationContextProvider.getRealClass(this.getClass()).getName().toUpperCase();
@@ -123,7 +124,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
             SharedData sharedData = vertx1.sharedData();
             Handler<Long> longHandler = aLong -> {
                 /*集群锁，防止重复处理和锁表*/
-                sharedData.getLock(URL_TOCKEN_LOCK, lockAsyncResult -> {
+                sharedData.getLock(URL_TOCKEN_LOCK).onComplete(lockAsyncResult -> {
                     if (lockAsyncResult.succeeded()) {
                         try {
 //                            requestService.toBeContinue();
@@ -210,7 +211,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
                                 .onSuccess(entries -> {
                                     routingContext.response().end(entries.toBuffer());
                                 }).onFailure(throwable -> {
-                                    throwable.printStackTrace();
+                            throwable.printStackTrace();
                             routingContext.response().setStatusCode(500).end(throwable.getMessage());
                         });
                         break;
@@ -356,7 +357,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
             router.post(this.getPath().getApp()).handler(BodyHandler.create()).handler(routingContext -> {
                 routingContext.response().setChunked(true);
                 Requset requset = Requset.newInstance(routingContext, option);
-                commonAsynService.callService(requset, stringAsyncResult -> {
+                commonAsynService.callService(requset).onComplete(stringAsyncResult -> {
                     if (stringAsyncResult.succeeded()) {
                         routingContext.response().end(stringAsyncResult.result().toJson().toBuffer());
                     } else {
@@ -367,9 +368,10 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
             });
             logger.info("inital request mapping: " + this.getPath().getApp());
 
-            StaticHandler staticHandler = StaticHandler.create()
+           /* StaticHandler staticHandler = StaticHandler.create()
                     .setAllowRootFileSystemAccess(true)
-                    .setWebRoot(staticPath);
+                    .setWebRoot(staticPath);*/
+            StaticHandler staticHandler = StaticHandler.create(FileSystemAccess.ROOT, staticPath);
             staticHandler.setAlwaysAsyncFS(true);
             staticHandler.setCachingEnabled(false);
 //            staticHandler.setDirectoryListing(true);
@@ -380,7 +382,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
                 final String fileName = Utils.pathOffset(httpServerRequest.path(), routingContext);
                 final String file = staticPath + fileName;
                 FileSystem fileSystem = routingContext.vertx().fileSystem();
-                fileSystem.exists(file, booleanAsyncResult -> {
+                fileSystem.exists(file).onComplete(booleanAsyncResult -> {
                     if (booleanAsyncResult.succeeded() && !booleanAsyncResult.result()) {
                         Requset requset = new Requset()
                                 .setService("pictureService")
@@ -390,7 +392,7 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
                                         .add(Map.of("name", fileName.substring(1))).toString())
                                 .putParams(httpServerRequest.params())
                                 .putSession(routingContext.session());
-                        commonAsynService.callService(requset, responseAsyncResult -> {
+                        commonAsynService.callService(requset).onComplete(responseAsyncResult -> {
                             if (responseAsyncResult.failed()) {
                                 routingContext.fail(500, responseAsyncResult.cause());
                                 return;
@@ -399,12 +401,12 @@ public class CustomWeChatAppConfiguration extends AbstractWechatMiniProgramsConf
                                 routingContext.fail(404);
                                 return;
                             }
-                            fileSystem.createFile(file, voidAsyncResult -> {
+                            fileSystem.createFile(file).onComplete(voidAsyncResult -> {
                                 if (voidAsyncResult.failed()) {
                                     routingContext.fail(500, voidAsyncResult.cause());
                                     return;
                                 }
-                                fileSystem.writeFile(file, Buffer.buffer(((JsonObject) responseAsyncResult.result().getResult()).getBinary("data")), voidAsyncResult1 -> {
+                                fileSystem.writeFile(file, Buffer.buffer(((JsonObject) responseAsyncResult.result().getResult()).getBinary("data"))).onComplete(voidAsyncResult1 -> {
                                     if (voidAsyncResult1.failed()) {
                                         routingContext.fail(500, voidAsyncResult.cause());
                                         return;

@@ -315,7 +315,7 @@ public abstract class AbstractWechatConfiguration {
                                 HttpResponse<Buffer> httpResponse = result;
                                 eventBus.publish(URL_TOCKEN_UPDATE, httpResponse.body().toJsonObject());
                             })
-                            .onComplete(event -> vertx1.timerStream(3000).handler(event1 -> lock.release())))
+                            .onComplete(event -> vertx1.timer(3000).onComplete(event1 -> lock.release())))
                     .onFailure(throwable -> logger.error(throwable.getMessage(), throwable));
         };
 

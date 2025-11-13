@@ -12,6 +12,6 @@ import org.welisdoon.web.common.web.Response;
 @Deprecated
 public interface ICommonAsynService {
 
-    void callService(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler);
+    Future<Response> callService(Requset requset);
 
 }

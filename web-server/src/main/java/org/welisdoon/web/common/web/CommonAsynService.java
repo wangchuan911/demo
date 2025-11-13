@@ -90,9 +90,8 @@ public class CommonAsynService implements ICommonAsynService {
 
 
     @Override
-    public void callService(Requset requset, Handler<AsyncResult<Response>> outputBodyHandler) {
+    public Future<Response> callService(Requset requset) {
         Promise<Response> promise = Promise.promise();
-        promise.future().onComplete(outputBodyHandler);
         Response response = new Response();
         JsonObject params = StringUtils.isEmpty(requset.getParams()) ? null : (JsonObject) Json.decodeValue(requset.getParams());
         boolean isAsynMethod = false;
@@ -119,7 +118,7 @@ public class CommonAsynService implements ICommonAsynService {
                             }).onFailure(promise::fail);
                     //报文转对象;
 
-                    return;
+                    return promise.future();
                 default:
                     Object input = requset.bodyAsJson();
                     if (input instanceof JsonArray) {
@@ -189,6 +188,7 @@ public class CommonAsynService implements ICommonAsynService {
                 promise.complete(response);
             }
         }
+        return promise.future();
     }
 
 
