@@ -25,8 +25,8 @@ public class Mappers extends LikeMyBatisSqlNode {
         super(parent, attributes);
     }
 
-    public Mappers() {
-        this(null, Map.of());
+    public Mappers(String id) {
+        this(null, Map.of("id", id));
     }
 
     public static abstract class SqlExecuteNode<R> extends LikeMyBatisSqlNode implements Script<SqlParameter> {
@@ -55,6 +55,9 @@ public class Mappers extends LikeMyBatisSqlNode {
 
             @Override
             public String getScript(SqlParameter request, String split) {
+                if (!matched(request)) {
+                    return " ";
+                }
                 return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split));
             }
         }
@@ -183,7 +186,14 @@ public class Mappers extends LikeMyBatisSqlNode {
             super(parent, attributes);
         }
 
-
+        public void generateSqlInfo(String name, SqlParameter sqlParameter) {
+            sqlParameter.setSql(getChild(likeMyBatisSqlNode -> Objects.equals(likeMyBatisSqlNode.getId(), name)
+                    && likeMyBatisSqlNode instanceof SqlExecuteNode)
+                    .stream()
+                    .findFirst()
+                    .map(node -> (SqlExecuteNode) node)
+                    .orElseThrow(() -> new IllegalStateException("没有找到节点")).getScript(sqlParameter, " "));
+        }
     }
 
     @Tag(value = "sql", parentTagTypes = Mappers.Mapper.class)

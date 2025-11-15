@@ -81,14 +81,14 @@ public class LikeMyBatisSAXParser extends SAXParserHandler<LikeMyBatisSqlNode> {
     }
 
 
-    public static void load(InputStream inputStream, Mappers mappers) throws ParserConfigurationException, SAXException, IOException {
+    public static Mappers.Mapper load(InputStream inputStream, Mappers mappers) throws ParserConfigurationException, SAXException, IOException {
         LikeMyBatisSAXParser handler = new LikeMyBatisSAXParser(mappers);
         getSaxParser().parse(inputStream, handler);
+        return (Mappers.Mapper) handler.root;
     }
 
     protected static SAXParser getSaxParser() throws ParserConfigurationException, SAXException {
         SAXParserFactory spf = SAXParserFactory.newInstance();
         return spf.newSAXParser();
     }
-
 }

@@ -200,6 +200,7 @@
                     <encoding>utf-8</encoding>
                     <annotationProcessors>
                         <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
+                        <annotationProcessor>org.welisdoon.common.generator.ObjectClassGeneratorProcessor</annotationProcessor>
 <!--                        <annotationProcessor>org.welisdoon.common.annotations.process.ThrowMessageAnnotationProcessor</annotationProcessor>-->
                     </annotationProcessors>
                 </configuration>
