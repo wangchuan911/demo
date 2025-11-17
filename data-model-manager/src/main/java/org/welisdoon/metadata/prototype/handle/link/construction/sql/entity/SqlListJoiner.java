@@ -1,9 +1,9 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.define.MetaLink;
 
 import java.text.MessageFormat;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,13 +15,23 @@ import java.util.stream.Collectors;
  */
 public class SqlListJoiner extends SqlJoiner {
     @Override
-    protected String format(FormatContent format, LinkMetaType parentType) {
-        if (leaf)
+    protected String format(FormatContent format) {
+        if (leaf) {
             switch (getType()) {
                 case SqlToJoinOfMultiDataRel:
                     List<String> cond = condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)).collect(Collectors.toList());
 
-                    format.addTablePart(new FormatContent.Part(format, table, cond).setParentType(parentType).setType(getType()));
+                    format.addTablePart(new FormatContent.LeafPart(
+                            format,
+                            table,
+                            cond,
+                            findInputs().stream().map(field -> {
+                                Sql last = SqlItem.format(field);
+                                String alias = last.getPrefix(),
+                                        target = last.getAttribute().getCode();
+                                return new FormatContent.Part.FormatColumn(alias, target, field);
+                            }).collect(Collectors.toList()),
+                            getType()));
 
                     Object[] args = new String[3];
                     args[0] = table.getTarget();
@@ -31,12 +41,13 @@ public class SqlListJoiner extends SqlJoiner {
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
+        }
 
-        return this.format(format, LinkMetaType.SqlToJoinOfMultiDataRel);
+        return this.format(format);
     }
 
     @Override
-    protected boolean isWeakRelation(LinkMetaType type) {
-        return super.isWeakRelation(type) || type == LinkMetaType.SqlToJoinOfMultiDataRel;
+    protected boolean isWeakRelation(MetaLink metaLink) {
+        return isRelation(metaLink, true, LinkMetaType.SqlToJoinOfMultiDataRel, LinkMetaType.SqlToJoinOfWeakRel);
     }
 }

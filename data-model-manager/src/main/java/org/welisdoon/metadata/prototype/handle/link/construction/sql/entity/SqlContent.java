@@ -24,16 +24,23 @@ public class SqlContent extends Sql {
         this.build();
     }
 
+    @Override
+    public LinkMetaType getType() {
+        return LinkMetaType.Content;
+    }
 
     @Override
     protected void build() {
         readonly();
         if (metaObject instanceof DataObject) {
+            boolean isFirst = true;
             for (MetaLink constructorLink : ((DataObject) metaObject).getConstructorLinks()) {
                 if (constructorLink instanceof Sql) {
                     constructorLink.setParent(this);
+                    ((SqlJoiner) constructorLink).first = isFirst;
                     ((SqlJoiner) constructorLink).build();
                     getChildren().add(constructorLink);
+                    isFirst = false;
                 }
             }
         }
@@ -54,7 +61,6 @@ public class SqlContent extends Sql {
             Sql last = SqlItem.format(field);
             String alias = last.getPrefix(),
                     target = last.getAttribute().getCode();
-            format.addColumnPart(new FormatContent.FormatColumn(alias, target, field));
             return MessageFormat.format("{0}.{1}", alias, target);
         }).collect(Collectors.joining(","));
         return MessageFormat.format("select {0} {1}", column, from.replace(SqlJoiner.OTHER, join.toString()));

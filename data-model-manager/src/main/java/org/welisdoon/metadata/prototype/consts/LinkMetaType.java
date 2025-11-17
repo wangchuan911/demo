@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
  */
 public enum LinkMetaType implements IMetaType {
     UNKNOWN(Long.MIN_VALUE, "未知"),
+    Content(Long.MIN_VALUE + 1, "上下文"),
     /*ObjectLinkSingleLineTable(3002, "对象与单行表的关系"),
     ObjectLinkMultiLineTable(3004, "对象与多行表的关系"),
     HeaderLinkAttributes(3005, "数据标题与属性的关系"),*/

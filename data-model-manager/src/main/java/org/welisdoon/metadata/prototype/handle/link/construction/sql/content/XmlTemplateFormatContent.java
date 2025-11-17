@@ -1,10 +1,12 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.content;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.FormatContent;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -47,13 +50,13 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
     }
 
     @Override
-    public void addColumnPart(FormatColumn sqlAlias) {
+    public void addColumnPart(FormatContent.Part.FormatColumn sqlAlias) {
         xmlResult = null;
         super.addColumnPart(sqlAlias);
     }
 
     @Override
-    public void addTablePart(Part part) {
+    public void addTablePart(FormatContent.Part part) {
         xmlResult = null;
         super.addTablePart(part);
     }
@@ -63,7 +66,11 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
         attrs.forEach(node::setAttribute);
         parent.insertBefore(node, null);
         nodeConsumer.accept(node);
+    }
 
+    protected void addNode(Node parent, String nodeName, Map<String, String> attrs) {
+        addNode(parent, nodeName, attrs, node -> {
+        });
     }
 
     protected void addText(Node node, String text) {
@@ -81,16 +88,83 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
         addText(node, MessageFormat.format(template, args));
     }
 
+
+    protected void findLeaf(Part part, List<Part> list) {
+        if (part instanceof VirtualPart) {
+            for (Part child : ((VirtualPart) part).getChildren()) {
+                if (child instanceof VirtualPart) {
+                    for (Part childChild : ((VirtualPart) child).getChildren()) {
+                        findLeaf(childChild, list);
+                    }
+                } else {
+                    list.add(child);
+                }
+            }
+            return;
+        }
+        list.add(part);
+    }
+
+    protected void findLeaf(List<Part> part, List<Part> list) {
+        for (Part part1 : part) {
+            findLeaf(part1, list);
+        }
+    }
+
+    protected List<Part> findLeaf(List<Part> part) {
+        List<Part> list = new LinkedList<>();
+        findLeaf(part, list);
+        return list;
+    }
+
+    protected List<Part> findLeaf(Part part) {
+        List<Part> list = new LinkedList<>();
+        findLeaf(part, list);
+        return list;
+    }
+
+    protected void groupBy(PartSplit partSplit) {
+        groupBy(this.tablePart, partSplit);
+    }
+
+    protected void groupBy(VirtualPart part1, PartSplit partSplit) {
+        List<Part> list = part1.getChildren();
+        Part first = part1.getChildren().get(0);
+        while (first instanceof VirtualPart) {
+            first = ((VirtualPart) first).getChildren().get(0);
+        }
+        List<Part> strong = new LinkedList<>();
+        List<Part> weak = new LinkedList<>();
+        List<Part> multi = new LinkedList<>();
+        for (int i = 0; i < list.size(); i++) {
+            Part part = list.get(i);
+            if (isWeakRel(list.get(i), LinkMetaType.SqlToJoinOfMultiDataRel)) {
+                multi.add(part);
+            } else if (isWeakRel(list.get(i), LinkMetaType.SqlToJoinOfWeakRel)) {
+                weak.add(part);
+            } else {
+                strong.add(part);
+            }
+        }
+        Assert.notNull(first, "没有配置任何表表");
+        partSplit.split(first, strong, weak, multi);
+    }
+
+    @FunctionalInterface
+    interface PartSplit {
+        void split(Part first, List<Part> strong, List<Part> weak, List<Part> multi);
+    }
+
+
     protected void build(TemplateParts templatePart, Node root) {
         switch (templatePart) {
             case Query:
-                this.addNode(root, "select", Map.of("id", "query"),
+                this.addNode(root, "select", Map.of("id", "query", "resultType", "string"),
                         queryNode -> {
-                            getTableParts().stream().findFirst().ifPresent(part1 -> {
+                            this.groupBy((part1, strong, weak, multi) -> {
                                 log.info("加载第一个表{}.{}", part1.getAlias(), part1.getTarget());
                                 this.addText(queryNode, MessageFormat.format("\nselect {0} \nfrom {1} {2} \nwhere {3}",
-                                        getColumnParts().stream().filter(formatColumn -> Objects.equals(formatColumn.getAlias(), part1.getAlias()))
-                                                .findFirst().map(formatColumn -> MessageFormat.format("\n  {0}.{1} as \"{2}\"", formatColumn.getAlias(), formatColumn.getTarget(), formatColumn.getField().getCode())).orElseThrow(() -> new IllegalStateException("没有配置主键")),
+                                        part1.getColumns().stream().findFirst().map(formatColumn -> MessageFormat.format("\n  {0}.{1} as \"{2}\"", formatColumn.getAlias(), formatColumn.getTarget(), formatColumn.getField().getCode())).orElseThrow(() -> new IllegalStateException("没有配置主键")),
                                         part1.getTarget(), part1.getAlias(),
                                         Optional.of(String.join("\n and ", part1.getCondition())).filter(StringUtils::isNotEmpty).orElse("1=1")
                                 ));
@@ -99,32 +173,32 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
 //                                this.addTextTemplate(ifNode2, " and {0}.{1}=#'{'{2},jdbcType={3}'}'", formatColumn.getAlias(), formatColumn.getTarget(), formatColumn.getField().getCode(), "VARCHAR");
 //                            });
 //                        });
-                                this.addIfCondition(this.getColumnParts(), part1, queryNode);
+                                this.addIfCondition(part1.getColumns(), part1, queryNode);
 
 
-                                Map<Boolean, List<Part>> map = getTableParts().stream().skip(1).collect(Collectors.groupingBy(part -> isWeakRel(part, LinkMetaType.SqlToJoinOfMultiDataRel, LinkMetaType.SqlToJoinOfWeakRel)));
+//                                Map<Boolean, List<Part>> map = getTablePart().stream().skip(1).collect(Collectors.groupingBy(part -> isWeakRel(part, LinkMetaType.SqlToJoinOfMultiDataRel, LinkMetaType.SqlToJoinOfWeakRel)));
 
-                                log.info("先加载强关联的表{}个", map.getOrDefault(Boolean.FALSE, List.of()).size());
-                                map.get(Boolean.FALSE).stream().findFirst().ifPresent(part2 -> {
+                                List<Part> strong2 = findLeaf(strong);
+                                log.info("先加载强关联的表{}个", strong2.size());
+                                strong2.stream().skip(1).findFirst().ifPresent(part2 -> {
                                     log.info("加载[强关联]第1个表{}.{}", part2.getAlias(), part2.getTarget());
                                     this.addText(queryNode,
                                             MessageFormat.format("\nand exists (select 1 from {0} {1} ",
                                                     part2.getTarget(), part2.getAlias()));
-                                    map.getOrDefault(Boolean.FALSE, List.of()).stream().skip(1).forEach(part3 -> {
+                                    strong2.stream().skip(2).forEach(part3 -> {
                                         log.info("加载[强关联]其他表{}.{}", part3.getAlias(), part3.getTarget());
                                         this.addText(queryNode, MessageFormat.format("\njoin {0} {1} \n  on {2}",
                                                 part3.getTarget(), part3.getAlias(), String.join("\nand ", part3.getCondition())
                                         ));
 
-                                        this.addIfCondition(this.getColumnParts(), part3, queryNode);
+                                        this.addIfCondition(part3.getColumns(), part3, queryNode);
                                     });
 
-                                    log.info("先加载[弱关联]的表{}个", map.getOrDefault(Boolean.TRUE, List.of()).size());
 
-
-                                    this.groupby(map.getOrDefault(Boolean.TRUE, List.of())).forEach(parts -> {
-                                        Set<String> set = parts.stream().map(part -> part.getAlias()).collect(Collectors.toSet());
-                                        List<FormatColumn> joinCols = this.getColumnParts().stream().filter(formatColumn -> set.contains(formatColumn.getAlias())).collect(Collectors.toList());
+                                    for (Part weak2 : weak) {
+                                        log.info("先加载[弱关联]的表");
+                                        List<Part> parts = findLeaf(weak2);
+                                        List<Part.FormatColumn> joinCols = parts.stream().flatMap(part -> part.getColumns().stream()).collect(Collectors.toList());
 
                                         this.addNode(queryNode, "if", Map.of("test", joinCols.stream().map(formatColumn -> {
                                             return MessageFormat.format("{0}!=null", formatColumn.getField().getCode());
@@ -144,31 +218,28 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
                                                     }
                                             );
                                         });
-
-                                    });
+                                    }
                                     this.addText(queryNode,
                                             MessageFormat.format("\nwhere {0} )",
                                                     String.join("\nand ", part2.getCondition())));
-                                    this.addIfCondition(getColumnParts(), part2, queryNode);
+                                    this.addIfCondition(part2.getColumns(), part2, queryNode);
                                 });
-
                             });
-
                         });
                 break;
             case Get:
-                this.addNode(root, "select", Map.of("id", "get"),
+                this.addNode(root, "select", Map.of("id", "get", "resultMap", "object"),
                         queryNode -> {
-                            getTableParts().stream().findFirst().ifPresent(part1 -> {
+                            groupBy((part1, strong, weak, multi) -> {
                                 log.info("加载第一个表{}.{}", part1.getAlias(), part1.getTarget());
                                 this.addText(queryNode, MessageFormat.format("\nselect {0} \nfrom {1} {2}",
-                                        getColumnParts().stream().filter(formatColumn -> getTableParts().stream().anyMatch(part -> !this.isWeakRel(part, LinkMetaType.SqlToJoinOfMultiDataRel)))
+                                        part1.getColumns().stream()
                                                 .map(formatColumn -> MessageFormat.format("\n  {0}.{1} as \"{2}\"", formatColumn.getAlias(), formatColumn.getTarget(), formatColumn.getField().getCode())).collect(Collectors.joining(" , ")),
                                         part1.getTarget(), part1.getAlias(),
                                         Optional.of(String.join("\nand ", part1.getCondition())).filter(StringUtils::isNotEmpty).orElse(" 1=1")
                                 ));
 
-                                getTableParts().stream().skip(1).filter(part -> !this.isWeakRel(part, LinkMetaType.SqlToJoinOfMultiDataRel)).forEach(part3 -> {
+                                findLeaf(strong).stream().skip(1).filter(part -> !this.isWeakRel(part, LinkMetaType.SqlToJoinOfMultiDataRel)).forEach(part3 -> {
                                     log.info("加载[强关联]表{}.{}", part3.getAlias(), part3.getTarget());
                                     this.addText(queryNode, MessageFormat.format("\n{3}join {0} {1} \n  on {2}",
                                             part3.getTarget(),
@@ -179,20 +250,37 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
                                 });
 
                                 this.addText(queryNode, MessageFormat.format("\nwhere {0} and {1} ",
-                                        getColumnParts().stream().filter(formatColumn -> Objects.equals(formatColumn.getAlias(), part1.getAlias()))
+                                        part1.getColumns().stream()
                                                 .findFirst().map(formatColumn -> MessageFormat.format("\n{0}.{1} = {2}", formatColumn.getAlias(), formatColumn.getTarget(), getDbParamerter(formatColumn))).orElseThrow(() -> new IllegalStateException("没有配置主键")),
                                         Optional.of(String.join("\n and ", part1.getCondition())).filter(StringUtils::isNotEmpty).orElse("1=1")
                                 ));
                             });
                         });
-                this.addNode(root, "resultMap", Map.of(), resultMapNode -> {
+                /*this.addNode(root, "resultMap", Map.of("id", "object"), resultMapNode -> {
+                    getColumnParts().stream().forEach(formatColumn -> {
+                        Part part = getTableParts().stream().filter(part1 -> formatColumn.getAlias().equals(part1.getAlias())).findFirst().get();
+                        if (part.getParentType() == LinkMetaType.SqlToJoinOfMultiDataRel) {
+                            this.addNode(resultMapNode,
+                                    "collection",
+                                    Map.of("property", formatColumn.getField().getCode(),
+                                            "column", formatColumn.getField().getCode(),
+                                            "javaType", "string")
+                            );
 
-                });
+                        }
+                        this.addNode(resultMapNode,
+                                "result",
+                                Map.of("property", formatColumn.getField().getCode(),
+                                        "column", formatColumn.getField().getCode(),
+                                        "javaType", "string")
+                        );
+                    });
+                });*/
                 break;
         }
     }
 
-    protected String getDbParamerter(FormatColumn formatColumn) {
+    protected String getDbParamerter(Part.FormatColumn formatColumn) {
         return MessageFormat.format("#'{'{0},jdbcType={1}'}'", formatColumn.getField().getCode(), "VARCHAR");
     }
 
@@ -248,15 +336,18 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
     }
 
     protected boolean isWeakRel(Part part, LinkMetaType... linkMetaTypes) {
+        if (part == null) {
+            return false;
+        }
         for (LinkMetaType linkMetaType : linkMetaTypes) {
-            if (part.getParentType() == linkMetaType) {
+            if (part.getType() == linkMetaType) {
                 return true;
             }
         }
-        return false;
+        return isWeakRel(part.getParent(), linkMetaTypes);
     }
 
-    protected void addIfCondition(List<FormatColumn> list, Part part3, Node node) {
+    protected void addIfCondition(List<Part.FormatColumn> list, Part part3, Node node) {
         list.stream().filter(formatColumn -> part3.getAlias().equalsIgnoreCase(formatColumn.getAlias())).forEach(formatColumn -> {
             this.addNode(node, "if", Map.of("test", MessageFormat.format("{0}!=null", formatColumn.getField().getCode())), ifNode2 -> {
                 this.addTextTemplate(ifNode2, " and {0}.{1}={2}", formatColumn.getAlias(), formatColumn.getTarget(), getDbParamerter(formatColumn));

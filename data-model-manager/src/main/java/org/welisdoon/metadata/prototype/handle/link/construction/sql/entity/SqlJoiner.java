@@ -1,6 +1,5 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
@@ -23,7 +22,8 @@ public class SqlJoiner extends Sql {
     SqlAlias table;
     List<SqlRelationExpression> condition;
     List<SqlJoiner> subJoiners = new LinkedList<>();
-    boolean leaf;
+    protected boolean leaf;
+    protected boolean first = false;
     static final String OTHER = "{other}";
 
     protected void build() {
@@ -44,6 +44,7 @@ public class SqlJoiner extends Sql {
             for (MetaLink constructorLink : ((DataObject) object).getConstructorLinks()) {
                 if (constructorLink instanceof SqlJoiner) {
                     constructorLink.setParent(this);
+                    ((SqlJoiner) constructorLink).first = this.first;
                     ((SqlJoiner) constructorLink).build();
                     subJoiners.add((SqlJoiner) constructorLink);
                     if (first) {
@@ -128,11 +129,7 @@ public class SqlJoiner extends Sql {
 
     @Override
     protected String format(FormatContent format) {
-        return format(format, LinkMetaType.ObjConstructor);
-    }
-
-    protected String format(FormatContent format, LinkMetaType parentType) {
-        boolean isFirst = format.getTableCount() == 0;
+        boolean isFirst = this.first;
         if (leaf) {
             switch (getType()) {
                 case SqlToJoinOfWeakRel:
@@ -140,7 +137,16 @@ public class SqlJoiner extends Sql {
                 case ObjConstructor:
                 case SqlToJoinOfStrongRel:
                     List<String> cond = condition.stream().map(sql -> sql.format(format)).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
-                    format.addTablePart(new FormatContent.Part(format, table, cond).setParentType(parentType).setType(getType()));
+                    format.addTablePart(new FormatContent.LeafPart(
+                            format,
+                            table,
+                            cond,
+                            findInputs().stream().map(field -> {
+                                Sql last = SqlItem.format(field);
+                                String alias = last.getPrefix(),
+                                        target = last.getAttribute().getCode();
+                                return new FormatContent.Part.FormatColumn(alias, target, field);
+                            }).filter(sql -> Objects.equals(sql.getAlias(), table.getAlias())).collect(Collectors.toList()), getType()));
 
                     Object[] args = new String[4];
                     args[0] = table.getTarget();
@@ -153,7 +159,7 @@ public class SqlJoiner extends Sql {
                         args[2] = StringUtils.isNoneBlank((String) args[2]) ? args[2] : "1=1";
                     } else {
                         template = " {3} join {0} {1} on {2} ";
-                        args[3] = isWeakRelation(parentType) || isWeakRelation(getType()) ? "left" : "";
+                        args[3] = isWeakRelation(this) ? "left" : "";
                     }
                     return MessageFormat.format(template, args);
                 default:
@@ -161,7 +167,7 @@ public class SqlJoiner extends Sql {
             }
         } else {
             try {
-                format.deep();
+                format.addTablePart(new FormatContent.VirtualPart(format, getType()));
                 if (isFirst)
                     return subJoiners.get(0).format(format).replace(OTHER,
                             (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
@@ -169,19 +175,36 @@ public class SqlJoiner extends Sql {
                     MetaObject object = getObject();
                     return String.format("/*%s*/ %s /*%s*/",
                             object.getName(),
-                            subJoiners.stream().map(sqlJoiner -> sqlJoiner.format(format, getType())).collect(Collectors.joining(" ")),
+                            subJoiners.stream().map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" ")),
                             object.getName());
                 }
+
             } finally {
-                format.shallow();
+                format.pullTablePart();
             }
         }
     }
 
-
-    protected boolean isWeakRelation(LinkMetaType type) {
-        return type == LinkMetaType.SqlToJoinOfWeakRel;
+    protected boolean isWeakRelation(MetaLink metaLink) {
+        return isRelation(metaLink, true, LinkMetaType.SqlToJoinOfWeakRel);
     }
+
+    final protected boolean isRelation(MetaLink metaLink, boolean findParent, LinkMetaType... types) {
+        for (LinkMetaType type : types) {
+            if (metaLink.getType() == type) {
+                return true;
+            }
+        }
+        while (findParent && (metaLink = metaLink.getParent()) != null) {
+            for (LinkMetaType type : types) {
+                if (metaLink.getType() == type) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     @Override
     String getPrefix() {

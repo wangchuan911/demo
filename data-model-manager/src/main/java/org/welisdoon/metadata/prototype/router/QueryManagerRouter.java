@@ -29,6 +29,7 @@ import org.welisdoon.metadata.prototype.define.*;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.XmlTemplateFormatContent;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.FormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.Sql;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
@@ -219,7 +220,7 @@ public class QueryManagerRouter {
     public void show(RoutingContextChain chain) {
         chain.handler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(new Sql.FormatContent()));
+            routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(new FormatContent()));
 //            SqlContent context = new SqlContent();
 //            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
 //                sqlBuilderHandler.handler(context, construct);
