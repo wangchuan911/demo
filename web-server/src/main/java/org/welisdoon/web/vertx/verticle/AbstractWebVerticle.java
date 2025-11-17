@@ -49,10 +49,11 @@ public abstract class AbstractWebVerticle extends AbstractMyVerticle {
         this.start();
         //开启https
         HttpServerOptions httpServerOptions = new HttpServerOptions();
-        if (!new File(sslKeyStore).exists()) {
+        if (sslKeyStore == null || !new File(sslKeyStore).exists()) {
             logger.warn(String.format("sslKeyStore:%s is not exists!", sslKeyStore));
             this.sslEnable = false;
-        } else if (sslEnable) {
+        }
+        if (sslEnable) {
             httpServerOptions.setSsl(true);
             switch (this.sslKeyType.toLowerCase()) {
                 case "pem":

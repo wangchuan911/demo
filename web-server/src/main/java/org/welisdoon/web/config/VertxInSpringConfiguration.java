@@ -39,15 +39,11 @@ public class VertxInSpringConfiguration {
     VertxOptions vertxOptions;
     Map<Class<? extends AbstractMyVerticle>, DeploymentOptions> deployOptions;
     Set<Class<? extends AbstractMyVerticle.Register>> register;
-    VerticleFactory factory;
 
     public void setRegister(Set<Class<? extends AbstractMyVerticle.Register>> register) {
         this.register = register;
     }
 
-    public VerticleFactory getFactory() {
-        return factory;
-    }
 
     public Set<Class<? extends AbstractMyVerticle.Register>> getRegister() {
         return register;
@@ -57,11 +53,6 @@ public class VertxInSpringConfiguration {
         if (GetOrNew && this.register == null)
             this.register = reflections.getSubTypesOf(AbstractMyVerticle.Register.class);
         return getRegister();
-    }
-
-    @Autowired
-    public void setFactory(VerticleFactory factory) {
-        this.factory = factory;
     }
 
     public void setVertxOptions(VertxOptions vertxOptions) {
@@ -95,7 +86,7 @@ public class VertxInSpringConfiguration {
                                     new DeploymentOptions()
                                             .setMaxWorkerExecuteTime(vertxOptions.getMaxWorkerExecuteTime())
                                             .setWorkerPoolSize(vertxOptions.getWorkerPoolSize())
-                                            .setThreadingModel(aClass.getAnnotation(Verticle.class).worker() ? ThreadingModel.WORKER : ThreadingModel.EVENT_LOOP)
+                                            .setThreadingModel(aClass.getAnnotation(Verticle.class).mode())
                     ));
         return getDeployOptions();
     }

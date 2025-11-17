@@ -33,6 +33,7 @@ import org.welisdoon.flow.module.flow.entity.Stream;
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.config.AbstractWechatConfiguration;
 import org.welisdoon.web.common.config.AbstractWechatMiniProgramsConfiguration;
+import org.welisdoon.web.config.VertxInSpringConfiguration;
 import org.welisdoon.web.entity.wechat.WeChatMarketTransferOrder;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
@@ -137,7 +138,8 @@ public class InviteRebateOrderRouter {
     public void order(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
-            WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), Long.valueOf(routingContext.pathParam("orderId")));
+            WorkerVerticle verticle = ApplicationContextProvider.getBean(WorkerVerticle.class);
+            verticle.getVertx().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderFinished"), Long.valueOf(routingContext.pathParam("orderId")));
             routingContext.end();
         });
     }
@@ -159,7 +161,7 @@ public class InviteRebateOrderRouter {
                 ;
                 OrderVO orderVO = ApplicationContextProvider.getBean(BaseOrderService.class).get(workOrderVO.getOrderId());
 
-                WorkerVerticle.pool().getOne().eventBus()
+                ApplicationContextProvider.getBean(WorkerVerticle.class).getVertx().eventBus()
                         .send(String.format("app[%s]-%s", configuration.getAppID(), "workorder_ready"),
                                 JSONObject.toJSONString(new WorkOrderReadyEvent(orderVO, workOrderVO), SerializerFeature.WriteClassName));
                 routingContext.end();

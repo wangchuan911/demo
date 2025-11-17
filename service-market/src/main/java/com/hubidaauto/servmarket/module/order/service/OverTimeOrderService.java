@@ -26,6 +26,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -68,6 +69,7 @@ public class OverTimeOrderService implements IWechatPayHandler, IOrderService<Ov
     private static final Logger logger = LoggerFactory.getLogger(OverTimeOrderService.class);
 
     @Autowired
+    @Lazy
     public OverTimeOrderService(ItemDao itemDao, ItemTypeDao itemTypeDao, BaseOrderService orderService, AppUserDao appUserDao, BaseOrderDao baseOrderDao, OrderPayDaoLog orderPrePayDaoLog, OverTimeOrderDao orderDao) {
         this.appUserDao = appUserDao;
         this.baseOrderDao = baseOrderDao;

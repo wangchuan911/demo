@@ -99,7 +99,7 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                         .filter(entry -> register.getClass().isAssignableFrom(entry.getClass())))
                 .toArray(Entry[]::new);
 
-        vertx.registerVerticleFactory(options.getFactory());
+//        vertx.registerVerticleFactory(options.getFactory());
         return Future
                 .all(options.getDeployOptions(true).entrySet()
                         .stream()
@@ -110,17 +110,15 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                                             entry.getValue() :
                                             JSON.toJavaObject((JSONObject) JSON.toJSON(options.getVertxOptions()), DeploymentOptions.class);
 
-                            String verticleName = String.format("%s:%s", options.getFactory().prefix(), entry.getKey().getName());
-//                            deploymentOptions.setWorker(verticle.worker());
-                            deploymentOptions.setThreadingModel(verticle.worker() ? ThreadingModel.WORKER : ThreadingModel.EVENT_LOOP);
+                            deploymentOptions.setThreadingModel(verticle.mode());
                             // As worker verticles are never executed concurrently by Vert.x by more than one thread,
                             // deploy multiple instances to avoid serializing requests.
 
                             Promise<Void> promise = Promise.promise();
-                            vertx.deployVerticle(verticleName, deploymentOptions).onComplete(event -> {
+                            vertx.deployVerticle(ApplicationContextProvider.getBean(entry.getKey()), deploymentOptions).onComplete(event -> {
                                 promise.complete();
                                 if (event.succeeded())
-                                    logger.info("deploy success!{}", verticleName);
+                                    logger.info("deploy success!{}", entry.getKey().getName());
                                 else {
                                     logger.error("Failed to deploy verticle");
                                     logger.error(event.cause().getMessage(), event.cause());

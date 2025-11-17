@@ -1,5 +1,6 @@
 package org.welisdoon.web.vertx;
 
+import io.vertx.core.Deployable;
 import io.vertx.core.Promise;
 import io.vertx.core.Verticle;
 import io.vertx.core.spi.VerticleFactory;
@@ -17,7 +18,8 @@ import java.util.concurrent.Callable;
  *
  * @author Thomas Segismont
  */
-@Component("verticleFactory")
+//@Component("verticleFactory")
+@Deprecated
 public class SpringVerticleFactory implements VerticleFactory {
 
     @Override
@@ -27,18 +29,15 @@ public class SpringVerticleFactory implements VerticleFactory {
     }
 
     @Override
-    public void createVerticle(String verticleName, ClassLoader classLoader, Promise<Callable<Verticle>> var3) {
-        // Our convention in this example is to give the class name as verticle name
+    public void createVerticle2(String verticleName, ClassLoader classLoader, Promise<Callable<? extends Deployable>> promise) {
         String clazz = VerticleFactory.removePrefix(verticleName);
         try {
             Verticle verticle;
             verticle = (Verticle) ApplicationContextProvider.getBean(Class.forName(clazz));
             verticle.hashCode();
-            var3.complete(() -> verticle);
+            promise.complete(() -> verticle);
         } catch (Throwable e) {
-            var3.fail(e);
+            promise.fail(e);
         }
-
     }
-
 }

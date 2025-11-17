@@ -1,5 +1,7 @@
 package org.welisdoon.web.vertx.annotation;
 
+import io.vertx.core.ThreadingModel;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -15,5 +17,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Verticle {
-    boolean worker() default false;
+    ThreadingModel mode() default ThreadingModel.EVENT_LOOP;
 }

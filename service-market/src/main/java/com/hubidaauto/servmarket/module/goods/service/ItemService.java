@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 public class ItemService {
     ItemDao itemDao;
     ItemTypeDao itemTypeDao;
-    ItemService itemService;
     TextContentDao itemDetailDao;
     AddedValueDao addedValueDao;
 
@@ -33,10 +32,6 @@ public class ItemService {
         this.itemDao = itemDao;
     }
 
-    @Autowired
-    public void setItemService(ItemService itemService) {
-        this.itemService = itemService;
-    }
 
     @Autowired
     public void setItemTypeDao(ItemTypeDao itemTypeDao) {

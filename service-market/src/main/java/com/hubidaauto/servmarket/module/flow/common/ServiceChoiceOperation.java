@@ -8,6 +8,7 @@ import com.hubidaauto.servmarket.module.order.entity.OrderCondition;
 import com.hubidaauto.servmarket.module.order.entity.OrderVO;
 import com.hubidaauto.servmarket.module.order.service.BaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,11 +42,13 @@ public class ServiceChoiceOperation implements VirtualNode.OnInstantiated {
     }
 
     @Autowired
+    @Lazy
     public void setBaseOrderDao(BaseOrderDao baseOrderDao) {
         this.baseOrderDao = baseOrderDao;
     }
 
     @Autowired
+    @Lazy
     public void setBaseOrderService(BaseOrderService baseOrderService) {
         this.baseOrderService = baseOrderService;
     }

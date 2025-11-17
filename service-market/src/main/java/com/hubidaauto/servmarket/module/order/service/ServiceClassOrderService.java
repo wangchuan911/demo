@@ -262,7 +262,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         ServiceClassOrderVO orderVO = orderDao.find(condition);
         orderVO.setStatusId(OrderStatus.COMPLETE.statusId());
         baseOrderDao.put(orderVO);
-        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), "orderFinished"), orderVO.getId());
+        ApplicationContextProvider.getBean(WorkerVerticle.class).getVertx().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), "orderFinished"), orderVO.getId());
     }
 
     @Override
@@ -380,7 +380,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
         try {
             Object object = supplier.get();
             logger.info(String.format("%s-%s", key, object));
-            WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), key), object);
+            ApplicationContextProvider.getBean(WorkerVerticle.class).getVertx().eventBus().send(String.format("app[%s]-%s", this.configuration.getAppID(), key), object);
         } catch (Throwable e) {
             logger.error(e.getMessage(), e);
         }
@@ -669,7 +669,7 @@ public class ServiceClassOrderService implements FlowEvent, IOrderService<Servic
             timeoutUserFinish.page(1);
             ServiceClassWorkOrderCondition timeoutUserFinish2 = new ServiceClassWorkOrderCondition();
             timeoutUserFinish2.setQuery("timeout_user_finish");
-            vertx1.setPeriodic(1 * 60 * 60 * 1000,aLong -> {
+            vertx1.setPeriodic(1 * 60 * 60 * 1000, aLong -> {
                 sharedData.getLock(String.format("%s_%s", ServiceClassOrderService.class.getName(), timeoutUserFinish2.getQuery()))
                         .onSuccess(lock -> {
                             long timer = vertx1.setTimer(59 * 60 * 1000, aLong1 -> {

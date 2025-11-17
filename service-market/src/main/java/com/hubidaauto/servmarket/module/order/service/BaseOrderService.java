@@ -22,6 +22,7 @@ import com.hubidaauto.servmarket.weapp.ServiceMarketConfiguration;
 import io.vertx.core.Future;
 import org.reflections.ReflectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -55,6 +56,7 @@ public class BaseOrderService {
     BaseOrderDao baseOrderDao;
 
     @Autowired
+    @Lazy
     public void setBaseOrderDao(BaseOrderDao baseOrderDao) {
         this.baseOrderDao = baseOrderDao;
     }
@@ -143,7 +145,7 @@ public class BaseOrderService {
         IOrderService iOrderService = ORDER_CLASSES.get(baseOrderDao.get(orderId).getClassId());
         iOrderService.dismiss(orderId);
         AbstractWechatConfiguration configuration = AbstractWechatConfiguration.getConfig(ServiceMarketConfiguration.class);
-        WorkerVerticle.pool().getOne().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderDestroy"), orderId);
+        ApplicationContextProvider.getBean(WorkerVerticle.class).getVertx().eventBus().send(String.format("app[%s]-%s", configuration.getAppID(), "orderDestroy"), orderId);
     }
 
     public void modifyOrder(String jsonText) {
