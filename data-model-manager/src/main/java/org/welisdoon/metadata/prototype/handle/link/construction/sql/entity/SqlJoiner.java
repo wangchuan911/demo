@@ -23,7 +23,6 @@ public class SqlJoiner extends Sql {
     List<SqlRelationExpression> condition;
     List<SqlJoiner> subJoiners = new LinkedList<>();
     protected boolean leaf;
-    protected boolean first = false;
     static final String OTHER = "{other}";
 
     protected void build() {
@@ -44,7 +43,6 @@ public class SqlJoiner extends Sql {
             for (MetaLink constructorLink : ((DataObject) object).getConstructorLinks()) {
                 if (constructorLink instanceof SqlJoiner) {
                     constructorLink.setParent(this);
-                    ((SqlJoiner) constructorLink).first = this.first;
                     ((SqlJoiner) constructorLink).build();
                     subJoiners.add((SqlJoiner) constructorLink);
                     if (first) {
@@ -63,7 +61,7 @@ public class SqlJoiner extends Sql {
         }
     }
 
-//    @Override
+    //    @Override
 //    protected String format(Format format) {
 //        if (leaf) {
 //            switch (getType()) {
@@ -126,10 +124,17 @@ public class SqlJoiner extends Sql {
 //                    (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
 //        }
 //    }
+    protected boolean isFirst() {
+        if (leaf) {
+            return table.getAlias().matches("T1(\\_1)*");
+        } else {
+            return subJoiners.get(0).isFirst();
+        }
+    }
 
     @Override
     protected String format(FormatContent format) {
-        boolean isFirst = this.first;
+        boolean isFirst = isFirst();
         if (leaf) {
             switch (getType()) {
                 case SqlToJoinOfWeakRel:

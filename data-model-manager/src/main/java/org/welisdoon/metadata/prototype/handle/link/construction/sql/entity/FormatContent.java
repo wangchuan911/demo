@@ -17,6 +17,7 @@ import java.util.List;
 public class FormatContent {
     final protected VirtualPart tablePart;
     private LinkedList<Part> current = new LinkedList<>();
+    protected int count = 0;
 
     public FormatContent() {
         tablePart = new VirtualPart(this, LinkMetaType.ObjConstructor);
@@ -24,7 +25,7 @@ public class FormatContent {
     }
 
     public int getTableCount() {
-        return tablePart.getChildren().size();
+        return count;
     }
 
     public void addTablePart(Part part) {
@@ -36,6 +37,9 @@ public class FormatContent {
             current.addLast(part);
             return;
         }
+        if (part instanceof LeafPart) {
+            ((LeafPart) part).index = count++;
+        }
         ((VirtualPart) current.getLast()).addChildren(part);
     }
 
@@ -44,7 +48,7 @@ public class FormatContent {
     }
 
     public void addColumnPart(Part.FormatColumn sqlAlias) {
-        current.getLast().columns.add(sqlAlias);
+        ((LeafPart) current.getLast()).columns.add(sqlAlias);
     }
 
 
@@ -61,7 +65,7 @@ public class FormatContent {
         final List<Part> children = new LinkedList<>();
 
         public VirtualPart(FormatContent content, LinkMetaType type) {
-            super(content, new SqlAlias(String.valueOf(System.currentTimeMillis()), ""), List.of(), type, List.of());
+            super(content, new SqlAlias(String.valueOf(System.currentTimeMillis()), ""), type);
         }
 
         @Override
@@ -71,27 +75,38 @@ public class FormatContent {
     }
 
     public static class LeafPart extends Part {
-        public LeafPart(FormatContent content, SqlAlias sqlAlias, List<String> condition, List<FormatColumn> column, LinkMetaType type) {
-            super(content, sqlAlias, condition, type, column);
-        }
-    }
-
-    public static class Part extends SqlAlias implements MetaPrototype.Child<Part> {
-        final LinkMetaType type;
+        int index;
         final List<String> condition;
         final List<FormatColumn> columns;
-        Part parent;
 
-        protected Part(FormatContent content, SqlAlias sqlAlias, List<String> condition, LinkMetaType type, List<FormatColumn> column) {
-            super(sqlAlias.getAlias(), sqlAlias.getTarget());
+        public LeafPart(FormatContent content, SqlAlias sqlAlias, List<String> condition, List<FormatColumn> column, LinkMetaType type) {
+            super(content, sqlAlias, type);
             this.condition = condition == null ? List.of() : condition;
-            this.type = type;
             this.columns = column;
         }
 
+        public int getIndex() {
+            return index;
+        }
 
-        public LinkMetaType getType() {
-            return type;
+        public static LeafPart find(List<Part> part, int index) {
+            LeafPart part2;
+            for (Part part1 : part) {
+                part2 = find(part1, index);
+                if (part2 != null) {
+                    return part2;
+                }
+            }
+            return null;
+        }
+
+        public static LeafPart find(Part part, int index) {
+            if (part instanceof VirtualPart) {
+                return find(((VirtualPart) part).getChildren(), index);
+            } else if (part instanceof LeafPart && ((LeafPart) part).getIndex() == index) {
+                return (LeafPart) part;
+            }
+            return null;
         }
 
         public List<String> getCondition() {
@@ -102,42 +117,22 @@ public class FormatContent {
             return columns;
         }
 
+    }
 
-        public int getLevel() {
-            int level = 0;
-            Part p = this;
-            while ((p = p.getParent()) != null) {
-                level++;
-            }
-            return level;
+    public static class Part extends SqlAlias implements MetaPrototype.Child<Part> {
+        final LinkMetaType type;
+        Part parent;
+
+        protected Part(FormatContent content, SqlAlias sqlAlias, LinkMetaType type) {
+            super(sqlAlias.getAlias(), sqlAlias.getTarget());
+            this.type = type;
         }
 
-        public boolean isGroup(Part part) {
-            if (part.equals(this)) {
-                return true;
-            }
-            int target = part.getLevel();
-            Part pTarget = part;
-            int self = this.getLevel();
-            Part pSelf = this;
-            if (target > self) {
-                pTarget = pTarget.getParent();
-                target--;
 
-            } else if (self > target) {
-                pSelf = pSelf.getParent();
-                self--;
-            }
-            if (pTarget.equals(pSelf)) {
-                return true;
-            }
-            for (int i = target - 1; i > 1; i--) {
-                if (pTarget.getParent().equals(pSelf.getParent())) {
-                    return true;
-                }
-            }
-            return false;
+        public LinkMetaType getType() {
+            return type;
         }
+
 
         @Override
         public Part getParent() {
@@ -161,5 +156,7 @@ public class FormatContent {
                 return field;
             }
         }
+
+
     }
 }

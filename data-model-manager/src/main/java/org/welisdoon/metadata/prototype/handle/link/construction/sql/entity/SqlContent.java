@@ -33,14 +33,11 @@ public class SqlContent extends Sql {
     protected void build() {
         readonly();
         if (metaObject instanceof DataObject) {
-            boolean isFirst = true;
             for (MetaLink constructorLink : ((DataObject) metaObject).getConstructorLinks()) {
                 if (constructorLink instanceof Sql) {
                     constructorLink.setParent(this);
-                    ((SqlJoiner) constructorLink).first = isFirst;
                     ((SqlJoiner) constructorLink).build();
                     getChildren().add(constructorLink);
-                    isFirst = false;
                 }
             }
         }
