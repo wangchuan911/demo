@@ -414,7 +414,7 @@ public class QueryManagerRouter {
     public void error(RoutingContextChain chain) {
         chain.failureHandler(event -> {
             logger.error(event.failure().getMessage(), event.failure());
-            event.response().setStatusCode(500).end(Optional.ofNullable(event.failure().getMessage()).orElse(""));
+            event.response().setStatusCode(500).end(event.failure().getMessage() + "");
         });
     }
 
@@ -881,7 +881,7 @@ public class QueryManagerRouter {
                     event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
                     break;
                 case "download":
-                    TemplateFormatContent content=new XmlTemplateFormatContent();
+                    TemplateFormatContent content = new XmlTemplateFormatContent();
                     new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(content);
                     content.build();
                     event.end(String.valueOf(content.getValue()));
