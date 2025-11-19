@@ -115,10 +115,11 @@ public abstract class AbstractMyVerticle extends AbstractVerticle {
                             // deploy multiple instances to avoid serializing requests.
 
                             Promise<Void> promise = Promise.promise();
+                            logger.info("deploy verticle starting!{}", entry.getKey().getName());
                             vertx.deployVerticle(ApplicationContextProvider.getBean(entry.getKey()), deploymentOptions).onComplete(event -> {
                                 promise.complete();
                                 if (event.succeeded())
-                                    logger.info("deploy success!{}", entry.getKey().getName());
+                                    logger.info("deploy verticle success!{}", entry.getKey().getName());
                                 else {
                                     logger.error("Failed to deploy verticle");
                                     logger.error(event.cause().getMessage(), event.cause());

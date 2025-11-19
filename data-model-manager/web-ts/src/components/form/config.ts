@@ -334,6 +334,7 @@ export class SearchFilterInputItem {
         this.enable = enable1;
         this.code = code;
         let typeDes;
+        this.value = null;
         switch (type) {
             case InputType.text:
                 typeDes = "文本";
@@ -349,6 +350,7 @@ export class SearchFilterInputItem {
                 break;
             case InputType.boolean:
                 typeDes = "布尔";
+                this.value = true;
                 break;
             default:
                 typeDes = "未知";
@@ -357,7 +359,6 @@ export class SearchFilterInputItem {
         this.name = `[${typeDes}]${name}`;
         this.id = id;
         this.operator = this.findOperator(operator);
-        this.value = null;
         this.displayValue = null;
     }
 

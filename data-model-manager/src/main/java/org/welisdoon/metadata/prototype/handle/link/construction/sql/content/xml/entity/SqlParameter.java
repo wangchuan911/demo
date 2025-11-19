@@ -1,6 +1,7 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity;
 
 import org.welisdoom.task.xml.intf.type.Context;
+import org.welisdoon.metadata.prototype.condition.Page;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,10 +15,9 @@ import java.util.List;
 public class SqlParameter extends Context {
     String sql;
     List<Object> params = new LinkedList<>();
-    SqlType sqlType;
 
-    public SqlParameter(SqlType sqlType) {
-        this.sqlType = sqlType;
+    public SqlParameter() {
+
     }
 
     public void setSql(String sql) {
@@ -28,7 +28,4 @@ public class SqlParameter extends Context {
         params.add(o);
     }
 
-    public enum SqlType {
-        DML, DQL, DDL;
-    }
 }

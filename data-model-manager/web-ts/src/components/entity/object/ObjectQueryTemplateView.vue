@@ -60,42 +60,64 @@
                   placement="top" :width="300" trigger="click"
               >
                 <template #reference>
-                  <el-link v-if="input.value == '' || input.value == null" type="danger">未输入条件</el-link>
-                  <el-link v-else type="success" style="min-width: 70px;">{{input.value}}</el-link>
+                  <el-link
+                      v-if="input.value === '' || input.value === null || (input.value instanceof Array && input.value.length===0)"
+                      type="danger">未输入条件
+                  </el-link>
+                  <el-link v-else type="success" style="min-width: 70px;">{{ input.value }}</el-link>
                 </template>
                 <div>
-                  <template v-if="input.operator.key=='range'">
-                    <template v-if="input.type=='int'">
+                  <template v-if="input.type=='int'">
+                    <template v-if="input.operator.key=='range'">
                       <div style="margin-bottom: 10px;margin-top: 10px">
                         <div style="display: inline-block">开始:</div>
-                        <el-input-number style="width: 240px" v-model="input.value[0]"
+                        <el-input-number style="width: 240px" v-model="input.value[0]" :precision="0"
                                          class="filter-item-input"/>
                       </div>
                       <div style="margin-bottom: 10px;">
                         <div style="display: inline-block">结束:</div>
-                        <el-input-number style="width: 240px" v-model="input.value[1]"
+                        <el-input-number style="width: 240px" v-model="input.value[1]" :precision="0"
                                          class="filter-item-input"/>
                       </div>
                     </template>
-                    <template v-if="input.type=='decimal'">
-                      <div style="margin-bottom: 10px;margin-top: 10px">
-                        <div style="display: inline-block">开始:</div>
-                        <el-input-number style="width: 240px" v-model="input.value[0]"
-                                         class="filter-item-input" :precision="2"/>
-                      </div>
-                      <div style="margin-bottom: 10px;">
-                        <div style="display: inline-block">结束:</div>
-                        <el-input-number style="width: 240px" v-model="input.value[1]"
-                                         class="filter-item-input" :precision="2"/>
-                      </div>
-                    </template>
-                  </template>
-                  <template v-else>
-                    <el-input-number v-if="input.type=='int'" v-model="input.value" class="filter-item-input"/>
-                    <el-input-number v-if="input.type=='decimal'" v-model="input.value" :precision="2"
+                    <el-input-number v-else style="width: 240px" v-model="input.value" :precision="0"
                                      class="filter-item-input"/>
                   </template>
-                  <el-input v-if="input.type=='text'" v-model="input.value"
+                  <template v-else-if="input.type=='decimal'">
+                    <template v-if="input.operator.key=='range'">
+                      <div style="margin-bottom: 10px;margin-top: 10px">
+                        <div style="display: inline-block">开始:</div>
+                        <el-input-number style="width: 240px" v-model="input.value[0]"
+                                         class="filter-item-input" :precision="2"/>
+                      </div>
+                      <div style="margin-bottom: 10px;">
+                        <div style="display: inline-block">结束:</div>
+                        <el-input-number style="width: 240px" v-model="input.value[1]"
+                                         class="filter-item-input" :precision="2"/>
+                      </div>
+                    </template>
+                    <el-input-number v-else style="width: 240px" v-model="input.value" :precision="2"
+                                     class="filter-item-input"/>
+                  </template>
+                  <template v-else-if="input.type=='time'">
+                    <template v-if="input.operator.key=='range'">
+                      <el-date-picker-panel
+                          v-model="input.value"
+                          type="datetimerange"
+                          start-placeholder="开始时间"
+                          end-placeholder="结束时间"
+                          :default-time="new Date()"
+                          value-format="YYYY-MM-DD HH:mm:ss"
+                      />
+                    </template>
+                    <el-date-picker-panel v-else
+                                          v-model="input.value"
+                                          type="datetime"
+                                          :default-time="new Date()"
+                                          value-format="YYYY-MM-DD HH:mm:ss"
+                    />
+                  </template>
+                  <el-input v-else-if="input.type=='text'" v-model="input.value"
                             class="filter-item-input" :clearable="true"
                             placeholder="Please input"/>
                 </div>
@@ -171,17 +193,23 @@ const allInputs = reactive<Array<SearchFilterInputItem>>([
 ]);
 const operators = reactive(FilterOperators);
 const props = defineProps<{ id: number }>();
+const snapshot = ref({});
 console.log(props.id);
 const objectId = computed(() => props.id);
-// watch(objectId, (value, oldValue, onCleanup) => {
-//   console.log(value);
-//   if (value < 0) {
-//     loading.value = true;
-//   } else {
-//     load(value as number);
-//   }
-// });
 const pager = reactive({page: 1, size: 20, loading: false, nomore: false});
+watch(objectId, async (value, oldValue, onCleanup) => {
+  console.log(value);
+  if (value < 0) {
+    return;
+  } else if (value != oldValue) {
+    pager.loading = true;
+    const {data} = await $http.get(`obj/template/snapshot/${objectId.value}`);
+    snapshot.value = data
+    console.log(snapshot)
+    pager.loading = false;
+  }
+});
+
 const search = async (page: number) => {
   pager.page = page;
   pager.nomore = false;

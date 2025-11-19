@@ -1,6 +1,5 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.node;
 
-import com.alibaba.druid.sql.parser.SQLDDLParser;
 import org.apache.commons.lang.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.handler.OgnlUtils;
@@ -12,7 +11,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -30,6 +28,7 @@ public class LikeMyBatisSqlNode implements BaseUnit<LikeMyBatisSqlNode>, MetaPro
 
     public LikeMyBatisSqlNode(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
         this.attributes = attributes;
+        this.children = new LinkedList<>();
         Arrays.stream(this.getClass().getAnnotations()).filter(annotation -> annotation instanceof Attr).map(annotation -> (Attr) annotation).forEach(attr -> {
             if (attr.options().length > 0 && attr.defaultOption() >= 0 && !this.attributes.containsKey(attr.name())) {
                 this.attributes.put(attr.name(), attr.options()[attr.defaultOption()]);

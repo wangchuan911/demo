@@ -12,8 +12,6 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.Assert;
@@ -29,8 +27,9 @@ import org.welisdoon.metadata.prototype.define.*;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.XmlTemplateFormatContent;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity.TemplateIntance;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity.VertxSqlDataBasePool;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.FormatContent;
-import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.Sql;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
 import org.welisdoon.web.vertx.annotation.VertxRoutePath;
 import org.welisdoon.web.vertx.annotation.VertxRouter;
@@ -57,18 +56,20 @@ public class QueryManagerRouter {
     MetaLinkDao metaLinkDao;
     MetaAttributeDao metaAttributeDao;
     TransactionTemplate transactionTemplate;
-    @Value("${md.lazy:false}")
-    boolean lazy = false;
+    VertxSqlDataBasePool vertxSqlDataBasePool;
+//    @Value("${md.lazy:false}")
+//    boolean lazy = false;
 
     //    @Autowired
 //    public void setSqlBuilderHandler(SqlBuilderHandler sqlBuilderHandler) {
 //        this.sqlBuilderHandler = sqlBuilderHandler;
 //    }
-    public QueryManagerRouter(MetaUtils metaUtils, TransactionTemplate transactionTemplate) {
+    public QueryManagerRouter(MetaUtils metaUtils, TransactionTemplate transactionTemplate, VertxSqlDataBasePool vertxSqlDataBasePool) {
         this.metaObjectDao = metaUtils.getMetaObjectDao();
         this.metaLinkDao = metaUtils.getMetaLinkDao();
         this.metaAttributeDao = metaUtils.getMetaAttributeDao();
         this.transactionTemplate = transactionTemplate;
+        this.vertxSqlDataBasePool = vertxSqlDataBasePool;
     }
 
     /*@Autowired
@@ -146,13 +147,13 @@ public class QueryManagerRouter {
                 list.addAll(metaLink.getChildren());
                 break;
         }
-        if (!lazy) {
-            if (!CollectionUtils.isEmpty(list)) {
-                object.put("children", list.stream().map(this::linkToJson).collect(Collectors.toList()));
-            }
-        } else {
-            object.put("hasChildren", !CollectionUtils.isEmpty(list));
+//        if (!lazy) {
+        if (!CollectionUtils.isEmpty(list)) {
+            object.put("children", list.stream().map(this::linkToJson).collect(Collectors.toList()));
         }
+//        } else {
+//            object.put("hasChildren", !CollectionUtils.isEmpty(list));
+//        }
 
         return object;
     }
@@ -414,7 +415,7 @@ public class QueryManagerRouter {
     public void error(RoutingContextChain chain) {
         chain.failureHandler(event -> {
             logger.error(event.failure().getMessage(), event.failure());
-            event.response().setStatusCode(500).end(Optional.ofNullable(event.failure().getMessage()).orElse(""));
+            event.response().setStatusCode(500).end(event.failure().getMessage() + "");
         });
     }
 
@@ -871,6 +872,7 @@ public class QueryManagerRouter {
     public void template(RoutingContextChain chain) {
         chain.handler(event -> {
             long qid = Long.parseLong(event.pathParam("id"));
+            MetaObject metaObject = MetaUtils.getInstance().getObject(qid);
             switch (event.pathParam("type")) {
                 case "query":
                     logger.info(event.body().asString());
@@ -878,13 +880,20 @@ public class QueryManagerRouter {
                     for (int i = 0; i < 21; i++) {
                         data.add(Map.of());
                     }
-                    event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
+                    TemplateFormatContent content = new XmlTemplateFormatContent(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(metaObject));
+                    TemplateIntance parameter = JSON.parseObject(event.body().asString(), TemplateIntance.class);
+                    vertxSqlDataBasePool.page("query", content, parameter, (objects, throwable) -> {
+                        Optional.ofNullable(throwable)
+                                .ifPresentOrElse(event::fail, () -> event.end(JSON.toJSONString(objects)));
+                    });
+//                    event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
                     break;
                 case "download":
-                    TemplateFormatContent content=new XmlTemplateFormatContent();
-                    new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(content);
-                    content.build();
-                    event.end(String.valueOf(content.getValue()));
+
+                    break;
+                case "snapshot":
+                    TemplateIntance parameter1 = new TemplateIntance(metaObject);
+                    event.end(JSON.toJSONString(parameter1, SerializerFeature.DisableCircularReferenceDetect));
                     break;
                 default:
                     event.response().setStatusCode(500).end("error");

@@ -26,6 +26,10 @@ public abstract class Context {
     }
 
     public Context() {
+        this(new HashMap<>());
+    }
+
+    public Context(Map<String, Object> bus) {
         this((OgnlContext) Ognl.addDefaultContext(
                 new HashMap<>(),
                 new AbstractMemberAccess() {
@@ -35,7 +39,7 @@ public abstract class Context {
                         return Modifier.isPublic(modifiers);
                     }
                 }, null, null, new HashMap()),
-                new HashMap<>());
+                bus);
     }
 
     public OgnlContext getOgnlContext() {

@@ -131,22 +131,29 @@ public enum LinkMetaType implements IMetaType {
     }
 
 
-    public boolean isMatched(final LinkMetaType value, Side side) {
+    public boolean isInstanceOf(final LinkMetaType value) {
         if (value == null) {
             return false;
         }
         if (this.equals(value)) {
             return true;
         }
-        switch (side) {
-            case Up:
-                return this.getParent() != null && this.getParent().isMatched(value, side);
-            case Down:
-                return Arrays.stream(values()).anyMatch(linkMetaType -> {
-                    return this.equals(linkMetaType.getParent()) && linkMetaType.isMatched(value, side);
-                });
-            default:
-                throw new UnsupportedOperationException();
+        if (this.getParent() != null) {
+            return this.getParent().isInstanceOf(value);
         }
+        return false;
+    }
+
+    public boolean isAssignableFrom(final LinkMetaType value) {
+        if (value == null) {
+            return false;
+        }
+        if (this.equals(value)) {
+            return true;
+        }
+        if (value.getParent() != null) {
+            return this.isAssignableFrom(value.getParent());
+        }
+        return false;
     }
 }

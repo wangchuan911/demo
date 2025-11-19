@@ -1,17 +1,14 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity;
 
-import io.vertx.core.Completable;
 import io.vertx.core.Future;
 import io.vertx.jdbcclient.JDBCConnectOptions;
 import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.sqlclient.*;
 import org.apache.commons.io.IOUtils;
-import org.checkerframework.checker.nullness.Opt;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 import org.welisdoon.common.ObjectUtils;
-import org.welisdoon.common.data.BaseCondition;
-import org.welisdoon.metadata.prototype.condition.Page;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.node.Mappers;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.parser.LikeMyBatisSAXParser;
@@ -24,9 +21,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @Classname PgDataBasePool
@@ -34,7 +31,7 @@ import java.util.stream.Stream;
  * @Author Septem
  * @Date 12:02
  */
-
+@Component
 public class VertxSqlDataBasePool {
     static Map<String, Mappers> MAPPERS = new HashMap<>();
 
@@ -60,15 +57,14 @@ public class VertxSqlDataBasePool {
             }
         }
         dataBases.get(name).getConnection()
-                .andThen(connection -> {
-                    if (connection.succeeded()) {
-                        try {
-                            sqlConnectionCompletable.apply(connection.result()).eventually(connection.result()::close);
-                        } catch (Throwable e) {
-                            connection.result().close();
-                        }
+                .compose(connection -> {
+                    try {
+                        return sqlConnectionCompletable.apply(connection).eventually(connection::close);
+                    } catch (Throwable e) {
+                        connection.close();
+                        return Future.failedFuture(e);
                     }
-                });
+                }, Future::failedFuture);
     }
 
     protected <T> Future<List<T>> select(SqlConnection connection, RowMapper<T> tRowMapper, String sql, Object... params) {
@@ -118,45 +114,60 @@ public class VertxSqlDataBasePool {
     }
 
 
-    public List<Map<String, Object>> page(String database,
-                                          String nameSpace,
-                                          String method,
-                                          TemplateFormatContent templateFormatContent,
-                                          Page page,
-                                          SqlParameter sqlParameter) {
-        Mappers mappers = ObjectUtils.synchronizedGet(MAPPERS, stringMappersMap -> stringMappersMap.get(database), stringMappersMap -> {
-            Mappers mappers1 = new Mappers(database);
-            stringMappersMap.put(database, mappers1);
-            return mappers1;
-        });
-        templateFormatContent.build();
+    public void page(String method, TemplateFormatContent templateFormatContent,
+                     TemplateIntance templateParameter,
+                     BiConsumer<List<?>, Throwable> listConsumer) {
+
+        Mappers.Mapper mapper;
+        if (templateParameter.template == null) {
+            Mappers mappers = ObjectUtils.synchronizedGet(MAPPERS, stringMappersMap -> stringMappersMap.get(templateParameter.database), stringMappersMap -> {
+                Mappers mappers1 = new Mappers(templateParameter.database);
+                stringMappersMap.put(templateParameter.database, mappers1);
+                return mappers1;
+            });
+            templateFormatContent.build();
 
 
-        Mappers.Mapper mapper = mappers.getChild(likeMyBatisSqlNode -> Objects.equals(likeMyBatisSqlNode.getId(), nameSpace))
-                .stream().findFirst().map(likeMyBatisSqlNode -> (Mappers.Mapper) likeMyBatisSqlNode).orElseGet(() -> {
-                    try {
-                        return LikeMyBatisSAXParser.load(IOUtils.toInputStream((CharSequence) templateFormatContent.getValue(), Charset.defaultCharset()), mappers);
-                    } catch (ParserConfigurationException | SAXException | IOException e) {
-                        throw new IllegalStateException(e);
-                    }
-                });
+            mapper = mappers.getChild(likeMyBatisSqlNode -> Objects.equals(likeMyBatisSqlNode.getId(), templateParameter.nameSpace))
+                    .stream().findFirst().map(likeMyBatisSqlNode -> (Mappers.Mapper) likeMyBatisSqlNode).orElseGet(() -> {
+                        try {
+                            Mappers.Mapper mapper1 = LikeMyBatisSAXParser.load(IOUtils.toInputStream((CharSequence) templateFormatContent.getValue(), Charset.defaultCharset()), mappers);
+                            mappers.addChildren(mapper1);
+                            return mapper1;
+                        } catch (ParserConfigurationException | SAXException | IOException e) {
+                            throw new IllegalStateException(e);
+                        }
+                    });
 
-        mapper.generateSqlInfo(method, sqlParameter);
-        switch (sqlParameter.sqlType) {
-            case DDL:
-                getConnect(database, sqlConnection -> {
-                    update(sqlConnection, Object.class, sqlParameter.sql, sqlParameter.params.toArray());
-                    return Future.succeededFuture();
-                });
-            case DQL:
-                getConnect(database, sqlConnection -> {
-                    select(sqlConnection, (rs, rowNum) -> {
-                        return Map.of();
-                    }, sqlParameter.sql, sqlParameter.params.toArray());
-                    return Future.succeededFuture();
-                });
+        } else {
+            mapper = templateParameter.template;
         }
-        return null;
+        SqlParameter sqlParameter = templateParameter.getSqlParameter();
+        mapper.generateSqlInfo(method, sqlParameter);
+        String sql;
+        Object[] objects;
+        if (templateParameter.page != null) {
+            sql = sqlParameter.sql + " limit ? offset ?";
+            objects = Arrays.copyOf(sqlParameter.params.toArray(), sqlParameter.params.size() + 2);
+            objects[objects.length - 2] = templateParameter.page.getPageSize();
+            objects[objects.length - 1] = templateParameter.page.getPageSize() * templateParameter.page.getPage();
+        } else {
+            sql = sqlParameter.sql;
+            objects = sqlParameter.params.toArray();
+        }
+        RowMapper tRowMapper = (rs, rowNum) -> {
+            Map<String, Object> map = new HashMap<>(rs.size(), 1.f);
+            for (int i = 0; i < rs.size(); i++) {
+                map.put(rs.getColumnName(i), rs.getValue(i));
+            }
+            return map;
+        };
+        getConnect(templateParameter.database, sqlConnection -> {
+            return select(sqlConnection, tRowMapper, sql, objects)
+                    .onComplete((result, failure) -> {
+                        listConsumer.accept((List) result, failure);
+                    });
+        });
     }
 
     @FunctionalInterface

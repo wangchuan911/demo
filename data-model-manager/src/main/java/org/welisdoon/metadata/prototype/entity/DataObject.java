@@ -10,15 +10,12 @@ import org.welisdoon.common.JsonUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.consts.AttributeMetaType;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
-import org.welisdoon.metadata.prototype.consts.MetaUtils;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.define.MetaProtoList;
-import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlJoiner;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 /**
  * @Classname DataObject
@@ -191,10 +188,10 @@ public class DataObject extends MetaObject {
             while (next != null) {
                 if (next.getLinkId() < 0) {
                     list.add(new SqlJoiner().<MetaLink>setId(next.getLinkId()).setInstanceId(1L).setAttributeId(next.getAttributeId()).setTypeId(LinkMetaType.ObjConstructor.getId()));
-                } else if (next.getLink().getType().getParent() == LinkMetaType.SqlToJoin) {
+                } else if (LinkMetaType.SqlToJoin.isAssignableFrom(next.getLink().getType())) {
                     list.add(next.getLink().copy().setAttributeId(next.getAttributeId()).setId(next.getLink().getId()));
                 } else {
-                    list.add(next.getLink());
+                    list.add(next.getLink().copy().setId(next.getId()));
                 }
                 next = next.getChildren().stream().filter(child -> child.getType() == LinkMetaType.SqlToSelect).findFirst().orElse(null);
             }

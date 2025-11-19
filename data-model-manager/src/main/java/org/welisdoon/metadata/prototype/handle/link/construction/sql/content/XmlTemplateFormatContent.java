@@ -51,6 +51,11 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
         }
     }
 
+    public XmlTemplateFormatContent(org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent sqlContent) {
+        this();
+        sqlContent.format(this);
+    }
+
     @Override
     public void addColumnPart(FormatContent.Part.FormatColumn sqlAlias) {
         xmlResult = null;
