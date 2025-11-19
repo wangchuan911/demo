@@ -109,6 +109,15 @@ public class FormatContent {
             return null;
         }
 
+        public static LeafPart findFirst(Part part) {
+            if (part instanceof VirtualPart) {
+                return findFirst(((VirtualPart) part).getChildren().get(0));
+            } else if (part instanceof LeafPart) {
+                return (LeafPart) part;
+            }
+            return null;
+        }
+
         public List<String> getCondition() {
             return condition;
         }

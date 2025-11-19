@@ -183,17 +183,19 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
 //        void split(Part first, List<Part> strong, List<Part> weak, List<Part> multi);
 //    }
 
-    protected void toFormatGet(final Node root, final Node currentNode, final VirtualPart part, String step) {
+    protected void toFormatGet(final Node root, final Node currentNode, final VirtualPart part, String step, Map<String, Object> map) {
+        LeafPart part1;
+        List<LeafPart> others;
         switch (step) {
             case "START":
-                LeafPart part1 = LeafPart.find(part, 0);
-                List<LeafPart> list = (List) findLeaf(part, part2 -> part2 instanceof LeafPart && !isRel(part2, part, LinkMetaType.SqlToJoinOfMultiDataRel));
+                part1 = LeafPart.find(part, 0);
+                others = (List) findLeaf(part, part2 -> part2 instanceof LeafPart && !isRel(part2, part, LinkMetaType.SqlToJoinOfMultiDataRel));
                 log.info("加载第一个表{}.{}", part1.getAlias(), part1.getTarget());
-                this.addText(currentNode, MessageFormat.format("\nselect {0} ", list.stream().flatMap(leafPart -> ((LeafPart) leafPart).getColumns().stream()).map(formatColumn -> MessageFormat.format("\n  {0}.{1} as \"{2}\"", formatColumn.getAlias(), formatColumn.getTarget(), formatColumn.getField().getCode())).collect(Collectors.joining(" , "))));
+                this.addText(currentNode, MessageFormat.format("\nselect {0} ", others.stream().flatMap(leafPart -> ((LeafPart) leafPart).getColumns().stream()).map(formatColumn -> MessageFormat.format("\n  {0}.{1} as \"{2}\"", formatColumn.getAlias(), formatColumn.getTarget(), formatColumn.getField().getCode())).collect(Collectors.joining(" , "))));
                 Node fromNode = this.addText(currentNode, MessageFormat.format("\nfrom {0} {1}", part1.getTarget(), part1.getAlias()));
 
                 for (int i = 1; i < getTableCount(); i++) {
-                    LeafPart part3 = LeafPart.find(this.tablePart, i);
+                    LeafPart part3 = LeafPart.find(part, i);
                     if (isRel(part3, part, LinkMetaType.SqlToJoinOfMultiDataRel)) continue;
                     boolean weak = isRel(part3, part, LinkMetaType.SqlToJoinOfWeakRel);
                     log.info("加载[强关联]其他表{}.{}", part3.getAlias(), part3.getTarget());
@@ -210,37 +212,70 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
                 ));
 
                 Node resultMapNode = this.addNode(root, "resultMap", Map.of("id", "objDefine"));
-                for (Part leafPart : list) {
+                for (Part leafPart : others) {
                     for (Part.FormatColumn column : ((LeafPart) leafPart).getColumns()) {
                         this.addNode(resultMapNode, "result", Map.of("property", column.getField().getCode(), "column", column.getField().getCode()));
                     }
                 }
-                AtomicInteger index = new AtomicInteger(0);
+                int index = 0, index2;
                 for (Part child : part.getChildren()) {
                     if (child instanceof VirtualPart && child.getType() == LinkMetaType.SqlToJoinOfMultiDataRel) {
                         List<LeafPart> list1 = (List) findLeaf(child, part2 -> part2 instanceof LeafPart);
-                        List<Map.Entry<String, String>> list2 = new LinkedList<>();
+                        Map<String, Object> params = new HashMap<>();
+                        StringBuilder builder = new StringBuilder("");
+                        index2 = 0;
                         for (LeafPart leafPart : list1) {
-                            for (LeafPart leafPart1 : list) {
+                            for (LeafPart leafPart1 : others) {
                                 for (String s : leafPart.getCondition()) {
                                     int offset = s.indexOf(leafPart1.getAlias() + ".");
                                     if (offset < 0) continue;
-                                    list2.add(Map.entry(s.substring(offset, s.indexOf(" ", offset)), s));
+                                    String valueCol = s.substring(offset, s.indexOf(" ", offset));
+                                    String valueAlias = "REL_ID_" + index++;
+                                    String argName = "arg" + index2++;
+                                    addTextTemplate(currentNode, fromNode, ",{0} as {1}", valueCol, valueAlias);
+                                    builder.append(MessageFormat.format(",{0}={1}", argName, valueAlias));
+                                    params.put(s.replace(valueCol, MessageFormat.format("#'{'{0}'}'", argName)), null);
                                 }
                             }
                         }
-                        if (CollectionUtils.isEmpty(list2)) continue;
+                        if (MapUtils.isEmpty(params)) continue;
 
-                        AtomicInteger atomicInteger = new AtomicInteger(0);
-                        this.addNode(currentNode, "collection", Map.of("select", "select" + atomicInteger.get(), "property", "", "column", "{" + list2.stream().map(stringStringEntry -> {
-                            addTextTemplate(currentNode, fromNode, ",{0} as REL_ID_{1}", stringStringEntry.getKey(), index.get());
-                            return MessageFormat.format("arg{0}=REL_ID_{1}", atomicInteger.getAndIncrement(), index.getAndIncrement());
-                        }).collect(Collectors.joining(",")) + "}"));
-                        toFormatGet(root, resultMapNode, (VirtualPart) child, "MULTI");
+                        String selectName = "select" + index++;
+                        this.addNode(currentNode, "collection", Map.of("select", selectName, "property", "", "column", builder.replace(0, 1, "{").append("}").toString()));
+
+                        this.addNode(root, "select", Map.of("id", selectName, "resultType", "string"), selectNode -> {
+                            toFormatGet(root, selectNode, (VirtualPart) child, "SUB_QUERY", params);
+                        });
                     }
                 }
                 break;
-            case "MULTI":
+            case "SUB_QUERY":
+                part1 = LeafPart.findFirst(part);
+                others = (List) findLeaf(part, part2 -> part2 instanceof LeafPart && !isRel(part2, part, LinkMetaType.SqlToJoinOfMultiDataRel));
+                log.info("加载第一个表{}.{}", part1.getAlias(), part1.getTarget());
+                this.addText(currentNode,
+                        MessageFormat.format(
+                                "\nselect {0} \nfrom {1} {2}",
+                                others.stream().flatMap(leafPart -> leafPart.getColumns().stream()).map(formatColumn -> MessageFormat.format("\n  {0}.{1} as \"{2}\"", formatColumn.getAlias(), formatColumn.getTarget(), formatColumn.getField().getCode())).collect(Collectors.joining(" , ")),
+                                part1.getTarget(),
+                                part1.getAlias()
+                        )
+                );
+
+                for (Part part3 : findLeaf(part, part2 -> part2 instanceof LeafPart && part1 != part2 && !isRel(part2, part, LinkMetaType.SqlToJoinOfMultiDataRel))) {
+                    boolean weak = isRel(part3, part, LinkMetaType.SqlToJoinOfWeakRel);
+                    log.info("加载[强关联]其他表{}.{}", part3.getAlias(), part3.getTarget());
+                    this.addText(currentNode, MessageFormat.format("\n{3}join {0} {1} \n  on {2}",
+                            part3.getTarget(), part3.getAlias(), String.join("\nand ", ((LeafPart) part3).getCondition()),
+                            weak ? "left " : ""
+                    ));
+                }
+                this.addText(currentNode,
+                        MessageFormat.format(
+                                "\nwhere {0} ",
+                                map.keySet().stream().collect(Collectors.joining(" and "))
+                        )
+                );
         }
     }
 
@@ -408,7 +443,7 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
 //                        });
                 break;
             case Get:
-                this.toFormatGet(root, this.addNode(root, "select", Map.of("id", "get", "resultMap", "objDefine")), this.tablePart, "START");
+                this.toFormatGet(root, this.addNode(root, "select", Map.of("id", "get", "resultMap", "objDefine")), this.tablePart, "START", null);
 //                this.addNode(root, "select", Map.of("id", "get", "resultMap", "objDefine"),
 //                        queryNode -> {
 //                            groupBy((part1, strong, weak, multi) -> {

@@ -192,7 +192,7 @@ public class DataObject extends MetaObject {
                 if (next.getLinkId() < 0) {
                     list.add(new SqlJoiner().<MetaLink>setId(next.getLinkId()).setInstanceId(1L).setAttributeId(next.getAttributeId()).setTypeId(LinkMetaType.ObjConstructor.getId()));
                 } else if (next.getLink().getType().getParent() == LinkMetaType.SqlToJoin) {
-                    list.add(MetaUtils.getInstance().<MetaLink>getType(next.getLink().getType()).copyValueTo(next.getLink()).setAttributeId(next.getAttributeId()));
+                    list.add(next.getLink().copy().setAttributeId(next.getAttributeId()).setId(next.getLink().getId()));
                 } else {
                     list.add(next.getLink());
                 }

@@ -332,6 +332,10 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         return (T) this;
     }
 
+    public <T extends MetaLink> T copy() {
+        return MetaUtils.getInstance().<MetaLink>getType(this.getType()).copyValueTo(this);
+    }
+
     public void test() {
         for (MetaLink child : this.getChildren()) {
             child.getType();
