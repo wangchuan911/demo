@@ -27,7 +27,7 @@ import org.welisdoon.metadata.prototype.define.*;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.XmlTemplateFormatContent;
-import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity.TemplateIntance;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity.QueryTemplateInstance;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity.VertxSqlDataBasePool;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.FormatContent;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -880,9 +880,8 @@ public class QueryManagerRouter {
                     for (int i = 0; i < 21; i++) {
                         data.add(Map.of());
                     }
-                    TemplateFormatContent content = new XmlTemplateFormatContent(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(metaObject));
-                    TemplateIntance parameter = JSON.parseObject(event.body().asString(), TemplateIntance.class);
-                    vertxSqlDataBasePool.page("query", content, parameter, (objects, throwable) -> {
+                    QueryTemplateInstance parameter = JSON.parseObject(event.body().asString(), QueryTemplateInstance.class);
+                    vertxSqlDataBasePool.page("query", parameter, (objects, throwable) -> {
                         Optional.ofNullable(throwable)
                                 .ifPresentOrElse(event::fail, () -> event.end(JSON.toJSONString(objects)));
                     });
@@ -892,7 +891,7 @@ public class QueryManagerRouter {
 
                     break;
                 case "snapshot":
-                    TemplateIntance parameter1 = new TemplateIntance(metaObject);
+                    QueryTemplateInstance parameter1 = new QueryTemplateInstance(metaObject);
                     event.end(JSON.toJSONString(parameter1, SerializerFeature.DisableCircularReferenceDetect));
                     break;
                 default:

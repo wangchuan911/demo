@@ -9,7 +9,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.XmlTemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.node.Mappers;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.parser.LikeMyBatisSAXParser;
 import org.welisdoon.web.common.ApplicationContextProvider;
@@ -114,43 +116,38 @@ public class VertxSqlDataBasePool {
     }
 
 
-    public void page(String method, TemplateFormatContent templateFormatContent,
-                     TemplateIntance templateParameter,
+    public void page(String method,
+                     QueryTemplateInstance templateParameter,
                      BiConsumer<List<?>, Throwable> listConsumer) {
 
-        Mappers.Mapper mapper;
-        if (templateParameter.template == null) {
-            Mappers mappers = ObjectUtils.synchronizedGet(MAPPERS, stringMappersMap -> stringMappersMap.get(templateParameter.database), stringMappersMap -> {
-                Mappers mappers1 = new Mappers(templateParameter.database);
-                stringMappersMap.put(templateParameter.database, mappers1);
-                return mappers1;
-            });
-            templateFormatContent.build();
 
+        Mappers mappers = ObjectUtils.synchronizedGet(MAPPERS, stringMappersMap -> stringMappersMap.get(templateParameter.database), stringMappersMap -> {
+            Mappers mappers1 = new Mappers(templateParameter.database);
+            stringMappersMap.put(templateParameter.database, mappers1);
+            return mappers1;
+        });
+        Mappers.Mapper mapper = mappers.getChild(likeMyBatisSqlNode -> Objects.equals(likeMyBatisSqlNode.getId(), templateParameter.nameSpace))
+                .stream().findFirst().map(likeMyBatisSqlNode -> (Mappers.Mapper) likeMyBatisSqlNode).orElseGet(() -> {
+                    try {
+                        TemplateFormatContent templateFormatContent = templateParameter.templateFormatContent();
+                        templateFormatContent.build();
+                        Mappers.Mapper mapper1 = LikeMyBatisSAXParser.load(IOUtils.toInputStream((CharSequence) templateFormatContent.getValue(), Charset.defaultCharset()), mappers);
+                        mappers.addChildren(mapper1);
+                        return mapper1;
+                    } catch (ParserConfigurationException | SAXException | IOException e) {
+                        throw new IllegalStateException(e);
+                    }
+                });
 
-            mapper = mappers.getChild(likeMyBatisSqlNode -> Objects.equals(likeMyBatisSqlNode.getId(), templateParameter.nameSpace))
-                    .stream().findFirst().map(likeMyBatisSqlNode -> (Mappers.Mapper) likeMyBatisSqlNode).orElseGet(() -> {
-                        try {
-                            Mappers.Mapper mapper1 = LikeMyBatisSAXParser.load(IOUtils.toInputStream((CharSequence) templateFormatContent.getValue(), Charset.defaultCharset()), mappers);
-                            mappers.addChildren(mapper1);
-                            return mapper1;
-                        } catch (ParserConfigurationException | SAXException | IOException e) {
-                            throw new IllegalStateException(e);
-                        }
-                    });
-
-        } else {
-            mapper = templateParameter.template;
-        }
         SqlParameter sqlParameter = templateParameter.getSqlParameter();
         mapper.generateSqlInfo(method, sqlParameter);
         String sql;
         Object[] objects;
-        if (templateParameter.page != null) {
+        if (templateParameter.pager != null) {
             sql = sqlParameter.sql + " limit ? offset ?";
             objects = Arrays.copyOf(sqlParameter.params.toArray(), sqlParameter.params.size() + 2);
-            objects[objects.length - 2] = templateParameter.page.getPageSize();
-            objects[objects.length - 1] = templateParameter.page.getPageSize() * templateParameter.page.getPage();
+            objects[objects.length - 2] = templateParameter.pager.getPageSize();
+            objects[objects.length - 1] = templateParameter.pager.getPageSize() * templateParameter.pager.getPage();
         } else {
             sql = sqlParameter.sql;
             objects = sqlParameter.params.toArray();
