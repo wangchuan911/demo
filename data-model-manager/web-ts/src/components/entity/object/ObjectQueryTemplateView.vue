@@ -214,14 +214,11 @@ const search = async (page: number) => {
   pager.page = page;
   pager.nomore = false;
   console.log(1);
-  const params: any = {};
-  allInputs.filter((item) => item.checked).forEach(item => {
-    params[item.code] = item.value;
-  });
+  const params = allInputs.filter((item) => item.checked);
   console.log(params);
   pager.loading = true;
   try {
-    const {data} = await $http.post(`obj/template/query/${objectId.value}`, {params, pager});
+    const {data} = await $http.post(`obj/template/query/${objectId.value}`, {...snapshot.value, params, pager});
     pager.nomore = (data.length < pager.size);
     if (page == 1) {
       tableData.length = 0;
