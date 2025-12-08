@@ -57,6 +57,12 @@ public abstract class BaseCondition<ID, D> {
             return this;
         }
 
+        public Page nextPage() {
+            this.page++;
+            compute();
+            return this;
+        }
+
         public int getPageSize() {
             return pageSize;
         }
