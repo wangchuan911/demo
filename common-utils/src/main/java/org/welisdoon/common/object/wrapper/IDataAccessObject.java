@@ -1,14 +1,12 @@
 package org.welisdoon.common.object.wrapper;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.lang.annotation.*;
 import java.lang.reflect.Method;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -317,8 +315,7 @@ public interface IDataAccessObject {
     }
 
     class SqlMapper {
-        StringBuilder sql = new StringBuilder();
-        List<Object> params = new LinkedList<>();
+        ITable.SqlBuilder sqlBuilder;
         List<Map.Entry<String, String>> relColumn = new LinkedList<>();
 
         public void add(Table.Column column1, Table.Column column2) {
@@ -332,51 +329,9 @@ public interface IDataAccessObject {
         }
 
         void build(GroupTable table, Map<String, Object> params) {
-            sql.setLength(0);
-            params.clear();
-            List<Map.Entry<ITable, Map<String, Object>>> entries = Arrays.stream(table.tables).map(iTable -> {
-                return Map.entry(iTable, params.entrySet().stream().filter(entry -> {
-                    return iTable.getAliasColumn(entry.getKey()) != null;
-                }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-            }).filter(iTableMapEntry -> MapUtils.isNotEmpty(iTableMapEntry.getValue())).collect(Collectors.toList());
-
-            if (entries.isEmpty()) {
-                MessageFormat.format("select {0} from {1} {2} where {3}",
-                        Arrays.stream(table.columns).map(column -> MessageFormat.format("{0}.{1} as \"{2}\"", column.column.getTable().name, column.column.name, column.column.alias)).collect(Collectors.joining(",")),
-                        table.tables[0].build(params, true),
-                        Arrays.stream(table.tables).skip(1).map(iTable -> iTable.build(params, false))
-                );
-            } else {
-                table.build(params);
-            }
-            Arrays.stream(table.columns).filter(column -> !column.column.linkColumns.isEmpty()).collect(Collectors.toList());
-            /*String where = params.entrySet().stream().map(entry -> {
-                ITable.IColumn column = main.getAliasColumn(entry.getKey());
-                if (column == null) return null;
-                Table.Column column1;
-                if (column instanceof GroupTable.Column) {
-                    column1 = ((GroupTable.Column) column).column;
-                } else {
-                    column1 = (Table.Column) column;
-                }
-                this.params.add(entry.getValue());
-                return MessageFormat.format("{0}.{1}=?", column1.getTable().alias, column1.name);
-            }).filter(Objects::nonNull).collect(Collectors.joining(" and "));
-            Set<ITable> iTables = params.keySet().stream()
-                    .map(s -> {
-                                ITable.IColumn iColumn;
-                                for (ITable iTable : table.tables) {
-                                    if ((iColumn = iTable.getAliasColumn(s)) != null)
-                                        return iColumn.getTable();
-                                }
-                                return null;
-                            }
-                    ).filter(Objects::nonNull).collect(Collectors.toSet());*/
+            sqlBuilder = table.build(params, new ITable.SqlBuilder.Option().setFormat(ITable.SqlBuilder.Format.From));
         }
 
-        //        String toSql(GroupTable groupTable) {
-//            groupTable.tables.fo
-//        }
         public static class ColumnArg {
             String name;
             String alias;
@@ -389,12 +344,78 @@ public interface IDataAccessObject {
 
         public interface ITable {
             class SqlBuilder {
+                StringBuilder select = new StringBuilder();
+                StringBuilder from = new StringBuilder();
+                List<Object> params = new LinkedList<>();
 
+                public SqlBuilder(SqlBuilder... sqlBuilders) {
+                    if (sqlBuilders == null || sqlBuilders.length == 0) return;
+                    StringBuilder from2 = new StringBuilder();
+                    for (int i = 0; i < sqlBuilders.length; i++) {
+                        append(select, sqlBuilders[i].select, ",");
+                        if (i != 0) {
+                            append(from2, sqlBuilders[i].from, " ");
+                            params.addAll(sqlBuilders[i].params);
+                        }
+                    }
+                    this.from.append(sqlBuilders[0].format(sqlBuilders[0].params, from2.toString()));
+                }
+
+                protected void append(StringBuilder s, StringBuilder s1, String split) {
+                    if (s.length() == 0) {
+                        s.append(s1);
+                        return;
+                    }
+                    s.append(split).append(s1);
+                }
+
+                public String format(List<Object> params) {
+                    return this.format(params, "");
+                }
+
+                public String format(List<Object> params, String join) {
+                    String sql = this.from.toString().replace(Table.JOIN_CUT_POINT, join);
+                    this.params.addAll(params);
+                    return sql;
+                }
+
+                public static class Option {
+                    Format format;
+                    final Option parent;
+
+                    public Option() {
+                        this(null);
+                    }
+
+                    public Option(Option parent) {
+                        this.parent = parent;
+                    }
+
+                    public Option setFormat(Format format) {
+                        this.format = format;
+                        return this;
+                    }
+
+                    public Option childOption() {
+                        return new Option(this);
+                    }
+
+                    boolean isUse(ITable iTable) {
+                        return false;
+                    }
+                }
+
+
+                public enum Format {
+                    From, Join;
+                }
             }
+
+            Map<String, Object> filter(Map<String, Object> params);
 
             boolean match(String key);
 
-            SqlBuilder build(Map<String, Object> map, boolean start);
+            SqlBuilder build(Map<String, Object> map, SqlBuilder.Option option);
 
             interface IColumn {
                 void linkColumn(IColumn column);
@@ -452,8 +473,16 @@ public interface IDataAccessObject {
                 this.parent = parent;
             }
 
-            void build(Map<String, Object> map) {
-
+            @Override
+            public Map<String, Object> filter(Map<String, Object> params) {
+                Map<String, Object> map = new HashMap<>();
+                for (ITable table : this.tables) {
+                    for (Map.Entry<String, Object> entry : params.entrySet()) {
+                        if (table.getAliasColumn(entry.getKey()) == null) continue;
+                        map.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                return map;
             }
 
             @Override
@@ -465,8 +494,15 @@ public interface IDataAccessObject {
             }
 
             @Override
-            public SqlBuilder build(Map<String, Object> map, boolean start) {
-                return null;
+            public SqlBuilder build(Map<String, Object> params, SqlBuilder.Option option) {
+                SqlBuilder sqlBuilder;
+                if (params.isEmpty()) {
+                    AtomicInteger index = new AtomicInteger(0);
+                    sqlBuilder = new ITable.SqlBuilder(Arrays.stream(this.tables).map(iTable -> iTable.build(params, option.childOption().setFormat(index.getAndIncrement() == 0 ? ITable.SqlBuilder.Format.From : ITable.SqlBuilder.Format.Join))).toArray(ITable.SqlBuilder[]::new));
+                } else {
+                    sqlBuilder = this.build(params, new ITable.SqlBuilder.Option().setFormat(ITable.SqlBuilder.Format.From));
+                }
+                return sqlBuilder;
             }
 
 
@@ -511,11 +547,6 @@ public interface IDataAccessObject {
                     boolean a = aKey.find() && bKey.find();
                     aColumn = getColumn(aKey.group(1), aKey.group(2));
                     bColumn = getColumn(bKey.group(1), bKey.group(2));
-//                    System.out.println(aKey.group(1) + "." + aKey.group(2));
-//                    System.out.println(bKey.group(1) + "." + bKey.group(2));
-//                    if (aColumn == null || bColumn == null) {
-//                        throw new NullPointerException();
-//                    }
                     aColumn.linkColumn(bColumn);
                     bColumn.linkColumn(aColumn);
                 }
@@ -560,6 +591,7 @@ public interface IDataAccessObject {
         }
 
         public class Table implements ITable {
+            final static String JOIN_CUT_POINT = "{{join}}";
             final String name;
             final String alias;
             final Column[] columns;
@@ -579,7 +611,7 @@ public interface IDataAccessObject {
                 this.parent = parent;
             }
 
-            public IColumn getColumn(String key) {
+            public Column getColumn(String key) {
                 for (Column column : columns) {
                     if (column.name.equals(key)) return column;
                 }
@@ -592,17 +624,64 @@ public interface IDataAccessObject {
             }
 
             @Override
+            public Map<String, Object> filter(Map<String, Object> params) {
+                Map<String, Object> map = new HashMap<>();
+                for (Map.Entry<String, Object> entry : params.entrySet()) {
+                    if (this.getAliasColumn(entry.getKey()) == null) continue;
+                    map.put(entry.getKey(), entry.getValue());
+                }
+                return map;
+            }
+
+            @Override
             public boolean match(String key) {
                 return alias.equals(key);
             }
 
             @Override
-            public SqlBuilder build(Map<String, Object> map, boolean start) {
-                return null;
+            public SqlBuilder build(Map<String, Object> map, SqlBuilder.Option option) {
+                SqlBuilder sqlBuilder = new SqlBuilder();
+                //弱关联 不做处理
+                if (map.isEmpty() && (rel == TableRel.Weak || rel == TableRel.Multi) && !option.isUse(this)) {
+                    return sqlBuilder;
+                }
+                switch (option.format) {
+                    case From:
+                        sqlBuilder.from.append(String.format(
+                                " from %s %s %S where %s",
+                                this.name,
+                                this.alias,
+                                JOIN_CUT_POINT,
+                                buildCondition(map)
+                        ));
+                        break;
+                    case Join:
+                        sqlBuilder.from.append(String.format(
+                                " join %s %s on %s",
+                                this.name,
+                                this.alias,
+                                buildCondition(map)
+                        ));
+                        break;
+                    default:
+                        break;
+                }
+                return sqlBuilder;
+            }
+
+            protected String buildCondition(Map<String, Object> map) {
+                return Stream.of(
+                        map.entrySet().stream().map(entry -> {
+                            Column column = this.getAliasColumn(entry.getKey());
+                            sqlBuilder.params.add(entry.getValue());
+                            return String.format("%s.%s = ?", this.name, column.name);
+                        }),
+                        Arrays.stream(filter)
+                ).flatMap(stringStream -> stringStream).collect(Collectors.joining(" and "));
             }
 
             @Override
-            public IColumn getColumn(String tableKey, String columnKey) {
+            public Column getColumn(String tableKey, String columnKey) {
                 if (tableKey.equals(alias)) {
                     return getColumn(columnKey);
                 }
@@ -610,7 +689,7 @@ public interface IDataAccessObject {
             }
 
             @Override
-            public IColumn getAliasColumn(String alias) {
+            public Column getAliasColumn(String alias) {
                 for (Column column : columns) {
                     if (alias.equals(column.alias)) return column;
                 }

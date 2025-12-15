@@ -39,5 +39,6 @@ public class DemoTypeAEntity implements IDemoTypeAEntity {
 //        configurationBuilder.setInputsFilter(s -> s.toLowerCase().endsWith(".class") || s.toLowerCase().endsWith(".java"));
 //        IDataAccessObject.initialization(new Reflections(configurationBuilder));
         IDataAccessObject.page(DemoTypeAEntity.class, new HashMap<>(), new BaseCondition.Page(1, 1));
+        IDataAccessObject.page(DemoTypeBEntity.class, new HashMap<>(), new BaseCondition.Page(1, 1));
     }
 }
