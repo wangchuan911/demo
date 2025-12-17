@@ -1,6 +1,7 @@
 package org.welisdoon.common.object.wrapper;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
 import org.welisdoon.common.data.BaseCondition;
@@ -329,7 +330,10 @@ public interface IDataAccessObject {
         }
 
         void build(GroupTable table, Map<String, Object> params) {
-            sqlBuilder = table.build(params, new ITable.SqlBuilder.Option().setFormat(ITable.SqlBuilder.Format.From));
+            ITable.SqlBuilder.Option option = new ITable.SqlBuilder.Option();
+            option.params = params;
+            table.setOption(option);
+            sqlBuilder = table.build();
         }
 
         public static class ColumnArg {
@@ -381,33 +385,24 @@ public interface IDataAccessObject {
 
                 public static class Option {
                     Format format;
-                    final Option parent;
+                    boolean use;
+                    Map<String, Object> params;
 
                     public Option() {
-                        this(null);
-                    }
 
-                    public Option(Option parent) {
-                        this.parent = parent;
-                    }
-
-                    public Option setFormat(Format format) {
-                        this.format = format;
-                        return this;
-                    }
-
-                    public Option childOption() {
-                        return new Option(this);
-                    }
-
-                    boolean isUse(ITable iTable) {
-                        return false;
                     }
                 }
 
 
                 public enum Format {
-                    From, Join;
+                    From, Join, Unknown;
+                }
+
+                public static class Empty extends SqlBuilder {
+                    public static Empty INSTANCE = new Empty();
+
+                    private Empty() {
+                    }
                 }
             }
 
@@ -415,7 +410,15 @@ public interface IDataAccessObject {
 
             boolean match(String key);
 
-            SqlBuilder build(Map<String, Object> map, SqlBuilder.Option option);
+            void setOption(SqlBuilder.Option option);
+
+            SqlBuilder.Option getOption();
+
+            SqlBuilder build();
+
+            default boolean isUse() {
+                return getOption().use;
+            }
 
             interface IColumn {
                 void linkColumn(IColumn column);
@@ -429,6 +432,8 @@ public interface IDataAccessObject {
 
             void setParent(ITable parent);
 
+            ITable getParent();
+
             TableRel getRel();
         }
 
@@ -438,6 +443,7 @@ public interface IDataAccessObject {
             final TableRel rel;
             ITable parent;
             final Column[] columns;
+            SqlBuilder.Option option;
 
             public GroupTable(String name, ITable[] iTables, TableRel rel) {
                 this.name = name;
@@ -474,6 +480,11 @@ public interface IDataAccessObject {
             }
 
             @Override
+            public ITable getParent() {
+                return this.parent;
+            }
+
+            @Override
             public Map<String, Object> filter(Map<String, Object> params) {
                 Map<String, Object> map = new HashMap<>();
                 for (ITable table : this.tables) {
@@ -494,15 +505,41 @@ public interface IDataAccessObject {
             }
 
             @Override
-            public SqlBuilder build(Map<String, Object> params, SqlBuilder.Option option) {
-                SqlBuilder sqlBuilder;
-                if (params.isEmpty()) {
-                    AtomicInteger index = new AtomicInteger(0);
-                    sqlBuilder = new ITable.SqlBuilder(Arrays.stream(this.tables).map(iTable -> iTable.build(params, option.childOption().setFormat(index.getAndIncrement() == 0 ? ITable.SqlBuilder.Format.From : ITable.SqlBuilder.Format.Join))).toArray(ITable.SqlBuilder[]::new));
-                } else {
-                    sqlBuilder = this.build(params, new ITable.SqlBuilder.Option().setFormat(ITable.SqlBuilder.Format.From));
+            public void setOption(SqlBuilder.Option option) {
+                this.option = option;
+                for (ITable table : this.tables) {
+                    SqlBuilder.Option option1 = new SqlBuilder.Option();
+                    option1.params = table.filter(option1.params);
+                    table.setOption(option1);
                 }
-                return sqlBuilder;
+            }
+
+            @Override
+            public SqlBuilder.Option getOption() {
+                return option;
+            }
+
+            @Override
+            public SqlBuilder build() {
+                Stream<ITable> stream = Arrays.stream(this.tables).filter(iTable -> !useless(iTable));
+                if (!this.option.params.isEmpty()) {
+                    stream = stream.sorted(Comparator.comparing(iTable -> {
+                        if (iTable.getOption().use) {
+                            return iTable.getOption().params.size() * -1;
+                        }
+                        return 1;
+                    }));
+                }
+                AtomicInteger index = new AtomicInteger();
+                return new ITable.SqlBuilder(stream
+                        .map(iTable -> {
+                            iTable.getOption().format = index.getAndIncrement() == 0 ? SqlBuilder.Format.From : SqlBuilder.Format.Join;
+                            return iTable;
+                        }).map(ITable::build).toArray(ITable.SqlBuilder[]::new));
+            }
+
+            protected boolean useless(ITable iTable) {
+                return iTable == null || (!iTable.getOption().use && (iTable.getRel() == TableRel.Multi || iTable.getRel() == TableRel.Weak || useless(iTable.getParent())));
             }
 
 
@@ -597,6 +634,7 @@ public interface IDataAccessObject {
             final Column[] columns;
             final String[] filter;
             final TableRel rel;
+            SqlBuilder.Option option;
             ITable parent;
 
             public Table(String name, String alias, ColumnArg[] columnArgs, String[] filter, TableRel rel) {
@@ -609,6 +647,11 @@ public interface IDataAccessObject {
 
             public void setParent(ITable parent) {
                 this.parent = parent;
+            }
+
+            @Override
+            public ITable getParent() {
+                return this.parent;
             }
 
             public Column getColumn(String key) {
@@ -639,10 +682,42 @@ public interface IDataAccessObject {
             }
 
             @Override
-            public SqlBuilder build(Map<String, Object> map, SqlBuilder.Option option) {
+            public void setOption(SqlBuilder.Option option) {
+                this.option = option;
+                if (option.use = MapUtils.isNotEmpty(option.params)) {
+                    markUse(this);
+                }
+            }
+
+            protected void markUse(ITable iTable) {
+                if (iTable instanceof Table) {
+                    for (Table.Column column : this.columns) {
+                        if (CollectionUtils.isEmpty(column.linkColumns)) continue;
+                        for (IColumn linkColumn : column.linkColumns) {
+                            if (linkColumn.getTable().getOption() == null && linkColumn.getTable().getOption().use)
+                                continue;
+                            ITable table = linkColumn.getTable();
+                            table.getOption().use = true;
+                            this.markUse(iTable.getParent());
+                        }
+                    }
+                } else if (iTable instanceof GroupTable) {
+                    iTable.getOption().use = true;
+                    this.markUse(iTable.getParent());
+                }
+            }
+
+            @Override
+            public SqlBuilder.Option getOption() {
+                return option;
+            }
+
+            @Override
+            public SqlBuilder build() {
                 SqlBuilder sqlBuilder = new SqlBuilder();
                 //弱关联 不做处理
-                if (map.isEmpty() && (rel == TableRel.Weak || rel == TableRel.Multi) && !option.isUse(this)) {
+                Map<String, Object> map = option.params;
+                if (map.isEmpty() && (rel == TableRel.Weak || rel == TableRel.Multi) && !isUse()) {
                     return sqlBuilder;
                 }
                 switch (option.format) {
