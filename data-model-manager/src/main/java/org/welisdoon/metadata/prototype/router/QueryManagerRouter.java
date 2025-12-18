@@ -97,7 +97,7 @@ public class QueryManagerRouter {
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void findObj(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long qid = Long.valueOf(routingContext.pathParam("id"));
             MetaObject object = metaObjectDao.get(qid);
             JSONObject jsonObject = (JSONObject) JSON.toJSON(object);
@@ -110,7 +110,7 @@ public class QueryManagerRouter {
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void objAttr(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             routingContext.end(JSON.toJSONString(MetaUtils.getInstance().getMetaAttributeDao().list(new MetaObject.Attribute().setObjectId(qid))));
         });
@@ -118,7 +118,7 @@ public class QueryManagerRouter {
 
     @VertxRouter(path = "/obj", method = "POST")
     public void objQuery(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             MetaObjectCondition condition = JsonUtils.toBean(routingContext.body().asString(), MetaObjectCondition.class);
             routingContext.end(JsonUtils.asJsonString(PageInfo.of(metaObjectDao.list(condition))));
         });
@@ -126,7 +126,7 @@ public class QueryManagerRouter {
 
     @VertxRouter(path = "\\/obj\\/combination\\/(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
     public void objComponent(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             routingContext.end(formatLinkToString(getLinks(Long.parseLong(routingContext.pathParam("id")))));
         });
     }
@@ -199,7 +199,7 @@ public class QueryManagerRouter {
 
     @VertxRouter(path = "\\/link\\/expand\\/(?<type>[a-zA-Z]*)(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
     public void linkExpand(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             MetaLinkCondition condition = new MetaLinkCondition();
             List<MetaLink> list = new LinkedList<>();
             long qid = Long.parseLong(routingContext.pathParam("id"));
@@ -219,7 +219,7 @@ public class QueryManagerRouter {
 
     @VertxRouter(path = "\\/link\\/show\\/(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
     public void show(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(new FormatContent()));
 //            SqlContent context = new SqlContent();
@@ -232,7 +232,7 @@ public class QueryManagerRouter {
 
     @VertxRouter(path = "\\/link\\/template\\/(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
     public void getTemplate(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent();
             new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(templateFormatContent);
@@ -250,7 +250,7 @@ public class QueryManagerRouter {
             method = "PUT",
             mode = VertxRouteType.PathRegex)
     public void objAttrAdd(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             routingContext.end(JSON.toJSONString(
                     transactionTemplate.execute(status -> {
                         long qid = Long.parseLong(routingContext.pathParam("id"));
@@ -404,7 +404,7 @@ public class QueryManagerRouter {
             method = "DELETE",
             mode = VertxRouteType.PathRegex)
     public void objAttrDel(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             metaAttributeDao.delete(qid);
             routingContext.end();
@@ -421,7 +421,7 @@ public class QueryManagerRouter {
 
     @VertxRouter(path = "\\/link\\/types\\/(?<type>[a-zA-Z]*)(?<id>\\d+)", method = "get", mode = VertxRouteType.PathRegex)
     public void linkTypes(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             Long id = TypeUtils.castToJavaBean(routingContext.pathParam("id"), Long.class);
             String type = TypeUtils.castToJavaBean(routingContext.pathParam("type"), String.class);
             List<LinkMetaType> result = new LinkedList<>();
@@ -458,7 +458,7 @@ public class QueryManagerRouter {
     @VertxRouter(path = "/link",
             method = "PUT")
     public void linkAdd(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             MetaLink metaLink = JSON.parseObject(routingContext.body().asString()).toJavaObject(MetaLink.class);
             metaLinkDao.add(metaLink);
             routingContext.end(JSON.toJSONString(metaLink));
@@ -468,7 +468,7 @@ public class QueryManagerRouter {
     @VertxRouter(path = "\\/query\\/object\\/(?<id>\\d+)",
             method = "GET", mode = VertxRouteType.PathRegex)
     public void queryObject(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             MetaObjectCondition condition = new MetaObjectCondition();
             condition.setData(new MetaObject());
             condition.getData().setCode(routingContext.queryParam("text").stream().findFirst().orElse(""));
@@ -482,7 +482,7 @@ public class QueryManagerRouter {
     @VertxRouter(path = "\\/query\\/link\\/type\\/(?<typeLinkId>\\d+)",
             method = "GET", mode = VertxRouteType.PathRegex)
     public void showObjectSubLinkType(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long typeLinkId = Long.parseLong(routingContext.pathParam("typeLinkId"));
             routingContext.end(JSON.toJSONString(LinkMetaType.getChildTypeId(LinkMetaType.SqlOperator.getId()).stream().map(aLong -> {
                 return Map.of("id", aLong, "desc", LinkMetaType.getInstance(aLong).getDesc());
@@ -493,7 +493,7 @@ public class QueryManagerRouter {
     @VertxRouter(path = "\\/add\\/obj\\/link\\/rel\\/(?<objectId>\\d+)",
             method = "POST", mode = VertxRouteType.PathRegex)
     public void objectAddLinkRel(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long objectId = Long.parseLong(routingContext.pathParam("objectId"));
             JSONObject body = JSONObject.parseObject(routingContext.body().asString());
 
@@ -603,7 +603,7 @@ public class QueryManagerRouter {
     @VertxRouter(path = "/obj",
             method = "PUT")
     public void addObject(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             MetaObject object = JSONObject.parseObject(routingContext.body().asString(), MetaObject.class);
             metaObjectDao.add(object);
             if (object.getType() == ObjectMetaType.Object) {
@@ -627,7 +627,7 @@ public class QueryManagerRouter {
     @VertxRouter(path = "/obj/type",
             method = "GET")
     public void getObjectType(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             routingContext.end(JSON.toJSONString(Stream.of(ObjectMetaType.Object, ObjectMetaType.Table)
                     .map(objectMetaType -> Map.of("id", objectMetaType.getId(), "desc", objectMetaType.getDesc())).toArray()));
         });
@@ -636,7 +636,7 @@ public class QueryManagerRouter {
     @VertxRouter(path = "\\/obj(?<objectId>\\d+)\\/parent(?<parentId>\\d+)",
             method = "POST", mode = VertxRouteType.PathRegex)
     public void getObjectParent(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             MetaObject object = new MetaObject();
             object.setId(Long.parseLong(routingContext.pathParam("objectId")));
             object.setParentId(Long.parseLong(routingContext.pathParam("parentId")));
@@ -648,7 +648,7 @@ public class QueryManagerRouter {
             method = "DELETE",
             mode = VertxRouteType.PathRegex)
     public void objDel(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             MetaObject object = metaObjectDao.get(qid);
             Assert.isTrue(org.apache.commons.collections4.CollectionUtils.isEmpty(object.getChildren()), "有子类不能删除");
@@ -676,7 +676,7 @@ public class QueryManagerRouter {
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void attrBindTree(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
             List<Map<String, Object>> list = getLinks(qid).stream().map(metaLink -> {
                 return attrBindTree(null, metaLink, metaLink, null);
@@ -750,7 +750,7 @@ public class QueryManagerRouter {
             method = "POST",
             mode = VertxRouteType.PathRegex)
     public void attrBindObj(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             String path = (String) JsonUtils.getKeyValue(JSONObject.parseObject(routingContext.body().asString()), "path");
             LinkedList<MetaPrototype> list = getAttrPath(path, MetaUtils.getInstance().getObject(Long.parseLong(routingContext.pathParam("id"))));
             Assert.isTrue(list.peekLast() instanceof MetaObject.Attribute*//*notNull(attribute*//*, () -> String.format("没有找到对应字段:%s", path));
@@ -790,7 +790,7 @@ public class QueryManagerRouter {
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void attrMapper(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             MetaObject.Attribute attribute = MetaUtils.getInstance().getAttribute(Long.parseLong(routingContext.pathParam("id")));
             List<Map<String, Object>> cols = new LinkedList<>();
             List<List<Map<String, Object>>> rows = new LinkedList<>();
@@ -837,7 +837,7 @@ public class QueryManagerRouter {
             method = "GET",
             mode = VertxRouteType.PathRegex)
     public void attrPath(RoutingContextChain chain) {
-        chain.handler(routingContext -> {
+        chain.blockingHandler(routingContext -> {
             MetaObject.Attribute attribute = MetaUtils.getInstance().getAttribute(Long.parseLong(routingContext.pathParam("id")));
             List<MetaLink> list = new LinkedList<>();
             if (attribute instanceof DataObject.Field) {
@@ -870,7 +870,7 @@ public class QueryManagerRouter {
             method = {"POST", "GET"},
             mode = VertxRouteType.PathRegex)
     public void template(RoutingContextChain chain) {
-        chain.handler(event -> {
+        chain.blockingHandler(event -> {
             long qid = Long.parseLong(event.pathParam("id"));
             MetaObject metaObject = MetaUtils.getInstance().getObject(qid);
             switch (event.pathParam("type")) {
@@ -888,7 +888,9 @@ public class QueryManagerRouter {
 //                    event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
                     break;
                 case "download":
-
+                    TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent();
+                    new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(templateFormatContent);
+                    templateFormatContent.build();
                     break;
                 case "snapshot":
                     QueryTemplateInstance parameter1 = new QueryTemplateInstance(metaObject);

@@ -1,6 +1,6 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.parser;
 
-import com.google.common.collect.ImmutableMap;
+/*import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
 import org.welisdoom.task.xml.handler.SAXParserHandler;
@@ -16,7 +16,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
+import java.util.Map;*/
 
 /**
  * @Classname SAXParserHandler
@@ -24,8 +24,9 @@ import java.util.Map;
  * @Author Septem
  * @Date 17:40
  */
-public class LikeMyBatisSAXParser extends SAXParserHandler<LikeMyBatisSqlNode> {
-    final Mappers mappers;
+@Deprecated
+class LikeMyBatisSAXParser /*extends SAXParserHandler<LikeMyBatisSqlNode>*/ {
+    /*final Mappers mappers;
 
     LikeMyBatisSAXParser(Mappers mappers) {
         this.mappers = mappers;
@@ -45,7 +46,7 @@ public class LikeMyBatisSAXParser extends SAXParserHandler<LikeMyBatisSqlNode> {
             for (int i = 0; i < attributes.getLength(); i++) {
                 String name = attributes.getQName(i);
                 String value = attributes.getValue(name);
-                /*System.out.println("属性值：" + name + "=" + value);*/
+                *//*System.out.println("属性值：" + name + "=" + value);*//*
                 builder.put(name, value);
             }
 
@@ -90,5 +91,5 @@ public class LikeMyBatisSAXParser extends SAXParserHandler<LikeMyBatisSqlNode> {
     protected static SAXParser getSaxParser() throws ParserConfigurationException, SAXException {
         SAXParserFactory spf = SAXParserFactory.newInstance();
         return spf.newSAXParser();
-    }
+    }*/
 }

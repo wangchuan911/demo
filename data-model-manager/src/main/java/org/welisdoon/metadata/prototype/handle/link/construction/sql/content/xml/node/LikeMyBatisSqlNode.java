@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 10:18
  */
-public class LikeMyBatisSqlNode implements BaseUnit<LikeMyBatisSqlNode>, MetaPrototype.Parent<LikeMyBatisSqlNode>, MetaPrototype.Child<LikeMyBatisSqlNode> {
+@Deprecated
+class LikeMyBatisSqlNode implements BaseUnit<LikeMyBatisSqlNode>, MetaPrototype.Parent<LikeMyBatisSqlNode>, MetaPrototype.Child<LikeMyBatisSqlNode> {
     Map<String, String> attributes;
     List<LikeMyBatisSqlNode> children;
     LikeMyBatisSqlNode parent;

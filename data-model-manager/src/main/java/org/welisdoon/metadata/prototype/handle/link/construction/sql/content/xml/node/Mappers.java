@@ -20,7 +20,8 @@ import java.util.stream.Stream;
  * @Author Septem
  * @Date 9:27
  */
-public class Mappers extends LikeMyBatisSqlNode {
+@Deprecated
+class Mappers extends LikeMyBatisSqlNode {
     public Mappers(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
         super(parent, attributes);
     }
@@ -29,7 +30,8 @@ public class Mappers extends LikeMyBatisSqlNode {
         this(null, Map.of("id", id));
     }
 
-    public static abstract class SqlExecuteNode<R> extends LikeMyBatisSqlNode implements Script<SqlParameter> {
+    @Deprecated
+    static abstract class SqlExecuteNode<R> extends LikeMyBatisSqlNode implements Script<SqlParameter> {
 
         public SqlExecuteNode(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
             super(parent, attributes);
@@ -44,7 +46,8 @@ public class Mappers extends LikeMyBatisSqlNode {
 
         @Tag(value = "if", parentTagTypes = BaseUnit.class, desc = "单条条件判断")
         @Attr(name = "test", desc = "判断条件")
-        public static class If extends LikeMyBatisSqlNode implements Script<SqlParameter> {
+        @Deprecated
+        static class If extends LikeMyBatisSqlNode implements Script<SqlParameter> {
             public If(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
                 super(parent, attributes);
             }
@@ -63,7 +66,8 @@ public class Mappers extends LikeMyBatisSqlNode {
         }
 
         @Tag(value = "choice", parentTagTypes = BaseUnit.class, desc = "多条件判断")
-        public static class Choice extends LikeMyBatisSqlNode implements Script<SqlParameter> {
+        @Deprecated
+        static class Choice extends LikeMyBatisSqlNode implements Script<SqlParameter> {
 
             public Choice(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
                 super(parent, attributes);
@@ -105,7 +109,8 @@ public class Mappers extends LikeMyBatisSqlNode {
 
         @Tag(value = "foreach", parentTagTypes = BaseUnit.class, desc = "循环")
         @Attr(name = "test", desc = "判断条件")
-        public static class Foreach extends LikeMyBatisSqlNode implements Script<SqlParameter> {
+        @Deprecated
+        static class Foreach extends LikeMyBatisSqlNode implements Script<SqlParameter> {
 
             public Foreach(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
                 super(parent, attributes);
@@ -140,7 +145,8 @@ public class Mappers extends LikeMyBatisSqlNode {
         }
 
         @Tag(value = "include", parentTagTypes = Mappers.Mapper.class)
-        public static class Include extends LikeMyBatisSqlNode implements Script<SqlParameter> {
+        @Deprecated
+        static class Include extends LikeMyBatisSqlNode implements Script<SqlParameter> {
 
             public Include(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
                 super(parent, attributes);
@@ -170,7 +176,8 @@ public class Mappers extends LikeMyBatisSqlNode {
     }
 
     @Tag(value = "mapper", parentTagTypes = Root.class)
-    public static class Mapper extends LikeMyBatisSqlNode implements Root, Executable {
+    @Deprecated
+    static class Mapper extends LikeMyBatisSqlNode implements Root, Executable {
         Map<String, Sql> sqlMap = new HashMap<>();
 
         Sql getSql(String id) {
@@ -197,7 +204,8 @@ public class Mappers extends LikeMyBatisSqlNode {
     }
 
     @Tag(value = "sql", parentTagTypes = Mappers.Mapper.class)
-    public static class Sql extends LikeMyBatisSqlNode implements Script<SqlParameter> {
+    @Deprecated
+    static class Sql extends LikeMyBatisSqlNode implements Script<SqlParameter> {
         static ThreadLocal<SqlExecuteNode.Include> local = new InheritableThreadLocal<>();
 
         public Sql(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
@@ -227,7 +235,8 @@ public class Mappers extends LikeMyBatisSqlNode {
     }
 
     @Tag(value = "select", parentTagTypes = Mappers.Mapper.class)
-    public static class Select extends SqlExecuteNode<List> implements Script<SqlParameter> {
+    @Deprecated
+    static class Select extends SqlExecuteNode<List> implements Script<SqlParameter> {
 
         public Select(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
             super(parent, attributes);
@@ -243,7 +252,8 @@ public class Mappers extends LikeMyBatisSqlNode {
     }
 
     @Tag(value = "update", parentTagTypes = Mappers.Mapper.class)
-    public static class Update extends SqlExecuteNode<Insert> implements Script<SqlParameter> {
+    @Deprecated
+    static class Update extends SqlExecuteNode<Insert> implements Script<SqlParameter> {
 
         public Update(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
             super(parent, attributes);
@@ -258,14 +268,16 @@ public class Mappers extends LikeMyBatisSqlNode {
     }
 
     @Tag(value = "insert", parentTagTypes = Mappers.Mapper.class)
-    public static class Insert extends Update {
+    @Deprecated
+    static class Insert extends Update {
         public Insert(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
             super(parent, attributes);
         }
     }
 
     @Tag(value = "delete", parentTagTypes = Mappers.Mapper.class)
-    public static class Delete extends Update {
+    @Deprecated
+    static class Delete extends Update {
         public Delete(LikeMyBatisSqlNode parent, Map<String, String> attributes) {
             super(parent, attributes);
         }

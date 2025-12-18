@@ -1,6 +1,10 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.welisdoon.common.object.wrapper.IDataAccessObject;
+import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
+
+import java.util.List;
 
 /**
  * @Classname SqlJoiner
@@ -29,10 +33,37 @@ public class SqlRelationExpression extends Sql {
         }
     }
 
+    protected boolean isColumn(SqlRelationExpression item) {
+        return item instanceof SqlItem && !((SqlItem) item).constValue;
+    }
+
+    protected void addCache(FormatContent format, SqlItem a, SqlItem b) {
+        List<Object> cache = format.get(this.findParent(SqlJoiner.class));
+        cache.add(new IDataAccessObject.Model.TableVO.ColumnVO(a.format(format), a.getName(), b.format(format), IDataAccessObject.ColumnType.Simple, String.class));
+    }
+
     @Override
     protected String format(FormatContent format) {
-//        Assert.isTrue(getType().getParent() == LinkMetaType.SqlOperator, "错误的操作符:" + getType().name());
+        boolean isCondition = getType() == LinkMetaType.Equal && isColumn(left) && isColumn(right);
+        String val = toSql(format);
+        if (!isCondition) {
+            List<Object> cache = format.get(this.findParent(SqlJoiner.class));
+            cache.add(val);
+        } else {
+            SqlJoiner sqlJoiner = left.findParent(SqlJoiner.class);
+            if (sqlJoiner.table.getAlias().equalsIgnoreCase(((SqlItem) left).sqlAlias.alias)) {
+                addCache(format, (SqlItem) left, (SqlItem) right);
+            } else if (sqlJoiner.table.getAlias().equalsIgnoreCase(((SqlItem) right).sqlAlias.alias)) {
+                addCache(format, (SqlItem) right, (SqlItem) left);
+            } else {
+                throw new IllegalStateException(String.format("不允许将sql语句:%s 放在其他表之内", val));
+            }
+        }
+        return val;
+    }
 
+    protected String toSql(FormatContent format) {
+//        Assert.isTrue(getType().getParent() == LinkMetaType.SqlOperator, "错误的操作符:" + getType().name());
         switch (getType()) {
             case Equal:
                 return String.format(" %s = %s ", left.format(format), right.format(format));

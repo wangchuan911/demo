@@ -1,10 +1,10 @@
 package org.welisdoon.common.object.wrapper;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
 import org.welisdoon.common.data.BaseCondition;
+import org.welisdoon.common.object.PageIterator;
 
 import java.lang.annotation.*;
 import java.lang.reflect.Method;
@@ -15,7 +15,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * @Classname IObject
@@ -145,9 +144,110 @@ public interface IDataAccessObject {
         Strong, Weak, Multi;
     }
 
-    class DataAccessObjectInfo {
-        static final Pattern COLUMN = Pattern.compile("(\\w+)\\.(\\w+)");
-        static final Pattern TABLE = Pattern.compile("(\\w+\\.\\w+)\\s+(\\w+)");
+    class Model {
+        public static class TableVO {
+            final ColumnVO[] columns;
+            final String table;
+            final String datasource;
+            final String[] filter;
+            final String group;
+            final TableRel rel;
+
+            public TableVO(ColumnVO[] columns, String table, String datasource, String[] filter, String group, TableRel rel) {
+                this.columns = columns;
+                this.table = table;
+                this.datasource = datasource;
+                this.filter = filter;
+                this.group = group;
+                this.rel = rel;
+            }
+
+            public TableVO(Table table) {
+                this(Arrays.stream(table.columns()).map(ColumnVO::new).toArray(ColumnVO[]::new), table.table(), table.datasource(), table.filter(), table.group(), table.rel());
+            }
+
+            public static class ColumnVO {
+                final String column;
+                final String property;
+                final String linkColumn;
+                final ColumnType type;
+                final Class<?> input;
+
+                public ColumnVO(String column, String property, String linkColumn, ColumnType type, Class<?> input) {
+                    this.column = column;
+                    this.property = property;
+                    this.linkColumn = linkColumn;
+                    this.type = type;
+                    this.input = input;
+                }
+
+                ColumnVO(Column column) {
+                    this(column.column(), column.property(), column.linkColumn(), column.type(), column.input());
+                }
+            }
+        }
+    }
+
+    interface ObjectScanner {
+        Pattern COLUMN = Pattern.compile("(\\w+)\\.(\\w+)");
+        Pattern TABLE = Pattern.compile("(\\w+\\.\\w+)\\s+(\\w+)");
+
+        default SqlMapper.GroupTable sql(SqlMapper mapper, String group, List<Model.TableVO> iterator, AtomicInteger index) {
+            List<SqlMapper.AbstractTable> iTables = new LinkedList<>();
+            TableRel rel = null;
+            for (int i = 0; iterator.size() > index.get(); index.incrementAndGet(), i++) {
+                Model.TableVO tableAnnotation = iterator.get(index.get());
+                Matcher tableMatcher = TABLE.matcher(tableAnnotation.table);
+                tableMatcher.find();
+                if (StringUtils.isEmpty(tableAnnotation.group) || tableAnnotation.group.equals(group)) {
+                    boolean changeRel = i == 0 && StringUtils.isNotEmpty(tableAnnotation.group);
+                    if (changeRel) rel = tableAnnotation.rel;
+                    List<SqlMapper.ColumnArg> columns = Arrays.stream(tableAnnotation.columns).map(column -> {
+                        Matcher matcher = COLUMN.matcher(column.column);
+                        if (!matcher.find()) {
+                            return null;
+                        }
+                        return new SqlMapper.ColumnArg(matcher.group(2), column.property, column.linkColumn);
+                    }).filter(Objects::nonNull).collect(Collectors.toList());
+                    SqlMapper.BaseTable LeafTable = new SqlMapper.BaseTable(
+                            tableMatcher.group(1),
+                            tableMatcher.group(2),
+                            columns,
+                            tableAnnotation.filter,
+                            changeRel ? TableRel.Strong : tableAnnotation.rel);
+                    iTables.add(LeafTable);
+                } else if (group == null || tableAnnotation.group.startsWith(group)) {
+                    SqlMapper.AbstractTable table = sql(mapper, tableAnnotation.group, iterator, index);
+                    if (table == null) {
+                        index.decrementAndGet();
+                        break;
+                    }
+                    iTables.add(table);
+                } else {
+                    return null;
+                }
+            }
+            if (CollectionUtils.isEmpty(iTables)) return null;
+            rel = rel != null ? rel : TableRel.Strong;
+            SqlMapper.AbstractTable[] tables = iTables.toArray(SqlMapper.AbstractTable[]::new);
+            if (group == null)
+                return new SqlMapper.MainTable("ROOT", tables, rel);
+            else
+                return new SqlMapper.GroupTable(group, tables, rel);
+        }
+
+        void scanTableAnnotation(List<Model.TableVO> tableList);
+
+        default SqlMapper.MainTable sql(SqlMapper mapper) {
+            List<Model.TableVO> tables = new LinkedList<>();
+            scanTableAnnotation(tables);
+            SqlMapper.MainTable table = (SqlMapper.MainTable) sql(mapper, null, tables, new AtomicInteger(0));
+            if (table == null) return null;
+            return table;
+        }
+    }
+
+    class DataAccessObjectInfo implements ObjectScanner {
         final protected Class<?> target;
         final protected DataAccessObjectInfo parent;
         protected Map<String, Method> methodMap;
@@ -156,7 +256,7 @@ public interface IDataAccessObject {
             this.target = target;
             this.parent = parent;
             this.methodMap = new HashMap<>();
-            Arrays.stream(this.target.getInterfaces()).filter(aClass -> IDemoTypeAEntity.class.isAssignableFrom(aClass)).flatMap(aClass -> Arrays.stream(aClass.getMethods())).forEach(method -> {
+            Arrays.stream(this.target.getInterfaces()).filter(IDataAccessObject.class::isAssignableFrom).flatMap(aClass -> Arrays.stream(aClass.getMethods())).forEach(method -> {
                 Field column = method.getAnnotation(Field.class);
                 if (column == null) return;
                 methodMap.put(column.name(), method);
@@ -171,65 +271,19 @@ public interface IDataAccessObject {
             return method;
         }
 
-        protected List<Table> getTableAnnotation() {
-            return Arrays.stream(target.getInterfaces()).filter(aClass -> IDataAccessObject.class.isAssignableFrom(aClass)).flatMap(aClass -> {
+        public void scanTableAnnotation(List<Model.TableVO> tableList) {
+            if (parent != null) {
+                parent.scanTableAnnotation(tableList);
+            }
+            Arrays.stream(target.getInterfaces()).filter(IDataAccessObject.class::isAssignableFrom).flatMap(aClass -> {
                 Table table = aClass.getAnnotation(Table.class);
                 if (table != null) return Stream.of(table);
                 Tables tables = aClass.getAnnotation(Tables.class);
                 if (tables != null) return Arrays.stream(tables.value());
                 return Stream.of();
-            }).collect(Collectors.toList());
+            }).map(Model.TableVO::new).forEach(tableList::add);
         }
 
-        SqlMapper.GroupTable sql(SqlMapper mapper) {
-            SqlMapper.GroupTable tableParent = null;
-            if (parent != null) {
-                tableParent = parent.sql(mapper);
-            }
-
-            SqlMapper.GroupTable table = sql(mapper, null, getTableAnnotation(), new AtomicInteger(0));
-            if (table == null) return null;
-            if (tableParent != null) {
-                table = mapper.new GroupTable(tableParent.name, new SqlMapper.ITable[]{tableParent, table}, tableParent.rel);
-            }
-            mapper.init(table);
-            return table;
-        }
-
-        SqlMapper.GroupTable sql(SqlMapper mapper, String group, List<Table> iterator, AtomicInteger index) {
-            List<SqlMapper.ITable> iTables = new LinkedList<>();
-            TableRel rel = null;
-            for (int i = 0; iterator.size() > index.get(); index.incrementAndGet(), i++) {
-                Table tableAnnotation = iterator.get(index.get());
-                Matcher tableMatcher = TABLE.matcher(tableAnnotation.table());
-                tableMatcher.find();
-                if (StringUtils.isEmpty(tableAnnotation.group()) || tableAnnotation.group().equals(group)) {
-                    boolean changeRel = i == 0 && StringUtils.isNotEmpty(tableAnnotation.group());
-                    if (changeRel) rel = tableAnnotation.rel();
-                    SqlMapper.Table LeafTable = mapper.new Table(
-                            tableMatcher.group(1),
-                            tableMatcher.group(2),
-                            Arrays.stream(tableAnnotation.columns()).map(column -> {
-                                Matcher matcher = DataAccessObjectInfo.COLUMN.matcher(column.column());
-                                if (!matcher.find()) {
-                                    return null;
-                                }
-                                return new SqlMapper.ColumnArg(matcher.group(2), column.property());
-                            }).filter(Objects::nonNull).toArray(SqlMapper.ColumnArg[]::new),
-                            tableAnnotation.filter(),
-                            changeRel ? TableRel.Strong : tableAnnotation.rel());
-                    for (Column link : tableAnnotation.columns()) {
-                        if (StringUtils.isEmpty(link.linkColumn())) continue;
-                        mapper.relColumn.add(Map.entry(link.column(), link.linkColumn()));
-                    }
-                    iTables.add(LeafTable);
-                } else {
-                    iTables.add(sql(mapper, tableAnnotation.group(), iterator, index));
-                }
-            }
-            if (CollectionUtils.isEmpty(iTables)) return null;
-            return mapper.new GroupTable(group, iTables, rel != null ? rel : TableRel.Strong);
-        }
 
     }
 
@@ -242,596 +296,47 @@ public interface IDataAccessObject {
         DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return Collections.emptyList();
         SqlMapper mapper = new SqlMapper();
-        SqlMapper.GroupTable table = dataAccessObjectInfo.sql(mapper);
+        SqlMapper.MainTable table = dataAccessObjectInfo.sql(mapper);
         mapper.build(table, params);
-
+        System.out.println(mapper.prepare.sql);
         return Collections.emptyList();
+    }
+
+    static <O extends IDataAccessObject> Optional<O> getOptional(Class<? extends IDataAccessObject> aClass, Object id) {
+        return Optional.ofNullable(get(aClass, id));
+    }
+
+    static <O extends IDataAccessObject> O get(Class<? extends IDataAccessObject> aClass, Object id) {
+        if (id instanceof Map) {
+        }
+        initialization(aClass);
+        DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
+        if (dataAccessObjectInfo == null) return null;
+        SqlMapper mapper = new SqlMapper();
+        SqlMapper.MainTable table = dataAccessObjectInfo.sql(mapper);
+        mapper.build(table, id);
+        System.out.println(mapper.prepare.sql);
+        return null;
     }
 
     static int count(Class<? extends IDataAccessObject> aClass, Map<String, Object> params, BaseCondition.Page page) {
         DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return 0;
         SqlMapper mapper = new SqlMapper();
-        SqlMapper.GroupTable table = dataAccessObjectInfo.sql(mapper);
+        SqlMapper.MainTable table = dataAccessObjectInfo.sql(mapper);
         mapper.build(table, params);
 
         return 1;
     }
 
-    class ValuesIterator implements Iterator<IDataAccessObject> {
-        Iterator<IDataAccessObject> iterator;
+    class ValuesIterator extends PageIterator<IDataAccessObject> {
         final Map<String, Object> params;
-        boolean more;
-        final BaseCondition.Page page;
         final Class<? extends IDataAccessObject> aClass;
-        int position = -1;
 
         public ValuesIterator(Class<? extends IDataAccessObject> aClass, Map<String, Object> params) {
+            super(pager -> page(aClass, params, pager));
             this.aClass = aClass;
             this.params = params;
-            page = new BaseCondition.Page(1, 100);
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (iterator == null) {
-                iterator = page(aClass, params, page).iterator();
-                more = iterator.hasNext();
-            }
-            if (!more) {
-                return false;
-            } else if (!iterator.hasNext()) {
-                iterator = page(aClass, params, page.nextPage()).iterator();
-                more = iterator.hasNext();
-            }
-            return iterator.hasNext();
-        }
-
-        @Override
-        public IDataAccessObject next() {
-            position++;
-            return iterator.next();
-        }
-
-        public boolean hasMore() {
-            return more;
-        }
-
-        public int getPosition() {
-            return position;
-        }
-
-        public Spliterator<IDataAccessObject> spliterator() {
-            return Spliterators.spliteratorUnknownSize(this, 0);
-        }
-
-
-        public Stream<IDataAccessObject> stream() {
-            return StreamSupport.stream(spliterator(), false);
-        }
-
-        public Stream<IDataAccessObject> parallelStream() {
-            return StreamSupport.stream(spliterator(), true);
-        }
-    }
-
-    class SqlMapper {
-        ITable.SqlBuilder sqlBuilder;
-        List<Map.Entry<String, String>> relColumn = new LinkedList<>();
-
-        public void add(Table.Column column1, Table.Column column2) {
-            column1.linkColumn(column2);
-            column2.linkColumn(column1);
-        }
-
-        void init(GroupTable table) {
-            table.initRelColumn(relColumn);
-            relColumn.clear();
-        }
-
-        void build(GroupTable table, Map<String, Object> params) {
-            ITable.SqlBuilder.Option option = new ITable.SqlBuilder.Option();
-            option.params = params;
-            table.setOption(option);
-            sqlBuilder = table.build();
-        }
-
-        public static class ColumnArg {
-            String name;
-            String alias;
-
-            public ColumnArg(String name, String alias) {
-                this.name = name;
-                this.alias = alias;
-            }
-        }
-
-        public interface ITable {
-            class SqlBuilder {
-                StringBuilder select = new StringBuilder();
-                StringBuilder from = new StringBuilder();
-                List<Object> params = new LinkedList<>();
-
-                public SqlBuilder(SqlBuilder... sqlBuilders) {
-//                    if (sqlBuilders == null || sqlBuilders.length == 0) return;
-//                    StringBuilder from2 = new StringBuilder();
-//                    for (int i = 0; i < sqlBuilders.length; i++) {
-//                        append(select, sqlBuilders[i].select, ",");
-//                        if (i != 0) {
-//                            append(from2, sqlBuilders[i].from, " ");
-//                            params.addAll(sqlBuilders[i].params);
-//                        }
-//                    }
-//                    this.from.append(sqlBuilders[0].format(sqlBuilders[0].params, from2.toString()));
-                    this(Arrays.asList(sqlBuilders));
-                }
-
-                public SqlBuilder(List<SqlBuilder> sqlBuilders) {
-                    if (sqlBuilders == null || sqlBuilders.isEmpty()) return;
-                    StringBuilder from2 = new StringBuilder();
-                    for (int i = 0; i < sqlBuilders.size(); i++) {
-                        SqlBuilder sqlBuilder = sqlBuilders.get(i);
-                        append(select, sqlBuilder.select, ",");
-                        if (i != 0) {
-                            append(from2, sqlBuilder.from, " ");
-                            params.addAll(sqlBuilder.params);
-                        }
-                    }
-                    this.from.append(sqlBuilders.get(0).format(sqlBuilders.get(0).params, from2.toString()));
-                }
-
-
-                protected void append(StringBuilder s, StringBuilder s1, String split) {
-                    if (s.length() == 0) {
-                        s.append(s1);
-                        return;
-                    }
-                    s.append(split).append(s1);
-                }
-
-                public String format(List<Object> params) {
-                    return this.format(params, "");
-                }
-
-                public String format(List<Object> params, String join) {
-                    String sql = this.from.toString().replace(Table.JOIN_CUT_POINT, join);
-                    this.params.addAll(params);
-                    return sql;
-                }
-
-                public static class Option {
-                    Format format;
-                    boolean use;
-                    Map<String, Object> params;
-
-                    public Option() {
-
-                    }
-                }
-
-
-                public enum Format {
-                    From, Join, Unknown;
-                }
-
-                public static class Empty extends SqlBuilder {
-                    public static Empty INSTANCE = new Empty();
-
-                    private Empty() {
-                    }
-                }
-            }
-
-            Map<String, Object> filter(Map<String, Object> params);
-
-            boolean match(String key);
-
-            void setOption(SqlBuilder.Option option);
-
-            SqlBuilder.Option getOption();
-
-            SqlBuilder build();
-
-            default boolean isUse() {
-                return getOption().use;
-            }
-
-            interface IColumn {
-                void linkColumn(IColumn column);
-
-                ITable getTable();
-            }
-
-            IColumn getColumn(String tableKey, String columnKey);
-
-            IColumn getAliasColumn(String alias);
-
-            void setParent(ITable parent);
-
-            ITable getParent();
-
-            TableRel getRel();
-        }
-
-        public class GroupTable implements ITable {
-            String name;
-            final ITable[] tables;
-            final TableRel rel;
-            ITable parent;
-            final Column[] columns;
-            SqlBuilder.Option option;
-
-            public GroupTable(String name, ITable[] iTables, TableRel rel) {
-                this.name = name;
-                this.tables = iTables;
-                for (ITable iTable : iTables) {
-                    iTable.setParent(this);
-                }
-                columns = Arrays.stream(tables).flatMap(iTable -> {
-                    if (iTable instanceof GroupTable) {
-                        return Arrays.stream(((GroupTable) iTable).columns);
-                    } else if (iTable instanceof Table) {
-                        return Arrays.stream(((Table) iTable).columns).map(column -> this.new Column(column));
-                    } else {
-                        return Stream.of();
-                    }
-                }).toArray(Column[]::new);
-                this.rel = rel;
-            }
-
-
-            public GroupTable(String name, List<ITable> iTables, TableRel rel) {
-                this(name, iTables.toArray(ITable[]::new), rel);
-            }
-
-            public void setParent(ITable parent) {
-                this.parent = parent;
-            }
-
-            @Override
-            public ITable getParent() {
-                return this.parent;
-            }
-
-            @Override
-            public Map<String, Object> filter(Map<String, Object> params) {
-                Map<String, Object> map = new HashMap<>();
-                for (ITable table : this.tables) {
-                    for (Map.Entry<String, Object> entry : params.entrySet()) {
-                        if (table.getAliasColumn(entry.getKey()) == null) continue;
-                        map.put(entry.getKey(), entry.getValue());
-                    }
-                }
-                return map;
-            }
-
-            @Override
-            public boolean match(String key) {
-                for (ITable table : tables) {
-                    if (table.match(key)) return true;
-                }
-                return false;
-            }
-
-            @Override
-            public void setOption(SqlBuilder.Option option) {
-                this.option = option;
-                for (ITable table : this.tables) {
-                    SqlBuilder.Option option1 = new SqlBuilder.Option();
-                    option1.params = table.filter(option.params);
-                    table.setOption(option1);
-                }
-            }
-
-            @Override
-            public SqlBuilder.Option getOption() {
-                return option;
-            }
-
-            @Override
-            public SqlBuilder build() {
-                Stream<ITable> stream = Arrays.stream(this.tables).filter(iTable -> !useless(iTable));
-                if (!this.option.params.isEmpty()) {
-                    stream = stream.sorted(Comparator.comparing(iTable -> {
-                        if (iTable.getOption().use) {
-                            return iTable.getOption().params.size() * -1;
-                        }
-                        return 1;
-                    }));
-                }
-                AtomicInteger index = new AtomicInteger();
-                return new ITable.SqlBuilder(stream
-                        .map(iTable -> {
-                            iTable.getOption().format = index.getAndIncrement() == 0 ? SqlBuilder.Format.From : SqlBuilder.Format.Join;
-                            return iTable;
-                        }).map(ITable::build).collect(Collectors.toList()));
-            }
-
-            protected boolean useless(ITable iTable) {
-                return iTable == null || (!iTable.getOption().use && (iTable.getRel() == TableRel.Multi || iTable.getRel() == TableRel.Weak || useless(iTable.getParent())));
-            }
-
-
-            @Override
-            public TableRel getRel() {
-                return rel;
-            }
-
-            public IColumn getColumn(String tableKey, String columnKey) {
-                for (ITable table : tables) {
-                    if (table instanceof GroupTable) {
-                        IColumn iColumn = table.getColumn(tableKey, columnKey);
-                        for (Column column : columns) {
-                            if (column.equals(iColumn)) {
-                                return column;
-                            }
-                        }
-                    } else if (table instanceof Table && table.match(tableKey)) {
-                        return ((Table) table).getColumn(columnKey);
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public IColumn getAliasColumn(String alias) {
-                for (Column column : columns) {
-                    if (alias.equals(column.column.alias)) return column;
-                }
-                return null;
-            }
-
-
-            public void initRelColumn(List<Map.Entry<String, String>> relColumn) {
-                Matcher aKey;
-                Matcher bKey;
-                IColumn aColumn;
-                IColumn bColumn;
-                for (Map.Entry<String, String> entry : relColumn) {
-                    aKey = DataAccessObjectInfo.COLUMN.matcher(entry.getKey());
-                    bKey = DataAccessObjectInfo.COLUMN.matcher(entry.getValue());
-                    boolean a = aKey.find() && bKey.find();
-                    aColumn = getColumn(aKey.group(1), aKey.group(2));
-                    bColumn = getColumn(bKey.group(1), bKey.group(2));
-                    aColumn.linkColumn(bColumn);
-                    bColumn.linkColumn(aColumn);
-                }
-
-            }
-
-            public class Column implements IColumn {
-                final Table.Column column;
-                final Set<IColumn> linkColumns = new HashSet<>();
-
-                public Column(Table.Column column) {
-                    this.column = column;
-                }
-
-
-                @Override
-                public boolean equals(Object o) {
-                    if (this == o) return true;
-                    if (o == null || getClass().isAssignableFrom(o.getClass()) || o.getClass().isAssignableFrom(getClass()))
-                        return false;
-                    if (o instanceof Column) {
-                        return Objects.equals(column, ((Column) o).column);
-                    } else {
-                        return o.equals(column);
-                    }
-                }
-
-                @Override
-                public int hashCode() {
-                    return column != null ? column.hashCode() : 0;
-                }
-
-                @Override
-                public void linkColumn(IColumn column) {
-                    linkColumns.add(column);
-                }
-
-                public GroupTable getTable() {
-                    return GroupTable.this;
-                }
-            }
-        }
-
-        public class Table implements ITable {
-            final static String JOIN_CUT_POINT = "{{join}}";
-            final String name;
-            final String alias;
-            final Column[] columns;
-            final String[] filter;
-            final TableRel rel;
-            SqlBuilder.Option option;
-            ITable parent;
-
-            public Table(String name, String alias, ColumnArg[] columnArgs, String[] filter, TableRel rel) {
-                this.name = name;
-                this.alias = alias;
-                this.filter = filter;
-                this.rel = rel;
-                this.columns = Arrays.stream(columnArgs).map(columnArg -> this.new Column(columnArg)).toArray(Column[]::new);
-            }
-
-            public void setParent(ITable parent) {
-                this.parent = parent;
-            }
-
-            @Override
-            public ITable getParent() {
-                return this.parent;
-            }
-
-            public Column getColumn(String key) {
-                for (Column column : columns) {
-                    if (column.name.equals(key)) return column;
-                }
-                return null;
-            }
-
-            @Override
-            public TableRel getRel() {
-                return rel;
-            }
-
-            @Override
-            public Map<String, Object> filter(Map<String, Object> params) {
-                Map<String, Object> map = new HashMap<>();
-                for (Map.Entry<String, Object> entry : params.entrySet()) {
-                    if (this.getAliasColumn(entry.getKey()) == null) continue;
-                    map.put(entry.getKey(), entry.getValue());
-                }
-                return map;
-            }
-
-            @Override
-            public boolean match(String key) {
-                return alias.equals(key);
-            }
-
-            @Override
-            public void setOption(SqlBuilder.Option option) {
-                this.option = option;
-                if (option.use = MapUtils.isNotEmpty(option.params)) {
-                    markUse(this);
-                }
-            }
-
-            protected void markUse(ITable iTable) {
-                if (iTable instanceof Table) {
-                    for (Table.Column column : this.columns) {
-                        if (CollectionUtils.isEmpty(column.linkColumns)) continue;
-                        for (IColumn linkColumn : column.linkColumns) {
-                            if (linkColumn.getTable().getOption() == null && linkColumn.getTable().getOption().use)
-                                continue;
-                            ITable table = linkColumn.getTable();
-                            table.getOption().use = true;
-                            this.markUse(iTable.getParent());
-                        }
-                    }
-                } else if (iTable instanceof GroupTable) {
-                    iTable.getOption().use = true;
-                    this.markUse(iTable.getParent());
-                }
-            }
-
-            @Override
-            public SqlBuilder.Option getOption() {
-                return option;
-            }
-
-            @Override
-            public SqlBuilder build() {
-                SqlBuilder sqlBuilder = new SqlBuilder();
-                //弱关联 不做处理
-                Map<String, Object> map = option.params;
-                if (map.isEmpty() && (rel == TableRel.Weak || rel == TableRel.Multi) && !isUse()) {
-                    return sqlBuilder;
-                }
-                switch (option.format) {
-                    case From:
-                        sqlBuilder.from.append(String.format(
-                                " from %s %s %S where %s",
-                                this.name,
-                                this.alias,
-                                JOIN_CUT_POINT,
-                                buildCondition(map)
-                        ));
-                        break;
-                    case Join:
-                        sqlBuilder.from.append(String.format(
-                                " join %s %s on %s",
-                                this.name,
-                                this.alias,
-                                buildCondition(map)
-                        ));
-                        break;
-                    default:
-                        break;
-                }
-                return sqlBuilder;
-            }
-
-            protected String buildCondition(Map<String, Object> map) {
-                return Stream.of(
-                        map.entrySet().stream().map(entry -> {
-                            Column column = this.getAliasColumn(entry.getKey());
-                            sqlBuilder.params.add(entry.getValue());
-                            return String.format("%s.%s = ?", this.name, column.name);
-                        }),
-                        Arrays.stream(filter)
-                ).flatMap(stringStream -> stringStream).collect(Collectors.joining(" and "));
-            }
-
-            @Override
-            public Column getColumn(String tableKey, String columnKey) {
-                if (tableKey.equals(alias)) {
-                    return getColumn(columnKey);
-                }
-                return null;
-            }
-
-            @Override
-            public Column getAliasColumn(String alias) {
-                for (Column column : columns) {
-                    if (alias.equals(column.alias)) return column;
-                }
-                return null;
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                if (this == o) return true;
-                if (o == null || getClass().isAssignableFrom(o.getClass()) || o.getClass().isAssignableFrom(getClass()))
-                    return false;
-                Table table = (Table) o;
-                return Objects.equals(alias, table.alias);
-            }
-
-            @Override
-            public int hashCode() {
-                return alias != null ? alias.hashCode() : 0;
-            }
-
-
-            public class Column extends ColumnArg implements IColumn {
-                Set<IColumn> linkColumns = new HashSet<>();
-
-                public Column(ColumnArg arg) {
-                    super(arg.name, arg.alias);
-                }
-
-                public Table getTable() {
-                    return Table.this;
-                }
-
-                @Override
-                public boolean equals(Object o) {
-                    if (this == o) return true;
-                    if (o == null || getClass().isAssignableFrom(o.getClass()) || o.getClass().isAssignableFrom(getClass()))
-                        return false;
-                    if (o instanceof Column) {
-                        Column column = (Column) o;
-                        return Objects.equals(this.name, column.name) && Objects.equals(getTable(), column.getTable());
-                    } else {
-                        return o.equals(this);
-                    }
-                }
-
-                @Override
-                public int hashCode() {
-                    int result = name != null ? name.hashCode() : 0;
-                    result = 31 * result + (getTable() != null ? getTable().hashCode() : 0);
-                    return result;
-                }
-
-                public void linkColumn(IColumn column) {
-                    if (this.equals(column)) return;
-                    this.linkColumns.add(column);
-                }
-            }
-
         }
     }
 

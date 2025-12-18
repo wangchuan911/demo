@@ -2,6 +2,7 @@ package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
+import org.welisdoon.common.object.wrapper.IDataAccessObject;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
@@ -132,17 +133,19 @@ public class SqlJoiner extends Sql {
         }
     }
 
+
+
     @Override
     protected String format(FormatContent format) {
         boolean isFirst = isFirst();
         if (leaf) {
             switch (getType()) {
                 case SqlToJoinOfWeakRel:
-                    Assert.isTrue(!isFirst, "不支持的操作：" + getType().name());
                 case ObjConstructor:
                 case SqlToJoinOfStrongRel:
+                    format.init(this);
                     List<String> cond = condition.stream().map(sql -> sql.format(format)).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
-                    format.addTablePart(new FormatContent.LeafPart(
+                    /*format.addTablePart(new FormatContent.LeafPart(
                             format,
                             table,
                             cond,
@@ -151,7 +154,7 @@ public class SqlJoiner extends Sql {
                                 String alias = last.getPrefix(),
                                         target = last.getAttribute().getCode();
                                 return new FormatContent.Part.FormatColumn(alias, target, field);
-                            }).filter(sql -> Objects.equals(sql.getAlias(), table.getAlias())).collect(Collectors.toList()), getType()));
+                            }).filter(sql -> Objects.equals(sql.getAlias(), table.getAlias())).collect(Collectors.toList()), getType()));*/
 
                     Object[] args = new String[4];
                     args[0] = table.getTarget();
@@ -171,22 +174,22 @@ public class SqlJoiner extends Sql {
                     throw new IllegalStateException("不支持的操作：" + getType().name());
             }
         } else {
-            try {
-                format.addTablePart(new FormatContent.VirtualPart(format, getType()));
-                if (isFirst)
-                    return subJoiners.get(0).format(format).replace(OTHER,
-                            (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
-                else {
-                    MetaObject object = getObject();
-                    return String.format("/*%s*/ %s /*%s*/",
-                            object.getName(),
-                            subJoiners.stream().map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" ")),
-                            object.getName());
-                }
-
-            } finally {
-                format.pullTablePart();
+            /*try {
+                format.addTablePart(new FormatContent.VirtualPart(format, getType()));*/
+            if (isFirst)
+                return subJoiners.get(0).format(format).replace(OTHER,
+                        (subJoiners.size() == 1 ? "" : subJoiners.stream().skip(1).map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" "))) + OTHER);
+            else {
+                MetaObject object = getObject();
+                return String.format("/*%s*/ %s /*%s*/",
+                        object.getName(),
+                        subJoiners.stream().map(sqlJoiner -> sqlJoiner.format(format)).collect(Collectors.joining(" ")),
+                        object.getName());
             }
+
+            /*} finally {
+                format.pullTablePart();
+            }*/
         }
     }
 

@@ -8,8 +8,10 @@ import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.sqlclient.*;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.handler.OgnlUtils;
+import org.welisdoon.common.MyBatisUtils;
 import org.welisdoon.common.data.BaseCondition;
 
+import java.sql.JDBCType;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -24,8 +26,8 @@ import java.util.stream.Collectors;
  * @Date 13:53
  */
 public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> extends ConnectPool<S> {
-    String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
-    Pattern PATTERN = Pattern.compile(PATTERN_STRING);
+//    String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
+//    Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
     P getPool(String name);
 
@@ -92,7 +94,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
 
     default List<Map.Entry<String, JdbcType>> getSqlParamTypes(String s) {
         List<Map.Entry<String, JdbcType>> list = new LinkedList<>();
-        Matcher matcher = DataBaseConnectPool.PATTERN.matcher(s);
+        /*Matcher matcher = DataBaseConnectPool.PATTERN.matcher(s);
         JdbcType sqlType = null;
         String name;
         while (matcher.find()) {
@@ -106,8 +108,31 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                     continue;
             }
             list.add(Map.entry(name, sqlType == null ? JdbcType.VARCHAR : sqlType));
-        }
+        }*/
+        MyBatisUtils.readSqlTemplate(s, (s1, jdbcType) -> {
+            JdbcType sqlType = toJdbcType(jdbcType);
+            if (sqlType == null) sqlType = JdbcType.VARCHAR;
+            list.add(Map.entry(s1, sqlType));
+        });
         return list;
+    }
+
+    default JdbcType toJdbcType(JDBCType jdbcType) {
+        for (JdbcType value : JdbcType.values()) {
+            if (value.TYPE_CODE == jdbcType.getVendorTypeNumber()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    default JDBCType toJDBCType(JdbcType jdbcType) {
+        for (JDBCType value : JDBCType.values()) {
+            if (value.getVendorTypeNumber() == jdbcType.TYPE_CODE) {
+                return value;
+            }
+        }
+        return null;
     }
 
     String toPageSql(String body);
@@ -125,7 +150,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
             if (value == null) {
                 continue;
             }
-            switch (jdbcType) {
+            /*switch (jdbcType) {
                 case INTEGER:
                 case SMALLINT:
                 case TINYINT:
@@ -168,7 +193,9 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                     break;
 
 
-            }
+            }*/
+
+            value = MyBatisUtils.getValue(toJDBCType(jdbcType), value);
             params.add(value);
         }
     }

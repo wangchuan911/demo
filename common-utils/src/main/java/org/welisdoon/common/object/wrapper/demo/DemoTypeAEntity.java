@@ -1,9 +1,10 @@
-package org.welisdoon.common.object.wrapper;
+package org.welisdoon.common.object.wrapper.demo;
 
 import org.welisdoon.common.data.BaseCondition;
+import org.welisdoon.common.object.wrapper.IDataAccessObject;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Classname DemoDaoEntity
@@ -38,7 +39,7 @@ public class DemoTypeAEntity implements IDemoTypeAEntity {
 //        configurationBuilder.setUrls(ClasspathHelper.forPackage(DemoDaoEntity.class.getPackageName()));
 //        configurationBuilder.setInputsFilter(s -> s.toLowerCase().endsWith(".class") || s.toLowerCase().endsWith(".java"));
 //        IDataAccessObject.initialization(new Reflections(configurationBuilder));
-        IDataAccessObject.page(DemoTypeAEntity.class, new HashMap<>(), new BaseCondition.Page(1, 1));
-        IDataAccessObject.page(DemoTypeBEntity.class, new HashMap<>(), new BaseCondition.Page(1, 1));
+        IDataAccessObject.page(DemoTypeAEntity.class, Map.of("t1column1", 1), new BaseCondition.Page(1, 1));
+        IDataAccessObject.page(DemoTypeBEntity.class, Map.of("t5_3column2", 1), new BaseCondition.Page(1, 1));
     }
 }

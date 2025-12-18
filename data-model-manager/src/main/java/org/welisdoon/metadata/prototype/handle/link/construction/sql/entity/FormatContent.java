@@ -1,12 +1,15 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
 import org.springframework.util.Assert;
+import org.welisdoon.common.object.wrapper.IDataAccessObject;
+import org.welisdoon.common.object.wrapper.SqlMapper;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaPrototype;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Classname FormatContent
@@ -14,8 +17,8 @@ import java.util.List;
  * @Author Septem
  * @Date 15:15
  */
-public class FormatContent {
-    final protected VirtualPart tablePart;
+public class FormatContent implements IDataAccessObject.ObjectScanner {
+    /*final protected VirtualPart tablePart;
     private LinkedList<Part> current = new LinkedList<>();
     protected int count = 0;
 
@@ -167,5 +170,58 @@ public class FormatContent {
         }
 
 
+    }*/
+    SqlMapper sqlMapper;
+    List<Map.Entry<SqlJoiner, List<Object>>> cache = new LinkedList<>();
+
+    List<Object> get(SqlJoiner sqlJoiner) {
+        for (Map.Entry<SqlJoiner, List<Object>> sqlJoinerListEntry : cache) {
+            if (sqlJoiner == sqlJoinerListEntry.getKey()) {
+                return sqlJoinerListEntry.getValue();
+            }
+        }
+        return List.of();
+    }
+
+
+    public List<Object> init(SqlJoiner sqlJoiner) {
+        List<Object> list = new LinkedList<>();
+        cache.add(Map.entry(sqlJoiner, list));
+        return list;
+    }
+
+    protected SqlMapper toMapper(Map<String, Object> params) {
+        SqlMapper mapper = new SqlMapper();
+        SqlMapper.MainTable table = sql(mapper);
+        mapper.build(table, params);
+        System.out.println(mapper.sql);
+        return mapper;
+    }
+
+    @Override
+    public void scanTableAnnotation(List<IDataAccessObject.Model.TableVO> tableList) {
+        cache.stream().map(entry -> {
+            SqlJoiner sqlJoiner = entry.getKey();
+            IDataAccessObject.TableRel rel;
+            switch (sqlJoiner.getType()) {
+                case SqlToJoinOfWeakRel:
+                case SqlToJoinOfMultiDataRel:
+                    rel = IDataAccessObject.TableRel.Weak;
+                    break;
+                default:
+                    rel = IDataAccessObject.TableRel.Strong;
+                    break;
+            }
+            if (sqlJoiner.table.getAlias().matches("T\\d+(\\_1)*") && sqlJoiner.getParent() instanceof SqlJoiner) {
+                rel = sqlJoiner.getParent().getType() == LinkMetaType.SqlToJoinOfStrongRel || sqlJoiner.getParent().getType() == LinkMetaType.ObjConstructor ? IDataAccessObject.TableRel.Strong : IDataAccessObject.TableRel.Weak;
+            }
+            return new IDataAccessObject.Model.TableVO(
+                    entry.getValue().stream().filter(o -> o instanceof IDataAccessObject.Model.TableVO.ColumnVO).map(o -> (IDataAccessObject.Model.TableVO.ColumnVO) o).toArray(IDataAccessObject.Model.TableVO.ColumnVO[]::new),
+                    String.format("%s.%s %s", "this", sqlJoiner.table.getTarget(), sqlJoiner.table.getAlias()),
+                    "datasource",
+                    entry.getValue().stream().filter(o -> o instanceof String).map(o -> (String) o).toArray(String[]::new),
+                    sqlJoiner.table.getAlias().matches("T\\d+") ? null : sqlJoiner.table.getAlias().substring(0, sqlJoiner.table.getAlias().lastIndexOf("_")),
+                    rel);
+        }).forEach(tableList::add);
     }
 }
