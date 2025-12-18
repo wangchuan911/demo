@@ -888,7 +888,9 @@ public class QueryManagerRouter {
 //                    event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
                     break;
                 case "download":
-
+                    TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent();
+                    new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(templateFormatContent);
+                    templateFormatContent.build();
                     break;
                 case "snapshot":
                     QueryTemplateInstance parameter1 = new QueryTemplateInstance(metaObject);

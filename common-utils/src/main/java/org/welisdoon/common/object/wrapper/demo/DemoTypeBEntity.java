@@ -1,9 +1,4 @@
-package org.welisdoon.common.object.wrapper;
-
-import org.welisdoon.common.data.BaseCondition;
-
-import java.util.HashMap;
-import java.util.List;
+package org.welisdoon.common.object.wrapper.demo;
 
 /**
  * @Classname DemoDaoEntity

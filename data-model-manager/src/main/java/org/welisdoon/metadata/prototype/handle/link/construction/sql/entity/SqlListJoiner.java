@@ -19,9 +19,9 @@ public class SqlListJoiner extends SqlJoiner {
         if (leaf) {
             switch (getType()) {
                 case SqlToJoinOfMultiDataRel:
+                    format.init(this);
                     List<String> cond = condition.stream().map(sqlRelationExpression -> sqlRelationExpression.format(format)).collect(Collectors.toList());
-
-                    format.addTablePart(new FormatContent.LeafPart(
+                    /*format.addTablePart(new FormatContent.LeafPart(
                             format,
                             table,
                             cond,
@@ -31,7 +31,7 @@ public class SqlListJoiner extends SqlJoiner {
                                         target = last.getAttribute().getCode();
                                 return new FormatContent.Part.FormatColumn(alias, target, field);
                             }).collect(Collectors.toList()),
-                            getType()));
+                            getType()));*/
 
                     Object[] args = new String[3];
                     args[0] = table.getTarget();

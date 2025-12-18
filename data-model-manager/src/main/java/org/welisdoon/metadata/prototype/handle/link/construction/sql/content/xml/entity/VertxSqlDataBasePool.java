@@ -4,23 +4,23 @@ import io.vertx.core.Future;
 import io.vertx.jdbcclient.JDBCConnectOptions;
 import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.sqlclient.*;
-import org.apache.commons.io.IOUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+/*import org.apache.commons.io.IOUtils;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.XmlTemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.node.Mappers;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.parser.LikeMyBatisSAXParser;
-import org.welisdoon.web.common.ApplicationContextProvider;
-import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.Charset;*/
+import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.vertx.verticle.WorkerVerticle;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 @Component
 public class VertxSqlDataBasePool {
-    static Map<String, Mappers> MAPPERS = new HashMap<>();
+//    static Map<String, Mappers> MAPPERS = new HashMap<>();
 
     protected Map<String, Pool> dataBases = new HashMap();
 
@@ -121,7 +121,7 @@ public class VertxSqlDataBasePool {
                      BiConsumer<List<?>, Throwable> listConsumer) {
 
 
-        Mappers mappers = ObjectUtils.synchronizedGet(MAPPERS, stringMappersMap -> stringMappersMap.get(templateParameter.database), stringMappersMap -> {
+        /*Mappers mappers = ObjectUtils.synchronizedGet(MAPPERS, stringMappersMap -> stringMappersMap.get(templateParameter.database), stringMappersMap -> {
             Mappers mappers1 = new Mappers(templateParameter.database);
             stringMappersMap.put(templateParameter.database, mappers1);
             return mappers1;
@@ -164,7 +164,7 @@ public class VertxSqlDataBasePool {
                     .onComplete((result, failure) -> {
                         listConsumer.accept((List) result, failure);
                     });
-        });
+        });*/
     }
 
     @FunctionalInterface

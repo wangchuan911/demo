@@ -27,7 +27,8 @@ import java.util.regex.Pattern;
 
 @Tag(value = "content", parentTagTypes = BaseUnit.class, desc = "单纯的文本内容")
 @Attr(name = "content", desc = "文本内容")
-public class Content extends LikeMyBatisSqlNode implements Script<SqlParameter> {
+@Deprecated
+class Content extends LikeMyBatisSqlNode implements Script<SqlParameter> {
     public static final String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
     public static final Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 

@@ -13,8 +13,8 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.Sql;
  */
 public abstract class TemplateFormatContent extends FormatContent {
     protected Logger log = LoggerFactory.getLogger(this.getClass());
-
+//
     public abstract void build();
-
+//
     public abstract Object getValue();
 }
