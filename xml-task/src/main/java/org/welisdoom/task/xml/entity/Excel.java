@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class Excel extends Sheet implements Iterable<Map<String, Object>> {
 
     @Override
-    protected Future<Object> operation(TaskInstance data, Object preUnitResult) {
+    protected Future<Object> operation(TaskSession data, Object preUnitResult) {
         if (attributes.containsKey("split")) {
             return split(data);
         }
@@ -45,7 +45,7 @@ public class Excel extends Sheet implements Iterable<Map<String, Object>> {
     }
 
 
-    public Future<Object> split(TaskInstance data) {
+    public Future<Object> split(TaskSession data) {
         String targetPath = getAttrFormatValue("split", data);
         String filePath = getAttrFormatValue("read", data);
         File file = new File(filePath);
@@ -118,7 +118,7 @@ public class Excel extends Sheet implements Iterable<Map<String, Object>> {
     }
 
     @Override
-    public Future<Object> read(TaskInstance data) {
+    public Future<Object> read(TaskSession data) {
         String filePath = getAttrFormatValue("read", data);
         try {
 
@@ -192,24 +192,24 @@ public class Excel extends Sheet implements Iterable<Map<String, Object>> {
 
 
     @Override
-    Charset getCharset(TaskInstance data) {
+    Charset getCharset(TaskSession data) {
         return Charset.forName("gbk");
     }
 
-    protected Closeable initWriter(TaskInstance request) throws Throwable {
+    protected Closeable initWriter(TaskSession request) throws Throwable {
         throw new IllegalStateException("不支持");
     }
 
 
     @Override
-    public Future<Object> write(TaskInstance data, WriteLine unit) {
+    public Future<Object> write(TaskSession data, WriteLine unit) {
         throw new IllegalStateException("不支持");
     }
 
 
     @Override
-    public Future<Void> destroy(TaskInstance taskInstance) {
-        return super.destroy(taskInstance);
+    public Future<Void> destroy(TaskSession taskSession) {
+        return super.destroy(taskSession);
     }
 
     @Override

@@ -25,14 +25,14 @@ public interface MyBatisUtils {
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
 
-    static void readSqlTemplate(String content, BiConsumer<String, JDBCType> consumer) {
+    static void readSqlTemplate(String content, BiConsumer<String, String> consumer) {
         Matcher matcher = PATTERN.matcher(content);
         while (matcher.find()) {
-            JDBCType sqlType = null;
+            String sqlType = null;
             String name;
             switch (matcher.groupCount()) {
                 case 2:
-                    sqlType = JDBCType.valueOf(matcher.group(2));
+                    sqlType = matcher.group(2);
                 case 1:
                     name = matcher.group(1);
                     break;
@@ -43,45 +43,45 @@ public interface MyBatisUtils {
         }
     }
 
-    static Object getValue(JDBCType sqlType, Object value) {
+    static Object getValue(String sqlType, Object value) {
         switch (sqlType) {
-            case INTEGER:
-            case SMALLINT:
-            case TINYINT:
+            case "INTEGER":
+            case "SMALLINT":
+            case "TINYINT":
                 value = TypeUtils.castToInt(value);
                 break;
-            case BLOB:
+            case "BLOB":
                 value = TypeUtils.castToBytes(value);
                 break;
-            case NUMERIC:
-            case BIGINT:
+            case "NUMERIC":
+            case "BIGINT":
                 value = TypeUtils.castToBigDecimal(value);
                 break;
-            case BOOLEAN:
+            case "BOOLEAN":
                 value = TypeUtils.castToBoolean(value);
                 break;
-            case BIT:
+            case "BIT":
                 value = TypeUtils.castToByte(value);
                 break;
-            case DOUBLE:
+            case "DOUBLE":
                 value = TypeUtils.castToDouble(value);
                 break;
-            case TIMESTAMP:
+            case "TIMESTAMP":
                 value = TypeUtils.castToTimestamp(value);
                 if (Objects.nonNull(value) && value instanceof Timestamp) {
                     value = ((Timestamp) value).toLocalDateTime();
                 }
                 break;
-            case FLOAT:
+            case "FLOAT":
                 value = TypeUtils.castToFloat(value);
                 break;
-            case DATE:
+            case "DATE":
                 value = TypeUtils.castToDate(value);
                 break;
-            case CLOB:
-            case NCHAR:
-            case NCLOB:
-            case VARCHAR:
+            case "CLOB":
+            case "NCHAR":
+            case "NCLOB":
+            case "VARCHAR":
                 value = TypeUtils.castToString(value);
             default:
                 break;

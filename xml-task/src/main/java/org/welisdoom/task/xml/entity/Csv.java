@@ -50,14 +50,14 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
     }*/
 
     @Override
-    protected Future<Object> operation(TaskInstance data, Object preUnitResult) {
+    protected Future<Object> operation(TaskSession data, Object preUnitResult) {
         if (attributes.containsKey("split")) {
             return split(data);
         }
         return super.operation(data, preUnitResult);
     }
 
-    public Future<Object> split(TaskInstance data) {
+    public Future<Object> split(TaskSession data) {
         String targetPath = getAttrFormatValue("split", data);
         String filePath = getAttrFormatValue("read", data);
         File file = new File(filePath);
@@ -120,7 +120,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
     }
 
     @Override
-    public Future<Object> read(TaskInstance data) {
+    public Future<Object> read(TaskSession data) {
         CSVReader csvReader;
         try {
             csvReader = new CSVReaderBuilder(
@@ -171,11 +171,11 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
     }
 
     @Override
-    Charset getCharset(TaskInstance data) {
+    Charset getCharset(TaskSession data) {
         return Charset.forName("gbk");
     }
 
-    protected Closeable initWriter(TaskInstance request) throws Throwable {
+    protected Closeable initWriter(TaskSession request) throws Throwable {
         CSVWriter writer = new CSVWriter(getWriter(request));
         if ("true".equals(attributes.get("header"))) {
             writer.writeNext(Arrays.stream(this.cols).map(Col::getName).toArray(String[]::new));
@@ -186,7 +186,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
 
 
     @Override
-    public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
+    public Future<Object> write(TaskSession data, StreamUnit.WriteLine unit) {
         try {
             CSVWriter csvWriter = data.cache(this);
             String[] value = unit.getChild(Col.class).stream().map(col -> BaseUnit.textFormat(data, col.getValue())).toArray(String[]::new);
@@ -199,16 +199,72 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
         }
     }
 
+    @Override
+    public void readSync(TaskSession data) throws Throwable {
+        CSVReader csvReader = new CSVReaderBuilder(
+                    /*new BufferedReader(
+                            new InputStreamReader(
+                                    Objects.equals(mode, "@stream") ? (InputStream) data.lastUnitResult : new FileInputStream(textFormat(data, mode)),
+                                    attributes.containsKey("charset") ? Charset.forName(getAttrFormatValue("charset", data)) : Charset.defaultCharset())
+                    )*/
+                this.getReader(data)
+        ).build();
+
+        Iterator<String[]> iterator = csvReader.iterator();
+        String[] headers;
+        if ("false".equals(attributes.get("header"))) {
+            if (iterator.hasNext()) {
+                headers = iterator.next();
+            } else {
+                throw new RuntimeException("文件获取文件头失败");
+            }
+        } else {
+            headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
+        }
+        List<Map.Entry> entries = new LinkedList<>();
+        String[] values;
+        AtomicLong index = new AtomicLong(0);
+        while (iterator.hasNext()) {
+            values = iterator.next();
+            entries.clear();
+            for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
+                if (StringUtils.isEmpty(values[i]))
+                    values[i] = "";
+                entries.add(Map.entry(headers[i], values[i]));
+            }
+            try {
+                this.iteratorSync(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries.toArray(Map.Entry[]::new))));
+            } catch (Break.SkipOneLoopThrowable e) {
+                Break.onContinue(e);
+            } catch (Break.BreakLoopThrowable e) {
+                Break.onBreak(e);
+                log(e.getMessage());
+                break;
+            }
+        }
+
+        await(data);
+    }
 
     @Override
-    public Future<Void> destroy(TaskInstance taskInstance) {
-        CSVWriter csvWriter = taskInstance.clearCache(this);
+    public void writeSync(TaskSession data, WriteLine unit) throws IOException {
+        CSVWriter csvWriter = data.cache(this);
+        String[] value = unit.getChild(Col.class).stream().map(col -> BaseUnit.textFormat(data, col.getValue())).toArray(String[]::new);
+        log(Arrays.toString(value));
+        csvWriter.writeNext(value);
+        csvWriter.flush();
+    }
+
+
+    @Override
+    public Future<Void> destroy(TaskSession taskSession) {
+        CSVWriter csvWriter = taskSession.clearCache(this);
         try (csvWriter) {
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return super.destroy(taskInstance);
+        return super.destroy(taskSession);
     }
 
     @Override

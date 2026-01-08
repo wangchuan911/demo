@@ -28,8 +28,34 @@ import java.util.stream.Collectors;
 @Attr(name = "id", desc = "唯一标识")
 @Attr(name = "db", desc = "数据库类型")
 public class Command extends Unit implements Executable {
+
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        Process process = Runtime.getRuntime().exec(BaseUnit.textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" "))));
+        data.cache(this, process);
+        Object result;
+        switch (MapUtils.getString(attributes, "output", "")) {
+            case "line":
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                result = new LinkedList<String>();
+                String txt;
+                log("==>      执行结果");
+                while (Objects.nonNull(txt = bufferedReader.readLine())) {
+                    ((List) result).add(txt);
+                    log("==>      " + txt);
+                }
+                break;
+            default:
+                result = StreamUtils.copyToString(process.getInputStream(), Charset.defaultCharset());
+                log("执行结果");
+                log(result);
+                break;
+        }
+        data.setResult(this, result);
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         try {
             Process process = Runtime.getRuntime().exec(BaseUnit.textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" "))));
             /*TimeoutStream timerStream = Task.getVertx().timerStream(MapUtils.getLong(attributes, "timeout", 5 * 1000L));*/
@@ -69,8 +95,8 @@ public class Command extends Unit implements Executable {
     }
 
     @Override
-    protected Future<Void> destroy(TaskInstance taskInstance) {
-        Process process = taskInstance.cache(this);
+    protected Future<Void> destroy(TaskSession taskSession) {
+        Process process = taskSession.cache(this);
         if (Objects.nonNull(process)) {
             long pId = process.pid();
             try {
@@ -84,6 +110,6 @@ public class Command extends Unit implements Executable {
                 }
             }
         }
-        return super.destroy(taskInstance);
+        return super.destroy(taskSession);
     }
 }

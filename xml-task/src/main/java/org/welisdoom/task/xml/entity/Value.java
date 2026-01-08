@@ -26,6 +26,15 @@ import java.util.HashMap;
 public class Value extends Unit implements Initialize {
 
     @Override
+    protected void startSync(TaskSession data) throws Throwable {
+            HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), MagicKey.VALUES, HashMap::new);
+            String value = BaseUnit.textFormat(data, getValue());
+            log("value:" + value);
+            map.put(this.id, value);
+
+    }
+
+    @Override
     public Unit attr(Attributes attributes) {
         return super.attr(attributes);
     }
@@ -44,7 +53,7 @@ public class Value extends Unit implements Initialize {
     }*/
 
     @Override
-    protected Future start(TaskInstance data, Object preUnitResult) {
+    protected Future start(TaskSession data, Object preUnitResult) {
         try {
             HashMap map = (HashMap) ObjectUtils.getMapValueOrNewSafe(data.getBus(), MagicKey.VALUES, HashMap::new);
             String value = BaseUnit.textFormat(data, getValue());

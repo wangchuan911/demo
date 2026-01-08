@@ -6,6 +6,7 @@ import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.SFtpConnectPool;
+import org.welisdoom.task.xml.connect.sync.SFtpConnectManager;
 import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -27,8 +28,9 @@ import java.util.Optional;
 public class SFtp extends Ftp implements Executable, Copyable {
 //    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
+
     @Override
-    public Future<Object> read(TaskInstance data) {
+    public Future<Object> read(TaskSession data) {
         Promise<Object> toNext = Promise.promise();
         SFtpConnectPool sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectPool.class);
         sFtpConnectPool.getConnect(getId(), data).onSuccess(session -> {
@@ -52,7 +54,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
 
 
     @Override
-    public Future<Object> write(TaskInstance data) {
+    public Future<Object> write(TaskSession data) {
         SFtpConnectPool sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectPool.class);
         return sFtpConnectPool.getConnect(getId(), data).compose(session -> {
             try {
@@ -138,7 +140,7 @@ public class SFtp extends Ftp implements Executable, Copyable {
     }*/
 
     @Override
-    protected Future<Void> disconnectFtp(TaskInstance data) {
+    protected Future<Void> disconnectFtp(TaskSession data) {
         Optional<SFtpConnectPool.SFtpSession> optional = Optional.ofNullable(data.cache(this));
         if (optional.isPresent()) {
             try {
@@ -148,6 +150,14 @@ public class SFtp extends Ftp implements Executable, Copyable {
             }
         }
         return Future.succeededFuture();
+    }
+
+    @Override
+    protected void disconnectFtpSync(TaskSession data) throws Throwable {
+        Optional<SFtpConnectPool.SFtpSession> optional = Optional.ofNullable(data.cache(this));
+        if (optional.isPresent()) {
+            optional.get().disconnect();
+        }
     }
 
     static class MySftpProgressMonitor implements SftpProgressMonitor {
@@ -177,5 +187,39 @@ public class SFtp extends Ftp implements Executable, Copyable {
             sFtp.log(String.format("success!!!"));
             sFtp = null;
         }
+    }
+
+    @Override
+    public void readSync(TaskSession data) throws Throwable {
+        SFtpConnectManager sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectManager.class);
+        SFtpConnectManager.SFtpSession session = sFtpConnectPool.getConnect(getId(), data);
+        SFtpConnectManager.SFtpClient client = session.getClient(data);
+        try {
+            data.cache(this, client);
+            String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("get", data);
+            log(String.format("%s=====>%s", remote, file));
+            client.get(remote, file, new MySftpProgressMonitor(this));
+            data.setValue(file);
+        } finally {
+            client.disconnect();
+        }
+    }
+
+
+    @Override
+    public void writeSync(TaskSession data) throws Throwable {
+        SFtpConnectManager sFtpConnectPool = ApplicationContextProvider.getBean(SFtpConnectManager.class);
+        SFtpConnectManager.SFtpSession session = sFtpConnectPool.getConnect(getId(), data);
+        SFtpConnectManager.SFtpClient client = session.getClient(data);
+        try {
+            data.cache(this, client);
+            String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
+            client.put(file, remote, new MySftpProgressMonitor(this));
+            data.setValue(file);
+        } finally {
+            data.clearCache(this);
+            client.disconnect();
+        }
+
     }
 }

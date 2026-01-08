@@ -5,6 +5,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.FtpConnectPool;
+import org.welisdoom.task.xml.connect.sync.FtpConnectManager;
 import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
@@ -32,7 +33,7 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
 //    Map<TaskRequest, Cache> ftpClientMap = new HashMap<>();
 
     @Override
-    public Future<Object> read(TaskInstance data) {
+    public Future<Object> read(TaskSession data) {
         return ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).compose(client -> {
             data.cache(this, client);
             try {
@@ -46,12 +47,12 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
         });
     }
 
-    public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
+    public Future<Object> write(TaskSession data, StreamUnit.WriteLine unit) {
         return Future.failedFuture("不支持的操作");
     }
 
     @Override
-    public Future<Object> write(TaskInstance data) {
+    public Future<Object> write(TaskSession data) {
         return ApplicationContextProvider.getBean(FtpConnectPool.class).getConnect(getId(), data).compose(client -> {
             data.cache(this, client);
             try {
@@ -66,8 +67,33 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
     }
 
     @Override
-    public Future<Object> write(TaskInstance request, Writer writer) {
+    public Future<Object> write(TaskSession request, Writer writer) {
         return Future.failedFuture("无效的操作");
+    }
+
+    @Override
+    public void readSync(TaskSession data) throws Throwable {
+        FTPClient client = ApplicationContextProvider.getBean(FtpConnectManager.class).getConnect(getId(), data);
+        data.cache(this, client);
+        String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("get", data);
+        log(String.format("%s=====>%s", remote, file));
+        StreamUtils.write(client.retrieveFileStream(remote), new FileOutputStream(file));
+        data.setValue(file);
+    }
+
+    @Override
+    public void writeSync(TaskSession data) throws Throwable {
+        FTPClient client = ApplicationContextProvider.getBean(FtpConnectManager.class).getConnect(getId(), data);
+        data.cache(this, client);
+        String file = getAttrFormatValue("local", data), remote = getAttrFormatValue("put", data);
+        log(String.format("%s=====>%s", file, remote));
+        StreamUtils.write(new FileInputStream(file), client.storeFileStream(remote));
+        data.setValue(file);
+    }
+
+    @Override
+    public void writeSync(TaskSession request, Writer writer) throws Throwable {
+        throw new IllegalStateException("无效的操作");
     }
 
     @Override
@@ -137,7 +163,8 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
                 throw new RuntimeException("错误的操作");
         }
     }*/
-    protected Future<Void> disconnectFtp(TaskInstance data) {
+    @Deprecated
+    protected Future<Void> disconnectFtp(TaskSession data) {
         Optional<FTPClient> optional = Optional.ofNullable(data.cache(this));
         if (optional.isPresent()) {
             try {
@@ -149,8 +176,15 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
         return Future.succeededFuture();
     }
 
+    protected void disconnectFtpSync(TaskSession data) throws Throwable {
+        Optional<FTPClient> optional = Optional.ofNullable(data.cache(this));
+        if (optional.isPresent()) {
+            optional.get().disconnect();
+        }
+    }
+
     @Override
-    protected Future<Void> destroy(TaskInstance data) {
+    protected Future<Void> destroy(TaskSession data) {
         return disconnectFtp(data).transform(objectAsyncResult -> super.destroy(data));
     }
 }

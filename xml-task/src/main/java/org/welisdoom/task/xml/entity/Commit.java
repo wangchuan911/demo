@@ -1,6 +1,5 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -27,6 +26,24 @@ public class Commit extends Unit implements Executable {
     AtomicInteger count = new AtomicInteger(0);
 
     @Override
+    protected void startSync(TaskSession data) {
+        log(String.format("batch:%d,count:%d", batch, count.incrementAndGet()));
+        if (batch == count.get()) {
+            count.set(0);
+            Optional<Transactional> optional;
+            if (attributes.containsKey("link")) {
+                optional = getParents(Transactional.class).stream().filter(transactional -> transactional.getId().equals(attributes.containsKey("link"))).findFirst();
+            } else {
+                optional = Optional.ofNullable(getParent(Transactional.class));
+            }
+            if (optional.isPresent()) {
+                log("提交");
+                commit(optional.get(), data);
+            }
+        }
+
+    }
+    @Override
     public Unit attr(Attributes attributes) {
         super.attr(attributes);
         batch = MapUtils.getInteger(this.attributes, "batch", 1);
@@ -34,7 +51,7 @@ public class Commit extends Unit implements Executable {
     }
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         log(String.format("batch:%d,count:%d", batch, count.incrementAndGet()));
         if (batch == count.get()) {
             count.set(0);
@@ -52,14 +69,14 @@ public class Commit extends Unit implements Executable {
         return Future.succeededFuture();
     }
 
-    protected Future<Object> commit(Transactional transactional, TaskInstance request) {
-        TaskInstance root = request;
+    protected Future<Object> commit(Transactional transactional, TaskSession request) {
+        TaskSession root = request;
         List<Future> list = new LinkedList<>();
         while (root.parentRequest != null) {
             root = root.parentRequest;
-            for (TaskInstance taskInstance : root.childrenRequest) {
-                if (taskInstance.cache(transactional) == null) continue;
-                list.add(transactional.commit(taskInstance));
+            for (TaskSession taskSession : root.childrenRequest) {
+                if (taskSession.cache(transactional) == null) continue;
+                list.add(transactional.commit(taskSession));
             }
         }
         if (root == null)

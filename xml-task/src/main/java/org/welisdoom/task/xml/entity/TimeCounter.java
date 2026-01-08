@@ -12,8 +12,19 @@ import org.welisdoom.task.xml.intf.type.Executable;
  */
 @Tag(value = "time-counter", parentTagTypes = Executable.class, desc = "csv文件读写")
 public class TimeCounter extends Unit implements Executable {
+
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+
+        long l = System.currentTimeMillis();
+        super.startSync(data);
+        String s = timeFormat(System.currentTimeMillis() - l);
+        log("耗时：{}", s);
+        data.setResult(this, s);
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         long l = System.currentTimeMillis();
         return super.start(data, preUnitResult).compose(o -> {
             String s = timeFormat(System.currentTimeMillis() - l);

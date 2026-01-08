@@ -79,18 +79,39 @@ public class Unit implements BaseUnit<Unit> {
         this.attributes = null;
     }
 
-    protected Future<Void> destroy(TaskInstance taskInstance) {
+    @Deprecated
+    protected Future<Void> destroy(TaskSession taskSession) {
         log("释放");
-        taskInstance.clearCache(this);
+        taskSession.clearCache(this);
         return Future.succeededFuture();
     }
 
-    protected Future<Void> hook(TaskInstance taskInstance) {
-        return this.destroy(taskInstance).transform(event ->
-                Optional.ofNullable(taskInstance.getChildrenRequest())
-                        .map(taskInstances -> (Future) Future.join(Arrays.stream(taskInstance.getChildrenRequest()).map(this::hook).collect(Collectors.toList())))
+    @Deprecated
+    protected Future<Void> hook(TaskSession taskSession) {
+        return this.destroy(taskSession).transform(event ->
+                Optional.ofNullable(taskSession.getChildrenRequest())
+                        .map(taskInstances -> (Future) Future.join(Arrays.stream(taskSession.getChildrenRequest()).map(this::hook).collect(Collectors.toList())))
                         .orElseGet(Future::succeededFuture)
         );
+    }
+
+    protected void destroySync(TaskSession taskSession) {
+        log("释放");
+        taskSession.clearCache(this);
+    }
+
+    protected void hookSync(TaskSession taskSession) {
+        this.destroySync(taskSession);
+        Optional.ofNullable(taskSession.getChildrenRequest())
+                .ifPresent(taskInstances -> {
+                    for (TaskSession instance : taskSession.getChildrenRequest()) {
+                        try {
+                            this.hookSync(instance);
+                        } catch (Throwable e) {
+                            log(LogUtils.styleString("", 41, 3, "hook异常:" + e.getMessage()));
+                        }
+                    }
+                });
     }
 
     public <T extends Unit> List<T> getChild(Class<T> tClass) {
@@ -139,14 +160,16 @@ public class Unit implements BaseUnit<Unit> {
         return list;
     }
 
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    @Deprecated
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         data.setPrevUnitValue(preUnitResult);
         return startChildUnit(data, preUnitResult, Objects::nonNull).onComplete(event -> {
             data.delPrevUnitValue();
         });
     }
 
-    protected Future<Object> startChildUnit(TaskInstance data, Object value, Predicate<Unit> predicate) {
+    @Deprecated
+    protected Future<Object> startChildUnit(TaskSession data, Object value, Predicate<Unit> predicate) {
         Future<Object> f = Future.succeededFuture(value);
         for (Unit child : getChild(predicate)) {
             f = f.compose(o -> startChildUnit(data, o, child));
@@ -154,7 +177,18 @@ public class Unit implements BaseUnit<Unit> {
         return f;
     }
 
-    protected Future<Object> startChildUnit(TaskInstance data, Object value, Unit unit) {
+    protected void startSync(TaskSession data) throws Throwable {
+        startChildUnitSync(data, Objects::nonNull);
+    }
+
+    protected void startChildUnitSync(TaskSession data, Predicate<Unit> predicate) throws Throwable {
+        for (Unit child : getChild(predicate)) {
+            startChildUnitSync(data, child);
+        }
+    }
+
+    @Deprecated
+    protected Future<Object> startChildUnit(TaskSession data, Object value, Unit unit) {
         long cost = System.currentTimeMillis();
 
         System.out.println();
@@ -171,6 +205,22 @@ public class Unit implements BaseUnit<Unit> {
             unit.log(String.format("--------------结束[%s][耗时:%s秒]--------------", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d), LogPosition.END);
             System.out.println();
         });
+    }
+
+    protected void startChildUnitSync(TaskSession data, Unit unit) throws Throwable {
+        long cost = System.currentTimeMillis();
+
+        System.out.println();
+        unit.log(String.format("_____________开始[%s]_____________", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)), LogPosition.START);
+        try {
+            unit.startSync(data);
+        } catch (Throwable e) {
+            unit.log(LogUtils.styleString("", 41, 3, "失败:" + e.getMessage()));
+            throw e;
+        } finally {
+            unit.log(String.format("--------------结束[%s][耗时:%s秒]--------------", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), (System.currentTimeMillis() - cost) / 1000.0d), LogPosition.END);
+            System.out.println();
+        }
     }
 
     protected synchronized void logNoTag(Object o) {
@@ -244,7 +294,7 @@ public class Unit implements BaseUnit<Unit> {
     }
 
 
-    protected String getAttrFormatValue(String name, TaskInstance data) {
+    protected String getAttrFormatValue(String name, TaskSession data) {
         return BaseUnit.textFormat(data, attributes.get(name));
     }
 

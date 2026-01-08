@@ -28,7 +28,24 @@ import java.util.stream.Collectors;
 @Attr(name = "read", desc = "读文件", require = true)
 public class GuessCharset extends Unit implements Executable {
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws FileNotFoundException {
+        String guess = getAttrFormatValue("guess", data);
+        log(guess);
+        int guessMaxLength = Math.max(MapUtils.getInteger(attributes, "max-length", 65535), 65535);
+        Map<String, AtomicInteger> result = guessCharset(Objects.equals(guess, "@stream") ? (InputStream) data.getValue() : new FileInputStream(guess), guessMaxLength);
+        log("预测的字符集：" + result);
+        List<String> list = result.entrySet().stream()
+                .sorted(Comparator.comparingInt(o -> o.getValue().get())).map(Map.Entry::getKey).collect(Collectors.toList());
+        String charset = list.stream().findFirst().get();
+        data.generateData(this);
+        Map<String, Object> map = data.getBus(this.id);
+        map.put("charsets", list);
+        log("选择的字符集：" + charset);
+        map.put("charset", charset);
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
 
         String guess = getAttrFormatValue("guess", data);
         log(guess);

@@ -1,8 +1,6 @@
 package org.welisdoom.task.xml;
 
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.VertxOptions;
+import io.vertx.core.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -81,20 +79,19 @@ public class XmlTaskApplication {
 
     @EventListener
     public void run(ApplicationReadyEvent readyEvent) {
-        options.setMaxEventLoopExecuteTime(1);
-        options.setMaxEventLoopExecuteTimeUnit(TimeUnit.HOURS);
         options.setMaxWorkerExecuteTime(10);
         options.setMaxWorkerExecuteTimeUnit(TimeUnit.DAYS);
-        Task.setVertxOption(options);
-        Future.join(taskList.entrySet().stream().map(entry ->
-                SubTask.run(entry.getKey(), entry.getValue()).onComplete(event -> {
-                    if (event.succeeded()) {
-                        System.out.println("成功：" + entry.getKey());
-                    } else {
-                        System.out.println("失败：" + entry.getKey());
-                    }
-                })).collect(Collectors.toList())).onComplete(event -> {
-            Task.closeVertx();
-        });
+        DeploymentOptions deploymentOptions = new DeploymentOptions();
+        deploymentOptions.setThreadingModel(ThreadingModel.WORKER);
+        Vertx.vertx(options).deployVerticle(new AbstractVerticle() {
+            @Override
+            public void start() {
+                Task.setVertx(getVertx());
+                context.runOnContext(event1 -> {
+                    Task.run(taskList, deploymentID());
+                });
+            }
+        }, deploymentOptions);
+
     }
 }

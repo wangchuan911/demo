@@ -15,7 +15,7 @@ import org.welisdoom.task.xml.intf.type.BaseUnit;
 
 @Tag(value = "content", parentTagTypes = BaseUnit.class, desc = "单纯的文本内容")
 @Attr(name = "content", desc = "文本内容")
-public class Content extends Unit implements Script<TaskInstance>, Copyable {
+public class Content extends Unit implements Script<TaskSession>, Copyable {
     String content;
 
     public Content setContent(String content) {
@@ -28,7 +28,7 @@ public class Content extends Unit implements Script<TaskInstance>, Copyable {
     }
 
     @Override
-    public String getScript(TaskInstance request, String s) {
+    public String getScript(TaskSession request, String s) {
         return content + s;
     }
 

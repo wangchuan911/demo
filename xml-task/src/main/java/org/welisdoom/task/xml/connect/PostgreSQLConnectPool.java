@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.Task;
+import org.welisdoon.common.MyBatisUtils;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import java.util.Map;
  */
 @Component
 @Db("postgresql")
+@Deprecated
 public class PostgreSQLConnectPool implements DataBaseConnectPool<Pool, PgConnection> {
     volatile Map<String, Pool> pools;
 
@@ -37,7 +39,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<Pool, PgConnec
     @Override
     public synchronized Pool getPool(String name) {
         if (!getPools().containsKey(name)) {
-            setInstance(this.configDao.getDatabase(name));
+            setInstance(new DatabaseLinkInfo(this.configDao.getDatabase(name)));
         }
         return getPools().get(name);
     }
@@ -85,7 +87,7 @@ public class PostgreSQLConnectPool implements DataBaseConnectPool<Pool, PgConnec
     public String sqlFormat(String sql, List<Object> param) {
         int i = 0;
         for (; i < param.size(); i++) {
-            sql = sql.replaceFirst(PATTERN_STRING, "\\$" + (i + 1));
+            sql = sql.replaceFirst(MyBatisUtils.PATTERN_STRING, "\\$" + (i + 1));
         }
         if (sql.endsWith(pageSqlSign)) {
             sql = sql.replace(pageSqlSign, " limit $" + (i + 1) + " offset $" + (i + 2));

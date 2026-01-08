@@ -33,7 +33,19 @@ public class If extends Unit implements Executable {
     }*/
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
+        log(String.format("表达式[%s]", attributes.get("test")));
+        log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));
+        log(String.format("结果[%s]", test));
+
+        if (test) {
+            super.startSync(data);
+        }
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         boolean test = test(attributes.get("test"), data.getOgnlContext(), data.getBus());
         log(String.format("表达式[%s]", attributes.get("test")));
         log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));

@@ -71,7 +71,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
     }
 
     @Override
-    public Future<Object> read(TaskInstance data) {
+    public Future<Object> read(TaskSession data) {
 
         StringBuilder builder = new StringBuilder("");
         try {
@@ -115,12 +115,12 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
         }
     }
 
-    protected Closeable initWriter(TaskInstance request) throws Throwable {
+    protected Closeable initWriter(TaskSession request) throws Throwable {
         return getWriter(request);
     }
 
     @Override
-    public Future<Object> write(TaskInstance request) {
+    public Future<Object> write(TaskSession request) {
         try {
             request.cache(this, () -> initWriter(request));
         } catch (Throwable throwable) {
@@ -141,7 +141,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
     }
 
     @Override
-    public Future<Object> write(TaskInstance data, StreamUnit.WriteLine unit) {
+    public Future<Object> write(TaskSession data, StreamUnit.WriteLine unit) {
         Promise<Object> promise = Promise.promise();
 
         try {
@@ -163,9 +163,9 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
     }
 
     @Override
-    public Future<Void> destroy(TaskInstance taskInstance) {
-        java.io.Writer writer = taskInstance.clearCache(this);
-        return super.destroy(taskInstance).onComplete(voidAsyncResult -> {
+    public Future<Void> destroy(TaskSession taskSession) {
+        java.io.Writer writer = taskSession.clearCache(this);
+        return super.destroy(taskSession).onComplete(voidAsyncResult -> {
             try (writer) {
 
             } catch (IOException e) {
@@ -175,4 +175,89 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
         });
 
     }
+
+    @Override
+    public void readSync(TaskSession data) throws Throwable {
+
+        StringBuilder builder = new StringBuilder("");
+        BufferedReader reader = this.getReader(data);
+
+        String[] line;
+        String[] headers;
+        if ("false".equals(attributes.get("header"))) {
+            if ((headers = readLine(reader, builder)) == null) {
+                throw new RuntimeException("文件获取文件头失败");
+            }
+        } else {
+            headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
+        }
+        String[] values;
+        AtomicLong index = new AtomicLong(0);
+        AtomicLong complete = new AtomicLong(0);
+        List<Map.Entry> entries = new LinkedList<>();
+        while ((line = readLine(reader, builder)) != null) {
+            values = line;
+            entries.clear();
+            for (int i = 0; i < Math.min(values.length, headers.length); i++) {
+                if (StringUtils.isEmpty(values[i]))
+                    values[i] = "";
+                entries.add(Map.entry(headers[i], values[i]));
+            }
+            try {
+                this.iteratorSync(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries.toArray(Map.Entry[]::new))));
+            } catch (Break.SkipOneLoopThrowable e) {
+                Break.onContinue(e);
+            } catch (Break.BreakLoopThrowable e) {
+                Break.onBreak(e);
+                log(e.getMessage());
+                break;
+            }
+        }
+        await(data);
+
+    }
+
+
+    @Override
+    public void writeSync(TaskSession request) throws Throwable {
+        request.cache(this, () -> initWriter(request));
+
+        super.write(request);
+        try {
+            Closeable closeable = request.clearCache(this);
+            closeable.close();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void writeSync(TaskSession data, StreamUnit.WriteLine unit) throws Throwable {
+        java.io.Writer writer = data.cache(this, () -> getWriter(data));
+        writer.append(unit.getChild(Col.class).stream().map(col -> {
+            try {
+                return TypeUtils.castToString(OgnlUtils.getValue(col.getValue(), data.getOgnlContext(), data.getBus(), String.class));
+            } catch (Throwable e) {
+                log(String.format("col[%s] parse fail %s", col.getCode(), e.getMessage()));
+                return "";
+            }
+        }).map(s -> StringUtils.isEmpty(quote) ? s : String.format("%s%s%s", quote, s, quote)).collect(Collectors.joining(delimiter)))
+                .append("\n");
+
+    }
+
+    @Override
+    public void destroySync(TaskSession taskSession) {
+        java.io.Writer writer = taskSession.clearCache(this);
+        super.destroy(taskSession);
+        try (writer) {
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        }
+
+    }
+
+
 }

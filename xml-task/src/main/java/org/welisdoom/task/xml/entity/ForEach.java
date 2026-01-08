@@ -32,7 +32,33 @@ import java.util.stream.Stream;
 public class ForEach extends Iterator {
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        String collectionName = attributes.get("collection");
+        this.itemName = (attributes.containsKey("item")) ? attributes.get("item") : this.itemName;
+        this.itemIndex = (attributes.containsKey("index")) ? attributes.get("index") : this.itemIndex;
+        Object o = OgnlUtils.getValue(collectionName, data.getOgnlContext(), data.getBus(), Object.class);
+        java.util.Iterator<Object> iterator;
+        AtomicLong index = new AtomicLong(0);
+        if (o.getClass().isArray()) {
+            iterator = Arrays.stream((Object[]) o).iterator();
+        } else {
+            iterator = ((List) o).stream().iterator();
+        }
+        while (iterator.hasNext()) {
+            data.setValue(Iterable.Item.of(index.getAndIncrement(), iterator.next()));
+            try {
+                ForEach.super.startSync(data);
+            } catch (Break.SkipOneLoopThrowable e) {
+                Break.onContinue(e);
+            } catch (Break.BreakLoopThrowable e) {
+                Break.onBreak(e);
+                break;
+            }
+        }
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         String collectionName = attributes.get("collection");
         this.itemName = (attributes.containsKey("item")) ? attributes.get("item") : this.itemName;
         this.itemIndex = (attributes.containsKey("index")) ? attributes.get("index") : this.itemIndex;
@@ -51,7 +77,7 @@ public class ForEach extends Iterator {
         }).orElse(Future.succeededFuture());
     }
 
-    protected Future<Object> execute(TaskInstance data, Iterable.Item item) {
+    protected Future<Object> execute(TaskSession data, Iterable.Item item) {
         Map map = data.getBus(parent.id);
         log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", getClass().getSimpleName(), getId(), item.getIndex())));
         map.put(itemIndex, item.getIndex());

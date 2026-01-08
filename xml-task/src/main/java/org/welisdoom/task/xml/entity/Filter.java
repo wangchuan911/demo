@@ -21,7 +21,7 @@ import java.util.List;
 public class Filter extends Unit implements Executable {
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         try {
             if (If.test(attributes.get("test"), data.getOgnlContext(), data.getBus())) {
                 List list = (List) ObjectUtils.getMapValueOrNewSafe(data.getBus(), getId(), () -> new LinkedList<>());
@@ -30,6 +30,14 @@ public class Filter extends Unit implements Executable {
             return Future.succeededFuture();
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);
+        }
+    }
+
+    @Override
+    protected void startSync(TaskSession data) throws Throwable {
+        if (If.test(attributes.get("test"), data.getOgnlContext(), data.getBus())) {
+            List list = (List) ObjectUtils.getMapValueOrNewSafe(data.getBus(), getId(), () -> new LinkedList<>());
+            list.add(data.getValue());
         }
     }
 

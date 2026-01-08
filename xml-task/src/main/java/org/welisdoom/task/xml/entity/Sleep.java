@@ -16,8 +16,17 @@ import org.welisdoom.task.xml.intf.type.Executable;
 @Tag(value = "sleep", parentTagTypes = {Executable.class}, desc = "阻塞线程")
 @Attr(name = "time", desc = "阻塞时间", require = true)
 public class Sleep extends Unit implements Executable {
+
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws InterruptedException {
+
+        long time = MapUtils.getLong(attributes, "time");
+        log("阻塞:" + time + "ms");
+        Thread.sleep(time);
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         try {
             long time = MapUtils.getLong(attributes, "time");
             log("阻塞:" + time + "ms");

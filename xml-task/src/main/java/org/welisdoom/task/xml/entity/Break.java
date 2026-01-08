@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
-import io.vertx.core.impl.NoStackTraceThrowable;
 import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
@@ -18,16 +17,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Tag(value = "break", parentTagTypes = Executable.class, desc = "停止循环")
 @Attr(name = "deep", desc = "中断深度")
 public class Break extends Unit implements Executable {
+
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) {
+        throw new BreakLoopThrowable(MapUtils.getInteger(attributes, "deep", 1));
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         return Future.failedFuture(new BreakLoopThrowable(MapUtils.getInteger(attributes, "deep", 1)));
     }
 
-    public static class BreakLoopThrowable extends NoStackTraceThrowable {
+    public static class BreakLoopThrowable extends RuntimeException {
         AtomicInteger deep = new AtomicInteger(1);
 
         BreakLoopThrowable(int deep) {
-            super("中断");
+            super("中断", null, false, false);
             this.deep.set(deep);
         }
 
@@ -40,13 +45,14 @@ public class Break extends Unit implements Executable {
         }
     }
 
-    public static class SkipOneLoopThrowable extends NoStackTraceThrowable {
+    public static class SkipOneLoopThrowable extends RuntimeException {
 
         SkipOneLoopThrowable() {
-            super("跳过");
+            super("跳过", null, false, false);
         }
     }
 
+    @Deprecated
     public static Future<Object> onBreak(Throwable throwable, Object result) {
         if (throwable instanceof Break.BreakLoopThrowable) {
             if (((Break.BreakLoopThrowable) throwable).decrementAndGetDeep() == 0) {
@@ -56,10 +62,31 @@ public class Break extends Unit implements Executable {
         return Future.failedFuture(throwable);
     }
 
+    public static <T extends Throwable> void onContinue(T throwable) throws T {
+        if (throwable instanceof Break.SkipOneLoopThrowable) {
+            return;
+        }
+        throw throwable;
+    }
+
+    public static <T extends Throwable> void onBreak(T throwable) throws T {
+        if (throwable instanceof Break.BreakLoopThrowable) {
+            if (((Break.BreakLoopThrowable) throwable).decrementAndGetDeep() <= 0) {
+                return;
+            }
+        }
+        throw throwable;
+    }
+
     @Tag(value = "continue", parentTagTypes = Executable.class, desc = "跳过循环")
     public static class Continue extends Unit implements Executable {
         @Override
-        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+        protected void startSync(TaskSession data) {
+            throw new SkipOneLoopThrowable();
+        }
+
+        @Override
+        protected Future<Object> start(TaskSession data, Object preUnitResult) {
             return Future.failedFuture(new SkipOneLoopThrowable());
         }
     }

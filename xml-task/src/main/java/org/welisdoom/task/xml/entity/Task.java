@@ -1,10 +1,9 @@
 package org.welisdoom.task.xml.entity;
 
 
-import io.vertx.core.CompositeFuture;
+import com.github.javaparser.quality.NotNull;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 import org.springframework.util.Assert;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Root;
@@ -13,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,16 +24,18 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "task", parentTagTypes = Root.class, desc = "根节点")
 public class Task extends Unit implements Root {
+
     private static Vertx vertx;
-    static Set<TaskInstance> tasks = new HashSet<>();
+    static Set<TaskSession> tasks = new HashSet<>();
+    static boolean sync = true;
 
     public static Vertx getVertx() {
         return vertx;
     }
 
-    public static void setVertxOption(VertxOptions options) {
-        Assert.isNull(vertx, "vertx is created!");
-        vertx = Vertx.vertx(options);
+    public static void setVertx(Vertx vertx1) {
+        Assert.notNull(vertx1, "vertx is created!");
+        vertx = vertx1;
         longTimeNotice();
     }
 
@@ -44,7 +46,59 @@ public class Task extends Unit implements Root {
         });
     }
 
-    public synchronized Future run(TaskInstance data) {
+    public synchronized void runSync(TaskSession data) throws Throwable {
+        try {
+            tasks.add(data);
+            startSync(data);
+            log("success");
+        } catch (Throwable e) {
+            log("fail");
+            e.printStackTrace();
+            throw e;
+        } finally {
+            tasks.remove(data);
+            for (Map.Entry<Unit, Object> unitObjectEntry : data.cache.entrySet()) {
+                unitObjectEntry.getKey().log("开始释放");
+                try {
+                    unitObjectEntry.getKey().destroySync(data);
+                    unitObjectEntry.getKey().log("释放完成");
+                } catch (Throwable e) {
+                    unitObjectEntry.getKey().log("释放失败:");
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    public static void run(Map<String, SubTask.Config> taskList, String taskId) {
+        if (sync) {
+            for (Map.Entry<String, SubTask.Config> entry : taskList.entrySet()) {
+                try {
+                    SubTask.runSync(entry.getKey(), entry.getValue());
+                    System.out.println("成功：" + entry.getKey());
+                } catch (Throwable e) {
+                    System.out.println("失败：" + entry.getKey());
+                }
+            }
+            vertx.undeploy(taskId);
+            return;
+        }
+        Future.join(taskList.entrySet().stream().map(entry ->
+                SubTask.run(entry.getKey(), entry.getValue()).onComplete(event -> {
+                    if (event.succeeded()) {
+                        System.out.println("成功：" + entry.getKey());
+                    } else {
+                        System.out.println("失败：" + entry.getKey());
+                    }
+                })).collect(Collectors.toList())).onComplete(event -> {
+            Task.closeVertx();
+            vertx.undeploy(taskId);
+        });
+    }
+
+    @Deprecated
+    public synchronized Future run(TaskSession data) {
         tasks.add(data);
         try {
             return start(data, null)
@@ -80,6 +134,7 @@ public class Task extends Unit implements Root {
         }
     }
 
+    @Deprecated
     public static Future<Void> closeVertx() {
         if (vertx == null) return Future.failedFuture("vertx is null");
         return vertx.close();
@@ -89,26 +144,21 @@ public class Task extends Unit implements Root {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                Future
-                        .all(new HashSet<>(tasks).stream()
-                                .map(taskRequest -> {
-                                    tasks.remove(taskRequest);
-                                    return Future.join(taskRequest.cache.entrySet().stream()
-                                            .map(unitObjectEntry -> {
-                                                unitObjectEntry.getKey().log("开始销毁");
-                                                return unitObjectEntry.getKey()
-                                                        .hook(taskRequest).onComplete(event -> {
-                                                            if (event.succeeded()) {
-                                                                unitObjectEntry.getKey().log("销毁完成");
-                                                            } else {
-                                                                unitObjectEntry.getKey().log("销毁失败:");
-                                                                event.cause().printStackTrace();
-                                                            }
-                                                        });
-                                            })
-                                            .collect(Collectors.toList()));
-                                })
-                                .collect(Collectors.toList())).onComplete(event -> {
+                if (sync) {
+                    for (TaskSession taskRequest : tasks) {
+                        tasks.remove(taskRequest);
+                        for (Map.Entry<Unit, Object> unitObjectEntry : taskRequest.cache.entrySet()) {
+                            unitObjectEntry.getKey().log("开始销毁");
+                            try {
+                                unitObjectEntry.getKey()
+                                        .hookSync(taskRequest);
+                                unitObjectEntry.getKey().log("销毁完成");
+                            } catch (Throwable e) {
+                                unitObjectEntry.getKey().log("销毁失败:");
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                     if (Task.getVertx() != null)
                         Task.getVertx().close().onSuccess(unused -> {
                             System.out.println("vertx 停止");
@@ -116,7 +166,35 @@ public class Task extends Unit implements Root {
                             System.out.println("vertx 失败");
                             throwable.printStackTrace();
                         });
-                });
+                } else
+                    Future
+                            .all(new HashSet<>(tasks).stream()
+                                    .map(taskRequest -> {
+                                        tasks.remove(taskRequest);
+                                        return Future.join(taskRequest.cache.entrySet().stream()
+                                                .map(unitObjectEntry -> {
+                                                    unitObjectEntry.getKey().log("开始销毁");
+                                                    return unitObjectEntry.getKey()
+                                                            .hook(taskRequest).onComplete(event -> {
+                                                                if (event.succeeded()) {
+                                                                    unitObjectEntry.getKey().log("销毁完成");
+                                                                } else {
+                                                                    unitObjectEntry.getKey().log("销毁失败:");
+                                                                    event.cause().printStackTrace();
+                                                                }
+                                                            });
+                                                })
+                                                .collect(Collectors.toList()));
+                                    })
+                                    .collect(Collectors.toList())).onComplete(event -> {
+                        if (Task.getVertx() != null)
+                            Task.getVertx().close().onSuccess(unused -> {
+                                System.out.println("vertx 停止");
+                            }).onFailure(throwable -> {
+                                System.out.println("vertx 失败");
+                                throwable.printStackTrace();
+                            });
+                    });
             }
         });
     }

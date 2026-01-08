@@ -28,6 +28,38 @@ import java.util.stream.Stream;
 @Tag(value = "file-type-check", parentTagTypes = Executable.class, desc = "文件类型校验")
 public class FileTypeCheck extends Unit implements Executable {
 
+    @Override
+    protected void startSync(TaskSession data) throws Throwable {
+        String fileName = getAttrFormatValue("name", data);
+
+        java.io.File file = new java.io.File(fileName);
+        if (!file.exists()) {
+            log("文件[" + fileName + "]不存在");
+            data.setResult(this, false);
+            return;
+        }
+        String fileType = fileName.substring(fileName.lastIndexOf(".") + 1);
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            byte[] b = new byte[1024];
+            fileInputStream.read(b);
+            StringBuilder bd = new StringBuilder();
+            for (byte b1 : b) {
+                bd.append(Integer.toHexString(b1 + 128)).append(",");
+            }
+            String eigenvalue = bd.toString();
+            FileCheckTypeConfiguration fileCheckTypeConfiguration = ApplicationContextProvider.getApplicationContext().getBean(FileCheckTypeConfiguration.class);
+            if (org.apache.commons.lang3.StringUtils.isEmpty(fileType)) {
+                fileCheckTypeConfiguration.matched(eigenvalue);
+            } else {
+                fileCheckTypeConfiguration.matched(fileType, eigenvalue);
+            }
+            data.setResult(this, true);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            data.setResult(this, false);
+        }
+    }
+
     @ConfigurationProperties("xml-task.file.check")
     @Configuration
     public static class FileCheckTypeConfiguration {
@@ -103,7 +135,7 @@ public class FileTypeCheck extends Unit implements Executable {
     }
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         String fileName = getAttrFormatValue("name", data);
 
         java.io.File file = new java.io.File(fileName);

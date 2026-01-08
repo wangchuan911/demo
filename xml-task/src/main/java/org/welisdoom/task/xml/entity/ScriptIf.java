@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "if", parentTagTypes = {Script.class}, desc = "条件判断,返回脚本内容")
 @Attr(name = "test", require = true, desc = "表达式")
-public class ScriptIf extends Unit implements Script<TaskInstance>, Copyable {
+public class ScriptIf extends Unit implements Script<TaskSession>, Copyable {
     @Override
-    public String getScript(TaskInstance request, String s) {
+    public String getScript(TaskSession request, String s) {
         if (If.test(attributes.get("test"), request.getOgnlContext(), request.getBus())) {
             return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, s).trim()).collect(Collectors.joining(s));
         }
@@ -34,10 +34,10 @@ public class ScriptIf extends Unit implements Script<TaskInstance>, Copyable {
     }
 
     @Tag(value = "choice", parentTagTypes = Script.class, desc = "if else")
-    public static class Choice extends Unit implements Script<TaskInstance> {
+    public static class Choice extends Unit implements Script<TaskSession> {
 
         @Override
-        public String getScript(TaskInstance request, String split) {
+        public String getScript(TaskSession request, String split) {
             List<String> list = new LinkedList<>();
             boolean isMatched = false;
             for (Unit child : children) {
@@ -55,9 +55,9 @@ public class ScriptIf extends Unit implements Script<TaskInstance>, Copyable {
         }
 
         @Tag(value = "when", parentTagTypes = Choice.class, desc = "if else")
-        public static class When extends Unit implements Script<TaskInstance> {
+        public static class When extends Unit implements Script<TaskSession> {
             @Override
-            public String getScript(TaskInstance request, String split) {
+            public String getScript(TaskSession request, String split) {
                 try {
                     if (If.test(attributes.get("test"), request.getOgnlContext(), request.getBus())) {
                         return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split));
@@ -70,9 +70,9 @@ public class ScriptIf extends Unit implements Script<TaskInstance>, Copyable {
         }
 
         @Tag(value = "otherwise", parentTagTypes = Choice.class, desc = "if else")
-        public static class Otherwise extends Unit implements Script<TaskInstance> {
+        public static class Otherwise extends Unit implements Script<TaskSession> {
             @Override
-            public String getScript(TaskInstance request, String split) {
+            public String getScript(TaskSession request, String split) {
                 return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split));
             }
         }

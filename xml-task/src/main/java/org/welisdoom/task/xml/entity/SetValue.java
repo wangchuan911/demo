@@ -24,8 +24,32 @@ import java.util.stream.Collectors;
 @Tag(value = "set-value", parentTagTypes = {Executable.class}, desc = "将前一个unit的结果保存到全局中")
 @Attr(name = "name", desc = "设置的变量名", require = true)
 public class SetValue extends Unit {
+
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        Map<String, Object> map = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), MagicKey.VALUES, () -> new HashMap<>());
+
+        Object value = data.getValue();
+        if (attributes.containsKey("value")) {
+            value = BaseUnit.textFormat(data, attributes.get("value"));
+        } else if (getChild(Content.class).stream().filter(content -> !StringUtils.isBlank(content.getContent())).count() > 0) {
+            value = BaseUnit.textFormat(data, getChild(Content.class).stream().map(Content::getContent).collect(Collectors.joining(" ")));
+        }
+        switch (BaseUnit.textFormat(data, attributes.get("style"))) {
+            case "object":
+                if (value instanceof String)
+                    value = OgnlUtils.getValue(value.toString(), data.getOgnlContext(), data.getBus(), Object.class);
+                break;
+            default:
+                break;
+        }
+        map.put(attributes.get("name"), value);
+        data.setValue(value);
+        super.startSync(data);
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         Map<String, Object> map;
         try {
             map = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), MagicKey.VALUES, () -> new HashMap<>());
@@ -56,7 +80,7 @@ public class SetValue extends Unit {
     @Attr(name = "name", desc = "设置的变量名", require = true)
     public static class DelValue extends Unit implements Executable {
         @Override
-        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+        protected Future<Object> start(TaskSession data, Object preUnitResult) {
             if (data.getBus().containsKey(MagicKey.VALUES)) {
                 Map<String, Object> map = (Map) data.getBus().get(MagicKey.VALUES);
                 map.remove(attributes.get("name"));

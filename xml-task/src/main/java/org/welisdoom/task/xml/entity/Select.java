@@ -1,6 +1,5 @@
 package org.welisdoom.task.xml.entity;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -8,10 +7,14 @@ import io.vertx.sqlclient.Tuple;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
+import org.welisdoom.task.xml.connect.sync.DatasouceConnectManager;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoon.common.data.BaseCondition;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -29,7 +32,53 @@ import java.util.stream.Collectors;
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        data.generateData(this);
+        BaseCondition.Page page = new BaseCondition.Page(1, 100);
+        AtomicLong index = new AtomicLong(0);
+        Database.DataSouceConnect connect = Database.getDataBaseSync(this);
+        DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
+        String sql = connectPool.toPageSql(getScript(data));
+        PreparedStatement preparedStatement = connect.prepare(sql, data);
+        connectPool.log("", connect.sqlTemplate.log1.toString());
+        connectPool.log("", connect.sqlTemplate.log2.toString());
+        BaseCondition.Page page1 = new BaseCondition.Page(1, 100);
+        connectPool.setPage(preparedStatement, page1);
+        List<Map<String, Object>> list = new LinkedList<>();
+        try {
+            do {
+                list.clear();
+                ResultSet row = preparedStatement.executeQuery();
+                ResultSetMetaData metaData = row.getMetaData();
+                Map<String, Object> map;
+                while (row.next()) {
+                    map = new HashMap<>(metaData.getColumnCount(), 1.0F);
+                    for (int i = 0; i < metaData.getColumnCount(); i++) {
+                        if (row.getObject(i) == null) continue;
+                        map.put(metaData.getColumnName(i), row.getObject(i));
+                    }
+                    list.add(map);
+                }
+                row.close();
+                page.setPage(page.getPage() + ("tetris".equals(attributes.get("mode")) ? 0 : 1));
+                for (Map<String, Object> row1 : list) {
+                    try {
+                        this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
+                    } catch (Break.SkipOneLoopThrowable e) {
+                        continue;
+                    }
+                }
+            } while (!list.isEmpty());
+        } catch (Break.BreakLoopThrowable e) {
+            Break.onBreak(e);
+            log(e.getMessage());
+        }
+        this.await(data);
+        connect.close();
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         data.generateData(this);
         BaseCondition.Page page = new BaseCondition.Page(1, 100);
         AtomicLong index = new AtomicLong(0);
@@ -82,12 +131,13 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         return list;
     }
 
-    protected String getScript(TaskInstance data) {
+    protected String getScript(TaskSession data) {
         return getChild(Sql.class).get(0).getScript(data, " ").trim();
     }
 
 
-    Future<Object> pageScroll(DataBaseConnectPool pool, String sql, List<Object> list, TaskInstance data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> future) {
+    @Deprecated
+    Future<Object> pageScroll(DataBaseConnectPool pool, String sql, List<Object> list, TaskSession data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> future) {
        /* Tuple tuple = Tuple.tuple(list);
         pool.setPage(tuple, page);
         pool.log("sql", sql);
@@ -112,14 +162,14 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         });
     }
 
-    Future<Object> page(DataBaseConnectPool pool, String sql, Tuple tuple, TaskInstance data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> result) {
+    Future<Object> page(DataBaseConnectPool pool, String sql, Tuple tuple, TaskSession data, BaseCondition.Page page, Function<Collection<Map<String, Object>>, Future<Object>> result) {
         pool.setPage(tuple, page);
         pool.log("sql", sql);
         pool.log("params", tuple);
         return Database.doConnect(this, data, connection -> ((Future<RowSet<Row>>) pool.execute(connection, sql, tuple)).compose(rows -> subQuery(data, rows)).compose(result::apply));
     }
 
-    Future<List<Map<String, Object>>> subQuery(TaskInstance data, RowSet<Row> rows) {
+    Future<List<Map<String, Object>>> subQuery(TaskSession data, RowSet<Row> rows) {
         Future<Object> future = Future.succeededFuture();
         List<Map<String, Object>> mapList = new LinkedList<>();
         for (Row row : rows) {
@@ -145,9 +195,9 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
     @Attr(name = "list", desc = "是否返回list")
     public static class SubQuery extends Select {
         @Override
-        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+        protected Future<Object> start(TaskSession data, Object preUnitResult) {
             DataBaseConnectPool pool = Database.getDataBase(this);
-            TaskInstance data1 = new TaskInstance(data.getId() + "-" + this.getParent(Unit.class).getId() + "-sub-query");
+            TaskSession data1 = new TaskSession(data.getId() + "-" + this.getParent(Unit.class).getId() + "-sub-query");
             data1.getBus().putAll((Map<String, Object>) preUnitResult);
             String sql = getScript(data);
             List<Object> params = new LinkedList<>();
@@ -157,7 +207,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
             return Database.doConnect(this, data, connection -> ((Future<RowSet<Row>>) pool.execute(connection, finalSql, Tuple.tuple(params))).compose(rows -> query(data, rows)));
         }
 
-        Future<Object> query(TaskInstance data, RowSet<Row> rows) {
+        Future<Object> query(TaskSession data, RowSet<Row> rows) {
             if (Boolean.valueOf(attributes.getOrDefault("list", "false"))) {
                 return (Future) super.subQuery(data, rows);
             }

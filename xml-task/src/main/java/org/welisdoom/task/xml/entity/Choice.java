@@ -18,7 +18,27 @@ import java.util.List;
 public class Choice extends Unit {
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        Otherwise otherwise = null;
+        for (Unit unit : getChild(unit -> unit instanceof When || unit instanceof Otherwise)) {
+            if (unit instanceof Otherwise) {
+                otherwise = (Otherwise) unit;
+            } else if (unit instanceof When) {
+                try {
+                    startChildUnitSync(data, unit);
+                } catch (Break.SkipOneLoopThrowable e) {
+                    continue;
+                } catch (Break.BreakLoopThrowable e) {
+                    Break.onBreak(e);
+                    return;
+                }
+            }
+        }
+        if (otherwise != null) startChildUnitSync(data, otherwise);
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         Future<Object> future = Future.succeededFuture();
         List<Unit> list = (List) getChild(When.class);
         list.add(getChild(Otherwise.class).stream().findFirst().orElse((Otherwise) new Otherwise().setParent(this)));
@@ -43,7 +63,22 @@ public class Choice extends Unit {
     @Tag(value = "when", parentTagTypes = Choice.class, desc = "if else")
     public static class When extends Unit implements Executable {
         @Override
-        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+        protected void startSync(TaskSession data) {
+            boolean test;
+            try {
+                test = If.test(attributes.get("test"), data.getOgnlContext(), data.getBus());
+            } catch (Throwable e) {
+                e.printStackTrace();
+                test = false;
+            }
+            log(String.format("表达式[%s]", attributes.get("test")));
+            log(String.format("参数[%s]", JSON.toJSONString(data.getBus(), SerializerFeature.IgnoreErrorGetter, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.WriteNullListAsEmpty)));
+            log(String.format("结果[%s]", test));
+            throw test ? new Break.BreakLoopThrowable(0) : new Break.SkipOneLoopThrowable();
+        }
+
+        @Override
+        protected Future<Object> start(TaskSession data, Object preUnitResult) {
             boolean test;
             try {
                 test = If.test(attributes.get("test"), data.getOgnlContext(), data.getBus());

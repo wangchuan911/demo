@@ -20,7 +20,21 @@ public class Catch extends Unit implements Executable {
     Final aFinal;
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data)  throws Throwable{
+        error = Optional.ofNullable(error).orElseGet(() -> getChild(Error.class).stream().findFirst().orElseGet(() -> (Error) new Error().setParent(this)));
+        aFinal = Optional.ofNullable(aFinal).orElseGet(() -> getChild(Final.class).stream().findFirst().orElseGet(() -> (Final) new Final().setParent(this)));
+        try {
+            startChildUnitSync(data, unit -> !(unit instanceof Error || unit instanceof Final));
+        } catch (Throwable e) {
+            startChildUnitSync(data, error);
+        } finally {
+            aFinal.startSync(data);
+        }
+    }
+
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         error = Optional.ofNullable(error).orElseGet(() -> {
             return getChild(Error.class).stream().findFirst().orElseGet(() -> (Error) new Error().setParent(this));
         });

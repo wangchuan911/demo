@@ -22,7 +22,92 @@ import java.util.Locale;
 @Attr(name = "file", desc = "文件")
 public class Uncompress extends Unit implements Executable {
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) {
+        String file = getAttrFormatValue("file", data);
+        String toPath = attributes.containsKey("to") ?
+                getAttrFormatValue("to", data) :
+                file.substring(0, file.lastIndexOf("."));
+        String password = getAttrFormatValue("pw", data);
+        switch (file.substring(file.lastIndexOf(".") + 1).toLowerCase(Locale.ROOT)) {
+            case "RAR":
+                try {
+                    // 第一个参数是需要解压的压缩包路径，第二个参数参考JdkAPI文档的RandomAccessFile
+                    //r代表以只读的方式打开文本，也就意味着不能用write来操作文件
+                    RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+
+                    IInArchive archive = StringUtils.isEmpty(password) ?
+                            SevenZip.openInArchive(null, new RandomAccessFileInStream(randomAccessFile))
+                            : SevenZip.openInArchive(null, new RandomAccessFileInStream(randomAccessFile), password);
+
+                    int[] in = new int[archive.getNumberOfItems()];
+                    for (int i = 0; i < in.length; i++) {
+                        in[i] = i;
+                    }
+                    //拼接输出目录文件路径
+                    String dest = toPath + File.separator;
+
+                    archive.extract(in, false, new IArchiveExtractCallback() {
+
+
+                        @Override
+                        public void setCompleted(long arg0) {
+                        }
+
+                        @Override
+                        public void setTotal(long arg0) {
+                        }
+
+                        @Override
+                        public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException {
+                            final String path = (String) archive.getProperty(index, PropID.PATH);
+                            final boolean isFolder = (boolean) archive.getProperty(index, PropID.IS_FOLDER);
+                            return data -> {
+                                try {
+                                    if (!isFolder) {
+                                        File file = new File(dest + path);
+                                        saveFile(file, data);
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                return data.length;
+                            };
+                        }
+
+                        @Override
+                        public void prepareOperation(ExtractAskMode arg0) {
+                        }
+
+                        @Override
+                        public void setOperationResult(ExtractOperationResult extractOperationResult) {
+
+                        }
+
+                        public void saveFile(File file, byte[] msg) {
+                            File parent = file.getParentFile();
+                            if ((!parent.exists()) && (!parent.mkdirs())) {
+                                return;
+                            }
+                            try (OutputStream fos = new FileOutputStream(file, true)) {
+                                fos.write(msg);
+                                fos.flush();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                    archive.close();
+                    randomAccessFile.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+        }
+        data.setResult(this, toPath);
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         try {
             String file = getAttrFormatValue("file", data);
             String toPath = attributes.containsKey("to") ?

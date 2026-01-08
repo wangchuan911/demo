@@ -23,6 +23,14 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
 //    Map<TaskRequest, Object> map = new HashMap<>();
 
     @Override
+    protected void startSync(TaskSession data) throws Throwable {
+        /*data.cache(this, preUnitResult);*/
+        this.cols = getChild(Col.class).stream().toArray(Col[]::new);
+        data.generateData(this);
+        operationSync(data);
+    }
+
+    @Override
     public Copyable copy() {
         return copyableUnit(this);
     }
@@ -36,12 +44,17 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
     }
 
     @Override
-    public Future<Object> write(TaskInstance data) {
+    public Future<Object> write(TaskSession data) {
         return startChildUnit(data, null, unit -> unit instanceof Executable);
     }
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    public void writeSync(TaskSession data) throws Throwable {
+        startChildUnitSync(data, unit -> unit instanceof Executable);
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         try {
             /*data.cache(this, preUnitResult);*/
             this.cols = getChild(Col.class).stream().toArray(Col[]::new);
@@ -53,7 +66,8 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         }
     }
 
-    protected Future<Object> operation(TaskInstance data, Object preUnitResult) {
+    @Deprecated
+    protected Future<Object> operation(TaskSession data, Object preUnitResult) {
         if (getRead() != null) {
             return read(data);
         } else if (getWrite() != null) {
@@ -63,7 +77,17 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         }
     }
 
-    BufferedReader getReader(TaskInstance data) throws FileNotFoundException {
+    protected void operationSync(TaskSession data) throws Throwable {
+        if (getRead() != null) {
+            readSync(data);
+        } else if (getWrite() != null) {
+            writeSync(data);
+        } else {
+            throw new IllegalStateException("未知的操作");
+        }
+    }
+
+    BufferedReader getReader(TaskSession data) throws FileNotFoundException {
         String mode = getRead();
         return new BufferedReader(
                 new InputStreamReader(
@@ -72,7 +96,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         );
     }
 
-    java.io.Writer getWriter(TaskInstance data) throws IOException {
+    java.io.Writer getWriter(TaskSession data) throws IOException {
         String path = BaseUnit.textFormat(data, getWrite());
         switch (path) {
             case "@stream":
@@ -82,7 +106,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         }
     }
 
-    Charset getCharset(TaskInstance data) {
+    Charset getCharset(TaskSession data) {
         return Charset.forName(BaseUnit.textFormat(data, attributes.getOrDefault("charset", "utf-8")));
     }
 
@@ -101,18 +125,28 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
     public static class WriteLine extends Unit implements Writer {
         StreamUnit stream;
 
-        @Override
-        protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+        protected StreamUnit getStream() {
             if (stream == null) {
                 synchronized (this) {
                     if (stream == null)
                         if (attributes.containsKey("link"))
-                            stream = (StreamUnit) getParents(aClass -> StreamUnit.class.isAssignableFrom(aClass)).stream().filter(t -> Objects.equals(t.getId(), attributes.get("link"))).findFirst().get();
+                            stream = (StreamUnit) getParents(StreamUnit.class::isAssignableFrom).stream().filter(t -> Objects.equals(t.getId(), attributes.get("link"))).findFirst().get();
                         else
-                            stream = getParent(aClass -> StreamUnit.class.isAssignableFrom(aClass));
+                            stream = getParent(StreamUnit.class::isAssignableFrom);
                 }
             }
-            return stream.write(data, this);
+            return stream;
+        }
+
+        @Override
+        protected void startSync(TaskSession data) throws Throwable {
+            getStream().writeSync(data, this);
+        }
+
+        @Override
+        protected Future<Object> start(TaskSession data, Object preUnitResult) {
+
+            return getStream().write(data, this);
         }
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.Task;
+import org.welisdoon.common.MyBatisUtils;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import java.util.Map;
  */
 @Component
 @Db("oracle")
+@Deprecated
 public class OracleConnectPool implements DataBaseConnectPool<Pool, OracleConnection> {
     volatile Map<String, Pool> pools;
 
@@ -48,7 +50,7 @@ public class OracleConnectPool implements DataBaseConnectPool<Pool, OracleConnec
     @Override
     public synchronized Pool getPool(String name) {
         if (!getPools().containsKey(name)) {
-            setInstance(this.configDao.getDatabase(name));
+            setInstance(new DatabaseLinkInfo(this.configDao.getDatabase(name)));
         }
         return getPools().get(name);
     }
@@ -83,7 +85,7 @@ public class OracleConnectPool implements DataBaseConnectPool<Pool, OracleConnec
 
     @Override
     public String sqlFormat(String sql, List<Object> param) {
-        return sql.replaceAll(PATTERN_STRING, "?");
+        return sql.replaceAll(MyBatisUtils.PATTERN_STRING, "?");
     }
 
 

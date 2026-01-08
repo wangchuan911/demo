@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 import io.vertx.core.Future;
-import org.springframework.util.StringUtils;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
@@ -11,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Tag(value = "random", parentTagTypes = Executable.class, desc = "生成随机数")
 public class Random extends Unit implements Executable, Iterable<String> {
 
-    protected WordRange[] getWordGroup(TaskInstance data) {
+    protected WordRange[] getWordGroup(TaskSession data) {
 //        final String key = "--range";
 //        String words = getAttrFormatValue("words", data).trim();
 //        if (words.contains(key)) {
@@ -105,7 +105,88 @@ public class Random extends Unit implements Executable, Iterable<String> {
     }
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        WordRange[] wordGroup = getWordGroup(data);
+        char[] words = Arrays.stream(wordGroup).map(wordRange -> wordRange.words).map(String::new).collect(Collectors.joining("")).toCharArray();
+        int length = Integer.parseInt(attributes.get("length"));
+        StringBuilder text = new StringBuilder();
+        final BigDecimal times = new BigDecimal(attributes.getOrDefault("times", "1"));
+        final int wordLength = words.length;
+        int offset = Integer.parseInt(attributes.getOrDefault("offset", "0"));
+
+        if (times.equals(BigDecimal.ONE)) {
+            java.util.Random random = new java.util.Random();
+            List<String> list = new LinkedList<>();
+            for (int j = 0; j <= offset; j++) {
+                do {
+                    text.setLength(0);
+                    for (int i = 0; i < length + j; i++) {
+                        text.append(words[random.nextInt(words.length)]);
+                    }
+                } while (!check(wordGroup, text));
+                list.add(text.toString());
+            }
+            log(list.stream().collect(Collectors.joining("\n")));
+            data.setResult(this, list.stream().collect(Collectors.joining("\n")));
+            return;
+        }
+
+        int[] index = new int[length + offset];
+        Arrays.fill(index, 0);
+        int point = 0;
+        AtomBigDecimal itemIndex = new AtomBigDecimal(0);
+        AtomBigDecimal itemComplete = new AtomBigDecimal(0);
+        BigDecimal combination = new BigDecimal(words.length).pow(index.length);
+        BigDecimal count = new BigDecimal("0");
+        long time = System.currentTimeMillis();
+        log("预计有{}种组合", combination);
+        while (point < wordLength) {
+            toText(text, index, words);
+            for (int i = 0; i <= offset; i++) {
+                if (check(wordGroup, text)) {
+                    if (times.equals(BigDecimal.ONE) && offset == 0) {
+                        data.setResult(this, text);
+                        return;
+                    }
+                    log("{}", text.substring(0, length + i));
+
+                    try {
+                        this.iteratorSync(data, Item.of(Math.abs(itemIndex.incrementAndGet().longValue()), text.substring(0, length + i)));
+                    } catch (Break.SkipOneLoopThrowable e) {
+                        Break.onContinue(e);
+                    } catch (Break.BreakLoopThrowable e) {
+                        Break.onBreak(e);
+                        log(e.getMessage());
+                        break;
+                    }
+                    await(data);
+                }
+            }
+            if (++index[point] >= wordLength) {
+                if (++point >= index.length) {
+                    break;
+                }
+                while (++index[point] >= wordLength) {
+                    if (++point >= index.length) {
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < point; i++) {
+                    index[i] = 0;
+                }
+                point = 0;
+            }
+            count.add(BigDecimal.ONE);
+            if (System.currentTimeMillis() - time >= 10000) {
+                time = System.currentTimeMillis();
+                log("{},()", count, combination);
+            }
+        }
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         WordRange[] wordGroup = getWordGroup(data);
         char[] words = Arrays.stream(wordGroup).map(wordRange -> wordRange.words).map(String::new).collect(Collectors.joining("")).toCharArray();
         int length = Integer.parseInt(attributes.get("length"));
@@ -214,7 +295,7 @@ public class Random extends Unit implements Executable, Iterable<String> {
             return false;
         }
 
-        public WordRange range(TaskInstance data) {
+        public WordRange range(TaskSession data) {
             this.words = getAttrFormatValue("words", data).toCharArray();
             this.min = Integer.parseInt(attributes.getOrDefault("min", "1"));
             this.max = Integer.parseInt(attributes.getOrDefault("max", "-1"));

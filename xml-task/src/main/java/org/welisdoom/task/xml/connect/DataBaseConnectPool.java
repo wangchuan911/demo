@@ -1,22 +1,21 @@
 package org.welisdoom.task.xml.connect;
 
-import com.alibaba.fastjson.util.TypeUtils;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.sqlclient.*;
 import org.apache.ibatis.type.JdbcType;
+import org.welisdoom.task.xml.connect.sync.DatasouceConnectManager;
 import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoon.common.MyBatisUtils;
 import org.welisdoon.common.data.BaseCondition;
 
 import java.sql.JDBCType;
-import java.sql.Timestamp;
-import java.util.*;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -25,16 +24,20 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 13:53
  */
+@Deprecated
 public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> extends ConnectPool<S> {
 //    String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
 //    Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
+    @Deprecated
     P getPool(String name);
 
+    @Deprecated
     Map<String, P> getPools();
 
     void setInstance(DatabaseLinkInfo config);
 
+    @Deprecated
     default Future<S> getConnect(String name, IToken token) {
         try {
             return (Future) getPool(name).getConnection();
@@ -44,87 +47,21 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
     }
 
 
-    /*default Future<Object> pageScroll(SqlConnection connection, String sql, BaseCondition<String, TaskRequest> data, Function<RowSet<Row>, Future<Object>> future) {
-        List<Object> params = new LinkedList<>();
-        setValueToSql(params, getSqlParamTypes(sql = toPageSql(sql)), data);
-        sql = sqlFormat(sql, params);
-        return pageScroll(connection, sql, params, data.getPage(), future);
-    }
-
-    default Future<Object> pageScroll(SqlConnection connection, String sql, List<Object> list, BaseCondition.Page page, Function<RowSet<Row>, Future<Object>> future) {
-        Tuple tuple = Tuple.tuple(list);
-        setPage(tuple, page);
-        log("sql", sql);
-        log("params", tuple);
-        int nextPageNum = page.getPage() + 1;
-        System.out.println(nextPageNum);
-        return Iterable.compose(*//*connection
-                .preparedQuery(sql)
-                .execute(tuple)*//*execute(connection, sql, tuple), rows ->
-                Iterable.compose(future.apply(rows), o ->
-                        rows.size() < page.getPageSize() ? Future.succeededFuture() : pageScroll(connection, sql, list, page.setPage(nextPageNum), future)
-                )
-        );
-
-        *//*return connection
-                .preparedQuery(sql)
-                .execute(tuple).compose(rows ->
-                        future
-                                .apply(rows)
-                                .compose(o -> rows.size() < page.getPageSize()
-                                        ? Future.succeededFuture()
-                                        : pageScroll(connection, sql, list, page.setPage(page.getPage() + 1), future)
-                                ));*//*
-    }
-
-    default Future<Integer> update(SqlConnection connection, String sql, TaskRequest data) {
-        List<Object> params = new LinkedList<>();
-        setValueToSql(params, getSqlParamTypes(sql), data.getOgnlContext(), data.getBus());
-        sql = sqlFormat(sql, params);
-        Tuple tuple = Tuple.tuple(params);
-        log("sql", sql);
-        log("params", tuple);
-        return *//*connection.preparedQuery(sql).execute(tuple).compose(rows -> Task.getVertx().executeBlocking(event -> event.complete(rows.rowCount())))*//*
-                execute(connection, sql, tuple).compose(rows -> Future.succeededFuture(rows.rowCount()));
-    }*/
-
+    @Deprecated
     default Future<RowSet<Row>> execute(SqlConnection connection, String sql, Tuple tuple) {
         return connection.preparedQuery(sql).execute(tuple);
     }
 
     default List<Map.Entry<String, JdbcType>> getSqlParamTypes(String s) {
         List<Map.Entry<String, JdbcType>> list = new LinkedList<>();
-        /*Matcher matcher = DataBaseConnectPool.PATTERN.matcher(s);
-        JdbcType sqlType = null;
-        String name;
-        while (matcher.find()) {
-            switch (matcher.groupCount()) {
-                case 2:
-                    sqlType = JdbcType.valueOf(matcher.group(2));
-                case 1:
-                    name = matcher.group(1);
-                    break;
-                default:
-                    continue;
-            }
-            list.add(Map.entry(name, sqlType == null ? JdbcType.VARCHAR : sqlType));
-        }*/
         MyBatisUtils.readSqlTemplate(s, (s1, jdbcType) -> {
-            JdbcType sqlType = toJdbcType(jdbcType);
+            JdbcType sqlType = JdbcType.valueOf(jdbcType);
             if (sqlType == null) sqlType = JdbcType.VARCHAR;
             list.add(Map.entry(s1, sqlType));
         });
         return list;
     }
 
-    default JdbcType toJdbcType(JDBCType jdbcType) {
-        for (JdbcType value : JdbcType.values()) {
-            if (value.TYPE_CODE == jdbcType.getVendorTypeNumber()) {
-                return value;
-            }
-        }
-        return null;
-    }
 
     default JDBCType toJDBCType(JdbcType jdbcType) {
         for (JDBCType value : JDBCType.values()) {
@@ -195,7 +132,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
 
             }*/
 
-            value = MyBatisUtils.getValue(toJDBCType(jdbcType), value);
+            value = MyBatisUtils.getValue(jdbcType.name(), value);
             params.add(value);
         }
     }
@@ -206,6 +143,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
 
     void removeInstance(String name);
 
+    @Deprecated
     default <S extends SqlConnectOptions> S getSqlConnectOptions(S connectOptions, DatabaseLinkInfo config) {
         return (S) connectOptions
                 .setPort(config.getPort())
@@ -217,7 +155,7 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
                 .setReconnectInterval(1000);
     }
 
-
+    @Deprecated
     default PoolOptions getPoolOptions() {
         log("cpu core count:", CpuCoreSensor.availableProcessors() + "");
         return new PoolOptions()
@@ -244,96 +182,34 @@ public interface DataBaseConnectPool<P extends Pool, S extends SqlConnection> ex
         System.out.println(" ]");
     }
 
-    class DatabaseLinkInfo {
-        String name;
-        int port;
-        String host;
-        String database;
-        String user;
-        String pw;
-        String model;
-
-        public int getPort() {
-            return port;
-        }
-
-        public void setPort(int port) {
-            this.port = port;
-        }
-
-        public String getHost() {
-            return host;
-        }
-
-        public void setHost(String host) {
-            this.host = host;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDatabase() {
-            return database;
-        }
-
-        public void setDatabase(String database) {
-            this.database = database;
-        }
-
-        public String getUser() {
-            return user;
-        }
-
-        public void setUser(String user) {
-            this.user = user;
-        }
-
-        public String getPw() {
-            return pw;
-        }
-
-        public void setPw(String pw) {
-            this.pw = pw;
-        }
-
-        public String getModel() {
-            return model;
-        }
-
-        public void setModel(String model) {
-            this.model = model;
+    @Deprecated
+    class DatabaseLinkInfo extends DatasouceConnectManager.DatasourceInfo {
+        public DatabaseLinkInfo(DatasouceConnectManager.DatasourceInfo datasourceInfo) {
+            this.name = datasourceInfo.getName();
+            this.port = datasourceInfo.getPort();
+            this.host = datasourceInfo.getHost();
+            this.database = datasourceInfo.getDatabase();
+            this.user = datasourceInfo.getUser();
+            this.pw = datasourceInfo.getPw();
+            this.model = datasourceInfo.getModel();
         }
     }
 
-    class StaticSql {
-        String sql;
-        List<Map.Entry<String, JdbcType>> types;
+    @Deprecated
+    class StaticSql extends DatasouceConnectManager.SqlTemplate {
 
         public StaticSql(String sql, List<Map.Entry<String, JdbcType>> types) {
-            this.sql = sql;
-            this.types = types;
+            super(sql, types);
         }
-
-        public List<Map.Entry<String, JdbcType>> getTypes() {
-            return types;
-        }
-
-        public String getSql() {
-            return sql;
-        }
-
     }
 
 
+    @Deprecated
     default Future<Void> closePools() {
         return (Future) Future.join(new HashSet<String>(getPools().keySet()).stream().map(s -> closePool(s)).collect(Collectors.toList()));
     }
 
+    @Deprecated
     default Future<Void> closePool(String name) {
         return getPools().remove(name).close();
     }

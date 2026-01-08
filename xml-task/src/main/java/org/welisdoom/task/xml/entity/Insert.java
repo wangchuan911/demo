@@ -8,10 +8,12 @@ import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
+import org.welisdoom.task.xml.connect.sync.DatasouceConnectManager;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Script;
 
+import java.sql.PreparedStatement;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -25,17 +27,31 @@ import java.util.stream.Collectors;
  */
 @Tag(value = "insert", parentTagTypes = Executable.class, desc = "sql写入")
 @Attr(name = "id", desc = "唯一标识")
-public class Insert extends Unit implements Script<TaskInstance>, Copyable {
+public class Insert extends Unit implements Script<TaskSession>, Copyable {
     /*@Override
     protected void execute(TaskRequest data) throws Throwable {
         System.out.println(getScript(data.getBus(), " "));
         data.next(null);
     }*/
+    @Deprecated
     Boolean isStaticContent;
+    @Deprecated
     DataBaseConnectPool.StaticSql sql;
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        Database.DataSouceConnect connect = Database.getDataBaseSync(this);
+        DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
+        String sql = getScript(data);
+        PreparedStatement preparedStatement = connect.prepare(sql, data);
+        connectPool.log("", connect.sqlTemplate.log1.toString());
+        connectPool.log("", connect.sqlTemplate.log2.toString());
+        data.setResult(this, preparedStatement.executeUpdate());
+        connect.close();
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         if (isStaticContent == null) {
             isStaticContent = children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).isStaticContent()).reduce(Boolean.TRUE, (aBoolean, aBoolean2) -> aBoolean && aBoolean2);
         }
@@ -73,11 +89,11 @@ public class Insert extends Unit implements Script<TaskInstance>, Copyable {
     }
 
     @Override
-    public String getScript(TaskInstance request, String split) {
+    public String getScript(TaskSession request, String split) {
         return children.stream().filter(unit -> unit instanceof Script).map(unit -> ((Script) unit).getScript(request, split)).collect(Collectors.joining(split)).trim();
     }
 
-    public String getScript(TaskInstance request) {
+    public String getScript(TaskSession request) {
         return getScript(request, " ");
     }
 

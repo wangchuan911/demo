@@ -2,7 +2,7 @@ package org.welisdoom.task.xml.intf.type;
 
 import io.vertx.core.Future;
 import org.welisdoom.task.xml.entity.Iterator;
-import org.welisdoom.task.xml.entity.TaskInstance;
+import org.welisdoom.task.xml.entity.TaskSession;
 import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
 
@@ -19,9 +19,14 @@ import java.util.function.Function;
  */
 public interface Iterable<T> {
 
-    default Future<Object> iterator(TaskInstance data, Item<T> item) {
+    default Future<Object> iterator(TaskSession data, Item<T> item) {
         return Iterator.iterator((Unit) this, data, item);
     }
+
+    default void iteratorSync(TaskSession data, Item<T> item) throws Throwable {
+        Iterator.iteratorSync((Unit) this, data, item);
+    }
+
 
     class Item<T> {
         long index;
@@ -49,15 +54,18 @@ public interface Iterable<T> {
         }
     }
 
-    default Future<Object> futureLoop(Item<T> item, Future<Object> preFuture, TaskInstance data) {
+    @Deprecated
+    default Future<Object> futureLoop(Item<T> item, Future<Object> preFuture, TaskSession data) {
         /*return preFuture.compose(o -> this.iterator(data, Item.of(index.incrementAndGet(), t)));*/
         return preFuture.compose(o -> this.iterator(data, item));
     }
 
+    @Deprecated
     default void waitAMonuments(AtomicLong index, AtomicLong complete) {
         waitAMonuments(index.get(), complete.get());
     }
 
+    @Deprecated
     default void waitAMonuments(long index, long complete) {
         try {
             if (index - complete > 100) {
@@ -74,15 +82,23 @@ public interface Iterable<T> {
         }
     }
 
+    @Deprecated
     default void waitAMonuments(BigDecimal index, BigDecimal complete) {
         waitAMonuments(Math.abs(index.longValue()), Math.abs(complete.longValue()));
     }
 
-    default Future<Object> loopEnd(TaskInstance data) {
+    @Deprecated
+    default Future<Object> loopEnd(TaskSession data) {
         Optional<Unit> iterator = ((BaseUnit) this).getChild(BaseUnit.typeMatched(Iterator.class)).stream().findFirst();
         if (iterator.isPresent())
             return ((Iterator) iterator.get()).iterateFinish(data);
         return Future.succeededFuture();
+    }
+
+    default void await(TaskSession data) {
+        ((BaseUnit) this).getChild(BaseUnit.typeMatched(Iterator.class)).stream().findFirst().ifPresent(o -> {
+            ((Iterator) o).await(data);
+        });
     }
 
 
@@ -96,12 +112,14 @@ public interface Iterable<T> {
         return preFuture.compose(loop, failureMapper);
     }*/
 
-    default Future<Object> bigFutureLoop(Item<T> item, long triggerCount, Future<?> preFuture, TaskInstance data) {
+    @Deprecated
+    default Future<Object> bigFutureLoop(Item<T> item, long triggerCount, Future<?> preFuture, TaskSession data) {
         return bigFutureLoop(item.index, triggerCount, preFuture,
                 o -> this.iterator(data, item));
 
     }
 
+    @Deprecated
     static <T, K> Future<T> bigFutureLoop(long count, long triggerCount, Future<K> preFuture, Function<K, Future<T>> loop) {
         if (count % triggerCount == 0) {
             GCUtils.toSafePoint();

@@ -9,6 +9,8 @@ import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoon.common.LogUtils;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,10 +27,29 @@ import java.util.stream.Collectors;
 @Attr(name = "id", desc = "唯一标识")
 @Attr(name = "link", desc = "database的Id")
 public class Transactional extends Unit implements Executable {
-//    Map<TaskRequest, Map.Entry<SqlConnection, Transaction>> MAP = new HashMap<>();
+    //    Map<TaskRequest, Map.Entry<SqlConnection, Transaction>> MAP = new HashMap<>();
+    Connection connection;
+
 
     @Override
-    protected Future start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        connection = Database.getDataSource(attributes.get("link")).getConnection();
+        try {
+            super.startSync(data);
+        } catch (Break.BreakLoopThrowable | Break.SkipOneLoopThrowable e) {
+            connection.commit();
+        } catch (Throwable e) {
+            connection.rollback();
+            throw e;
+        }
+        if (!connection.isClosed())
+            connection.close();
+        connection = null;
+    }
+
+    @Override
+    @Deprecated
+    protected Future start(TaskSession data, Object preUnitResult) {
         return getSqlConnection(data).compose(connection -> {
             return super.start(data, preUnitResult).transform(event -> {
                 /*Map.Entry<SqlConnection, Transaction> entry = data.cache(this);
@@ -101,7 +122,8 @@ public class Transactional extends Unit implements Executable {
     }
 
 
-    public Future<SqlConnection> getSqlConnection(TaskInstance data) {
+    @Deprecated
+    public Future<SqlConnection> getSqlConnection(TaskSession data) {
         Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
         if (cache != null)
             return Future.succeededFuture(cache.getKey());
@@ -117,11 +139,12 @@ public class Transactional extends Unit implements Executable {
     }
 
     @Override
-    public Future<Void> destroy(TaskInstance taskInstance) {
-        return super.destroy(taskInstance);
+    public Future<Void> destroy(TaskSession taskSession) {
+        return super.destroy(taskSession);
     }
 
-    public Future<?> commit(TaskInstance data) {
+    @Deprecated
+    public Future<?> commit(TaskSession data) {
         /*log("提交");
         log(MAP.get(data));*/
         return ((Map.Entry<SqlConnection, Transaction>) data.cache(this)).getValue().commit().compose(voidAsyncResult ->
@@ -129,9 +152,10 @@ public class Transactional extends Unit implements Executable {
         );
     }
 
+    @Deprecated
     @Override
-    protected Future<Void> hook(TaskInstance taskInstance) {
-        return Future.join(allTransaction(taskInstance).stream().map(entry ->
+    protected Future<Void> hook(TaskSession taskSession) {
+        return Future.join(allTransaction(taskSession).stream().map(entry ->
                 Future.join(Arrays.asList(
                         entry
                                 .getValue()
@@ -154,23 +178,43 @@ public class Transactional extends Unit implements Executable {
                                 })
                 ))
         ).collect(Collectors.toList())).transform(compositeFutureAsyncResult -> {
-            clearCache(taskInstance);
-            return super.hook(taskInstance);
+            clearCache(taskSession);
+            return super.hook(taskSession);
         });
     }
 
-    protected List<Map.Entry<SqlConnection, Transaction>> allTransaction(TaskInstance data) {
+    @Override
+    protected void hookSync(TaskSession taskSession) {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.rollback();
+                log(LogUtils.styleString("", 31, 1, "事务终止"));
+                if (!connection.isClosed())
+                    connection.close();
+                log(LogUtils.styleString("", 31, 1, "连接终止"));
+            }
+        } catch (SQLException e) {
+            log(LogUtils.styleString("", 31, 1, "连接终止失败"));
+            e.printStackTrace();
+        }
+        clearCache(taskSession);
+        super.hookSync(taskSession);
+    }
+
+    @Deprecated
+    protected List<Map.Entry<SqlConnection, Transaction>> allTransaction(TaskSession data) {
         List<Map.Entry<SqlConnection, Transaction>> list = new LinkedList<>();
         Map.Entry<SqlConnection, Transaction> map = data.cache(this);
         if (map != null)
             list.add(map);
-        for (TaskInstance taskInstance : data.childrenRequest) {
-            list.addAll(allTransaction(taskInstance));
+        for (TaskSession taskSession : data.childrenRequest) {
+            list.addAll(allTransaction(taskSession));
         }
         return list;
     }
 
-    public Future<?> rollback(TaskInstance data) {
+    @Deprecated
+    public Future<?> rollback(TaskSession data) {
         /*log("回滚");
         log(MAP1.get(data));*/
         return
@@ -179,7 +223,8 @@ public class Transactional extends Unit implements Executable {
                 );
     }
 
-    protected Future<Transaction> newTransaction(TaskInstance data) {
+    @Deprecated
+    protected Future<Transaction> newTransaction(TaskSession data) {
         Map.Entry<SqlConnection, Transaction> cache = data.cache(this);
         Future<SqlConnection> future = (Future) cache.getKey().close().compose(
                 o -> Database.getDatabase(attributes.get("link")).getConnect(attributes.get("link"), data));
@@ -190,10 +235,10 @@ public class Transactional extends Unit implements Executable {
                 }));
     }
 
-    protected void clearCache(TaskInstance data) {
+    protected void clearCache(TaskSession data) {
         data.clearCache(this);
-        for (TaskInstance taskInstance : data.childrenRequest) {
-            taskInstance.clearCache(this);
+        for (TaskSession taskSession : data.childrenRequest) {
+            taskSession.clearCache(this);
         }
     }
 }

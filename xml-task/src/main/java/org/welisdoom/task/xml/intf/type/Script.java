@@ -1,7 +1,5 @@
 package org.welisdoom.task.xml.intf.type;
 
-import org.welisdoom.task.xml.entity.TaskInstance;
-
 /**
  * @Classname Script
  * @Description TODO

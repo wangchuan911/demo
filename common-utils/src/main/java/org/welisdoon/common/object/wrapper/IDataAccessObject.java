@@ -197,9 +197,9 @@ public interface IDataAccessObject {
             TableRel rel = null;
             for (int i = 0; iterator.size() > index.get(); index.incrementAndGet(), i++) {
                 Model.TableVO tableAnnotation = iterator.get(index.get());
-                Matcher tableMatcher = TABLE.matcher(tableAnnotation.table);
-                tableMatcher.find();
                 if (StringUtils.isEmpty(tableAnnotation.group) || tableAnnotation.group.equals(group)) {
+                    Matcher tableMatcher = TABLE.matcher(tableAnnotation.table);
+                    tableMatcher.find();
                     boolean changeRel = i == 0 && StringUtils.isNotEmpty(tableAnnotation.group);
                     if (changeRel) rel = tableAnnotation.rel;
                     List<SqlMapper.ColumnArg> columns = Arrays.stream(tableAnnotation.columns).map(column -> {
@@ -218,13 +218,10 @@ public interface IDataAccessObject {
                     iTables.add(LeafTable);
                 } else if (group == null || tableAnnotation.group.startsWith(group)) {
                     SqlMapper.AbstractTable table = sql(mapper, tableAnnotation.group, iterator, index);
-                    if (table == null) {
-                        index.decrementAndGet();
-                        break;
-                    }
+                    index.decrementAndGet();
                     iTables.add(table);
                 } else {
-                    return null;
+                    break;
                 }
             }
             if (CollectionUtils.isEmpty(iTables)) return null;

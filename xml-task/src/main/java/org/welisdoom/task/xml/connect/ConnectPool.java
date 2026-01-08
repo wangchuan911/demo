@@ -9,10 +9,14 @@ import org.apache.commons.net.ftp.FTPClient;
  * @Author Septem
  * @Date 13:53
  */
+@Deprecated
 public interface ConnectPool<T> {
+
+    @Deprecated
     interface IToken {
 
     }
 
+    @Deprecated
     Future<T> getConnect(String name, IToken token);
 }

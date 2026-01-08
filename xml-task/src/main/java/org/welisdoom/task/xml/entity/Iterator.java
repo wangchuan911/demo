@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import org.apache.commons.collections4.MapUtils;
@@ -17,6 +16,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,11 +43,29 @@ public class Iterator extends Unit implements Executable {
     }*/
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected void startSync(TaskSession data) throws Throwable {
+        switch (threadCount()) {
+            case 1:
+                executeSync(data);
+            default:
+                ThreadInfoSync threadInfo = data.cache(this, () -> new ThreadInfoSync(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES"))));
+                threadInfo.isBreak();
+                log("并发-线程中");
+                threadInfo.run(taskRequest ->
+                        {
+                            executeSync(taskRequest);
+                        }
+                );
+
+        }
+    }
+
+    @Override
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         return thread(data, (Iterable.Item) preUnitResult);
     }
 
-    protected Future<Object> execute(TaskInstance data, Iterable.Item item) {
+    protected Future<Object> execute(TaskSession data, Iterable.Item item) {
         Map map = data.getBus(parent.id);
         log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
         map.put(itemIndex, item.getIndex());
@@ -62,24 +84,47 @@ public class Iterator extends Unit implements Executable {
                 });
     }
 
+    protected void executeSync(TaskSession data) throws Throwable {
+        Map map = data.getBus(parent.id);
+        {
+            Iterable.Item item = (Iterable.Item) data.getValue();
+            log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
+            map.put(itemName, item.getItem());
+            map.put(itemIndex, item.getIndex());
+            item.destroy();
+            data.setValue(GCUtils.release(item));
+        }
+        try {
+            super.startSync(data);
+        } finally {
+            synchronized (map) {
+                map.remove(itemName);
+                map.remove(itemIndex);
+            }
+        }
+    }
+
+    @Deprecated
     public static class ThreadInfo {
-        Queue<TaskInstance> idles = new LinkedList<>();
+        Queue<TaskSession> idles = new LinkedList<>();
         List<Future> futures = new LinkedList<>();
         final int count;
+        ExecutorService executorService;
 
-        ThreadInfo(TaskInstance taskInstance, int threadCount) {
+        ThreadInfo(TaskSession taskSession, int threadCount) {
             count = threadCount;
+            executorService = Executors.newFixedThreadPool(threadCount);
             for (int i = 0; i < threadCount; i++) {
-                idles.add(taskInstance.copy("thread-" + (i + 1)));
+                idles.add(taskSession.copy("thread-" + (i + 1)));
             }
         }
 
-        synchronized Future<Object> run(Function<TaskInstance, Future<Object>> function) {
+        synchronized Future<Object> run(Function<TaskSession, Future<Object>> function) {
 
-            TaskInstance taskInstance = idles.poll();
+            TaskSession taskSession = idles.poll();
             futures.removeAll(futures.stream().filter(Future::isComplete).collect(Collectors.toList()));
-            futures.add(function.apply(taskInstance).onComplete(event -> {
-                idles.add(taskInstance);
+            futures.add(function.apply(taskSession).onComplete(event -> {
+                idles.add(taskSession);
             }));
             if (futures.size() >= count)
                 return (Future) Future.any((List) futures);
@@ -88,11 +133,85 @@ public class Iterator extends Unit implements Executable {
         }
 
         synchronized Future<Object> flush() {
-            Future future = Future.all((List)futures);
+            Future future = Future.all((List) futures);
             futures.clear();
             return future;
         }
 
+    }
+
+    public static class ThreadInfoSync {
+        final Queue<TaskSession> idles = new LinkedList<>();
+        final int count;
+        final AtomicInteger counter = new AtomicInteger();
+        final CountDown countDown = new CountDown();
+        final long wait;
+        final TimeUnit unit;
+        Throwable stop;
+
+        ThreadInfoSync(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
+            count = threadCount;
+            for (int i = 0; i < threadCount; i++) {
+                idles.add(taskSession.copy("thread-" + (i + 1)));
+            }
+            this.wait = wait;
+            this.unit = unit;
+        }
+
+        synchronized void isBreak() throws Throwable {
+            try {
+                if (stop != null) {
+                    throw stop;
+                }
+            } finally {
+                this.stop = null;
+            }
+        }
+
+        synchronized void run(ThreadRunner function) throws InterruptedException {
+            TaskSession taskSession = idles.poll();
+            CountDownLatch countDownLatch = idles.size() <= 1 ? new CountDownLatch(1) : null;
+            Task.getVertx().executeBlocking(() -> {
+                counter.incrementAndGet();
+                try {
+                    function.run(taskSession);
+                } catch (Throwable e) {
+                    boolean pass = (e instanceof Break.SkipOneLoopThrowable || (e instanceof Break.BreakLoopThrowable && ((Break.BreakLoopThrowable) e).decrementAndGetDeep() <= 0));
+                    if (!pass) {
+                        stop = e;
+                    }
+                }
+                countDown.run();
+                if (countDownLatch != null) {
+                    countDownLatch.countDown();
+                }
+                return null;
+            });
+            if (countDownLatch != null) {
+                countDownLatch.await();
+            }
+        }
+
+        synchronized void await() {
+            if (counter.get() > 0)
+                countDown.countDownLatch = new CountDownLatch(1);
+            try {
+                countDown.countDownLatch.await(wait, unit);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public class CountDown implements Runnable {
+            volatile CountDownLatch countDownLatch;
+
+            @Override
+            public void run() {
+                if (counter.decrementAndGet() == 0 && countDownLatch != null) {
+                    countDownLatch.countDown();
+                }
+            }
+        }
     }
 
     @Override
@@ -102,7 +221,7 @@ public class Iterator extends Unit implements Executable {
         System.out.print(highLight ? LogUtils.styleString("", ((hashCode() + 1) % 5) + 31, 1, str) : str);
     }
 
-    protected Future<Object> thread(TaskInstance data, Iterable.Item o) {
+    protected Future<Object> thread(TaskSession data, Iterable.Item o) {
         switch (threadCount()) {
             case 1:
                 return execute(data, o);
@@ -132,20 +251,48 @@ public class Iterator extends Unit implements Executable {
         return this;
     }
 
-    public static Future<Object> iterator(Unit unit, TaskInstance data, Object item) {
+    @Deprecated
+    public static Future<Object> iterator(Unit unit, TaskSession data, Object item) {
         return unit.startChildUnit(data, item, BaseUnit.typeMatched(Iterator.class));
     }
 
-    @Override
-    protected Future<Void> destroy(TaskInstance taskInstance) {
-        return super.destroy(taskInstance).onComplete(event -> taskInstance.clearCache(this));
+    public static void iteratorSync(Unit unit, TaskSession data, Object item) throws Throwable {
+        data.setValue(item);
+        unit.startChildUnitSync(data, BaseUnit.typeMatched(Iterator.class));
     }
 
-    public Future<Object> iterateFinish(TaskInstance data) {
+    @Override
+    @Deprecated
+    protected Future<Void> destroy(TaskSession taskSession) {
+        return super.destroy(taskSession).onComplete(event -> taskSession.clearCache(this));
+    }
+
+    @Override
+    protected void destroySync(TaskSession taskSession) {
+        super.destroySync(taskSession);
+        taskSession.clearCache(this);
+    }
+
+    @Deprecated
+    public Future<Object> iterateFinish(TaskSession data) {
         ThreadInfo threadInfo = data.cache(this);
         if (threadInfo == null) {
             return Future.succeededFuture();
         }
         return threadInfo.flush();
     }
+
+    public void await(TaskSession data) {
+        ThreadInfoSync threadInfo = data.cache(this);
+        if (threadInfo == null) {
+            return;
+        }
+        threadInfo.await();
+    }
+
+    @FunctionalInterface
+    public interface ThreadRunner {
+        void run(TaskSession t) throws Throwable;
+    }
+
 }

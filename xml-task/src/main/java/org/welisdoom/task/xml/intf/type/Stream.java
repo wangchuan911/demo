@@ -1,7 +1,7 @@
 package org.welisdoom.task.xml.intf.type;
 
 import io.vertx.core.Future;
-import org.welisdoom.task.xml.entity.TaskInstance;
+import org.welisdoom.task.xml.entity.TaskSession;
 
 
 /**
@@ -12,15 +12,26 @@ import org.welisdoom.task.xml.entity.TaskInstance;
  */
 public interface Stream<WRITER extends Stream.Writer> {
 
-    Future<Object> read(TaskInstance request);
+    @Deprecated
+    Future<Object> read(TaskSession request);
 
-    default Future<Object> write(TaskInstance request){
+    @Deprecated
+    default Future<Object> write(TaskSession request) {
         return Future.succeededFuture();
     }
 
-    Future<Object> write(TaskInstance request, WRITER writer);
+    @Deprecated
+    Future<Object> write(TaskSession request, WRITER writer);
 
     interface Writer {
 
     }
+
+    void readSync(TaskSession request) throws Throwable;
+
+    default void writeSync(TaskSession request) throws Throwable {
+
+    }
+
+    void writeSync(TaskSession request, WRITER writer) throws Throwable;
 }

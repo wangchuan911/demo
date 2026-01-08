@@ -4,7 +4,7 @@
 
 <mapper namespace="org.welisdoom.task.xml.dao.ConfigDao">
 
-    <resultMap id="rm_DatabaseLinkInfo" type="org.welisdoom.task.xml.connect.DataBaseConnectPool$DatabaseLinkInfo">
+    <resultMap id="rm_DatabaseLinkInfo" type="org.welisdoom.task.xml.connect.sync.DatasouceConnectManager$DatasourceInfo">
         <result column="name" property="name"></result>
         <result column="port" property="port"></result>
         <result column="host" property="host"></result>

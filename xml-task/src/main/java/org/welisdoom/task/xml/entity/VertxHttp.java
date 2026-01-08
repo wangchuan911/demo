@@ -23,9 +23,13 @@ import java.nio.charset.StandardCharsets;
 @Attr(name = "url", desc = "请求地址")
 @Attr(name = "output", desc = "输出方式:stream流;json;string(默认)")
 public class VertxHttp extends Http {
+    @Override
+    protected void startSync(TaskSession data) {
+        throw new IllegalArgumentException("不支持的模块");
+    }
 
     @Override
-    protected Future start(TaskInstance data, Object preUnitResult) {
+    protected Future start(TaskSession data, Object preUnitResult) {
         String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
         log(LogUtils.styleString("params:", 42, 2, inputBody));
         addLog(data, "不记录", "不记录");
@@ -33,7 +37,7 @@ public class VertxHttp extends Http {
 
         try {
             HttpClient client = data.cache(this, () -> Task.getVertx().createHttpClient());
-            return  client.request(HttpMethod.valueOf(attributes.getOrDefault("method", "POST")), getUrl(data)).compose(httpClientRequest -> {
+            return client.request(HttpMethod.valueOf(attributes.getOrDefault("method", "POST")), getUrl(data)).compose(httpClientRequest -> {
                 for (Header header : getChild(Header.class)) {
                     httpClientRequest.putHeader(header.getName(), header.getContent());
                     log(String.format("header: %s = %s", header.getName(), header.getContent()));

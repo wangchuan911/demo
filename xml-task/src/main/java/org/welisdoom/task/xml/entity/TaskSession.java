@@ -2,19 +2,15 @@ package org.welisdoom.task.xml.entity;
 
 import com.sun.istack.NotNull;
 import io.vertx.core.Future;
-import ognl.AbstractMemberAccess;
-import ognl.Ognl;
-import ognl.OgnlContext;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.consts.MagicKey;
+import org.welisdoom.task.xml.intf.ISession;
 import org.welisdoom.task.xml.intf.type.Context;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
 
-import java.lang.reflect.Member;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,12 +20,22 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 15:46
  */
-public class TaskInstance extends Context implements DataBaseConnectPool.IToken {
+public class TaskSession extends Context implements DataBaseConnectPool.IToken, ISession {
     Map<Unit, Object> cache = new LinkedHashMap<>();
-    List<TaskInstance> childrenRequest = new LinkedList<>();
-    TaskInstance parentRequest;
+    List<TaskSession> childrenRequest = new LinkedList<>();
+    TaskSession parentRequest;
+    Object value;
 
 //    Object lastUnitResult;
+
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
 
     public synchronized void cache(Unit unit, Object o) {
         cache.put(unit, o);
@@ -47,9 +53,16 @@ public class TaskInstance extends Context implements DataBaseConnectPool.IToken 
         return (T) cache.remove(unit);
     }
 
-    public TaskInstance(@NotNull String id) {
+    public TaskSession(@NotNull String id) {
         super();
         this.id = id;
+    }
+
+    public synchronized void setResult(Unit unit, Object result) {
+        if (unit.id != null && result != null) {
+            setBus(unit, unit.id, result);
+        }
+        setValue(result);
     }
 
     public synchronized void setBus(Unit unit, String key, Object value) {
@@ -69,7 +82,7 @@ public class TaskInstance extends Context implements DataBaseConnectPool.IToken 
         return (T) getBus().get(key);
     }
 
-    public TaskInstance(@NotNull String id, Object o) {
+    public TaskSession(@NotNull String id, Object o) {
         this(id);
         getBus().put(MagicKey.INPUTS, o);
     }
@@ -101,7 +114,7 @@ public class TaskInstance extends Context implements DataBaseConnectPool.IToken 
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TaskInstance that = (TaskInstance) o;
+        TaskSession that = (TaskSession) o;
         return Objects.equals(id, that.id);
     }
 
@@ -111,35 +124,48 @@ public class TaskInstance extends Context implements DataBaseConnectPool.IToken 
     }
 
 
-    public synchronized TaskInstance copy(String subId) {
-        TaskInstance taskInstance = new TaskInstance(String.format("%s-%s", this.id, subId));
-        taskInstance.getBus().putAll(SerializationUtils.clone((HashMap) this.getBus()));
-        taskInstance.parentRequest = this;
-        this.childrenRequest.add(taskInstance);
-        return taskInstance;
+    public synchronized TaskSession copy(String subId) {
+        TaskSession taskSession = new TaskSession(String.format("%s-%s", this.id, subId));
+        taskSession.getBus().putAll(SerializationUtils.clone((HashMap) this.getBus()));
+        taskSession.parentRequest = this;
+        taskSession.setValue(this.getValue());
+        this.childrenRequest.add(taskSession);
+        return taskSession;
     }
 
-    public TaskInstance getParentRequest() {
+    public TaskSession getParentRequest() {
         return parentRequest;
     }
 
-    public TaskInstance getRootRequest() {
-        TaskInstance root = parentRequest;
+    public TaskSession getRootRequest() {
+        TaskSession root = parentRequest;
         while (root.getParentRequest() != null) {
             root = root.getParentRequest();
         }
         return root;
     }
 
-    public TaskInstance[] getChildrenRequest() {
-        return childrenRequest.toArray(TaskInstance[]::new);
+    public TaskSession[] getChildrenRequest() {
+        return childrenRequest.toArray(TaskSession[]::new);
     }
 
+    @Deprecated
     public Future<Void> destroy() {
         return (Future) Future.join(cache.entrySet().stream().map(entry -> entry.getKey().destroy(this)).collect(Collectors.toList())).transform(event -> {
             getBus().clear();
-            return Future.join(childrenRequest.stream().map(TaskInstance::destroy).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
+            return Future.join(childrenRequest.stream().map(TaskSession::destroy).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
         });
+    }
+
+    public void destroySync() {
+        for (Map.Entry<Unit, Object> entry : cache.entrySet()) {
+            entry.getKey().destroySync(this);
+            getBus().clear();
+            for (TaskSession taskSession : childrenRequest) {
+                taskSession.destroySync();
+            }
+            childrenRequest.clear();
+        }
     }
 
 
@@ -147,13 +173,24 @@ public class TaskInstance extends Context implements DataBaseConnectPool.IToken 
         return (T) getBus().get(MagicKey.PREV_UNIT_RESULT);
     }
 
-    public TaskInstance setPrevUnitValue(Object value) {
+    public TaskSession setPrevUnitValue(Object value) {
         getBus().put(MagicKey.PREV_UNIT_RESULT, value);
         return this;
     }
 
-    public TaskInstance delPrevUnitValue() {
+    public TaskSession delPrevUnitValue() {
         getBus().remove(MagicKey.PREV_UNIT_RESULT);
         return this;
+    }
+
+    public static class SubTaskSession extends TaskSession {
+
+        public SubTaskSession(String id) {
+            super(id);
+        }
+
+        public SubTaskSession(String id, Object o) {
+            super(id, o);
+        }
     }
 }

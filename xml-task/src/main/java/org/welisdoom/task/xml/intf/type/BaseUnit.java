@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.intf.type;
 
 import com.alibaba.fastjson.util.TypeUtils;
 import org.springframework.util.StringUtils;
-import org.welisdoom.task.xml.entity.TaskInstance;
 import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoom.task.xml.handler.OgnlUtils;
 

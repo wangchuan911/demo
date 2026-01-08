@@ -1,10 +1,8 @@
 package org.welisdoom.task.xml.dao;
 
 import org.springframework.stereotype.Repository;
-import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.connect.FtpConnectPool;
-
-import java.util.Map;
+import org.welisdoom.task.xml.connect.sync.DatasouceConnectManager;
 
 /**
  * @Classname ConfigDao
@@ -16,7 +14,7 @@ import java.util.Map;
 public interface ConfigDao {
     FtpConnectPool.FtpLinkInfo getFtp(String name);
 
-    DataBaseConnectPool.DatabaseLinkInfo getDatabase(String name);
+    DatasouceConnectManager.DatasourceInfo getDatabase(String name);
 
     String getTaskXML(Long id);
 }

@@ -35,6 +35,74 @@ import java.util.stream.Collectors;
 @Attr(name = "url", desc = "请求地址")
 @Attr(name = "output", desc = "输出方式:stream流;json;string(默认)")
 public class Http extends Unit implements Executable, Copyable {
+
+    @Override
+    protected void startSync(TaskSession data) throws IOException {
+        String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
+        log(LogUtils.styleString("params:", 42, 2, inputBody));
+        addLog(data, "不记录", "不记录");
+        HttpURLConnection httpConnection = null;
+        try {
+            String outputBody;
+            httpConnection = (HttpURLConnection) new URL(getUrl(data)).openConnection();
+            // 打开和URL之间的连接
+
+            // 发送POST请求必须设置如下两行
+            httpConnection.setDoOutput(true);
+            httpConnection.setDoInput(true);
+            httpConnection.setRequestMethod(attributes.getOrDefault("method", "POST"));    // POST方法
+            String contentType = "";
+            for (Header header : getChild(Header.class)) {
+                httpConnection.setRequestProperty(header.getName(), header.getContent());
+                log(String.format("header: %s = %s", header.getName(), header.getContent()));
+                if (header.getName().equalsIgnoreCase("content-type")) {
+                    contentType = header.getContent();
+                }
+            }
+
+
+            write(httpConnection, inputBody, contentType);
+
+            httpConnection.connect();
+            if (httpConnection.getResponseCode() == 200) {
+                InputStream input = httpConnection.getInputStream();
+                Object result;
+            /*try (input) {
+                StreamUtils.copyToString(input, Charset.forName("utf-8"));
+            }*/
+                switch (attributes.getOrDefault("output", "default")) {
+                    case "stream":
+                        outputBody = "data is stream";
+                        result = (input);
+                        break;
+                    case "json":
+                        result = (JSON.parse(outputBody = StreamUtils.copyToString(input, StandardCharsets.UTF_8)));
+                        break;
+                    default:
+                        result = (outputBody = StreamUtils.copyToString(input, StandardCharsets.UTF_8));
+                        break;
+                }
+                addLog(data, inputBody, outputBody);
+                data.setResult(this, result);
+            } else {
+                InputStream input = httpConnection.getErrorStream();
+                throw new IllegalStateException(StreamUtils.copyToString(input, StandardCharsets.UTF_8));
+            }
+
+        } catch (Throwable e) {
+            addLog(data, inputBody, e);
+            throw e;
+        } finally {
+            if (httpConnection != null) {
+                try {
+                    httpConnection.disconnect();
+                } catch (Throwable e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+    }
+
     /*@Override
     protected void execute(TaskRequest data) {
         String body = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data.getBus(), "").trim();
@@ -78,12 +146,12 @@ public class Http extends Unit implements Executable, Copyable {
             }
         }
     }*/
-    protected String getUrl(TaskInstance data) {
+    protected String getUrl(TaskSession data) {
         return BaseUnit.textFormat(data, attributes.get("url"));
     }
 
     @Override
-    protected Future<Object> start(TaskInstance data, Object preUnitResult) {
+    protected Future<Object> start(TaskSession data, Object preUnitResult) {
         String inputBody = getChild(Body.class).stream().findFirst().orElse(new Body()).getScript(data, "").trim();
         log(LogUtils.styleString("params:", 42, 2, inputBody));
         addLog(data, "不记录", "不记录");
@@ -156,7 +224,7 @@ public class Http extends Unit implements Executable, Copyable {
         });
     }
 
-    protected void addLog(TaskInstance data, String input, Throwable e) {
+    protected void addLog(TaskSession data, String input, Throwable e) {
         if ("true".equals(attributes.get("is-log"))) {
             try {
                 ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
@@ -223,7 +291,7 @@ public class Http extends Unit implements Executable, Copyable {
         }
     }
 
-    protected void addLog(TaskInstance data, String input, String output) {
+    protected void addLog(TaskSession data, String input, String output) {
         if ("true".equals(attributes.get("is-log"))) {
             try {
                 Map log = (Map) ObjectUtils.getMapValueOrNewSafe(data.getBus(), attributes.get("id"), HashMap::new);
@@ -245,7 +313,7 @@ public class Http extends Unit implements Executable, Copyable {
     @Tag(value = "body", parentTagTypes = {Http.class, Initialization.class}, desc = "post请求内容")
     public static class Body extends Unit implements Script, Copyable {
 
-        public String getScript(TaskInstance request, String split) {
+        public String getScript(TaskSession request, String split) {
             return BaseUnit.textFormat(request, children.stream()
                     .filter(unit -> unit instanceof Script)
                     .map(unit -> ((Script) unit).getScript(request, split).trim()).collect(Collectors.joining(split)));
