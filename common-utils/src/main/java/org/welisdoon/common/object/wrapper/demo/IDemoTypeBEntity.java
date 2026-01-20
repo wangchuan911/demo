@@ -39,7 +39,7 @@ import org.welisdoon.common.object.wrapper.IDataAccessObject;
 })
 @IDataAccessObject.Table(table = "user8.table12 t7", group = "t7", datasource = "db1", rel = IDataAccessObject.TableRel.Weak, columns = {
         @IDataAccessObject.Column(column = "t7.column1", property = "t7_2column1", linkColumn = "t5_1.column1"),
-        @IDataAccessObject.Column(column = "t7.column2", property = "t7_2column2", linkColumn = "t5_2column1"),
+        @IDataAccessObject.Column(column = "t7.column2", property = "t7_2column2", linkColumn = "t5_2_1.column1"),
 })
 public interface IDemoTypeBEntity extends IDemoTypeAEntity {
 }

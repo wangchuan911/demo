@@ -16,10 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -114,9 +111,7 @@ public class Iterator extends Unit implements Executable {
         ThreadInfo(TaskSession taskSession, int threadCount) {
             count = threadCount;
             executorService = Executors.newFixedThreadPool(threadCount);
-            for (int i = 0; i < threadCount; i++) {
-                idles.add(taskSession.copy("thread-" + (i + 1)));
-            }
+            idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
         }
 
         synchronized Future<Object> run(Function<TaskSession, Future<Object>> function) {
@@ -141,19 +136,16 @@ public class Iterator extends Unit implements Executable {
     }
 
     public static class ThreadInfoSync {
-        final Queue<TaskSession> idles = new LinkedList<>();
+        final LinkedBlockingQueue<TaskSession> idles = new LinkedBlockingQueue<>();
         final int count;
         final AtomicInteger counter = new AtomicInteger();
-        final CountDown countDown = new CountDown();
         final long wait;
         final TimeUnit unit;
         Throwable stop;
 
         ThreadInfoSync(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
             count = threadCount;
-            for (int i = 0; i < threadCount; i++) {
-                idles.add(taskSession.copy("thread-" + (i + 1)));
-            }
+            idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
             this.wait = wait;
             this.unit = unit;
         }
@@ -169,8 +161,7 @@ public class Iterator extends Unit implements Executable {
         }
 
         synchronized void run(ThreadRunner function) throws InterruptedException {
-            TaskSession taskSession = idles.poll();
-            CountDownLatch countDownLatch = idles.size() <= 1 ? new CountDownLatch(1) : null;
+            TaskSession taskSession = idles.take();
             Task.getVertx().executeBlocking(() -> {
                 counter.incrementAndGet();
                 try {
@@ -180,36 +171,16 @@ public class Iterator extends Unit implements Executable {
                     if (!pass) {
                         stop = e;
                     }
-                }
-                countDown.run();
-                if (countDownLatch != null) {
-                    countDownLatch.countDown();
+                } finally {
+                    idles.put(taskSession);
                 }
                 return null;
             });
-            if (countDownLatch != null) {
-                countDownLatch.await();
-            }
         }
 
-        synchronized void await() {
-            if (counter.get() > 0)
-                countDown.countDownLatch = new CountDownLatch(1);
-            try {
-                countDown.countDownLatch.await(wait, unit);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public class CountDown implements Runnable {
-            volatile CountDownLatch countDownLatch;
-
-            @Override
-            public void run() {
-                if (counter.decrementAndGet() == 0 && countDownLatch != null) {
-                    countDownLatch.countDown();
-                }
+        synchronized void await() throws InterruptedException {
+            for (int i = 0; i < count; i++) {
+                idles.poll(wait, unit);
             }
         }
     }
@@ -282,7 +253,7 @@ public class Iterator extends Unit implements Executable {
         return threadInfo.flush();
     }
 
-    public void await(TaskSession data) {
+    public void await(TaskSession data) throws InterruptedException {
         ThreadInfoSync threadInfo = data.cache(this);
         if (threadInfo == null) {
             return;

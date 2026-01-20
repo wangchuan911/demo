@@ -7,6 +7,7 @@ import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -95,10 +96,11 @@ public interface Iterable<T> {
         return Future.succeededFuture();
     }
 
-    default void await(TaskSession data) {
-        ((BaseUnit) this).getChild(BaseUnit.typeMatched(Iterator.class)).stream().findFirst().ifPresent(o -> {
-            ((Iterator) o).await(data);
-        });
+    default void await(TaskSession data) throws InterruptedException {
+        List<Object> list = ((BaseUnit) this).getChild(BaseUnit.typeMatched(Iterator.class));
+        for (Object o : list) {
+            if (o instanceof Iterator) ((Iterator) o).await(data);
+        }
     }
 
 

@@ -299,20 +299,18 @@ public interface IDataAccessObject {
         return Collections.emptyList();
     }
 
-    static <O extends IDataAccessObject> Optional<O> getOptional(Class<? extends IDataAccessObject> aClass, Object id) {
+    static <O extends IDataAccessObject> Optional<O> getOrDefault(Class<? extends IDataAccessObject> aClass, Object id) {
         return Optional.ofNullable(get(aClass, id));
     }
 
     static <O extends IDataAccessObject> O get(Class<? extends IDataAccessObject> aClass, Object id) {
-        if (id instanceof Map) {
-        }
         initialization(aClass);
         DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return null;
         SqlMapper mapper = new SqlMapper();
         SqlMapper.MainTable table = dataAccessObjectInfo.sql(mapper);
         mapper.build(table, id);
-        System.out.println(mapper.prepare.sql);
+//        System.out.println(mapper.prepare.sql);
         return null;
     }
 

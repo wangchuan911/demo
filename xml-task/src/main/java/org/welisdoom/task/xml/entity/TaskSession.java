@@ -12,6 +12,7 @@ import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  */
 public class TaskSession extends Context implements DataBaseConnectPool.IToken, ISession {
     Map<Unit, Object> cache = new LinkedHashMap<>();
-    List<TaskSession> childrenRequest = new LinkedList<>();
+    List<TaskSession> childrenSession = new LinkedList<>();
     TaskSession parentRequest;
     Object value;
 
@@ -123,14 +124,20 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
         return Objects.hash(id);
     }
 
-
-    public synchronized TaskSession copy(String subId) {
-        TaskSession taskSession = new TaskSession(String.format("%s-%s", this.id, subId));
-        taskSession.getBus().putAll(SerializationUtils.clone((HashMap) this.getBus()));
-        taskSession.parentRequest = this;
-        taskSession.setValue(this.getValue());
-        this.childrenRequest.add(taskSession);
-        return taskSession;
+    public synchronized List<TaskSession> newSession(int count, Function<Integer, String> value) {
+        if (count > this.childrenSession.size()) {
+            return childrenSession.subList(0, count);
+        }
+        List<TaskSession> taskSessions = new LinkedList<>();
+        taskSessions.addAll(this.childrenSession);
+        for (int i = this.childrenSession.size(); i < count; i++) {
+            TaskSession taskSession = new TaskSession(String.format("%s-%s", this.id, value.apply(i)));
+            taskSession.getBus().putAll(SerializationUtils.clone((HashMap) this.getBus()));
+            taskSession.parentRequest = this;
+            taskSession.setValue(this.getValue());
+            this.childrenSession.add(taskSession);
+        }
+        return List.copyOf(taskSessions);
     }
 
     public TaskSession getParentRequest() {
@@ -146,14 +153,14 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
     }
 
     public TaskSession[] getChildrenRequest() {
-        return childrenRequest.toArray(TaskSession[]::new);
+        return childrenSession.toArray(TaskSession[]::new);
     }
 
     @Deprecated
     public Future<Void> destroy() {
         return (Future) Future.join(cache.entrySet().stream().map(entry -> entry.getKey().destroy(this)).collect(Collectors.toList())).transform(event -> {
             getBus().clear();
-            return Future.join(childrenRequest.stream().map(TaskSession::destroy).collect(Collectors.toList())).onComplete(event1 -> childrenRequest.clear());
+            return Future.join(childrenSession.stream().map(TaskSession::destroy).collect(Collectors.toList())).onComplete(event1 -> childrenSession.clear());
         });
     }
 
@@ -161,10 +168,10 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
         for (Map.Entry<Unit, Object> entry : cache.entrySet()) {
             entry.getKey().destroySync(this);
             getBus().clear();
-            for (TaskSession taskSession : childrenRequest) {
+            for (TaskSession taskSession : childrenSession) {
                 taskSession.destroySync();
             }
-            childrenRequest.clear();
+            childrenSession.clear();
         }
     }
 

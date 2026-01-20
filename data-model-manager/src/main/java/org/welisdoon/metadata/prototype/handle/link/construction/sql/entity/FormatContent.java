@@ -194,7 +194,7 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
         SqlMapper mapper = new SqlMapper();
         SqlMapper.MainTable table = sql(mapper);
         mapper.build(table, params);
-        System.out.println(mapper.sql);
+        System.out.println(mapper.prepare.sql);
         return mapper;
     }
 
