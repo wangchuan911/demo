@@ -163,17 +163,17 @@ public class Beauty {
 
     public void prepare(Object id) {
         SqlMapper.BaseColumn keyCol = getMainBaseTable().getColumns()[0];
-        Prepare.Part part = new Prepare.SinglePart(index.getAndIncrement(), IDataAccessObject.TableRel.Strong);
+        Prepare.MainPart part = new Prepare.MainPart(index.getAndIncrement(), IDataAccessObject.TableRel.Strong);
         find(part, mainTable);
         part.merge();
         System.out.println(part);
     }
 
-    protected void find(Prepare.Part<?> part, SqlMapper.AbstractTable<?> table) {
+    protected void find(Prepare.AbstractPart part, SqlMapper.AbstractTable<?> table) {
         if (table instanceof SqlMapper.GroupTable) {
             for (int i = 0; i < ((SqlMapper.GroupTable) table).tables.length; i++) {
                 if (i == 0 && table.rel != IDataAccessObject.TableRel.Strong) {
-                    Prepare.Part<?> part1 = newPart(table.rel);
+                    Prepare.AbstractPart part1 = newPart(table.rel);
                     part.add(part1);
                     part = part1;
                 }
@@ -193,8 +193,8 @@ public class Beauty {
         }
     }
 
-    Prepare.Part newPart(IDataAccessObject.TableRel rel) {
-        return rel == IDataAccessObject.TableRel.Multi ? new Prepare.MultiPart(index.getAndIncrement(), rel) : new Prepare.SinglePart(index.getAndIncrement(), rel);
+    Prepare.AbstractPart newPart(IDataAccessObject.TableRel rel) {
+        return new Prepare.OtherPart(index.getAndIncrement(), rel);
     }
 
     SqlMapper.BaseTable getMainBaseTable() {

@@ -3,7 +3,6 @@ package org.welisdoon.common.object.wrapper;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.common.MyBatisUtils;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -42,27 +41,27 @@ public class Prepare {
         this.sql = prepareSql.replaceAll(MyBatisUtils.PATTERN_STRING, "?");
     }
 
-    public static abstract class Part<T> {
+    public static abstract class AbstractPart {
         protected final IDataAccessObject.TableRel rel;
-        protected T params;
-        protected Part<?> parent;
+        protected AbstractPart parent;
         protected List<SqlMapper.BaseTable> tables = new LinkedList<>();
-        protected List<Part<?>> parts = new LinkedList<>();
+        protected List<AbstractPart> parts = new LinkedList<>();
+        protected List<AbstractPart> conditionLinks = new LinkedList<>();
         final int index;
 
-        public Part(int index, IDataAccessObject.TableRel rel) {
+        public AbstractPart(int index, IDataAccessObject.TableRel rel) {
             this.index = index;
             this.rel = rel;
         }
 
 
-        public Part<?> add(Part<?> part) {
+        public AbstractPart add(AbstractPart part) {
             parts.add(part);
             part.parent = this;
             return this;
         }
 
-        public Part<?> add(SqlMapper.BaseTable table) {
+        public AbstractPart add(SqlMapper.BaseTable table) {
             tables.add(table);
             return this;
         }
@@ -113,55 +112,63 @@ public class Prepare {
                     }
                 }
             }
-            filterRelColumn(this, relColumnInfos);
+            filterRelColumn(this, relColumnInfos, null);
 
             return relColumnInfos;
         }
 
-        protected boolean filterRelColumn(Part<?> part, List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos) {
+        protected boolean filterRelColumn(AbstractPart part, List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos, final AbstractPart origin) {
             int i = relColumnInfos.size();
             for (SqlMapper.BaseTable table : part.tables) {
-                relColumnInfos.removeIf(relColumn -> table.tableAlias.equals(relColumn.tableAlias));
+                relColumnInfos.removeIf(relColumn -> {
+                    if (table.tableAlias.equals(relColumn.tableAlias)) {
+                        if (origin != null) {
+                            origin.conditionLinks.add(this);
+                        }
+                        return true;
+                    }
+                    return false;
+                });
             }
             return i > relColumnInfos.size();
         }
 
-        protected void matchedPart(Part<?> part1, List<Part<?>> parts1, List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos) {
-            for (Part part : parts) {
-                filterRelColumn(part, relColumnInfos);
+        protected void matchedPart(AbstractPart part1, List<AbstractPart> parts1, List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos, final AbstractPart origin) {
+            for (AbstractPart part : parts) {
+                filterRelColumn(part, relColumnInfos, origin);
                 if (part == part1) break;
                 parts1.add(part);
             }
             if (parent != null)
-                parent.matchedPart(part1.parent, parts1, relColumnInfos);
+                parent.matchedPart(part1.parent, parts1, relColumnInfos, origin);
             else
-                filterRelColumn(this, relColumnInfos);
+                filterRelColumn(this, relColumnInfos, origin);
         }
 
-        protected void getInnerParts(List<Part<?>> parts) {
-            for (Part<?> part : this.parts) {
+        protected void getInnerParts(List<AbstractPart> parts) {
+            for (AbstractPart part : this.parts) {
                 part.getInnerParts(parts);
                 parts.add(part);
             }
         }
 
-        public boolean matchedInPrev(List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos, List<Part<?>> parentParts) {
+        public boolean matchedInPrev(List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos, List<AbstractPart> parentParts) {
             relColumnInfos.clear();
             relColumnInfos.addAll(this.getOutRelCol());
 
             parentParts.clear();
             if (relColumnInfos.isEmpty()) return true;
-            parent.matchedPart(this, parentParts, relColumnInfos);
+            parent.matchedPart(this, parentParts, relColumnInfos, this);
             return relColumnInfos.isEmpty();
         }
 
-        public List<Part<?>> findInnerParts(List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos, List<Part<?>> parentParts) {
-            List<Part<?>> parentPartsInner = new LinkedList<>();
-            List<Part<?>> matched = new LinkedList<>();
-            for (Part<?> parentPart : parentParts) {
+        public List<AbstractPart> findInnerParts(List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos, List<AbstractPart> parentParts) {
+            List<AbstractPart> parentPartsInner = new LinkedList<>();
+            List<AbstractPart> matched = new LinkedList<>();
+            for (AbstractPart parentPart : parentParts) {
                 parentPart.getInnerParts(parentPartsInner);
-                for (Part<?> part : parentPartsInner) {
-                    if (filterRelColumn(part, relColumnInfos)) {
+                for (AbstractPart part : parentPartsInner) {
+                    if (filterRelColumn(part, relColumnInfos, this)) {
                         matched.add(part);
                     }
                 }
@@ -171,57 +178,53 @@ public class Prepare {
         }
 
 
-        protected Part getRootPart() {
+        protected AbstractPart getRootPart() {
             return parent != null ? parent.getRootPart() : this;
         }
 
         public void merge() {
-
+            if (parent != null) {
+                List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = new LinkedList<>();
+                List<AbstractPart> parentParts = new LinkedList<>();
+                if (!matchedInPrev(relColumnInfos, parentParts)) {
+                    List<AbstractPart> inner = findInnerParts(relColumnInfos, parentParts);
+                    if (!relColumnInfos.isEmpty())
+                        throw new IllegalStateException(relColumnInfos.stream().map(relColumnInfo -> relColumnInfo.toSql()).collect(Collectors.joining(",")) + "没有匹配到对端");
+                }
+            }
+            for (AbstractPart part : List.copyOf(parts)) {
+                part.merge();
+            }
         }
 
         @Override
         public String toString() {
             return "Part{" +
                     "rel=" + rel +
-                    ", params=" + params +
                     ", tables=" + tables +
                     ", parts=" + parts +
                     '}';
         }
     }
 
-    public static class SinglePart extends Part<Map<String, Object>> {
+    public static class MainPart extends AbstractPart {
+        boolean[] loaded;
 
-        public SinglePart(int index, IDataAccessObject.TableRel rel) {
+        public MainPart(int index, IDataAccessObject.TableRel rel) {
             super(index, rel);
-            params = new HashMap<>();
         }
 
-        public void merge() {
-            if (parent != null) {
-                List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = new LinkedList<>();
-                List<Part<?>> parentParts = new LinkedList<>();
-                if (!matchedInPrev(relColumnInfos, parentParts)) {
-                    List<Part<?>> inner = findInnerParts(relColumnInfos, parentParts);
-                    if (!relColumnInfos.isEmpty())
-                        throw new IllegalStateException(relColumnInfos.stream().map(relColumnInfo -> relColumnInfo.toSql()).collect(Collectors.joining(",")) + "没有匹配到对端");
-                }
-            }
-            for (Part part : List.copyOf(parts)) {
-                part.merge();
-            }
+        public void init(int partCount) {
+            loaded = new boolean[partCount];
+        }
+    }
+    public static class OtherPart extends AbstractPart {
 
-
+        public OtherPart(int index, IDataAccessObject.TableRel rel) {
+            super(index, rel);
         }
     }
 
-    public static class MultiPart extends Part<List<Map<String, Object>>> {
-
-        public MultiPart(int index, IDataAccessObject.TableRel rel) {
-            super(index, rel);
-            params = new LinkedList<>();
-        }
-    }
 }
 
 
