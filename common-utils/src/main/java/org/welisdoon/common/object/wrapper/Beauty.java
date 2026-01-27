@@ -26,8 +26,11 @@ public class Beauty {
             COLUMN = "{column}",
             TABLE = "{table}",
             WHERE = "{where}",
+            EQUAL = " {0} = {1} ",
+            EQUAL_PARAM = " {0} /* = */ $'{'{1}'}' ",
             JOIN = "{JOIN}",
             AND = " and ",
+            COLUMN_AS = " {0} AS \"{1}\" ",
             JION_ON = MessageFormat.format("JOIN {0} ON {1} {2}", TABLE, WHERE, JOIN),
             BODY = MessageFormat.format("select {0} from {1} {2} where {3}", COLUMN, TABLE, JOIN, WHERE),
             BODY_EXISTS = MessageFormat.format(" exists ( select 1 from {0} {1} where {2} )", TABLE, JOIN, WHERE);
@@ -109,8 +112,8 @@ public class Beauty {
 
     protected String getCondition(SqlMapper.BaseTable table, List<SqlMapper.BaseColumn> list) {
         return Stream.of(
-                Arrays.stream(table.getColumns()).filter(column -> column.relColumn != null).map(column -> column.toSql() + " = " + column.relColumn.toSql()).collect(Collectors.joining(AND)),
-                Arrays.stream(table.getColumns()).filter(column -> list.contains(column)).map(column -> column.toSql() + " = ${" + column.objectAlias + "}").collect(Collectors.joining(AND)),
+                Arrays.stream(table.getColumns()).filter(column -> column.relColumn != null).map(column -> MessageFormat.format(EQUAL, column.toSql(), column.relColumn.toSql())).collect(Collectors.joining(AND)),
+                Arrays.stream(table.getColumns()).filter(column -> list.contains(column)).map(column -> MessageFormat.format(EQUAL_PARAM, column.toSql(), column.objectAlias)).collect(Collectors.joining(AND)),
                 Arrays.stream(table.filter).collect(Collectors.joining(AND))
         ).filter(StringUtils::isNotBlank).collect(Collectors.joining(AND));
     }
@@ -161,19 +164,23 @@ public class Beauty {
         }
     }
 
-    public void prepare(Object id) {
+    public Prepare prepare(Object id) {
         SqlMapper.BaseColumn keyCol = getMainBaseTable().getColumns()[0];
         Prepare.MainPart part = new Prepare.MainPart(index.getAndIncrement(), IDataAccessObject.TableRel.Strong);
         find(part, mainTable);
         part.merge();
+        Prepare.Parameter parameter = new Prepare.Parameter();
+        parameter.values.put(keyCol.objectAlias, new Prepare.SingleValue(id, keyCol.dataType));
+        part.load(parameter);
         System.out.println(part);
+        return null;
     }
 
-    protected void find(Prepare.AbstractPart part, SqlMapper.AbstractTable<?> table) {
+    protected void find(Prepare.Part part, SqlMapper.AbstractTable<?> table) {
         if (table instanceof SqlMapper.GroupTable) {
             for (int i = 0; i < ((SqlMapper.GroupTable) table).tables.length; i++) {
                 if (i == 0 && table.rel != IDataAccessObject.TableRel.Strong) {
-                    Prepare.AbstractPart part1 = newPart(table.rel);
+                    Prepare.Part part1 = newPart(table.rel);
                     part.add(part1);
                     part = part1;
                 }
@@ -193,7 +200,7 @@ public class Beauty {
         }
     }
 
-    Prepare.AbstractPart newPart(IDataAccessObject.TableRel rel) {
+    Prepare.Part newPart(IDataAccessObject.TableRel rel) {
         return new Prepare.OtherPart(index.getAndIncrement(), rel);
     }
 

@@ -119,7 +119,7 @@ public interface IDataAccessObject {
 
         ColumnType type() default ColumnType.Simple;
 
-        Class<?> input() default String.class;
+        Class<?> dataType() default String.class;
     }
 
     enum ColumnType {
@@ -171,18 +171,18 @@ public interface IDataAccessObject {
                 final String property;
                 final String linkColumn;
                 final ColumnType type;
-                final Class<?> input;
+                final Class<?> dataType;
 
-                public ColumnVO(String column, String property, String linkColumn, ColumnType type, Class<?> input) {
+                public ColumnVO(String column, String property, String linkColumn, ColumnType type, Class<?> dataType) {
                     this.column = column;
                     this.property = property;
                     this.linkColumn = linkColumn;
                     this.type = type;
-                    this.input = input;
+                    this.dataType = dataType;
                 }
 
                 ColumnVO(Column column) {
-                    this(column.column(), column.property(), column.linkColumn(), column.type(), column.input());
+                    this(column.column(), column.property(), column.linkColumn(), column.type(), column.dataType());
                 }
             }
         }
@@ -207,7 +207,7 @@ public interface IDataAccessObject {
                         if (!matcher.find()) {
                             return null;
                         }
-                        return new SqlMapper.ColumnArg(matcher.group(2), column.property, column.linkColumn);
+                        return new SqlMapper.ColumnArg(matcher.group(2), column.property, column.linkColumn, column.dataType);
                     }).filter(Objects::nonNull).collect(Collectors.toList());
                     SqlMapper.BaseTable LeafTable = new SqlMapper.BaseTable(
                             tableMatcher.group(1),

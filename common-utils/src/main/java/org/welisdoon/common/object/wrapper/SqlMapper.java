@@ -26,22 +26,24 @@ public class SqlMapper {
 //    }
 
     public void build(MainTable table, Map<String, Object> params) {
-        table.prepare(params);
+        prepare = table.prepare(params);
     }
 
     public void build(MainTable table, Object id) {
-        table.prepare(id);
+        prepare = table.prepare(id);
     }
 
     public static class ColumnArg {
         String columnName;
         String objectAlias;
+        Class<?> dataType;
         String linkColumn;
 
-        public ColumnArg(String columnName, String objectAlias, String linkColumn) {
+        public ColumnArg(String columnName, String objectAlias, String linkColumn, Class<?> dataType) {
             this.columnName = columnName;
             this.objectAlias = objectAlias;
             this.linkColumn = linkColumn;
+            this.dataType = dataType;
         }
     }
 
@@ -189,13 +191,11 @@ public class SqlMapper {
 
 
         public Prepare prepare(Map<String, Object> params) {
-            beauty.prepare(params);
-            return null;
+            return  beauty.prepare(params);
         }
 
         public Prepare prepare(Object id) {
-            beauty.prepare(id);
-            return null;
+            return  beauty.prepare(id);
         }
     }
 
@@ -326,12 +326,14 @@ public class SqlMapper {
     public static class BaseColumn extends AbstractTable.AbstractColumn<BaseTable> {
         String columnName;
         String objectAlias;
+        Class<?> dataType;
         final RelColumnInfo relColumn;
 
         public BaseColumn(BaseTable table, ColumnArg arg) {
             super(table);
             this.columnName = arg.columnName;
             this.objectAlias = arg.objectAlias;
+            this.dataType = arg.dataType;
             Matcher aKey;
             RelColumnInfo relColumn = null;
             if (StringUtils.isNotEmpty(arg.linkColumn) && (aKey = IDataAccessObject.ObjectScanner.COLUMN.matcher(arg.linkColumn)).find()) {

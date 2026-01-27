@@ -1,14 +1,15 @@
 package org.welisdoon.common;
 
 import com.alibaba.fastjson.util.TypeUtils;
-import org.apache.commons.lang3.StringUtils;
 
-import java.sql.JDBCType;
-import java.sql.Timestamp;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.sql.Date;
+import java.sql.*;
+import java.text.MessageFormat;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
  */
 public interface MyBatisUtils {
 
-    String PATTERN_STRING = "\\#\\{(.+?)\\,jdbcType\\=(\\w+)\\}";
+    String PATTERN_STRING = "\\#\\{\\s*(.+?)\\s*\\,\\s*jdbcType\\s*\\=\\s*(\\w+)\\s*\\}";
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
 
@@ -41,6 +42,12 @@ public interface MyBatisUtils {
             }
             consumer.accept(name, sqlType);
         }
+    }
+
+    static List<Map.Entry<String, String>> readSqlTemplate(String content) {
+        List<Map.Entry<String, String>> list = new LinkedList<>();
+        readSqlTemplate(content, (s, s2) -> list.add(Map.entry(s, s2)));
+        return list;
     }
 
     static Object getValue(String sqlType, Object value) {
@@ -85,6 +92,76 @@ public interface MyBatisUtils {
                 value = TypeUtils.castToString(value);
             default:
                 break;
+        }
+        return value;
+    }
+
+    static PreparedStatement prepared(Connection connection, String sql, Map<String, Object> map) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(sql.replaceAll(PATTERN_STRING, "?"));
+        List<Map.Entry<String, String>> list = readSqlTemplate(sql);
+        ListIterator<Map.Entry<String, String>> iterator = list.listIterator();
+        Map.Entry<String, String> entry;
+        int i;
+        Object value;
+        while (iterator.hasNext()) {
+            i = iterator.nextIndex();
+            entry = iterator.next();
+            value = map.get(entry.getKey());
+            try {
+                setVal(preparedStatement, i, entry.getValue(), value);
+            } catch (NoSuchFieldException e) {
+                throw new SQLException(MessageFormat.format("不支持的数据类型[{0}]{1},{2}", value == null ? "NULL" : value.getClass().getSimpleName(), entry.getKey(), entry.getValue()), e);
+            }
+        }
+        return preparedStatement;
+    }
+
+    static Object setVal(PreparedStatement preparedStatement, int i, String type, Object value) throws SQLException, NoSuchFieldException {
+        switch (type) {
+            case "BLOB":
+                preparedStatement.setBlob(i, new ByteArrayInputStream((byte[]) (value = TypeUtils.castToBytes(value))));
+                break;
+            case "INTEGER":
+            case "SMALLINT":
+            case "TINYINT":
+                preparedStatement.setInt(i, (Integer) (value = TypeUtils.castToInt(value)));
+                break;
+            case "NUMERIC":
+            case "BIGINT":
+                preparedStatement.setBigDecimal(i, (BigDecimal) (value = TypeUtils.castToBigDecimal(value)));
+                break;
+            case "BIT":
+                preparedStatement.setByte(i, (Byte) (value = TypeUtils.castToByte(value)));
+                break;
+            case "BOOLEAN":
+                preparedStatement.setBoolean(i, (Boolean) (value = TypeUtils.castToBoolean(value)));
+                break;
+            case "DOUBLE":
+                preparedStatement.setDouble(i, (Double) (value = TypeUtils.castToDouble(value)));
+                break;
+            case "FLOAT":
+                preparedStatement.setFloat(i, (Float) (value = TypeUtils.castToFloat(value)));
+                break;
+            case "TIMESTAMP":
+                preparedStatement.setTimestamp(i, ((Timestamp) (value = TypeUtils.castToTimestamp(value))));
+                break;
+            case "DATE":
+                preparedStatement.setDate(i, (Date) (value = new Date(TypeUtils.castToDate(value).getTime())));
+                break;
+            case "CLOB":
+                preparedStatement.setClob(i, new InputStreamReader(new ByteArrayInputStream(((String) (value = TypeUtils.castToString(value))).getBytes(StandardCharsets.UTF_8))));
+                break;
+            case "NCLOB":
+                preparedStatement.setNClob(i, new InputStreamReader(new ByteArrayInputStream(((String) (value = TypeUtils.castToString(value))).getBytes(StandardCharsets.UTF_8))));
+                break;
+            case "NCHAR":
+                preparedStatement.setNString(i, (String) (value = TypeUtils.castToString(value)));
+                break;
+            case "VARCHAR":
+                preparedStatement.setString(i, (String) (value = TypeUtils.castToString(value)));
+                break;
+            default:
+                throw new NoSuchFieldException();
         }
         return value;
     }
