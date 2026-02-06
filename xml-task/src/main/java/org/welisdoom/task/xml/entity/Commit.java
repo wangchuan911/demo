@@ -72,9 +72,9 @@ public class Commit extends Unit implements Executable {
     protected Future<Object> commit(Transactional transactional, TaskSession request) {
         TaskSession root = request;
         List<Future> list = new LinkedList<>();
-        while (root.parentRequest != null) {
-            root = root.parentRequest;
-            for (TaskSession taskSession : root.childrenRequest) {
+        while (root.parentSession != null) {
+            root = root.parentSession;
+            for (TaskSession taskSession : root.childrenSession) {
                 if (taskSession.cache(transactional) == null) continue;
                 list.add(transactional.commit(taskSession));
             }

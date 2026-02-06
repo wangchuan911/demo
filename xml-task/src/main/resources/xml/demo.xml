@@ -2,123 +2,126 @@
 <task>
     <initialization>
 
-        <database id="mirror_rc_res_sch" model="postgresql"></database>
+        <database id="rimdb_pg" model="postgresql"></database>
         <value id="now"
                value="{{@java.time.LocalDateTime@now().format(@java.time.format.DateTimeFormatter@ofPattern('yyyyMMddHHmmss'))}}"></value>
     </initialization>
     <start>
-        <select link="mirror_rc_res_sch" id="getAddress">
+        <select link="rimdb_pg" id="getAddress" mode="page">
             <sql>
             with ta as (
-            select 451990000000002004896356 id from dual union all
-            select 0 id from dual union all
-            select 451990000000002004896366 id from dual union all
-            select 451990000000002004896367 id from dual union all
-            select 451990000000002004896369 id from dual union all
-            select 451990000000002004896380 id from dual union all
-            select 451990000000002004896382 id from dual union all
-            select 451990000000002004896384 id from dual union all
-            select 451990000000002004896386 id from dual union all
-            select 451990000000002004935759 id from dual union all
-            select 451990000000002004896390 id from dual union all
-            select 451990000000002004896396 id from dual union all
-            select 451990000000002004896398 id from dual union all
-            select 451990000000002004896458 id from dual union all
-            select 451990000000002004896460 id from dual union all
-            select 451990000000002004896467 id from dual union all
-            select 451990000000002004896474 id from dual union all
-            select 451990000000002004896481 id from dual union all
-            select 451990000000002004896501 id from dual union all
-            select 451990000000002004896511 id from dual union all
-            select 451990000000002004896357 id from dual union all
-            select 451990000000002004896358 id from dual union all
-            select 451990000000002004896371 id from dual union all
-            select 451990000000002004896373 id from dual union all
-            select 451990000000002004896374 id from dual union all
-            select 451990000000002004896376 id from dual union all
-            select 451990000000002004896378 id from dual union all
-            select 451990000000002004896388 id from dual union all
-            select 451990000000002004896392 id from dual union all
-            select 451990000000002004896394 id from dual union all
-            select 451990000000002004896400 id from dual union all
-            select 451990000000002004896402 id from dual union all
-            select 451990000000002004896404 id from dual union all
-            select 451990000000002004896428 id from dual union all
-            select 451990000000002004896436 id from dual union all
-            select 451990000000002004896438 id from dual union all
-            select 451990000000002004896440 id from dual union all
-            select 451990000000002004896454 id from dual union all
-            select 451990000000002004896406 id from dual union all
-            select 451990000000002004896408 id from dual union all
-            select 451990000000002004896410 id from dual union all
-            select 451990000000002004896412 id from dual union all
-            select 451990000000002004896414 id from dual union all
-            select 451990000000002004896415 id from dual union all
-            select 451990000000002004896417 id from dual union all
-            select 451990000000002004896419 id from dual union all
-            select 451990000000002004896432 id from dual union all
-            select 451990000000002004896434 id from dual union all
-            select 451990000000002004896435 id from dual union all
-            select 451990000000002004896442 id from dual union all
-            select 451990000000002004896444 id from dual union all
-            select 451990000000002004896446 id from dual union all
-            select 451990000000002004896448 id from dual union all
-            select 451990000000002004896450 id from dual union all
-            select 451990000000002004896456 id from dual union all
-            select 451990000000002004896462 id from dual union all
-            select 451990000000002004896464 id from dual union all
-            select 451990000000002004896465 id from dual union all
-            select 451990000000002004896469 id from dual union all
-            select 451990000000002004896471 id from dual union all
-            select 451990000000002004896473 id from dual union all
-            select 451990000000002004896483 id from dual union all
-            select 451990000000002004896497 id from dual union all
-            select 451990000000002004896499 id from dual union all
-            select 451990000000002004896503 id from dual union all
-            select 451990000000002004896505 id from dual union all
-            select 451990000000002004896507 id from dual union all
-            select 451990000000002004896352 id from dual union all
-            select 451990000000002004896353 id from dual union all
-            select 451990000000002004896354 id from dual union all
-            select 451990000000002004896355 id from dual union all
-            select 451990000000002004896359 id from dual union all
-            select 451990000000002004896360 id from dual union all
-            select 451990000000002004896361 id from dual union all
-            select 451990000000002004896362 id from dual union all
-            select 451990000000002004896363 id from dual union all
-            select 451990000000002004896364 id from dual union all
-            select 451990000000002004896365 id from dual union all
-            select 451990000000002004896421 id from dual union all
-            select 451990000000002004896423 id from dual union all
-            select 451990000000002004896424 id from dual union all
-            select 0 id from dual union all
-            select 451990000000002004896427 id from dual union all
-            select 451990000000002004896430 id from dual union all
-            select 451990000000002004896451 id from dual union all
-            select 451990000000002004896453 id from dual union all
-            select 451990000000002004896476 id from dual union all
-            select 451990000000002004896477 id from dual union all
-            select 451990000000002004896479 id from dual union all
-            select 451990000000002004896485 id from dual union all
-            select 451990000000002004896487 id from dual union all
-            select 451990000000002004896489 id from dual union all
-            select 451990000000002004896495 id from dual union all
-            select 451990000000002004896491 id from dual union all
-            select 451990000000002004896493 id from dual union all
-            select 451990000000002004896513 id from dual union all
-            select 451990000000002004896515 id from dual union all
-            select 451990000000002004896519 id from dual union all
-            select 451990000000002004896521 id from dual union all
-            select 451990000000002004896509 id from dual union all
-            select 451990000000002004896517 id from dual union all
-            select 451990000000002004896523 id from dual union all
+            select 451990000000002004896356 as id union all
+            select 0 as id union all
+            select 451990000000002004896366 as id union all
+            select 451990000000002004896367 as id union all
+            select 451990000000002004896369 as id union all
+            select 451990000000002004896380 as id union all
+            select 451990000000002004896382 as id union all
+            select 451990000000002004896384 as id union all
+            select 451990000000002004896386 as id union all
+            select 451990000000002004935759 as id union all
+            select 451990000000002004896390 as id union all
+            select 451990000000002004896396 as id union all
+            select 451990000000002004896398 as id union all
+            select 451990000000002004896458 as id union all
+            select 451990000000002004896460 as id union all
+            select 451990000000002004896467 as id union all
+            select 451990000000002004896474 as id union all
+            select 451990000000002004896481 as id union all
+            select 451990000000002004896501 as id union all
+            select 451990000000002004896511 as id union all
+            select 451990000000002004896357 as id union all
+            select 451990000000002004896358 as id union all
+            select 451990000000002004896371 as id union all
+            select 451990000000002004896373 as id union all
+            select 451990000000002004896374 as id union all
+            select 451990000000002004896376 as id union all
+            select 451990000000002004896378 as id union all
+            select 451990000000002004896388 as id union all
+            select 451990000000002004896392 as id union all
+            select 451990000000002004896394 as id union all
+            select 451990000000002004896400 as id union all
+            select 451990000000002004896402 as id union all
+            select 451990000000002004896404 as id union all
+            select 451990000000002004896428 as id union all
+            select 451990000000002004896436 as id union all
+            select 451990000000002004896438 as id union all
+            select 451990000000002004896440 as id union all
+            select 451990000000002004896454 as id union all
+            select 451990000000002004896406 as id union all
+            select 451990000000002004896408 as id union all
+            select 451990000000002004896410 as id union all
+            select 451990000000002004896412 as id union all
+            select 451990000000002004896414 as id union all
+            select 451990000000002004896415 as id union all
+            select 451990000000002004896417 as id union all
+            select 451990000000002004896419 as id union all
+            select 451990000000002004896432 as id union all
+            select 451990000000002004896434 as id union all
+            select 451990000000002004896435 as id union all
+            select 451990000000002004896442 as id union all
+            select 451990000000002004896444 as id union all
+            select 451990000000002004896446 as id union all
+            select 451990000000002004896448 as id union all
+            select 451990000000002004896450 as id union all
+            select 451990000000002004896456 as id union all
+            select 451990000000002004896462 as id union all
+            select 451990000000002004896464 as id union all
+            select 451990000000002004896465 as id union all
+            select 451990000000002004896469 as id union all
+            select 451990000000002004896471 as id union all
+            select 451990000000002004896473 as id union all
+            select 451990000000002004896483 as id union all
+            select 451990000000002004896497 as id union all
+            select 451990000000002004896499 as id union all
+            select 451990000000002004896503 as id union all
+            select 451990000000002004896505 as id union all
+            select 451990000000002004896507 as id union all
+            select 451990000000002004896352 as id union all
+            select 451990000000002004896353 as id union all
+            select 451990000000002004896354 as id union all
+            select 451990000000002004896355 as id union all
+            select 451990000000002004896359 as id union all
+            select 451990000000002004896360 as id union all
+            select 451990000000002004896361 as id union all
+            select 451990000000002004896362 as id union all
+            select 451990000000002004896363 as id union all
+            select 451990000000002004896364 as id union all
+            select 451990000000002004896365 as id union all
+            select 451990000000002004896421 as id union all
+            select 451990000000002004896423 as id union all
+            select 451990000000002004896424 as id union all
+            select 0 as id union all
+            select 451990000000002004896427 as id union all
+            select 451990000000002004896430 as id union all
+            select 451990000000002004896451 as id union all
+            select 451990000000002004896453 as id union all
+            select 451990000000002004896476 as id union all
+            select 451990000000002004896477 as id union all
+            select 451990000000002004896479 as id union all
+            select 451990000000002004896485 as id union all
+            select 451990000000002004896487 as id union all
+            select 451990000000002004896489 as id union all
+            select 451990000000002004896495 as id union all
+            select 451990000000002004896491 as id union all
+            select 451990000000002004896493 as id union all
+            select 451990000000002004896513 as id union all
+            select 451990000000002004896515 as id union all
+            select 451990000000002004896519 as id union all
+            select 451990000000002004896521 as id union all
+            select 451990000000002004896509 as id union all
+            select 451990000000002004896517 as id union all
+            select 451990000000002004896523
             )
             select a.id as "id",(case when b.id is null then '有' else '无' end)  as  "error" from ta a left join rm_address b on a.id=b.id
             </sql>
             <iterator>
-                <if test="getAddress.item.error=='有'">
+                <if test="getAddress.item.error=='有'.toString()">
                     <set-value name="msg" value="{{$values.msg}},{{getAddress.item.id}}"></set-value>
                 </if>
+                <http url="http://195.5.100.200:30410/isearch/indices/single/11/41/update/id:11"
+                      is-log="true" id="http2" method="GET">
+                </http>
             </iterator>
         </select>
     </start>

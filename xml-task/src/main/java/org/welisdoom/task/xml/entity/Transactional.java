@@ -207,7 +207,7 @@ public class Transactional extends Unit implements Executable {
         Map.Entry<SqlConnection, Transaction> map = data.cache(this);
         if (map != null)
             list.add(map);
-        for (TaskSession taskSession : data.childrenRequest) {
+        for (TaskSession taskSession : data.childrenSession) {
             list.addAll(allTransaction(taskSession));
         }
         return list;
@@ -237,7 +237,7 @@ public class Transactional extends Unit implements Executable {
 
     protected void clearCache(TaskSession data) {
         data.clearCache(this);
-        for (TaskSession taskSession : data.childrenRequest) {
+        for (TaskSession taskSession : data.childrenSession) {
             taskSession.clearCache(this);
         }
     }

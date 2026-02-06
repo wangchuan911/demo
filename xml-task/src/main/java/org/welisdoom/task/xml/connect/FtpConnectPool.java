@@ -34,7 +34,7 @@ public class FtpConnectPool implements ConnectPool<FTPClient> {
         try {
             return Future.succeededFuture(ObjectUtils.getMapValueOrNewSafe(ObjectUtils.getMapValueOrNewSafe(client, token, () -> new HashMap<>()), name,
                     () -> {
-                        FtpLinkInfo ftpLinkInfo = configDao.getFtp(name);
+                        SFtpConnectManager.FtpInfo ftpLinkInfo = configDao.getFtp(name);
                         FTPClient client = new FTPClient();
                         client.connect(ftpLinkInfo.getHost(),
                                 ftpLinkInfo.getPort());

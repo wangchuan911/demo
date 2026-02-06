@@ -47,7 +47,10 @@ public class Database extends Unit {
     @Override
     protected void startSync(TaskSession data) throws Throwable {
 
-        ObjectUtils.getMapValueOrNewSafe(MAP_SYNC, attributes.get("id"), () -> Database.getDataSource(attributes.get("id")));
+        ObjectUtils.getMapValueOrNewSafe(MAP_SYNC, attributes.get("id"), () -> {
+            DataSource dataSource = Database.getDataSource(attributes.get("id"));
+            return dataSource;
+        });
         super.startSync(data);
 
     }

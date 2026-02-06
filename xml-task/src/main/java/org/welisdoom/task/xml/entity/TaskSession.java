@@ -8,6 +8,7 @@ import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.intf.ISession;
 import org.welisdoom.task.xml.intf.type.Context;
+import org.welisdoon.common.LayersMap;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.IData;
 
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 public class TaskSession extends Context implements DataBaseConnectPool.IToken, ISession {
     Map<Unit, Object> cache = new LinkedHashMap<>();
     List<TaskSession> childrenSession = new LinkedList<>();
-    TaskSession parentRequest;
+    final TaskSession parentSession;
     Object value;
 
 //    Object lastUnitResult;
@@ -57,6 +58,13 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
     public TaskSession(@NotNull String id) {
         super();
         this.id = id;
+        this.parentSession = null;
+    }
+
+    public TaskSession(@NotNull String id, TaskSession parent) {
+        super(parent.getOgnlContext(), parent.getBus().lowerLayersMap());
+        this.id = id;
+        this.parentSession = parent;
     }
 
     public synchronized void setResult(Unit unit, Object result) {
@@ -125,29 +133,25 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
     }
 
     public synchronized List<TaskSession> newSession(int count, Function<Integer, String> value) {
-        if (count > this.childrenSession.size()) {
+        if (count <= this.childrenSession.size()) {
             return childrenSession.subList(0, count);
         }
-        List<TaskSession> taskSessions = new LinkedList<>();
-        taskSessions.addAll(this.childrenSession);
         for (int i = this.childrenSession.size(); i < count; i++) {
-            TaskSession taskSession = new TaskSession(String.format("%s-%s", this.id, value.apply(i)));
-            taskSession.getBus().putAll(SerializationUtils.clone((HashMap) this.getBus()));
-            taskSession.parentRequest = this;
+            TaskSession taskSession = new TaskSession(String.format("%s-%s", this.id, value.apply(i)), this);
             taskSession.setValue(this.getValue());
             this.childrenSession.add(taskSession);
         }
-        return List.copyOf(taskSessions);
+        return List.copyOf(this.childrenSession);
     }
 
-    public TaskSession getParentRequest() {
-        return parentRequest;
+    public TaskSession getParentSession() {
+        return parentSession;
     }
 
     public TaskSession getRootRequest() {
-        TaskSession root = parentRequest;
-        while (root.getParentRequest() != null) {
-            root = root.getParentRequest();
+        TaskSession root = parentSession;
+        while (root.getParentSession() != null) {
+            root = root.getParentSession();
         }
         return root;
     }

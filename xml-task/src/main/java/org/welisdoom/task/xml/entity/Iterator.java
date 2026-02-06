@@ -41,18 +41,20 @@ public class Iterator extends Unit implements Executable {
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
+        Iterable.Item<?> item = (Iterable.Item<?>) data.getValue();
         switch (threadCount()) {
             case 1:
-                executeSync(data);
+                executeSync(data, item);
+                break;
             default:
-                ThreadInfoSync threadInfo = data.cache(this, () -> new ThreadInfoSync(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES"))));
-                threadInfo.isBreak();
+                AbstractThreadInfo threadInfo = data.cache(this, () -> new ThreadInfoSync(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES"))));
                 log("并发-线程中");
                 threadInfo.run(taskRequest ->
                         {
-                            executeSync(taskRequest);
+                            executeSync(taskRequest, item);
                         }
                 );
+                break;
 
         }
     }
@@ -62,6 +64,7 @@ public class Iterator extends Unit implements Executable {
         return thread(data, (Iterable.Item) preUnitResult);
     }
 
+    @Deprecated
     protected Future<Object> execute(TaskSession data, Iterable.Item item) {
         Map map = data.getBus(parent.id);
         log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
@@ -81,10 +84,10 @@ public class Iterator extends Unit implements Executable {
                 });
     }
 
-    protected void executeSync(TaskSession data) throws Throwable {
+    protected void executeSync(TaskSession data, Iterable.Item<?> item) throws Throwable {
+        data.generateData(parent);
         Map map = data.getBus(parent.id);
         {
-            Iterable.Item item = (Iterable.Item) data.getValue();
             log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
             map.put(itemName, item.getItem());
             map.put(itemIndex, item.getIndex());
@@ -135,19 +138,24 @@ public class Iterator extends Unit implements Executable {
 
     }
 
-    public static class ThreadInfoSync {
-        final LinkedBlockingQueue<TaskSession> idles = new LinkedBlockingQueue<>();
+    public static abstract class AbstractThreadInfo {
         final int count;
         final AtomicInteger counter = new AtomicInteger();
         final long wait;
         final TimeUnit unit;
         Throwable stop;
 
-        ThreadInfoSync(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
+        AbstractThreadInfo(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
             count = threadCount;
-            idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
             this.wait = wait;
             this.unit = unit;
+        }
+
+        synchronized void setError(Throwable e) {
+            boolean pass = (e instanceof Break.SkipOneLoopThrowable || (e instanceof Break.BreakLoopThrowable && ((Break.BreakLoopThrowable) e).decrementAndGetDeep() <= 0));
+            if (!pass) {
+                stop = e;
+            }
         }
 
         synchronized void isBreak() throws Throwable {
@@ -160,22 +168,34 @@ public class Iterator extends Unit implements Executable {
             }
         }
 
-        synchronized void run(ThreadRunner function) throws InterruptedException {
+        abstract void run(ThreadRunner function) throws Throwable;
+    }
+
+    public static class ThreadInfoSync extends AbstractThreadInfo {
+        final LinkedBlockingQueue<TaskSession> idles = new LinkedBlockingQueue<>();
+
+        ThreadInfoSync(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
+            super(taskSession, threadCount, wait, unit);
+            idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
+        }
+
+        synchronized void run(ThreadRunner function) throws Throwable {
+            isBreak();
             TaskSession taskSession = idles.take();
-            Task.getVertx().executeBlocking(() -> {
+            new Thread(() -> {
                 counter.incrementAndGet();
                 try {
                     function.run(taskSession);
                 } catch (Throwable e) {
-                    boolean pass = (e instanceof Break.SkipOneLoopThrowable || (e instanceof Break.BreakLoopThrowable && ((Break.BreakLoopThrowable) e).decrementAndGetDeep() <= 0));
-                    if (!pass) {
-                        stop = e;
-                    }
+                    setError(e);
                 } finally {
-                    idles.put(taskSession);
+                    try {
+                        idles.put(taskSession);
+                    } catch (Throwable e) {
+
+                    }
                 }
-                return null;
-            });
+            }).run();
         }
 
         synchronized void await() throws InterruptedException {
@@ -184,6 +204,44 @@ public class Iterator extends Unit implements Executable {
             }
         }
     }
+
+    public static class ThreadInfoSync2 extends ThreadInfoSync {
+        final static ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(128);
+        final LinkedList<TaskSession> idles = new LinkedList<>();
+
+        ThreadInfoSync2(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
+            super(taskSession, threadCount, wait, unit);
+            idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
+        }
+
+        synchronized void run(ThreadRunner function) throws Throwable {
+            isBreak();
+            TaskSession taskSession = idles.pollFirst();
+            if (idles.isEmpty()) {
+                run(function, taskSession);
+            } else {
+                EXECUTOR_SERVICE.execute(() -> {
+                    run(function, taskSession);
+                });
+            }
+            while (idles.isEmpty()) {
+                Thread.sleep(100);
+            }
+        }
+
+        protected void run(ThreadRunner function, TaskSession taskSession) {
+            try {
+                function.run(taskSession);
+            } catch (Throwable e) {
+                setError(e);
+            } finally {
+                synchronized (idles) {
+                    idles.addLast(taskSession);
+                }
+            }
+        }
+    }
+
 
     @Override
     protected synchronized void printTag(boolean highLight, LogPosition mode) {

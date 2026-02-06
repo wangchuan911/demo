@@ -1,5 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
+import com.alibaba.fastjson.parser.ParserConfig;
+import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoom.task.xml.annotations.Attr;
@@ -36,6 +38,13 @@ public class Unit implements BaseUnit<Unit> {
     public Unit setId(String id) {
         this.id = id;
         return this;
+    }
+
+    protected <T> T getAttribute(String code, T defaultVal) {
+        return Arrays.stream(getClass().getAnnotations()).filter(annotation -> annotation.getClass() == Attr.class).filter(annotation -> ((Attr) annotation).name().equals(code)).findFirst().map(annotation -> {
+            return (T) TypeUtils.cast(attributes.get(code), ((Attr) annotation).type(), ParserConfig.getGlobalInstance());
+        }).orElse(defaultVal);
+
     }
 
     public String getId() {
@@ -227,7 +236,7 @@ public class Unit implements BaseUnit<Unit> {
         System.out.print(o);
     }
 
-    protected synchronized void logInline(Object o, LogPosition mode) {
+    protected void logInline(Object o, LogPosition mode) {
         printTag(true, mode);
         System.out.print(":");
         System.out.print(o);
@@ -251,7 +260,7 @@ public class Unit implements BaseUnit<Unit> {
         this.log(String.format(str.replaceAll("\\{\\}", "%s"), os));
     }
 
-    protected synchronized void printTag(boolean highLight, LogPosition mode) {
+    protected void printTag(boolean highLight, LogPosition mode) {
         if (this.parent != null) {
             this.parent.printTag(false, mode == LogPosition.END ? LogPosition.START : mode);
         }

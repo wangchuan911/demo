@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
+import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
@@ -29,21 +30,21 @@ import java.util.stream.Collectors;
 @Tag(value = "select", parentTagTypes = {Executable.class}, desc = "sql查询")
 @Attr(name = "id", desc = "唯一标识")
 @Attr(name = "mode", options = {"page", "tetris"}, defaultOption = 0)
+@Attr(name = "size", type = Integer.class)
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
-        data.generateData(this);
-        BaseCondition.Page page = new BaseCondition.Page(1, 100);
+//        data.generateData(this);
+        BaseCondition.Page page = new BaseCondition.Page(1, Math.max(MapUtils.getInteger(attributes, "size", 100), 100));
         AtomicLong index = new AtomicLong(0);
         Database.DataSouceConnect connect = Database.getDataBaseSync(this);
         DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
         String sql = connectPool.toPageSql(getScript(data));
         PreparedStatement preparedStatement = connect.prepare(sql, data);
+        String pageInfo = connectPool.setPage(preparedStatement, page);
         connectPool.log("", connect.sqlTemplate.log1.toString());
-        connectPool.log("", connect.sqlTemplate.log2.toString());
-        BaseCondition.Page page1 = new BaseCondition.Page(1, 100);
-        connectPool.setPage(preparedStatement, page1);
+        connectPool.log("", connect.sqlTemplate.log2.toString() + "," + pageInfo);
         List<Map<String, Object>> list = new LinkedList<>();
         try {
             do {
@@ -53,14 +54,16 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                 Map<String, Object> map;
                 while (row.next()) {
                     map = new HashMap<>(metaData.getColumnCount(), 1.0F);
-                    for (int i = 0; i < metaData.getColumnCount(); i++) {
+                    for (int i = 1; i <= metaData.getColumnCount(); i++) {
                         if (row.getObject(i) == null) continue;
                         map.put(metaData.getColumnName(i), row.getObject(i));
                     }
                     list.add(map);
                 }
                 row.close();
-                page.setPage(page.getPage() + ("tetris".equals(attributes.get("mode")) ? 0 : 1));
+                if (!("tetris".equals(attributes.get("mode")))) page.nextPage();
+                connectPool.log("", connect.sqlTemplate.log1.toString());
+                connectPool.log("", connect.sqlTemplate.log2.toString() + "," + connectPool.setPage(preparedStatement, page));
                 for (Map<String, Object> row1 : list) {
                     try {
                         this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));

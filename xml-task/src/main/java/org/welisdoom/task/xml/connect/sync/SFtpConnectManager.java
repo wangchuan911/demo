@@ -31,7 +31,7 @@ public class SFtpConnectManager implements IConnectManager<SFtpConnectManager.SF
         SFtpSession sFtpSession = sessions.get(name);
         if (sFtpSession != null)
             return sFtpSession;
-        FtpConnectPool.FtpLinkInfo ftpLinkInfo = configDao.getFtp(name);
+        SFtpConnectManager.FtpInfo ftpLinkInfo = configDao.getFtp(name);
         sessions.put(name, new SFtpSession(ftpLinkInfo));
         return sessions.get(name);
     }

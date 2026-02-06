@@ -4,6 +4,7 @@ import com.jcraft.jsch.*;
 import io.vertx.core.Future;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.welisdoom.task.xml.connect.sync.SFtpConnectManager;
 import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoon.common.data.Event;
 import org.welisdoon.common.data.EventObject;
@@ -88,7 +89,7 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpSession>
             return Optional.ofNullable(this.session).orElseGet(() -> SESSIONS.stream().filter(sFtpLinkInfo -> Objects.equals(sFtpLinkInfo, this)).findFirst().get().session);
         }
 
-        public SFtpSession(FtpConnectPool.FtpLinkInfo ftpLinkInfo) {
+        public SFtpSession(SFtpConnectManager.FtpInfo ftpLinkInfo) {
             this(ftpLinkInfo.getHost(), ftpLinkInfo.getPort(), ftpLinkInfo.getUser(), ftpLinkInfo.getPw().getBytes(StandardCharsets.UTF_8));
         }
 
@@ -153,7 +154,7 @@ public class SFtpConnectPool implements ConnectPool<SFtpConnectPool.SFtpSession>
 
     public Future<SFtpSession> getConnect(String name, IToken token) {
         try {
-            FtpConnectPool.FtpLinkInfo ftpLinkInfo = configDao.getFtp(name);
+            SFtpConnectManager.FtpInfo ftpLinkInfo = configDao.getFtp(name);
             return Future.succeededFuture(new SFtpSession(ftpLinkInfo));
         } catch (Throwable throwable) {
             return Future.failedFuture(throwable);

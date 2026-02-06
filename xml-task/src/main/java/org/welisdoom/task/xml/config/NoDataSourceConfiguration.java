@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StreamUtils;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
 import org.welisdoom.task.xml.connect.FtpConnectPool;
+import org.welisdoom.task.xml.connect.sync.DatasouceConnectManager;
+import org.welisdoom.task.xml.connect.sync.SFtpConnectManager;
 import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.GuessCharset;
 import org.welisdoon.common.ObjectUtils;
@@ -48,13 +50,13 @@ public class NoDataSourceConfiguration {
     public ConfigDao getConfigDao() {
         return new ConfigDao() {
             @Override
-            public FtpConnectPool.FtpLinkInfo getFtp(String name) {
-                return JSON.toJavaObject((JSON) JSONObject.toJSON(connections.get(name)), FtpConnectPool.FtpLinkInfo.class);
+            public SFtpConnectManager.FtpInfo getFtp(String name) {
+                return JSON.toJavaObject((JSON) JSONObject.toJSON(connections.get(name)), SFtpConnectManager.FtpInfo.class);
             }
 
             @Override
-            public DataBaseConnectPool.DatabaseLinkInfo getDatabase(String name) {
-                return JSON.toJavaObject((JSON) JSONObject.toJSON(connections.get(name)), DataBaseConnectPool.DatabaseLinkInfo.class);
+            public DatasouceConnectManager.DatasourceInfo getDatabase(String name) {
+                return JSON.toJavaObject((JSON) JSONObject.toJSON(connections.get(name)), DatasouceConnectManager.DatasourceInfo.class);
             }
 
             @Override

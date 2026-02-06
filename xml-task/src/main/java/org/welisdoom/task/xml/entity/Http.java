@@ -48,9 +48,8 @@ public class Http extends Unit implements Executable, Copyable {
             // 打开和URL之间的连接
 
             // 发送POST请求必须设置如下两行
-            httpConnection.setDoOutput(true);
-            httpConnection.setDoInput(true);
-            httpConnection.setRequestMethod(attributes.getOrDefault("method", "POST"));    // POST方法
+            String method = attributes.getOrDefault("method", "POST");
+            httpConnection.setRequestMethod(method);
             String contentType = "";
             for (Header header : getChild(Header.class)) {
                 httpConnection.setRequestProperty(header.getName(), header.getContent());
@@ -59,24 +58,30 @@ public class Http extends Unit implements Executable, Copyable {
                     contentType = header.getContent();
                 }
             }
+            switch (method) {
+                case "POST":
+                case "PUT":
+                    httpConnection.setDoOutput(true);
+                    write(httpConnection, inputBody, contentType);
+                    break;
+                default:
+                    break;
+            }
+            httpConnection.setDoInput(true);  // POST方法
 
-
-            write(httpConnection, inputBody, contentType);
 
             httpConnection.connect();
+            InputStream input;
             if (httpConnection.getResponseCode() == 200) {
-                InputStream input = httpConnection.getInputStream();
                 Object result;
-            /*try (input) {
-                StreamUtils.copyToString(input, Charset.forName("utf-8"));
-            }*/
+                input = httpConnection.getInputStream();
                 switch (attributes.getOrDefault("output", "default")) {
+                    case "json":
+                        result = (JSON.parse(outputBody = StreamUtils.copyToString(input, StandardCharsets.UTF_8)));
+                        break;
                     case "stream":
                         outputBody = "data is stream";
                         result = (input);
-                        break;
-                    case "json":
-                        result = (JSON.parse(outputBody = StreamUtils.copyToString(input, StandardCharsets.UTF_8)));
                         break;
                     default:
                         result = (outputBody = StreamUtils.copyToString(input, StandardCharsets.UTF_8));
@@ -85,7 +90,7 @@ public class Http extends Unit implements Executable, Copyable {
                 addLog(data, inputBody, outputBody);
                 data.setResult(this, result);
             } else {
-                InputStream input = httpConnection.getErrorStream();
+                input = httpConnection.getErrorStream();
                 throw new IllegalStateException(StreamUtils.copyToString(input, StandardCharsets.UTF_8));
             }
 
@@ -236,53 +241,49 @@ public class Http extends Unit implements Executable, Copyable {
     }
 
     protected void write(HttpURLConnection httpConnection, String inputBody, String contentType) throws IOException {
-        switch (Optional.ofNullable(contentType).orElse("").toLowerCase(Locale.ROOT)) {
-            case "content-type":
-                if (contentType.contains("application/x-www-form-urlencoded")
-                        && inputBody.startsWith("{") && inputBody.endsWith("{")) {
-                    JSONObject object = JSON.parseObject(inputBody);
-                    StringBuilder builder = new StringBuilder();
-                    for (String s : object.keySet()) {
-                        builder.append("&").append(s).append("=").append(URLEncoder.encode(object.getString(s), StandardCharsets.UTF_8));
-                    }
-                    inputBody = builder.length() == 0 ? "" : builder.substring(1);
-                    log("{}:{} 入参转换 {}", "content-type", contentType, inputBody);
-                } else if (contentType.contains("multipart/form-data")) {
-                    String end = "\r\n";
-                    String boundary = "*****";
-                    String twoHyphens = "--";
-                    httpConnection.setRequestProperty("ContentType", "multipart/form-data;boundary=" + boundary);
-                    httpConnection.setRequestProperty("Connection", "Keep-Alive");
-                    httpConnection.setRequestMethod("POST");
-                    httpConnection.setUseCaches(false);
-                    String[] uploadFilePaths = Arrays.stream(inputBody.split("\n"))
-                            .filter(StringUtils::isNotEmpty).map(String::trim).toArray(String[]::new);
-                    DataOutputStream ds = new DataOutputStream(httpConnection.getOutputStream());
-                    try (ds) {
-                        for (int i = 0; i < uploadFilePaths.length; i++) {
-                            String uploadFile = uploadFilePaths[i];
-                            String filename = uploadFile.substring(uploadFile.lastIndexOf("//") + 1);
-                            ds.writeBytes(twoHyphens + boundary + end);
-                            ds.writeBytes("Content-Disposition: form-data; " + "name=\"" + i + "\";filename=\"" + filename
-                                    + "\"" + end);
-                            ds.writeBytes(end);
-                            FileInputStream fStream = new FileInputStream(uploadFile);
-                            try (fStream) {
-                                int bufferSize = 1024;
-                                byte[] buffer = new byte[bufferSize];
-                                int length = -1;
-                                while ((length = fStream.read(buffer)) != -1) {
-                                    ds.write(buffer, 0, length);
-                                }
-                                ds.writeBytes(end);
-                            }
+        if (contentType.contains("application/x-www-form-urlencoded")
+                && inputBody.startsWith("{") && inputBody.endsWith("{")) {
+            JSONObject object = JSON.parseObject(inputBody);
+            StringBuilder builder = new StringBuilder();
+            for (String s : object.keySet()) {
+                builder.append("&").append(s).append("=").append(URLEncoder.encode(object.getString(s), StandardCharsets.UTF_8));
+            }
+            inputBody = builder.length() == 0 ? "" : builder.substring(1);
+            log("{}:{} 入参转换 {}", "content-type", contentType, inputBody);
+        } else if (contentType.contains("multipart/form-data")) {
+            String end = "\r\n";
+            String boundary = "*****";
+            String twoHyphens = "--";
+            httpConnection.setRequestProperty("ContentType", "multipart/form-data;boundary=" + boundary);
+            httpConnection.setRequestProperty("Connection", "Keep-Alive");
+            httpConnection.setRequestMethod("POST");
+            httpConnection.setUseCaches(false);
+            String[] uploadFilePaths = Arrays.stream(inputBody.split("\n"))
+                    .filter(StringUtils::isNotEmpty).map(String::trim).toArray(String[]::new);
+            DataOutputStream ds = new DataOutputStream(httpConnection.getOutputStream());
+            try (ds) {
+                for (int i = 0; i < uploadFilePaths.length; i++) {
+                    String uploadFile = uploadFilePaths[i];
+                    String filename = uploadFile.substring(uploadFile.lastIndexOf("//") + 1);
+                    ds.writeBytes(twoHyphens + boundary + end);
+                    ds.writeBytes("Content-Disposition: form-data; " + "name=\"" + i + "\";filename=\"" + filename
+                            + "\"" + end);
+                    ds.writeBytes(end);
+                    FileInputStream fStream = new FileInputStream(uploadFile);
+                    try (fStream) {
+                        int bufferSize = 1024;
+                        byte[] buffer = new byte[bufferSize];
+                        int length = -1;
+                        while ((length = fStream.read(buffer)) != -1) {
+                            ds.write(buffer, 0, length);
                         }
-                        ds.writeBytes(twoHyphens + boundary + twoHyphens + end);
-                        ds.flush();
+                        ds.writeBytes(end);
                     }
-                    return;
                 }
-                break;
+                ds.writeBytes(twoHyphens + boundary + twoHyphens + end);
+                ds.flush();
+            }
+            return;
         }
 
         OutputStream output = httpConnection.getOutputStream();

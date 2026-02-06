@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.dao;
 import org.springframework.stereotype.Repository;
 import org.welisdoom.task.xml.connect.FtpConnectPool;
 import org.welisdoom.task.xml.connect.sync.DatasouceConnectManager;
+import org.welisdoom.task.xml.connect.sync.SFtpConnectManager;
 
 /**
  * @Classname ConfigDao
@@ -12,7 +13,7 @@ import org.welisdoom.task.xml.connect.sync.DatasouceConnectManager;
  */
 @Repository
 public interface ConfigDao {
-    FtpConnectPool.FtpLinkInfo getFtp(String name);
+    SFtpConnectManager.FtpInfo getFtp(String name);
 
     DatasouceConnectManager.DatasourceInfo getDatabase(String name);
 

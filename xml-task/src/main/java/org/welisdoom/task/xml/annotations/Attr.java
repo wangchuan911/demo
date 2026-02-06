@@ -21,4 +21,6 @@ public @interface Attr {
     String[] options() default {};
 
     int defaultOption() default -1;
+
+    Class<?> type() default String.class;
 }

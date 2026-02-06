@@ -1,7 +1,6 @@
 package org.welisdoom.task.xml.entity;
 
 
-import com.github.javaparser.quality.NotNull;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.springframework.util.Assert;
@@ -14,6 +13,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -25,23 +26,23 @@ import java.util.stream.Collectors;
 @Tag(value = "task", parentTagTypes = Root.class, desc = "根节点")
 public class Task extends Unit implements Root {
 
-    private static Vertx vertx;
+    final static AtomicReference<Vertx> vertx = new AtomicReference<>();
     static Set<TaskSession> tasks = new HashSet<>();
-    static boolean sync = true;
+    public final static AtomicBoolean sync = new AtomicBoolean(true);
 
     public static Vertx getVertx() {
-        return vertx;
+        return vertx.get();
     }
 
     public static void setVertx(Vertx vertx1) {
         Assert.notNull(vertx1, "vertx is created!");
-        vertx = vertx1;
+        vertx.set(vertx1);
         longTimeNotice();
     }
 
     public static void longTimeNotice() {
         String s = Arrays.stream(new Character[10]).map(character -> "-").collect(Collectors.joining("-"));
-        vertx.setPeriodic(10000, event -> {
+        getVertx().setPeriodic(10000, event -> {
             System.out.println(String.format("%s%s%s", s, LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), s));
         });
     }
@@ -71,19 +72,19 @@ public class Task extends Unit implements Root {
 
     }
 
-    public static void run(Map<String, SubTask.Config> taskList, String taskId) {
-        if (sync) {
-            for (Map.Entry<String, SubTask.Config> entry : taskList.entrySet()) {
-                try {
-                    SubTask.runSync(entry.getKey(), entry.getValue());
-                    System.out.println("成功：" + entry.getKey());
-                } catch (Throwable e) {
-                    System.out.println("失败：" + entry.getKey());
-                }
+    public static void runSync(Map<String, SubTask.Config> taskList) {
+        for (Map.Entry<String, SubTask.Config> entry : taskList.entrySet()) {
+            try {
+                SubTask.runSync(entry.getKey(), entry.getValue());
+                System.out.println("成功：" + entry.getKey());
+            } catch (Throwable e) {
+                System.out.println("失败：" + entry.getKey());
             }
-            vertx.undeploy(taskId);
-            return;
         }
+        Task.closeVertx();
+    }
+
+    public static void run(Map<String, SubTask.Config> taskList, String taskId) {
         Future.join(taskList.entrySet().stream().map(entry ->
                 SubTask.run(entry.getKey(), entry.getValue()).onComplete(event -> {
                     if (event.succeeded()) {
@@ -93,7 +94,7 @@ public class Task extends Unit implements Root {
                     }
                 })).collect(Collectors.toList())).onComplete(event -> {
             Task.closeVertx();
-            vertx.undeploy(taskId);
+            getVertx().undeploy(taskId);
         });
     }
 
@@ -136,15 +137,15 @@ public class Task extends Unit implements Root {
 
     @Deprecated
     public static Future<Void> closeVertx() {
-        if (vertx == null) return Future.failedFuture("vertx is null");
-        return vertx.close();
+        if (getVertx() == null) return Future.failedFuture("vertx is null");
+        return getVertx().close();
     }
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                if (sync) {
+                if (sync.get()) {
                     for (TaskSession taskRequest : tasks) {
                         tasks.remove(taskRequest);
                         for (Map.Entry<Unit, Object> unitObjectEntry : taskRequest.cache.entrySet()) {

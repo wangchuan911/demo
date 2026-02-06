@@ -3,7 +3,6 @@ package org.welisdoom.task.xml.connect.sync;
 import com.alibaba.druid.pool.DruidDataSource;
 import org.apache.ibatis.type.JdbcType;
 import org.welisdoom.task.xml.intf.ISession;
-import org.welisdoon.common.MyBatisUtils;
 import org.welisdoon.common.data.BaseCondition;
 
 import javax.sql.DataSource;
@@ -11,7 +10,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,7 +57,7 @@ public abstract class DatasouceConnectManager implements IConnectManager<Connect
 
     abstract public String toPageSql(String body);
 
-    abstract public void setPage(PreparedStatement preparedStatement, BaseCondition.Page page) throws SQLException;
+    abstract public String setPage(PreparedStatement preparedStatement, BaseCondition.Page page) throws SQLException;
 
     abstract public String sqlFormat(String sql, List<Object> param);
 
@@ -80,6 +78,7 @@ public abstract class DatasouceConnectManager implements IConnectManager<Connect
         protected String user;
         protected String pw;
         protected String model;
+        protected String url;
 
         public int getPort() {
             return port;
