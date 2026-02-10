@@ -9,10 +9,7 @@ import org.welisdoom.task.xml.intf.type.Root;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -29,6 +26,7 @@ public class Task extends Unit implements Root {
     final static AtomicReference<Vertx> vertx = new AtomicReference<>();
     static Set<TaskSession> tasks = new HashSet<>();
     public final static AtomicBoolean sync = new AtomicBoolean(true);
+    static Timer timer;
 
     public static Vertx getVertx() {
         return vertx.get();
@@ -68,11 +66,25 @@ public class Task extends Unit implements Root {
                     e.printStackTrace();
                 }
             }
+            if (tasks.size() == 0) {
+                timer.cancel();
+            }
         }
 
     }
 
     public static void runSync(Map<String, SubTask.Config> taskList) {
+        if (timer == null) {
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+                final String s = Arrays.stream(new Character[10]).map(character -> "-").collect(Collectors.joining("-"));
+
+                @Override
+                public void run() {
+                    System.out.println(String.format("%s%s%s", s, LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), s));
+                }
+            }, 10000, 10000);
+        }
         for (Map.Entry<String, SubTask.Config> entry : taskList.entrySet()) {
             try {
                 SubTask.runSync(entry.getKey(), entry.getValue());
@@ -81,7 +93,6 @@ public class Task extends Unit implements Root {
                 System.out.println("失败：" + entry.getKey());
             }
         }
-        Task.closeVertx();
     }
 
     public static void run(Map<String, SubTask.Config> taskList, String taskId) {
@@ -160,13 +171,6 @@ public class Task extends Unit implements Root {
                             }
                         }
                     }
-                    if (Task.getVertx() != null)
-                        Task.getVertx().close().onSuccess(unused -> {
-                            System.out.println("vertx 停止");
-                        }).onFailure(throwable -> {
-                            System.out.println("vertx 失败");
-                            throwable.printStackTrace();
-                        });
                 } else
                     Future
                             .all(new HashSet<>(tasks).stream()

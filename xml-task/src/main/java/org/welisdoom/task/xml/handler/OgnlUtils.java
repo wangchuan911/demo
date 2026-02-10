@@ -20,7 +20,7 @@ public class OgnlUtils {
     public static <T> T getValue(String expression, Map context, Object root, Class<T> type) {
         try {
             return (T) Ognl.getValue(parseExpression(expression), context, root, type);
-        } catch (OgnlException e) {
+        } catch (Throwable e) {
             throw new BuilderException("Error evaluating expression '" + expression + "'. Cause: " + e, e);
         }
     }

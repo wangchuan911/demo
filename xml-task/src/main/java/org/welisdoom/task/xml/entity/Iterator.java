@@ -169,6 +169,8 @@ public class Iterator extends Unit implements Executable {
         }
 
         abstract void run(ThreadRunner function) throws Throwable;
+
+        abstract void await() throws InterruptedException;
     }
 
     public static class ThreadInfoSync extends AbstractThreadInfo {
@@ -182,20 +184,27 @@ public class Iterator extends Unit implements Executable {
         synchronized void run(ThreadRunner function) throws Throwable {
             isBreak();
             TaskSession taskSession = idles.take();
-            new Thread(() -> {
-                counter.incrementAndGet();
-                try {
-                    function.run(taskSession);
-                } catch (Throwable e) {
-                    setError(e);
-                } finally {
-                    try {
-                        idles.put(taskSession);
-                    } catch (Throwable e) {
+            if (idles.isEmpty())
+                run(function, taskSession);
+            else
+                new Thread(() -> {
+                    counter.incrementAndGet();
+                    run(function, taskSession);
+                }).run();
+        }
 
-                    }
+        protected void run(ThreadRunner function, TaskSession taskSession) {
+            try {
+                function.run(taskSession);
+            } catch (Throwable e) {
+                setError(e);
+            } finally {
+                try {
+                    idles.put(taskSession);
+                } catch (Throwable e) {
+
                 }
-            }).run();
+            }
         }
 
         synchronized void await() throws InterruptedException {
@@ -203,20 +212,25 @@ public class Iterator extends Unit implements Executable {
                 idles.poll(wait, unit);
             }
         }
+
     }
 
-    public static class ThreadInfoSync2 extends ThreadInfoSync {
-        final static ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(128);
+    public static class ThreadInfoSync2 extends AbstractThreadInfo {
+        final ExecutorService EXECUTOR_SERVICE;
         final LinkedList<TaskSession> idles = new LinkedList<>();
 
         ThreadInfoSync2(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
             super(taskSession, threadCount, wait, unit);
+            EXECUTOR_SERVICE = Executors.newFixedThreadPool(threadCount);
             idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
         }
 
-        synchronized void run(ThreadRunner function) throws Throwable {
+        void run(ThreadRunner function) throws Throwable {
             isBreak();
-            TaskSession taskSession = idles.pollFirst();
+            TaskSession taskSession;
+            synchronized (idles) {
+                taskSession = idles.pollFirst();
+            }
             if (idles.isEmpty()) {
                 run(function, taskSession);
             } else {
@@ -225,6 +239,13 @@ public class Iterator extends Unit implements Executable {
                 });
             }
             while (idles.isEmpty()) {
+                Thread.sleep(100);
+            }
+        }
+
+        @Override
+        void await() throws InterruptedException {
+            while (idles.size() < count) {
                 Thread.sleep(100);
             }
         }
@@ -312,7 +333,7 @@ public class Iterator extends Unit implements Executable {
     }
 
     public void await(TaskSession data) throws InterruptedException {
-        ThreadInfoSync threadInfo = data.cache(this);
+        AbstractThreadInfo threadInfo = data.cache(this);
         if (threadInfo == null) {
             return;
         }

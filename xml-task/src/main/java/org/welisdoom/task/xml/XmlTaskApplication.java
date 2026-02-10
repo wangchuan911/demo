@@ -79,17 +79,17 @@ public class XmlTaskApplication {
 
     @EventListener
     public void run(ApplicationReadyEvent readyEvent) {
-        options.setMaxWorkerExecuteTime(10);
-        options.setMaxWorkerExecuteTimeUnit(TimeUnit.DAYS);
-        options.setMaxEventLoopExecuteTime(10);
-        options.setMaxEventLoopExecuteTimeUnit(TimeUnit.DAYS);
-        DeploymentOptions deploymentOptions = new DeploymentOptions();
-        deploymentOptions.setThreadingModel(ThreadingModel.WORKER);
-        Vertx vertx = Vertx.vertx(options);
+
         if (Task.sync.get()) {
-            Task.setVertx(vertx);
             Task.runSync(taskList);
-        } else
+        } else {
+            options.setMaxWorkerExecuteTime(10);
+            options.setMaxWorkerExecuteTimeUnit(TimeUnit.DAYS);
+            options.setMaxEventLoopExecuteTime(10);
+            options.setMaxEventLoopExecuteTimeUnit(TimeUnit.DAYS);
+            DeploymentOptions deploymentOptions = new DeploymentOptions();
+            deploymentOptions.setThreadingModel(ThreadingModel.WORKER);
+            Vertx vertx = Vertx.vertx(options);
             vertx.deployVerticle(new AbstractVerticle() {
                 @Override
                 public void start() {
@@ -99,6 +99,7 @@ public class XmlTaskApplication {
                     });
                 }
             }, deploymentOptions);
+        }
 
     }
 }
