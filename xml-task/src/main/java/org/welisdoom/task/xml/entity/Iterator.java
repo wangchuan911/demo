@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -47,7 +48,12 @@ public class Iterator extends Unit implements Executable {
                 executeSync(data, item);
                 break;
             default:
-                AbstractThreadInfo threadInfo = data.cache(this, () -> new ThreadInfoSync(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES"))));
+                AbstractThreadInfo threadInfo = data.cache(this, () -> {
+                    return "true".equals(attributes.get("pool")) ?
+                            new ThreadInfoSync2(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES"))) :
+                            new ThreadInfoSync(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES")));
+
+                });
                 log("并发-线程中");
                 threadInfo.run(taskRequest ->
                         {
@@ -170,27 +176,38 @@ public class Iterator extends Unit implements Executable {
 
         abstract void run(ThreadRunner function) throws Throwable;
 
+        abstract void run(ThreadRunner function, TaskSession taskSession) throws Throwable;
+
         abstract void await() throws InterruptedException;
+
+        public abstract void destroy();
     }
 
     public static class ThreadInfoSync extends AbstractThreadInfo {
+        static AtomicReference<ExecutorService> EXECUTOR_SERVICE = new AtomicReference<>();
         final LinkedBlockingQueue<TaskSession> idles = new LinkedBlockingQueue<>();
+        final static AtomicInteger USING = new AtomicInteger(0);
 
         ThreadInfoSync(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
             super(taskSession, threadCount, wait, unit);
             idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
+            USING.incrementAndGet();
+        }
+
+        synchronized boolean isShutdown() {
+            return EXECUTOR_SERVICE.get() == null || EXECUTOR_SERVICE.get().isShutdown();
         }
 
         synchronized void run(ThreadRunner function) throws Throwable {
             isBreak();
             TaskSession taskSession = idles.take();
-            if (idles.isEmpty())
+            if (isShutdown()) {
+                EXECUTOR_SERVICE.set(Executors.newCachedThreadPool());
+            }
+            EXECUTOR_SERVICE.get().execute(() -> {
+                counter.incrementAndGet();
                 run(function, taskSession);
-            else
-                new Thread(() -> {
-                    counter.incrementAndGet();
-                    run(function, taskSession);
-                }).run();
+            });
         }
 
         protected void run(ThreadRunner function, TaskSession taskSession) {
@@ -207,21 +224,31 @@ public class Iterator extends Unit implements Executable {
             }
         }
 
+
         synchronized void await() throws InterruptedException {
             for (int i = 0; i < count; i++) {
                 idles.poll(wait, unit);
             }
         }
 
+        @Override
+        public synchronized void destroy() {
+            if (USING.decrementAndGet() <= 0 && isShutdown()) {
+                if (EXECUTOR_SERVICE.get() != null)
+                    EXECUTOR_SERVICE.get().shutdown();
+                EXECUTOR_SERVICE.set(null);
+            }
+        }
+
     }
 
     public static class ThreadInfoSync2 extends AbstractThreadInfo {
-        final ExecutorService EXECUTOR_SERVICE;
         final LinkedList<TaskSession> idles = new LinkedList<>();
+        final ExecutorService pool;
 
         ThreadInfoSync2(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
             super(taskSession, threadCount, wait, unit);
-            EXECUTOR_SERVICE = Executors.newFixedThreadPool(threadCount);
+            pool = Executors.newFixedThreadPool(threadCount);
             idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
         }
 
@@ -234,7 +261,7 @@ public class Iterator extends Unit implements Executable {
             if (idles.isEmpty()) {
                 run(function, taskSession);
             } else {
-                EXECUTOR_SERVICE.execute(() -> {
+                pool.execute(() -> {
                     run(function, taskSession);
                 });
             }
@@ -248,6 +275,11 @@ public class Iterator extends Unit implements Executable {
             while (idles.size() < count) {
                 Thread.sleep(100);
             }
+        }
+
+        @Override
+        public void destroy() {
+            pool.shutdown();
         }
 
         protected void run(ThreadRunner function, TaskSession taskSession) {
@@ -319,8 +351,9 @@ public class Iterator extends Unit implements Executable {
 
     @Override
     protected void destroySync(TaskSession taskSession) {
+        AbstractThreadInfo threadInfo = taskSession.cache(this);
+        if (threadInfo != null) threadInfo.destroy();
         super.destroySync(taskSession);
-        taskSession.clearCache(this);
     }
 
     @Deprecated
