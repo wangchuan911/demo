@@ -556,6 +556,12 @@ public class QueryManagerRouter {
                 }
             }
             Assert.notNull(current, "初始化失败");
+            if (typeId == 3012) {
+                String multiName = body.getString("multiName");
+                Assert.isTrue(StringUtils.isNotEmpty(multiName), "[多对一节点别名]不能为空!");
+                MetaObject.Attribute attribute = new MetaObject.Attribute().setCode(multiName).setName(multiName).setTypeId(AttributeMetaType.MultiField.getId());
+                current.setAttribute(attribute);
+            }
             JSONArray rel = body.getJSONArray("rel");
             for (int i = 0; i < rel.size(); i++) {
                 objectAddLinkRel(current.getInstanceId(), current, rel.getJSONObject(i));
@@ -904,5 +910,16 @@ public class QueryManagerRouter {
         });
     }
 
+    @VertxRouter(path = "\\/link\\/(?<id>\\d+)",
+            method = "DELETE",
+            mode = VertxRouteType.PathRegex)
+    public void delLink(RoutingContextChain chain) {
+        chain.blockingHandler(routingContext -> {
+            long linkId = Long.parseLong(routingContext.pathParam("id"));
+            MetaLink metaLink = MetaUtils.getInstance().getMetaLinkDao().get(linkId);
+            metaLink.remove();
+            routingContext.end("删除成功");
+        });
+    }
 
 }

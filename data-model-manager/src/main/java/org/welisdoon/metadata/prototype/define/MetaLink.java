@@ -234,6 +234,28 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
     public int save() {
 
         int update = 0;
+        if (this.object != null) {
+            object.save();
+            setObjectId(object.getId());
+        }
+        if (this.attribute != null) {
+            attribute.save();
+            setAttributeId(attribute.getId());
+        }
+        if (this.value != null) {
+            value.save();
+            setValueId(value.getId());
+        }
+
+        if (this.instance != null) {
+            instance.save();
+            setInstanceId(instance.getId());
+        }
+        if (this.link != null) {
+            link.save();
+            setLinkId(link.getId());
+        }
+
         if (isEditing())
             if (getId() != null) {
                 update += MetaUtils.getInstance().getMetaLinkDao().put(this);
@@ -245,28 +267,6 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         for (MetaLink child : children)
             child.setParentId(this.getId());
         children.save();
-
-        if (this.object != null) {
-            object.save();
-            objectId = object.getId();
-        }
-        if (this.attribute != null) {
-            attribute.save();
-            attributeId = attribute.getId();
-        }
-        if (this.value != null) {
-            value.save();
-            valueId = value.getId();
-        }
-
-        if (this.instance != null) {
-            instance.save();
-            instanceId = instance.getId();
-        }
-        if (this.link != null) {
-            link.save();
-            linkId = link.getId();
-        }
         return update;
     }
 
@@ -340,6 +340,18 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         for (MetaLink child : this.getChildren()) {
             child.getType();
             child.test();
+        }
+    }
+
+    public static class VirtualLink extends MetaLink {
+        @Override
+        public int save() {
+            return 0;
+        }
+
+        @Override
+        public int remove() {
+            return 0;
         }
     }
 }

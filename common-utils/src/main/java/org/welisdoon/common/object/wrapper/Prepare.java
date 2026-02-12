@@ -210,6 +210,7 @@ public class Prepare {
                     ", parts=" + parts +
                     '}';
         }
+
     }
 
     public static class MainPart extends Part {
@@ -225,15 +226,21 @@ public class Prepare {
                 part = parts.get(parts.size() - 1);
                 i = Math.max(i, part.index);
             }
-            parameter.loaded = new boolean[i + 1];
-            System.out.println(toSql().replace(Beauty.WHERE, MessageFormat.format(Beauty.EQUAL_PARAM, tables.get(0).columns[0].toSql(), tables.get(0).columns[0].objectAlias)));
-            tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
-                parameter.values.put(column.objectAlias, new SingleValue(column.objectAlias + "_Val", column.dataType));
-            }));
-            parameter.loaded[0] = true;
+            parameter.initState(i + 1);
+            parameter.setState(0, Parameter.State.LOADING);
+            this.query(toSql().replace(Beauty.WHERE, MessageFormat.format(Beauty.EQUAL_PARAM, tables.get(0).columns[0].toSql(), tables.get(0).columns[0].objectAlias)), parameter);
+            parameter.setState(0, Parameter.State.LOADED);
             for (Part part1 : parts) {
                 part1.load(parameter);
             }
+        }
+
+        void query(String sql, Parameter parameter) {
+            System.out.print("MainPart:");
+            System.out.println(sql);
+            tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
+                parameter.values.put(column.objectAlias, new SingleValue(column.objectAlias + "_Val", column.dataType));
+            }));
         }
     }
 
@@ -247,10 +254,16 @@ public class Prepare {
         public void load(Parameter parameter) {
             Map<String, Object> map = new HashMap<>();
             List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = getOutRelCol();
-            conditionLinks.forEach((conditionLink, relColumnInfo1s) -> {
-                if (!parameter.loaded[conditionLink.index]) {
+            parameter.setState(index, Parameter.State.LOADING);
+
+            for (Map.Entry<Part, List<SqlMapper.BaseColumn.RelColumnInfo>> partListEntry : conditionLinks.entrySet()) {
+                Part conditionLink = partListEntry.getKey();
+                List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfo1s = partListEntry.getValue();
+                if (parameter.stateMatch(conditionLink.index, Parameter.State.UNLOAD)) {
+                    System.out.println("加载未加载sql:" + conditionLink.index);
                     conditionLink.load(parameter);
                 }
+
                 List<SqlMapper.BaseColumn> baseColumns = new LinkedList<>();
                 for (SqlMapper.BaseTable table : conditionLink.tables) {
                     for (SqlMapper.BaseColumn.RelColumnInfo relColumnInfo : relColumnInfos) {
@@ -264,17 +277,50 @@ public class Prepare {
 
                 if (baseColumns.isEmpty()) throw new IllegalStateException("没有找到关联");
                 for (SqlMapper.BaseColumn baseColumn : baseColumns) {
+                    System.out.println("-->" + baseColumn.objectAlias);
                     map.put(baseColumn.objectAlias, parameter.values.get(baseColumn.objectAlias).val);
                 }
-            });
-            parameter.loaded[index] = true;
+            }
+
+            this.query(toSql().replace(Beauty.AND + Beauty.WHERE, ""), parameter);
+            parameter.setState(index, Parameter.State.LOADED);
+        }
+
+        void query(String sql, Parameter parameter) {
+            System.out.print("OtherPart:");
+            System.out.println(sql);
+
+            tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
+                parameter.values.put(column.objectAlias, new SingleValue(column.objectAlias + "_Val", column.dataType));
+            }));
         }
     }
 
     public static class Parameter {
-        boolean[] loaded;
+        State[] loaded;
         Map<String, Value> values = new HashMap<>();
 
+        enum State {
+            UNLOAD, LOADING, LOADED
+        }
+
+        void initState(int size) {
+            loaded = new Parameter.State[size];
+            for (int i1 = 0; i1 < loaded.length; i1++) {
+                loaded[i1] = Parameter.State.UNLOAD;
+            }
+        }
+
+        void setState(int index, State state) {
+            loaded[index] = state;
+        }
+
+        boolean stateMatch(int index, State... states) {
+            for (State state1 : states) {
+                if (state1 == loaded[index]) return true;
+            }
+            return false;
+        }
     }
 
     public static abstract class Value {

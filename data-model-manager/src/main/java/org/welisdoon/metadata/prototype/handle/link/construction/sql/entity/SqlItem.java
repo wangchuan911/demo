@@ -66,12 +66,12 @@ public class SqlItem extends SqlRelationExpression {
             return sqlJoiner.getPrefix();
         } else {
             List<MetaLink> metaLinks;
-            boolean isChild = false;
             if (sqlJoiner.getParent() instanceof SqlJoiner) {
                 metaLinks = (List) ((SqlJoiner) sqlJoiner.getParent()).subJoiners;
-                isChild = true;
-            } else {
+            } else if (sqlJoiner.getParent() != null) {
                 metaLinks = sqlJoiner.getParent().getChildren();
+            } else {
+                return "";
             }
             for (MetaLink child : metaLinks) {
                 if (child instanceof SqlJoiner) {

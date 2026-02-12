@@ -110,7 +110,7 @@
     <template #footer>
       <div style="flex: auto">
         <el-button @click="addLink.show=false">cancel</el-button>
-        <el-button type="primary" @click="addLink.confirm()">confirm</el-button>
+        <el-button type="primary" @click="addLink.validateAndConfirm()">confirm</el-button>
       </div>
     </template>
   </el-drawer>
@@ -146,6 +146,7 @@ const loading = ref(false);
 const props = defineProps<{ id: number }>();
 const lazy = ref(false);
 const load = (id: number) => {
+  if (id < 0) return
   loading.value = true;
   $http.get(`obj/combination/${id}`)
       .then(({data}: { data: Array<Record<any, any>> }) => {
@@ -170,12 +171,10 @@ console.log(props.id);
 const objectId = computed(() => props.id);
 watch(objectId, (value, oldValue, onCleanup) => {
   console.log(value);
-  if (value < 0) {
-    loading.value = true;
-  } else {
-    load(value as number);
-  }
+  if (value == oldValue) return;
+  load(value as number);
 });
+
 const expand = (row: Record<any, any>,
                 treeNode: unknown,
                 resolve: (date: Record<any, any>[]) => void) => {
@@ -222,7 +221,18 @@ const operation = (type: number, row: Record<any, any>) => {
       addLink.value = new ObjectLinkDrawersContent(row);
       addLink.value.open(row);
       break;
+    case 4:
+      ElMessageBox.confirm('是否删除?', {confirmButtonText: "确定", cancelButtonText: "取消"})
+          .then(async () => {
+            try {
+              loading.value = true;
+              await $http.delete(`link/${row.id}`)
+              loading.value = false;
+            } catch (e) {
 
+            }
+            load(objectId.value);
+          });
   }
 };
 import {DrawersContent, FormContent, stringLike} from "@/components/config";
@@ -256,12 +266,13 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
     this.name = "添加对象";
 
     const _attrs: Array<any> = attrs.slice(0, attrs.findIndex(value => value.instanceId == row.instanceId) + 1);
-    this.content.addInput(
+    const content: FormContent = this.content;
+    content.addInput(
         new SelectItem("type", "类型", {
           async inputLoadHandler(input, content) {
             const {data}: { data: Array<Record<any, any>> } = await $http.get(`link/types/obj${objectId.value}`);
             input.setOptions(...data.map(v => new MyOption(v.id, v.desc)));
-          }
+          },
         } as ItemConfig<SelectItem>),
         new TextItem("parent", "上级", {
           async inputLoadHandler(input, content) {
@@ -271,6 +282,15 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
           },
           async valueToData(input, form, content) {
             form[input.code] = row.instanceId;
+          }
+        } as ItemConfig<TextItem>),
+        new TextItem("multiName", "多对一节点别名", {
+          async inputChangeHandler(input, changeInput, value, content) {
+            switch (changeInput.code) {
+              case"type":
+                content.setInputState("multiName", value == 3012);
+                break
+            }
           }
         } as ItemConfig<TextItem>),
         new SelectItem("object", "对象", {
@@ -348,7 +368,7 @@ class ObjectLinkDrawersContent extends LinkAddDrawersContent {
 
   async confirm() {
     try {
-      await $http.post(`add/obj/link/rel/${objectId.value}`, await this.content.getForm(true));
+      await $http.post(`add/obj/link/rel/${objectId.value}`, await this.content.getForm());
       this._close();
       load(objectId.value);
     } catch (e: any) {
@@ -397,7 +417,7 @@ class ChoiceParentDrawersContent extends LinkAddDrawersContent {
 
   async confirm() {
     try {
-      const data = await this.content.getForm(true);
+      const data = await this.content.getForm();
       await $http.post(`obj${objectId.value}/parent${data.parent}`, {});
       this._close();
       load(objectId.value);
@@ -424,6 +444,9 @@ const showTemplate = () => {
         loading.value = false;
       });
 }
+
+load(props.id as number);
+
 </script>
 
 <style scoped>

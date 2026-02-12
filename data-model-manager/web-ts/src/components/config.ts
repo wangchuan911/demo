@@ -1,4 +1,7 @@
 import {InputItem} from "@/components/form/config";
+import {reactive, ref} from "vue";
+import {FormInstance, FormRules} from "element-plus";
+import {Reactive, Ref} from "@vue/reactivity";
 
 export abstract class DrawersContent {
 
@@ -24,10 +27,12 @@ export abstract class DrawersContent {
 export class FormContent {
     form: Record<any, any>;
     inputs: Array<InputItem>;
+    formRef: Ref<FormInstance | undefined> | undefined
 
     constructor(form: Record<any, any> = {}) {
         this.form = form;
         this.inputs = [];
+        this.formRef = undefined;
     }
 
     addInput(...inputs: Array<InputItem>): this {
@@ -35,25 +40,30 @@ export class FormContent {
         return this;
     }
 
+
+
+    setInputState(code: string, visible: boolean): this {
+        for (let input of this.inputs) {
+            if (input.code == code) {
+                input.disable = !visible;
+            }
+        }
+        return this;
+    }
+
     async onLoaded(): Promise<void> {
         for (const input of this.inputs) {
+            if (input.disable) continue;
             await input.onLoaded(this);
         }
     }
 
-    async getForm(check: boolean): Promise<Record<any, any>> {
+    async getForm(): Promise<Record<any, any>> {
         let flag = false;
         const form: Record<any, any> = {};
         for (const input of this.inputs) {
+            if (input.disable) continue;
             await input.valueToData(input, form, this);
-        }
-        if (check) {
-            for (const input of this.inputs) {
-                flag = flag || !input.check();
-            }
-            if (flag) {
-                throw "检查不通过";
-            }
         }
         console.log("原始", this.form);
         console.log("转换", form);
@@ -63,9 +73,10 @@ export class FormContent {
 
     reset(data: any = {}): void {
         this.form = {};
-        this.inputs.forEach(input => {
+        for (const input of this.inputs) {
+            if (input.disable) continue;
             input.dataToValue(input, data, this);
-        });
+        }
     }
 }
 

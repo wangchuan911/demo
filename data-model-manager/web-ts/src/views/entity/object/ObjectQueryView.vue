@@ -48,7 +48,7 @@
     <template #footer>
       <div style="flex: auto">
         <el-button @click="drawer.show=false">cancel</el-button>
-        <el-button type="primary" @click="drawer.confirm()">confirm</el-button>
+        <el-button type="primary" @click="drawer.validateAndConfirm()">confirm</el-button>
       </div>
     </template>
   </el-drawer>
@@ -139,7 +139,7 @@ class ObjectLinkDrawersContent extends FormDrawersContent {
 
   async confirm() {
     try {
-      await $http.put(`obj`, await this.content.getForm(true));
+      await $http.put(`obj`, await this.content.getForm());
       this._close();
       submitForm(formRef.value);
     } catch (e: any) {

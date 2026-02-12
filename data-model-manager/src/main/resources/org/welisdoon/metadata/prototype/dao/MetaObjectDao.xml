@@ -30,6 +30,9 @@
             <if test="data.typeId!=null">
                 and type_id=#{data.typeId,jdbcType=NUMERIC}
             </if>
+            <if test="data.id!=null">
+                and id=#{data.id,jdbcType=NUMERIC}
+            </if>
         </where>
 
     </select>

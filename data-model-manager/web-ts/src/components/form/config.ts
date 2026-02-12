@@ -35,6 +35,8 @@ export abstract class InputItem implements ItemConfig<InputItem> {
     contentGetter: ContentGetter;
     events: any;
     config: ItemConfig<any>;
+    disable: boolean = false;
+    rules: any | undefined;
 
     protected constructor(code: string, label: string, config: ItemConfig<InputItem>) {
         this.code = code;
@@ -50,6 +52,7 @@ export abstract class InputItem implements ItemConfig<InputItem> {
                 }
             }
         };
+        this.rules = undefined;
     }
 
     _self(): this {
@@ -71,9 +74,6 @@ export abstract class InputItem implements ItemConfig<InputItem> {
         this.contentGetter = getter;
     }
 
-    check(): boolean {
-        return true;
-    }
 
     async dataToValue(input: any, data: any, content: FormContent): Promise<void> {
         if (typeof (this.config.dataToValue) == 'function') {
@@ -252,8 +252,18 @@ export class FormDrawersContent extends DrawersContent {
         }
     }
 
-    confirm() {
-        console.log(this.content.getForm(true));
+    async validateAndConfirm() {
+        this.content.formRef.validate((valid, fields) => {
+            if (valid) {
+                this.confirm();
+            } else {
+                console.log('error submit!', fields)
+            }
+        })
+    }
+
+    async confirm() {
+        console.log(this.content.getForm());
     }
 }
 

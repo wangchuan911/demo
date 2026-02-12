@@ -199,16 +199,19 @@ const objectId = computed(() => props.id);
 const pager = reactive({page: 1, size: 20, loading: false, nomore: false});
 watch(objectId, async (value, oldValue, onCleanup) => {
   console.log(value);
-  if (value < 0) {
+  if (value == oldValue) {
     return;
-  } else if (value != oldValue) {
-    pager.loading = true;
-    const {data} = await $http.get(`obj/template/snapshot/${objectId.value}`);
-    snapshot.value = data
-    console.log(snapshot)
-    pager.loading = false;
   }
+  await loadSnapshot(value as number)
 });
+const loadSnapshot = async (id: number) => {
+  if (id < 0) return
+  pager.loading = true;
+  const {data} = await $http.get(`obj/template/snapshot/${id}`);
+  snapshot.value = data
+  console.log(snapshot)
+  pager.loading = false;
+}
 
 const search = async (page: number) => {
   pager.page = page;
@@ -248,6 +251,7 @@ const addFilter = (item: SearchFilterInputItem) => {
   filter.inputs.push(item);
 };
 
+loadSnapshot(props.id as number);
 </script>
 
 <style scoped>

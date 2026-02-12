@@ -1,13 +1,13 @@
 <template>
   <el-tabs v-model="activeTab" @tab-click="onChangeTab">
-    <el-tab-pane label="属性管理" name="attr" >
-      <object-attribute-view :id="objId"></object-attribute-view>
+    <el-tab-pane label="属性管理" name="attr">
+      <object-attribute-view :id="objId" :typeId="typeId"></object-attribute-view>
     </el-tab-pane>
-    <el-tab-pane label="对象管理" name="obj">
-      <object-combination-view :id="objId"></object-combination-view>
+    <el-tab-pane label="对象管理" name="obj" v-if="typeId==1001">
+      <object-combination-view :id="objId" :typeId="typeId"></object-combination-view>
     </el-tab-pane>
-    <el-tab-pane label="对象搜索模板" name="search">
-      <object-query-template-view :id="objId"></object-query-template-view>
+    <el-tab-pane label="对象搜索模板" name="search" v-if="typeId==1001">
+      <object-query-template-view :id="objId" :typeId="typeId"></object-query-template-view>
     </el-tab-pane>
   </el-tabs>
 
@@ -26,23 +26,21 @@ const attrs = reactive(new Array<Record<any, any>>());
 const {proxy} = getCurrentInstance() as ComponentInternalInstance, route = useRoute();
 const loading = ref(true)
 const objId = ref(-1)
-onActivated(() => {
+const typeId = ref(-1)
+onActivated(async () => {
   console.log("onActivated")
   console.log(route.params)
   objId.value = route.params.id as unknown as number;
+  await load(objId.value)
 })
-const load = () => {
-  proxy?.$http.get(`obj/${objId.value}`)
-      .then(({data}) => {
-        attrs.length = 0;
-        attrs.push(...data.attributes as Array<Record<any, any>>)
-
-      })
-      .then(() => {
-        loading.value = false
-      }, () => {
-        loading.value = false
-      })
+const load = async (id: number) => {
+  proxy?.$http.post(`obj`, {
+    query: 'objectSearch',
+    data: {id},
+    page: {page: 1, size: 1}
+  }).then((data: any) => {
+    typeId.value = data.data.list[0].typeId;
+  })
 }
 onMounted(() => {
   console.log("onMounted")

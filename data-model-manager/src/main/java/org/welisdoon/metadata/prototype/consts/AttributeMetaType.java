@@ -16,7 +16,7 @@ public enum AttributeMetaType implements IMetaType {
     UNKNOWN(Long.MIN_VALUE, "未知", null),
     Column(2000, "表字段", ObjectMetaType.Table),
     Field(2001, "对象属性", ObjectMetaType.Object),
-    ChildAttributes(2004, "对象属性(只给子对象使用，当前对象不使用)", null),
+    MultiField(2004, "多对一属性节点名称", null),
     Header(2002, "搜索结果标题", ObjectMetaType.Search),
     Condition(2003, "搜索条件", ObjectMetaType.Search);
     long id;

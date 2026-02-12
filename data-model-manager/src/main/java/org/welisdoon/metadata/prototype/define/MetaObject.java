@@ -214,7 +214,7 @@ public class MetaObject extends MetaPrototype implements ITypeEntity<ObjectMetaT
         public MetaLink getParent() {
             ObjectUtils.synchronizedInitial(this, metaLink -> this.parent != null, metaLink -> {
                 if (this.parentId == null) {
-                    parent = new MetaLink().setTypeId(LinkMetaType.AttrConstructor.getId());
+                    parent = new MetaLink.VirtualLink().setTypeId(LinkMetaType.AttrConstructor.getId());
                 } else {
                     parent = MetaUtils.getInstance().getMetaLinkDao().get(getParentId());
                 }

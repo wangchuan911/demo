@@ -134,7 +134,6 @@ public class SqlJoiner extends Sql {
     }
 
 
-
     @Override
     protected String format(FormatContent format) {
         boolean isFirst = isFirst();
@@ -233,5 +232,11 @@ public class SqlJoiner extends Sql {
         return List.of();
     }
 
-
+    protected String getPropertyPrefix() {
+        SqlJoiner sqlJoiner = findParent(SqlJoiner.class);
+        if (sqlJoiner != null) {
+            return sqlJoiner.getPropertyPrefix();
+        }
+        return "";
+    }
 }

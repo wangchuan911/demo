@@ -34,12 +34,12 @@ import org.welisdoon.common.object.wrapper.IDataAccessObject;
         @IDataAccessObject.Column(column = "t3.column6", property = "t3column6")
 })
 @IDataAccessObject.Table(table = "user4.table4 t4", datasource = "db1", rel = IDataAccessObject.TableRel.Multi, columns = {
-        @IDataAccessObject.Column(column = "t4.column1", property = "t4column1", linkColumn = "t3.column1", type = IDataAccessObject.ColumnType.PrimaryKeu),
-        @IDataAccessObject.Column(column = "t4.column2", property = "t4column2"),
-        @IDataAccessObject.Column(column = "t4.column3", property = "t4column3"),
-        @IDataAccessObject.Column(column = "t4.column4", property = "t4column4"),
-        @IDataAccessObject.Column(column = "t4.column5", property = "t4column5"),
-        @IDataAccessObject.Column(column = "t4.column6", property = "t4column6")
+        @IDataAccessObject.Column(column = "t4.column1", property = "node1.t4column1", linkColumn = "t3.column1", type = IDataAccessObject.ColumnType.PrimaryKeu),
+        @IDataAccessObject.Column(column = "t4.column2", property = "node1.t4column2"),
+        @IDataAccessObject.Column(column = "t4.column3", property = "node1.t4column3"),
+        @IDataAccessObject.Column(column = "t4.column4", property = "node1.t4column4"),
+        @IDataAccessObject.Column(column = "t4.column5", property = "node1.t4column5"),
+        @IDataAccessObject.Column(column = "t4.column6", property = "node1.t4column6")
 })
 
 public interface IDemoTypeAEntity extends IDataAccessObject {

@@ -1,8 +1,58 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import {createRouter, createWebHashHistory, RouteRecordRaw} from 'vue-router'
+import {createRouter, createWebHashHistory, RouteMeta, RouteRecordRaw} from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 
+const tabsPageState: Record<string, TabState> = {}
+
+export declare interface TabState {
+    using: Record<string, string>,
+    path: string,
+    max: number
+}
+
+function tabsPage(parents: Array<RouteRecordRaw>, routes: Array<RouteRecordRaw>): void {
+    for (let i = 0, len = routes.length; i < len; i++) {
+        const row: RouteRecordRaw = routes[i];
+        const tabsCountMax = row?.meta?.tabsCountMax as number;
+        if (tabsCountMax > 0) {
+            console.log(row);
+            const arr: Array<RouteRecordRaw> = [];
+            for (let j = 0; j < tabsCountMax; j++) {
+                arr.push({
+                    name: row.name,
+                    component: row.component,
+                    path: `${j}/${row.path}`,
+                    meta: {...row.meta, tabsCountMax: -1, standalone: false}
+                } as RouteRecordRaw)
+            }
+
+            if (parents.length == 0) {
+                routes.push(...arr)
+            } else {
+                parents[parents.length - 1].children?.push(...arr);
+            }
+            const prefix = parents.map(value => {
+                let text = value.path;
+                if (text.endsWith("/")) {
+                    text = text.substring(0, text.length - 1);
+                }
+                if (text.startsWith("/")) {
+                    text = text.substring(1, text.length);
+                }
+                return text;
+            }).join("/")
+            tabsPageState[`${prefix}/${row.path}`] = {
+                path: `${prefix}/{{count}}/${row.path}`,
+                using: {},
+                max: tabsCountMax
+            } as TabState
+        } else if (row.children != null) {
+            parents.push(row);
+            tabsPage(parents, row.children);
+        }
+    }
+}
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -42,9 +92,11 @@ const routes: Array<RouteRecordRaw> = [
                 path: 'object-detail/:id(\\d+)',
                 component: () => import( '../views/entity/object/ObjectDetailView.vue'),
                 meta: {
-                    standalone: true
+                    standalone: true,
+                    tabsCountMax: 20
                 }
-            },
+            }
+            ,
             {
                 path: 'object-query',
                 component: () => import( '../views/entity/object/ObjectQueryView.vue'),
@@ -70,6 +122,7 @@ const routes: Array<RouteRecordRaw> = [
     }
 ]
 
+tabsPage([], routes)
 routes.filter(value => (value?.children || []).length > 0)
     .forEach(value1 => {
         (value1?.children || [])
@@ -83,11 +136,13 @@ routes.filter(value => (value?.children || []).length > 0)
             })
     })
 
-
 console.log(routes)
 const router = createRouter({
     history: createWebHashHistory(),
     routes
 })
-
-export default router
+console.log(tabsPageState)
+export default {
+    router,
+    tabsPageState
+}

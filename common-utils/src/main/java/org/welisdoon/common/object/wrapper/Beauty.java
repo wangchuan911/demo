@@ -27,7 +27,7 @@ public class Beauty {
             TABLE = "{table}",
             WHERE = "{where}",
             EQUAL = " {0} = {1} ",
-            EQUAL_PARAM = " {0} /* = */ $'{'{1}'}' ",
+            EQUAL_PARAM = "/*cond>*/ {0} = $'{'{1}'}' /*<cond*/",
             JOIN = "{JOIN}",
             AND = " and ",
             COLUMN_AS = " {0} AS \"{1}\" ",

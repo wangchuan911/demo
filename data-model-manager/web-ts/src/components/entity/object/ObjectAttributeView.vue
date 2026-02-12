@@ -30,7 +30,7 @@
     <template #footer>
       <div style="flex: auto">
         <el-button @click="addAttr.show=false">cancel</el-button>
-        <el-button type="primary" @click="addAttr.confirm()">confirm</el-button>
+        <el-button type="primary" @click="addAttr.validateAndConfirm()">confirm</el-button>
       </div>
     </template>
   </el-drawer>
@@ -79,7 +79,27 @@ class AttrAddDrawersContent extends FormDrawersContent {
   constructor() {
     super();
     this.name = "属性";
-    this.content.addInput(new TextItem("code", "标识"), new TextItem("name", "描述", {} as ItemConfig<TextItem>),
+    this.content.addInput(
+        new TextItem("code", "标识").andThen(item => item.rules = [
+          {required: true, message: '不能为空', trigger: 'blur'},
+          {
+            validator: (rule: any, value: any, callback: any) => {
+              console.log(objectTypeId.value)
+              if (objectTypeId.value == 1001) {
+                if ((value as string).replace(/[a-zA-Z\d]+/, "").length > 0)
+                  return callback(new Error('不能带特殊字符'));
+              } else {
+                if (value.toUpperCase() != value) {
+                  return callback(new Error('必须全部大写'));
+                }
+                if ((value as string).replace(/[a-zA-Z\_\d]+/, "").length > 0)
+                  return callback(new Error('不能带特殊字符'));
+              }
+              callback();
+            }, trigger: 'blur'
+          }]),
+        new TextItem("name", "描述", {} as ItemConfig<TextItem>).andThen(item => item.rules = [
+          {required: true, message: '不能为空', trigger: 'blur'}]),
         new SelectTreeItem("attr", "关联表字段", {
           async inputLoadHandler(input: SelectTreeItem, content: FormContent): Promise<void> {
             const {data}: { data: Array<any> } = await $http.get(`attr/bind/tree/${props.id}`);
@@ -159,7 +179,11 @@ class AttrAddDrawersContent extends FormDrawersContent {
                   .map((value1) => ({attrId: value1.attributeId, linkId: value1.id})));
               input.prop.rows.push(...rows);
               console.log(rows);
-              content.form[input.code] = content.form[input.code] || {rows: input.prop.rows, cols: input.prop.cols, dels: input.prop.dels}
+              content.form[input.code] = content.form[input.code] || {
+                rows: input.prop.rows,
+                cols: input.prop.cols,
+                dels: input.prop.dels
+              }
               return;
             }
             content.form[input.code] = value[input.code];
@@ -174,29 +198,22 @@ class AttrAddDrawersContent extends FormDrawersContent {
         } as ItemConfig<AttrObjMapperItem>));
   }
 
-  confirm() {
+  async confirm() {
     loading.value = true;
-    this.content.getForm(true).then(form => {
-      $http.put(`obj/attrs/${props.id}`, {...this.data, ...form})
-          .then(({data}: { data: Array<Record<any, any>> }) => {
-            loading.value = false;
-            this._close();
-            if (data instanceof String) {
-              throw data;
-            }
-            if (this.data?.id != null)
-              attrs[attrs.findIndex(value => value.id == this.data?.id)] = data;
-            else
-              attrs.push(data);
-          }, (error: any) => {
-            loading.value = false;
-            this._close();
-            /*if (error instanceof AxiosError)
-              ElMessage.error(error.response?.data || error);
-            else
-              ElMessage.error(error);*/
-          });
-    });
+    const form = await this.content.getForm();
+    try {
+      const {data}: { data: Array<Record<any, any>> } = await $http.put(`obj/attrs/${props.id}`, {...this.data, ...form});
+      if (data instanceof String) {
+        throw data;
+      }
+      if (this.data?.id != null)
+        attrs[attrs.findIndex(value => value.id == this.data?.id)] = data;
+      else
+        attrs.push(data);
+    } finally {
+      this._close();
+      loading.value = false;
+    }
   }
 }
 
@@ -230,7 +247,7 @@ const attrs = reactive(new Array<Record<any, any>>());
 const {proxy} = getCurrentInstance() as ComponentInternalInstance;
 const {$http} = proxy as ComponentCustomProperties;
 const loading = ref(true);
-const props = defineProps<{ id: number }>();
+const props = defineProps<{ id: number, typeId: number }>();
 const load = (id: number) => {
   $http.get(`obj/attrs/${id}`)
       .then(({data}: { data: Array<Record<any, any>> }) => {
@@ -246,6 +263,7 @@ const load = (id: number) => {
 };
 console.log(props.id);
 const objectId = computed(() => props.id);
+const objectTypeId = computed(() => props.typeId);
 watch(objectId, (value, oldValue, onCleanup) => {
   console.log(value);
   if (value < 0) {
@@ -253,6 +271,11 @@ watch(objectId, (value, oldValue, onCleanup) => {
   } else {
     load(value as number);
   }
+});
+watch(objectTypeId, (value, oldValue, onCleanup) => {
+  addAttr.content.setInputState("attr", value == 1001);
+  addAttr.content.setInputState("colMapper", value == 1001);
+
 });
 const close = (event: null) => {
   console.log(event);

@@ -38,8 +38,9 @@ public class SqlRelationExpression extends Sql {
     }
 
     protected void addCache(FormatContent format, SqlItem a, SqlItem b) {
-        List<Object> cache = format.get(this.findParent(SqlJoiner.class));
-        cache.add(new IDataAccessObject.Model.TableVO.ColumnVO(a.format(format), a.getName(), b.format(format), IDataAccessObject.ColumnType.Simple, String.class));
+        SqlJoiner sqlJoiner = this.findParent(SqlJoiner.class);
+        List<Object> cache = format.get(sqlJoiner);
+        cache.add(new IDataAccessObject.Model.TableVO.ColumnVO(a.format(format), sqlJoiner.getPropertyPrefix() + a.getName(), b.format(format), IDataAccessObject.ColumnType.Simple, String.class));
     }
 
     @Override
