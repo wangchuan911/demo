@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -150,6 +149,7 @@ public class Iterator extends Unit implements Executable {
         final long wait;
         final TimeUnit unit;
         Throwable stop;
+        ExecutorService pool;
 
         AbstractThreadInfo(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
             count = threadCount;
@@ -174,41 +174,16 @@ public class Iterator extends Unit implements Executable {
             }
         }
 
-        abstract void run(ThreadRunner function) throws Throwable;
-
-        abstract void run(ThreadRunner function, TaskSession taskSession) throws Throwable;
-
-        abstract void await() throws InterruptedException;
-
-        public abstract void destroy();
-    }
-
-    public static class ThreadInfoSync extends AbstractThreadInfo {
-        static AtomicReference<ExecutorService> EXECUTOR_SERVICE = new AtomicReference<>();
-        final LinkedBlockingQueue<TaskSession> idles = new LinkedBlockingQueue<>();
-        final static AtomicInteger USING = new AtomicInteger(0);
-
-        ThreadInfoSync(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
-            super(taskSession, threadCount, wait, unit);
-            idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
-            USING.incrementAndGet();
-        }
-
-        synchronized boolean isShutdown() {
-            return EXECUTOR_SERVICE.get() == null || EXECUTOR_SERVICE.get().isShutdown();
-        }
-
         synchronized void run(ThreadRunner function) throws Throwable {
             isBreak();
-            TaskSession taskSession = idles.take();
-            if (isShutdown()) {
-                EXECUTOR_SERVICE.set(Executors.newCachedThreadPool());
-            }
-            EXECUTOR_SERVICE.get().execute(() -> {
-                counter.incrementAndGet();
-                run(function, taskSession);
-            });
+            TaskSession taskSession = useSession();
+            pool.execute(() -> run(function, taskSession));
+            counter.incrementAndGet();
         }
+
+        abstract TaskSession useSession() throws Throwable;
+
+        abstract void idleSession(TaskSession taskSession) throws Throwable;
 
         protected void run(ThreadRunner function, TaskSession taskSession) {
             try {
@@ -217,11 +192,41 @@ public class Iterator extends Unit implements Executable {
                 setError(e);
             } finally {
                 try {
-                    idles.put(taskSession);
+                    idleSession(taskSession);
                 } catch (Throwable e) {
-
+                    e.printStackTrace();
                 }
             }
+        }
+
+        abstract void await() throws InterruptedException;
+
+        public void destroy() {
+            if (pool.isShutdown()) return;
+            pool.shutdown();
+        }
+
+    }
+
+    public static class ThreadInfoSync extends AbstractThreadInfo {
+        final LinkedBlockingQueue<TaskSession> idles = new LinkedBlockingQueue<>();
+        final static AtomicInteger USING = new AtomicInteger(0);
+
+        ThreadInfoSync(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
+            super(taskSession, threadCount, wait, unit);
+            idles.addAll(taskSession.newSession(count, integer -> "thread-" + (integer + 1)));
+            USING.incrementAndGet();
+            pool = Executors.newCachedThreadPool();
+        }
+
+        @Override
+        TaskSession useSession() throws Throwable {
+            return idles.take();
+        }
+
+        @Override
+        void idleSession(TaskSession taskSession) throws Throwable {
+            idles.put(taskSession);
         }
 
 
@@ -231,14 +236,6 @@ public class Iterator extends Unit implements Executable {
             }
         }
 
-        @Override
-        public synchronized void destroy() {
-            if (USING.decrementAndGet() <= 0 && isShutdown()) {
-                if (EXECUTOR_SERVICE.get() != null)
-                    EXECUTOR_SERVICE.get().shutdown();
-                EXECUTOR_SERVICE.set(null);
-            }
-        }
 
     }
 
@@ -253,44 +250,26 @@ public class Iterator extends Unit implements Executable {
         }
 
         void run(ThreadRunner function) throws Throwable {
-            isBreak();
-            TaskSession taskSession;
-            synchronized (idles) {
-                taskSession = idles.pollFirst();
-            }
-            if (idles.isEmpty()) {
-                run(function, taskSession);
-            } else {
-                pool.execute(() -> {
-                    run(function, taskSession);
-                });
-            }
+            super.run(function);
             while (idles.isEmpty()) {
                 Thread.sleep(100);
             }
         }
 
         @Override
-        void await() throws InterruptedException {
-            while (idles.size() < count) {
-                Thread.sleep(100);
-            }
+        TaskSession useSession() throws Throwable {
+            return idles.pollFirst();
         }
 
         @Override
-        public void destroy() {
-            pool.shutdown();
+        void idleSession(TaskSession taskSession) throws Throwable {
+            idles.addLast(taskSession);
         }
 
-        protected void run(ThreadRunner function, TaskSession taskSession) {
-            try {
-                function.run(taskSession);
-            } catch (Throwable e) {
-                setError(e);
-            } finally {
-                synchronized (idles) {
-                    idles.addLast(taskSession);
-                }
+        @Override
+        void await() throws InterruptedException {
+            while (idles.size() < count) {
+                Thread.sleep(100);
             }
         }
     }
