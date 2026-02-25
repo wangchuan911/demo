@@ -295,7 +295,7 @@ public interface IDataAccessObject {
         SqlMapper mapper = new SqlMapper();
         SqlMapper.MainTable table = dataAccessObjectInfo.sql(mapper);
         mapper.build(table, params);
-        System.out.println(mapper.prepare.sql);
+//        System.out.println(mapper.prepare.sql);
         return Collections.emptyList();
     }
 

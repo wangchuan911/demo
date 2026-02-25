@@ -1,5 +1,7 @@
 package org.welisdoon.common.object.wrapper;
 
+import com.alibaba.fastjson.parser.ParserConfig;
+import com.alibaba.fastjson.util.TypeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.MessageFormat;
@@ -27,7 +29,9 @@ public class Beauty {
             TABLE = "{table}",
             WHERE = "{where}",
             EQUAL = " {0} = {1} ",
-            EQUAL_PARAM = "/*cond>*/ {0} = $'{'{1}'}' /*<cond*/",
+            MARK_1 = "/*@@##*/",
+            MARK_2 = "/*##@@*/",
+            EQUAL_PARAM = MessageFormat.format("{0} {1} {2}", MARK_1, "{0} = #'{'{1}'}'", MARK_2),
             JOIN = "{JOIN}",
             AND = " and ",
             COLUMN_AS = " {0} AS \"{1}\" ",
@@ -52,7 +56,7 @@ public class Beauty {
         }
     }
 
-    public Prepare prepare(Map<String, Object> params) {
+    public List<IDataAccessObject> prepare(Map<String, Object> params) {
         System.out.println(params);
         List<SqlMapper.BaseColumn> list = new LinkedList<>();
         for (Map.Entry<String, Object> entry : params.entrySet()) {
@@ -102,7 +106,9 @@ public class Beauty {
                     break;
             }
         });
-        return new Prepare(selectSql.get().replace(WHERE, existsSql.get()).replace(WHERE, getCondition(firstTable.get(), list)).replace(JOIN, ""), params);
+        Prepare prepare = new Prepare(selectSql.get().replace(WHERE, existsSql.get()).replace(WHERE, getCondition(firstTable.get(), list)).replace(JOIN, ""), params);
+        prepare.log("");
+        return List.of();
     }
 
     String orElse(String a, String p, String b) {
@@ -164,15 +170,19 @@ public class Beauty {
         }
     }
 
-    public Prepare prepare(Object id) {
+    public IDataAccessObject prepare(Object id) {
+        if (id instanceof Map) {
+            return (IDataAccessObject) prepare((Map) id).stream().findFirst().orElse(null);
+        }
         SqlMapper.BaseColumn keyCol = getMainBaseTable().getColumns()[0];
         Prepare.MainPart part = new Prepare.MainPart(index.getAndIncrement(), IDataAccessObject.TableRel.Strong);
         find(part, mainTable);
         part.merge();
         Prepare.Parameter parameter = new Prepare.Parameter();
-        parameter.values.put(keyCol.objectAlias, new Prepare.SingleValue(id, keyCol.dataType));
-        part.load(parameter);
+        part.paramLocal.put(parameter, Map.of(keyCol.objectAlias, TypeUtils.cast(id, keyCol.dataType, ParserConfig.getGlobalInstance())));
+        part.query(parameter);
         System.out.println(part);
+        System.out.println(parameter.values);
         return null;
     }
 
@@ -201,7 +211,12 @@ public class Beauty {
     }
 
     Prepare.Part newPart(IDataAccessObject.TableRel rel) {
-        return new Prepare.OtherPart(index.getAndIncrement(), rel);
+        switch (rel) {
+            case Multi:
+                return new Prepare.LeafMultiPart(index.getAndIncrement(), rel);
+            default:
+                return new Prepare.LeafSinglePart(index.getAndIncrement(), rel);
+        }
     }
 
     SqlMapper.BaseTable getMainBaseTable() {

@@ -16,21 +16,13 @@ import java.util.regex.Matcher;
  */
 public class SqlMapper {
 
-    public Prepare prepare;
-//    protected List<Map.Entry<String, String>> relColumn = new LinkedList<>();
 
-
-//    protected void init(GroupTable table) {
-//        table.initRelColumn(relColumn);
-//        relColumn.clear();
-//    }
-
-    public void build(MainTable table, Map<String, Object> params) {
-        prepare = table.prepare(params);
+    public List<IDataAccessObject> build(MainTable table, Map<String, Object> params) {
+        return table.prepare(params);
     }
 
-    public void build(MainTable table, Object id) {
-        prepare = table.prepare(id);
+    public IDataAccessObject build(MainTable table, Object id) {
+        return table.prepare(id);
     }
 
     public static class ColumnArg {
@@ -190,12 +182,12 @@ public class SqlMapper {
         }
 
 
-        public Prepare prepare(Map<String, Object> params) {
-            return  beauty.prepare(params);
+        public List<IDataAccessObject> prepare(Map<String, Object> params) {
+            return beauty.prepare(params);
         }
 
-        public Prepare prepare(Object id) {
-            return  beauty.prepare(id);
+        public IDataAccessObject prepare(Object id) {
+            return beauty.prepare(id);
         }
     }
 

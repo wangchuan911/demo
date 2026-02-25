@@ -1,10 +1,18 @@
 package org.welisdoon.common.object.wrapper;
 
+import com.alibaba.fastjson.parser.ParserConfig;
+import com.alibaba.fastjson.util.TypeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.common.MyBatisUtils;
 
+import java.lang.reflect.Type;
 import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
+import java.time.chrono.ChronoLocalDate;
+import java.time.chrono.ChronoLocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -15,16 +23,18 @@ import java.util.stream.Stream;
  * @Date 8:48
  */
 public class Prepare {
+    public final static String SPLITTER = ".";
+    static final String logFormat = "%s==> %-6s ==>: %-6s [ %s ] %n";
     final public String sql;
     final public List<Object> params;
 
     Prepare(String sql, List<Object> params) {
-        this.sql = sql;
+        this.sql = sql.replace(Beauty.MARK_1, "").replace(Beauty.MARK_2, "");
         this.params = params;
     }
 
     Prepare(String prepareSql, Map<String, Object> params) {
-        this.params = new LinkedList<>();
+        this(prepareSql.replaceAll(MyBatisUtils.PATTERN_STRING, "?"), new LinkedList<>());
         MyBatisUtils.readSqlTemplate(prepareSql, (name, jdbcType) -> {
             Object value = params.get(name);
             if (value == null || StringUtils.isEmpty(value.toString())) {
@@ -38,7 +48,31 @@ public class Prepare {
             }
             this.params.add(value);
         });
-        this.sql = prepareSql.replaceAll(MyBatisUtils.PATTERN_STRING, "?");
+    }
+
+    static String valToSql(Object o) {
+        if (o instanceof Number) {
+            return o.toString();
+        } else if (o instanceof Date || o instanceof Calendar) {
+            String format = "yyyy-MM-dd HH:mm:ss";
+            SimpleDateFormat sdf = new SimpleDateFormat(format);
+            String formattedDate = sdf.format(o instanceof Date ? ((Date) o).getTime() : ((Calendar) o).getTime());
+            return MessageFormat.format("to_date(''{0}'',''{1}'')", formattedDate, format);
+        } else if (o instanceof ChronoLocalDate) {
+            return MessageFormat.format("to_date(''{0}'',''{1}'')", ((ChronoLocalDate) o).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), DateTimeFormatter.ISO_LOCAL_DATE_TIME.toString());
+        } else {
+            return MessageFormat.format("''{0}''", o.toString());
+        }
+    }
+
+    void log(Object prefix) {
+        System.out.printf(logFormat, prefix, "TO DB", "SQL", sql);
+        System.out.printf(logFormat, prefix, "TO DB", "PARAMS", params.stream().map(o -> MessageFormat.format("{0}({1})", Objects.toString(o), o.getClass().getSimpleName())).collect(Collectors.joining(" , ")));
+        String sql2 = sql;
+        for (int i = 0; sql2.contains("?"); i++) {
+            sql2 = sql2.replaceFirst("\\?", valToSql(params.get(i)));
+        }
+        System.out.printf(logFormat, prefix, "TO LOG", "SQL", sql2);
     }
 
     public static abstract class Part {
@@ -48,6 +82,7 @@ public class Prepare {
         protected List<Part> parts = new LinkedList<>();
         protected Map<Part, List<SqlMapper.BaseColumn.RelColumnInfo>> conditionLinks = new HashMap<>();
         final int index;
+        final Map<Parameter, Map<String, Object>> paramLocal = new HashMap<>();
 
         public Part(int index, IDataAccessObject.TableRel rel) {
             this.index = index;
@@ -68,6 +103,19 @@ public class Prepare {
 
         abstract public void load(Parameter parameter);
 
+        public void query(Parameter parameter) {
+            if (!parameter.loaded.contains(this)) {
+                parameter.loaded.add(this);
+                if (!paramLocal.containsKey(parameter))
+                    paramLocal.put(parameter, new HashMap<>());
+                load(parameter);
+                paramLocal.remove(parameter);
+            }
+
+            for (Part part : parts) {
+                part.query(parameter);
+            }
+        }
 
         public List<SqlMapper.BaseColumn.RelColumnInfo> getOutRelCol() {
             List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = new LinkedList<>();
@@ -204,12 +252,43 @@ public class Prepare {
 
         @Override
         public String toString() {
-            return "Part{" +
-                    "rel=" + rel +
-                    ", tables=" + tables +
-                    ", parts=" + parts +
-                    '}';
+            return String.format("%-15s[%2d]", getClass().getSimpleName(), index);
         }
+
+        public void load(Runnable runnable) {
+            runnable.run();
+        }
+
+        void query(String sql, Map<String, Object> map) {
+            List<Object> params = new LinkedList<>();
+            Map<String, String> format = new HashMap<>();
+//            Map<String, String> format2 = new HashMap<>();
+            MyBatisUtils.readSqlTemplate(sql, (s, s2) -> {
+                Object o = map.get(s);
+                if (o instanceof List) {
+                    params.addAll((Collection<?>) o);
+                    format.put(MessageFormat.format("= #'{'{0}'}'", s), MessageFormat.format("in ({0})", ((List<?>) o).stream().map(o1 -> "?").collect(Collectors.joining(","))));
+//                    format2.put(MessageFormat.format("= #'{'{0}'}'", s), MessageFormat.format("in ({0})", ((List<?>) o).stream().map(this::valToSql).collect(Collectors.joining(","))));
+                } else {
+                    params.add(o);
+                    format.put(MessageFormat.format("#'{'{0}'}'", s), "?");
+//                    format2.put(MessageFormat.format("#'{'{0}'}'", s), valToSql(o));
+                }
+            });
+            String sql2 = sql;
+            for (Map.Entry<String, String> entry : format.entrySet()) {
+                sql2 = sql2.replace(entry.getKey(), entry.getValue());
+            }
+            Prepare prepare = new Prepare(sql2, params);
+            prepare.log(this);
+            /*sql2 = sql;
+            for (Map.Entry<String, String> entry : format2.entrySet()) {
+                sql2 = sql2.replace(entry.getKey(), entry.getValue());
+            }
+            sql2 = sql2.replace(Beauty.MARK_1, "").replace(Beauty.MARK_2, "");
+            System.out.printf(logFormat, this, "TO LOG", "SQL", sql2);*/
+        }
+
 
     }
 
@@ -220,51 +299,45 @@ public class Prepare {
         }
 
         public void load(Parameter parameter) {
-            int i = this.index;
-            Part part = this;
-            while (!part.parts.isEmpty()) {
-                part = parts.get(parts.size() - 1);
-                i = Math.max(i, part.index);
-            }
-            parameter.initState(i + 1);
-            parameter.setState(0, Parameter.State.LOADING);
             this.query(toSql().replace(Beauty.WHERE, MessageFormat.format(Beauty.EQUAL_PARAM, tables.get(0).columns[0].toSql(), tables.get(0).columns[0].objectAlias)), parameter);
-            parameter.setState(0, Parameter.State.LOADED);
-            for (Part part1 : parts) {
-                part1.load(parameter);
-            }
         }
 
         void query(String sql, Parameter parameter) {
-            System.out.print("MainPart:");
-            System.out.println(sql);
+            query(sql, paramLocal.get(parameter));
             tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
-                parameter.values.put(column.objectAlias, new SingleValue(column.objectAlias + "_Val", column.dataType));
+                parameter.values.put(column.objectAlias, new Value(column.objectAlias + "_Val", column.dataType));
             }));
         }
+
     }
 
-    public static class OtherPart extends Part {
+    public static abstract class AbstractLeafPart extends Part {
 
-        public OtherPart(int index, IDataAccessObject.TableRel rel) {
+        String getParentNode(String value) {
+            return value.substring(0, value.lastIndexOf(SPLITTER));
+        }
+
+        String getUpperNode(String value) {
+            return value.substring(0, value.lastIndexOf(SPLITTER));
+        }
+
+        public AbstractLeafPart(int index, IDataAccessObject.TableRel rel) {
             super(index, rel);
         }
 
         @Override
         public void load(Parameter parameter) {
-            Map<String, Object> map = new HashMap<>();
             List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = getOutRelCol();
-            parameter.setState(index, Parameter.State.LOADING);
 
             for (Map.Entry<Part, List<SqlMapper.BaseColumn.RelColumnInfo>> partListEntry : conditionLinks.entrySet()) {
                 Part conditionLink = partListEntry.getKey();
                 List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfo1s = partListEntry.getValue();
-                if (parameter.stateMatch(conditionLink.index, Parameter.State.UNLOAD)) {
+                if (!parameter.loaded.contains(conditionLink)) {
                     System.out.println("加载未加载sql:" + conditionLink.index);
-                    conditionLink.load(parameter);
+                    conditionLink.query(parameter);
                 }
 
-                List<SqlMapper.BaseColumn> baseColumns = new LinkedList<>();
+                Collection<SqlMapper.BaseColumn> baseColumns = new HashSet<>();
                 for (SqlMapper.BaseTable table : conditionLink.tables) {
                     for (SqlMapper.BaseColumn.RelColumnInfo relColumnInfo : relColumnInfos) {
                         if (!relColumnInfo.tableAlias.equals(table.tableAlias)) continue;
@@ -277,82 +350,303 @@ public class Prepare {
 
                 if (baseColumns.isEmpty()) throw new IllegalStateException("没有找到关联");
                 for (SqlMapper.BaseColumn baseColumn : baseColumns) {
-                    System.out.println("-->" + baseColumn.objectAlias);
-                    map.put(baseColumn.objectAlias, parameter.values.get(baseColumn.objectAlias).val);
+                    System.out.println(this + "-->" + baseColumn.objectAlias);
+                    setSqlParam(baseColumn, parameter);
                 }
             }
-
             this.query(toSql().replace(Beauty.AND + Beauty.WHERE, ""), parameter);
-            parameter.setState(index, Parameter.State.LOADED);
         }
 
         void query(String sql, Parameter parameter) {
-            System.out.print("OtherPart:");
-            System.out.println(sql);
+            Map<String, Object> map2 = new HashMap<>();
+            Map<String, Object> params = paramLocal.get(parameter);
+            params.remove("@@");
+            Map.Entry<String, Map<Result, Object>> valueEntry = null;
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
+                if (entry.getValue() instanceof Map) {
+                    if (valueEntry != null) throw new IllegalStateException("存在多个");
+                    valueEntry = (Map.Entry) entry;
+                } else {
+                    map2.put(entry.getKey(), entry.getValue());
+                }
+            }
+            query(sql, parameter, map2, valueEntry);
+        }
 
+        abstract void query(String sql, Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams);
+
+
+        void setSqlParam(SqlMapper.BaseColumn baseColumn, Parameter parameter) {
+
+            Map<String, Object> map = paramLocal.get(parameter);
+            if (!baseColumn.objectAlias.contains(SPLITTER)) {
+                map.put(baseColumn.objectAlias, parameter.values.get(baseColumn.objectAlias).getVal());
+                return;
+            }
+            //获取前缀 当前PART 节点 父节点.数组节点.属性==> 父节点
+            String parentNode = getParentNode(tables.get(0).columns[0].objectAlias);
+            String upperNode = getUpperNode(baseColumn.objectAlias);
+            //如果当前取的值在PART节点，将额外记录 value节点，方便将结果赋值
+            if (parentNode != null && parentNode.equals(upperNode)) {
+                Map.Entry<String, String> prefix2 = (Map.Entry) map.get("@@");
+                //只记录一个value,原来的恢复
+                if (prefix2 != null) {
+                    Map<Result, List<Object>> resultListMap = (Map) map.get(prefix2.getValue());
+                    map.put(prefix2.getValue(), resultListMap.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList()));
+                }
+                Map<Result, Object> resultListMap = new HashMap<>();
+                for (Result result : parameter.getLowerValue(upperNode)) {
+                    result.findLowerValue(baseColumn.objectAlias.substring(upperNode.length() + SPLITTER.length()), result1 -> {
+                        if (resultListMap.put(result, result1.getVal()) != null)
+                            throw new IllegalStateException("存在多个数据");
+                    });
+                }
+                map.put(baseColumn.objectAlias, resultListMap);
+                map.put("@@", Map.entry(parentNode, baseColumn.objectAlias));
+                return;
+
+            }
+            map.put(baseColumn.objectAlias, parameter.getLowerValue(baseColumn.objectAlias).stream().map(Result::getVal).collect(Collectors.toList()));
+        }
+    }
+
+    public static class LeafSinglePart extends AbstractLeafPart {
+
+        public LeafSinglePart(int index, IDataAccessObject.TableRel rel) {
+            super(index, rel);
+        }
+
+        void query(String sql, Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams) {
+            SqlMapper.BaseColumn baseColumn = tables.get(0).columns[0];
+            if (baseColumn.objectAlias.contains(SPLITTER)) {
+                String parentNode = getParentNode(baseColumn.objectAlias);
+                if (multiParams != null)
+                    for (Map.Entry<Result, Object> valueObjectEntry : multiParams.getValue().entrySet()) {
+                        singleParams.put(multiParams.getKey(), valueObjectEntry.getValue());
+                        query(sql, singleParams, (Values) valueObjectEntry.getKey());
+                    }
+                else {
+                    parameter.getLowerValue(parentNode).forEach(result -> {
+                        query(sql, singleParams, (Values) result);
+                    });
+                }
+            } else {
+                if (multiParams != null) {
+                    for (Map.Entry<Result, Object> valueObjectEntry : multiParams.getValue().entrySet()) {
+                        singleParams.put(multiParams.getKey(), valueObjectEntry.getValue());
+                        query(sql, singleParams, ((Values) valueObjectEntry.getKey()));
+                    }
+                } else {
+                    query(sql, singleParams, parameter.values);
+                }
+            }
+        }
+
+        void query(String sql, Map<String, Object> singleParams, Values values) {
+            query(sql, singleParams);
             tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
-                parameter.values.put(column.objectAlias, new SingleValue(column.objectAlias + "_Val", column.dataType));
+                values.put(column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), new Value(column.objectAlias + "_Val", column.dataType));
             }));
         }
     }
 
+    public static class LeafMultiPart extends AbstractLeafPart {
+
+        public LeafMultiPart(int index, IDataAccessObject.TableRel rel) {
+            super(index, rel);
+        }
+
+        String getMultiNodeName(String value) {
+            StringBuilder prefix = new StringBuilder(value).delete(value.lastIndexOf(SPLITTER), value.length());
+            int deep = prefix.lastIndexOf(SPLITTER);
+            if (deep >= 0) {
+                prefix.delete(0, deep + SPLITTER.length());
+            }
+            return prefix.toString();
+        }
+
+        String getParentNode(String value) {
+            value = value.substring(0, value.lastIndexOf(SPLITTER));
+            int i = value.lastIndexOf(SPLITTER);
+            if (i < 0) {
+                return null;
+            }
+            return value.substring(0, i);
+        }
+
+        int getPrefixNodeLevel(String value) {
+            int offset = 0;
+            int index = 0;
+            int count = 0;
+            while (index >= 0) {
+                index = value.indexOf(SPLITTER, offset);
+                if (index >= 0) count++;
+                else offset = index + SPLITTER.length();
+            }
+            return count;
+        }
+
+        void query(String sql, Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams) {
+            SqlMapper.BaseColumn baseColumn = tables.get(0).columns[0];
+            String parentNode = getParentNode(baseColumn.objectAlias);
+            String node = getMultiNodeName(baseColumn.objectAlias);
+            if (multiParams != null)
+                for (Map.Entry<Result, Object> valueObjectEntry : multiParams.getValue().entrySet()) {
+                    singleParams.put(multiParams.getKey(), valueObjectEntry.getValue());
+                    MultiValues multiValues = new MultiValues();
+                    ((Values) valueObjectEntry.getKey()).put(node, multiValues);
+                    query(sql, singleParams, multiValues);
+                }
+            else {
+                parameter.getLowerValue(parentNode).forEach(result -> {
+                    MultiValues multiValues = new MultiValues();
+                    ((Values) result).put(node, multiValues);
+                    query(sql, singleParams, multiValues);
+                });
+            }
+        }
+
+        void query(String sql, Map<String, Object> map, MultiValues values) {
+            query(sql, map);
+            for (int i = 0; i < 2; i++) {
+                Values values1 = new Values();
+                int finalI = i;
+                tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
+                    values1.put(column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), new Value(column.objectAlias + "_Val_" + finalI, column.dataType));
+                }));
+                values.add(values1);
+            }
+        }
+
+    }
+
     public static class Parameter {
-        State[] loaded;
-        Map<String, Value> values = new HashMap<>();
+        Values values = new Values();
+        Set<Part> loaded = new HashSet<>();
 
-        enum State {
-            UNLOAD, LOADING, LOADED
-        }
 
-        void initState(int size) {
-            loaded = new Parameter.State[size];
-            for (int i1 = 0; i1 < loaded.length; i1++) {
-                loaded[i1] = Parameter.State.UNLOAD;
-            }
-        }
-
-        void setState(int index, State state) {
-            loaded[index] = state;
-        }
-
-        boolean stateMatch(int index, State... states) {
-            for (State state1 : states) {
-                if (state1 == loaded[index]) return true;
-            }
-            return false;
+        public List<Result> getLowerValue(String key) {
+            if (StringUtils.isEmpty(key)) return List.of(values);
+            List<Result> list = new LinkedList<>();
+            values.findLowerValue(key, value -> {
+                list.add(value);
+            });
+            return list;
         }
     }
 
-    public static abstract class Value {
+    interface Result {
+        void findLowerValue(String key, Consumer<Result> val);
+
+        default String[] getKeyAndSuffix(String key) {
+            if (key.contains(SPLITTER)) {
+                return new String[]{key.substring(0, key.indexOf(SPLITTER)), key.substring(key.indexOf(SPLITTER) + SPLITTER.length())};
+            }
+            return new String[]{key, ""};
+        }
+
+        Object getVal();
+    }
+
+    public static class Values extends HashMap<String, Result> implements Result {
+
+        @Override
+        public void findLowerValue(String key, Consumer<Result> val) {
+            if (StringUtils.isEmpty(key)) {
+                val.accept(this);
+            }
+            String[] keys = getKeyAndSuffix(key);
+            String[] arrKey = getArrIndex(keys[0]);
+            Result result = get(arrKey[0]);
+            if (result == null) return;
+            result.findLowerValue(arrKey[1] + keys[1], val);
+        }
+
+        @Override
+        public Object getVal() {
+            return this;
+        }
+
+        String[] getArrIndex(String key) {
+            boolean isArr = key.contains("[") && key.endsWith("]");
+            if (isArr) {
+                return new String[]{key.substring(0, key.indexOf("[")), key.substring(key.indexOf("["))};
+            }
+            return new String[]{key, ""};
+        }
+    }
+
+    public static class MultiValues implements Result {
+        List<Values> values = new LinkedList<>();
+
+        @Override
+        public void findLowerValue(String key, Consumer<Result> val) {
+            int[] i = getArrIndex(key);
+            if (i.length == 0)
+                values.forEach(values1 -> {
+                    values1.findLowerValue(key, val);
+                });
+            else if (i.length == 1)
+                values.get(i[0]).findLowerValue(key.substring(key.indexOf("]") + 1), val);
+            else if (i.length == 2) {
+                ListIterator<Values> iterator = values.listIterator();
+                while (iterator.hasNext()) {
+                    if (iterator.nextIndex() >= i[0]) {
+                        iterator.next().findLowerValue(key.substring(key.indexOf("]") + 1), val);
+                    } else {
+                        iterator.next();
+                    }
+                    if (iterator.nextIndex() > i[1]) break;
+                }
+            }
+
+        }
+
+        void add(Values values) {
+            this.values.add(values);
+        }
+
+        int[] getArrIndex(String key) {
+            boolean isArr = key.startsWith("[") && key.contains("]");
+            if (!isArr) return new int[0];
+            String val = key.substring(1, key.indexOf("]"));
+            if (val.contains("-")) {
+                return Arrays.stream(val.split("-")).mapToInt(Integer::parseInt).toArray();
+            }
+            return new int[]{Integer.parseInt(val)};
+        }
+
+        @Override
+        public Object getVal() {
+            return values;
+        }
+
+        @Override
+        public String toString() {
+            return " [ " + values.stream().map(AbstractMap::toString).collect(Collectors.joining(" , ")) + " ] ";
+        }
+    }
+
+    public static class Value implements Result {
         final Object val;
         final Class<?> type;
 
         public Value(Object val, Class<?> type) {
-            this.val = val;
             this.type = type;
+            this.val = val;
         }
-    }
 
-    public static class SingleValue extends Value {
-        String show;
-
-        public SingleValue(Object val, Class<?> type) {
-            super(val, type);
+        public Object getVal() {
+            return TypeUtils.cast(val, (Type) type, ParserConfig.getGlobalInstance());
         }
-    }
 
-    public static class ForeignValue extends Value {
-        Map<String, Object> show;
-
-        public ForeignValue(Object val, Class<?> type) {
-            super(val, type);
+        public void findLowerValue(String key, Consumer<Result> val) {
+            if (StringUtils.isEmpty(key)) val.accept(this);
         }
-    }
 
-    public static class MultiValue extends Value {
-
-        public MultiValue(Object val, Class<?> type) {
-            super(val, type);
+        @Override
+        public String toString() {
+            return Objects.toString(val);
         }
     }
 }

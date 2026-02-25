@@ -22,14 +22,14 @@ import java.util.regex.Pattern;
  */
 public interface MyBatisUtils {
 
-    String PATTERN_STRING = "\\#\\{\\s*(.+?)\\s*\\,\\s*jdbcType\\s*\\=\\s*(\\w+)\\s*\\}";
+    String PATTERN_STRING = "\\#\\{\\s*(.+?)\\s*(?:\\,\\s*jdbcType\\s*\\=\\s*(\\w+)\\s*)?\\}";
     Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
 
     static void readSqlTemplate(String content, BiConsumer<String, String> consumer) {
         Matcher matcher = PATTERN.matcher(content);
         while (matcher.find()) {
-            String sqlType = null;
+            String sqlType = "UNKNOWN";
             String name;
             switch (matcher.groupCount()) {
                 case 2:

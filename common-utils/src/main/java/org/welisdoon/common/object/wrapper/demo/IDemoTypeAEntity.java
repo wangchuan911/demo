@@ -33,7 +33,7 @@ import org.welisdoon.common.object.wrapper.IDataAccessObject;
         @IDataAccessObject.Column(column = "t3.column5", property = "t3column5"),
         @IDataAccessObject.Column(column = "t3.column6", property = "t3column6")
 })
-@IDataAccessObject.Table(table = "user4.table4 t4", datasource = "db1", rel = IDataAccessObject.TableRel.Multi, columns = {
+@IDataAccessObject.Table(table = "user4.table4 t4", group = "t4", datasource = "db1", rel = IDataAccessObject.TableRel.Multi, columns = {
         @IDataAccessObject.Column(column = "t4.column1", property = "node1.t4column1", linkColumn = "t3.column1", type = IDataAccessObject.ColumnType.PrimaryKeu),
         @IDataAccessObject.Column(column = "t4.column2", property = "node1.t4column2"),
         @IDataAccessObject.Column(column = "t4.column3", property = "node1.t4column3"),
@@ -41,6 +41,23 @@ import org.welisdoon.common.object.wrapper.IDataAccessObject;
         @IDataAccessObject.Column(column = "t4.column5", property = "node1.t4column5"),
         @IDataAccessObject.Column(column = "t4.column6", property = "node1.t4column6")
 })
+@IDataAccessObject.Table(table = "user4.table41 t4_1", group = "t4_1", datasource = "db1", rel = IDataAccessObject.TableRel.Multi, columns = {
+        @IDataAccessObject.Column(column = "t4_1.column1", property = "node1.node2.t4_1column1", linkColumn = "t4.column1", type = IDataAccessObject.ColumnType.PrimaryKeu),
+        @IDataAccessObject.Column(column = "t4_1.column2", property = "node1.node2.t4_1column2"),
+        @IDataAccessObject.Column(column = "t4_1.column3", property = "node1.node2.t4_1column3"),
+        @IDataAccessObject.Column(column = "t4_1.column4", property = "node1.node2.t4_1column4"),
+        @IDataAccessObject.Column(column = "t4_1.column5", property = "node1.node2.t4_1column5"),
+        @IDataAccessObject.Column(column = "t4_1.column6", property = "node1.node2.t4_1column6")
+})
+@IDataAccessObject.Table(table = "user4.table44 t4_2", group = "t4_1", datasource = "db1", rel = IDataAccessObject.TableRel.Strong, columns = {
+        @IDataAccessObject.Column(column = "t4_2.column1", property = "node1.node2.t4_2column1", linkColumn = "t4_1.column1", type = IDataAccessObject.ColumnType.PrimaryKeu),
+        @IDataAccessObject.Column(column = "t4_2.column2", property = "node1.node2.t4_2column2"),
+        @IDataAccessObject.Column(column = "t4_2.column3", property = "node1.node2.t4_2column3"),
+        @IDataAccessObject.Column(column = "t4_2.column4", property = "node1.node2.t4_2column4"),
+        @IDataAccessObject.Column(column = "t4_2.column5", property = "node1.node2.t4_2column5"),
+        @IDataAccessObject.Column(column = "t4_2.column6", property = "node1.node2.t4_2column6")
+})
+
 
 public interface IDemoTypeAEntity extends IDataAccessObject {
 }

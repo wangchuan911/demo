@@ -1,5 +1,6 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.welisdoon.common.object.wrapper.Prepare;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
  * @Date 20:21
  */
 public class SqlListJoiner extends SqlJoiner {
-    public final static String SPLITTER = ".";
 
     @Override
     protected String format(FormatContent format) {
@@ -64,6 +64,6 @@ public class SqlListJoiner extends SqlJoiner {
     protected String getPropertyPrefix() {
         MetaObject.Attribute attribute = this.getAttribute();
         SqlJoiner sqlJoiner = findParent(SqlJoiner.class);
-        return MessageFormat.format("{0}{1}{2}", sqlJoiner != null ? sqlJoiner.getPropertyPrefix() : "", attribute.getCode(), SPLITTER);
+        return MessageFormat.format("{0}{1}{2}", sqlJoiner != null ? sqlJoiner.getPropertyPrefix() : "", attribute.getCode(), Prepare.SPLITTER);
     }
 }
