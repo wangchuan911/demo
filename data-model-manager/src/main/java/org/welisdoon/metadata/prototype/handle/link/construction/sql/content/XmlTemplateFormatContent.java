@@ -7,6 +7,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
+import org.welisdoon.metadata.prototype.define.MetaObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.FormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent;
 
@@ -597,23 +598,20 @@ public class XmlTemplateFormatContent extends TemplateFormatContent {
 //        Query, Get
 //    }
 
+    FormatContent.FormatContentObject formatContentObject;
 
-    public XmlTemplateFormatContent() {
+    public XmlTemplateFormatContent(MetaObject metaObject) {
         super();
-    }
-
-    public XmlTemplateFormatContent(org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent sqlContent) {
-        this();
-        sqlContent.format(this);
+        formatContentObject = FormatContent.FormatContentObject.getObject(metaObject);
     }
 
     @Override
     public void build() {
-        toMapper(Map.of());
+
     }
 
     @Override
     public Object getValue() {
-        return null;
+        return formatContentObject.show;
     }
 }

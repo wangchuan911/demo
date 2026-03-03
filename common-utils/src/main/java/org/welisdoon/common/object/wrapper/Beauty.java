@@ -23,7 +23,6 @@ public class Beauty {
     final Set<RelCol> relCols = new HashSet<>();
     final Set<RelTab> relTabs = new HashSet<>();
     final SqlMapper.MainTable mainTable;
-    final AtomicInteger index = new AtomicInteger();
     final static String
             COLUMN = "{column}",
             TABLE = "{table}",
@@ -38,6 +37,8 @@ public class Beauty {
             JION_ON = MessageFormat.format("JOIN {0} ON {1} {2}", TABLE, WHERE, JOIN),
             BODY = MessageFormat.format("select {0} from {1} {2} where {3}", COLUMN, TABLE, JOIN, WHERE),
             BODY_EXISTS = MessageFormat.format(" exists ( select 1 from {0} {1} where {2} )", TABLE, JOIN, WHERE);
+
+    final Prepare.MainPart part;
 
     public Beauty(SqlMapper.MainTable mainTable) {
         this.mainTable = mainTable;
@@ -54,9 +55,11 @@ public class Beauty {
                 }
             }
         }
+
+        part = new Prepare.MainPart(this);
     }
 
-    public List<IDataAccessObject> prepare(Map<String, Object> params) {
+    public List<Object> prepare(Map<String, Object> params) {
         System.out.println(params);
         List<SqlMapper.BaseColumn> list = new LinkedList<>();
         for (Map.Entry<String, Object> entry : params.entrySet()) {
@@ -108,7 +111,7 @@ public class Beauty {
         });
         Prepare prepare = new Prepare(selectSql.get().replace(WHERE, existsSql.get()).replace(WHERE, getCondition(firstTable.get(), list)).replace(JOIN, ""), params);
         prepare.log("");
-        return List.of();
+        return List.of(1, 2);
     }
 
     String orElse(String a, String p, String b) {
@@ -170,54 +173,17 @@ public class Beauty {
         }
     }
 
-    public IDataAccessObject prepare(Object id) {
-        if (id instanceof Map) {
-            return (IDataAccessObject) prepare((Map) id).stream().findFirst().orElse(null);
-        }
+    public Map<String, Prepare.Result> prepare(Object id) {
         SqlMapper.BaseColumn keyCol = getMainBaseTable().getColumns()[0];
-        Prepare.MainPart part = new Prepare.MainPart(index.getAndIncrement(), IDataAccessObject.TableRel.Strong);
-        find(part, mainTable);
-        part.merge();
+
         Prepare.Parameter parameter = new Prepare.Parameter();
         part.paramLocal.put(parameter, Map.of(keyCol.objectAlias, TypeUtils.cast(id, keyCol.dataType, ParserConfig.getGlobalInstance())));
-        part.query(parameter);
+        part.loads(parameter);
         System.out.println(part);
         System.out.println(parameter.values);
-        return null;
+        return parameter.values;
     }
 
-    protected void find(Prepare.Part part, SqlMapper.AbstractTable<?> table) {
-        if (table instanceof SqlMapper.GroupTable) {
-            for (int i = 0; i < ((SqlMapper.GroupTable) table).tables.length; i++) {
-                if (i == 0 && table.rel != IDataAccessObject.TableRel.Strong) {
-                    Prepare.Part part1 = newPart(table.rel);
-                    part.add(part1);
-                    part = part1;
-                }
-                SqlMapper.AbstractTable<?> abstractTable = ((SqlMapper.GroupTable) table).tables[i];
-                if (abstractTable instanceof SqlMapper.GroupTable) {
-                    find(part, abstractTable);
-                    continue;
-                }
-                if (abstractTable.rel == IDataAccessObject.TableRel.Strong) {
-                    part.add((SqlMapper.BaseTable) abstractTable);
-                } else {
-                    part.add(newPart(abstractTable.getRel()).add((SqlMapper.BaseTable) abstractTable));
-                }
-            }
-        } else {
-            part.add((SqlMapper.BaseTable) table);
-        }
-    }
-
-    Prepare.Part newPart(IDataAccessObject.TableRel rel) {
-        switch (rel) {
-            case Multi:
-                return new Prepare.LeafMultiPart(index.getAndIncrement(), rel);
-            default:
-                return new Prepare.LeafSinglePart(index.getAndIncrement(), rel);
-        }
-    }
 
     SqlMapper.BaseTable getMainBaseTable() {
         SqlMapper.AbstractTable main = mainTable;

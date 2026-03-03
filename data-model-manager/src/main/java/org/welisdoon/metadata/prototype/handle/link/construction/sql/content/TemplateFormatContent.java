@@ -11,7 +11,7 @@ import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.Sql;
  * @Author Septem
  * @Date 16:28
  */
-public abstract class TemplateFormatContent extends FormatContent {
+public abstract class TemplateFormatContent  {
     protected Logger log = LoggerFactory.getLogger(this.getClass());
 //
     public abstract void build();

@@ -221,7 +221,7 @@ public class QueryManagerRouter {
     public void show(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(new FormatContent()));
+            routingContext.end(FormatContent.FormatContentObject.getObject(MetaUtils.getInstance().getObject(qid)).show);
 //            SqlContent context = new SqlContent();
 //            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
 //                sqlBuilderHandler.handler(context, construct);
@@ -234,9 +234,9 @@ public class QueryManagerRouter {
     public void getTemplate(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent();
-            new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(templateFormatContent);
-            templateFormatContent.build();
+            TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent(MetaUtils.getInstance().getObject(qid));
+//            new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(templateFormatContent);
+//            templateFormatContent.build();
             routingContext.response().putHeader("content-type", "application/xml").end(templateFormatContent.getValue().toString());
 //            SqlContent context = new SqlContent();
 //            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
@@ -894,10 +894,11 @@ public class QueryManagerRouter {
 //                    event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
                     break;
                 case "download":
-                    TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent();
-                    new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(templateFormatContent);
-                    templateFormatContent.build();
-                    break;
+//                    TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent(MetaUtils.getInstance().getObject(qid));
+//                    new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(templateFormatContent);
+//                    templateFormatContent.build();
+                    throw new IllegalStateException("开发中");
+//                    break;
                 case "snapshot":
                     QueryTemplateInstance parameter1 = new QueryTemplateInstance(metaObject);
                     event.end(JSON.toJSONString(parameter1, SerializerFeature.DisableCircularReferenceDetect));

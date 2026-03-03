@@ -39,7 +39,7 @@ public class QueryTemplateInstance {
     }
 
     public XmlTemplateFormatContent templateFormatContent() {
-        return new XmlTemplateFormatContent(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(objectId)));
+        return new XmlTemplateFormatContent(MetaUtils.getInstance().getObject(objectId));
     }
 
     public QueryTemplateInstance(MetaObject metaObject) {

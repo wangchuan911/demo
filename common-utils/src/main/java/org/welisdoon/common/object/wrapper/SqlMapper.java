@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 /**
  * @Classname SqlMapper
@@ -15,15 +16,6 @@ import java.util.regex.Matcher;
  * @Date 18:32
  */
 public class SqlMapper {
-
-
-    public List<IDataAccessObject> build(MainTable table, Map<String, Object> params) {
-        return table.prepare(params);
-    }
-
-    public IDataAccessObject build(MainTable table, Object id) {
-        return table.prepare(id);
-    }
 
     public static class ColumnArg {
         String columnName;
@@ -182,12 +174,19 @@ public class SqlMapper {
         }
 
 
-        public List<IDataAccessObject> prepare(Map<String, Object> params) {
-            return beauty.prepare(params);
+        public List<IDataAccessObject> prepare(Class<?> target, Map<String, Object> params) {
+            return beauty.prepare(params).stream().map(o -> {
+                return prepare(target, o);
+            }).collect(Collectors.toList());
         }
 
-        public IDataAccessObject prepare(Object id) {
-            return beauty.prepare(id);
+        public IDataAccessObject prepare(Class<?> target, Object id) {
+            if (id instanceof Map) {
+                List<IDataAccessObject> iDataAccessObjects = prepare(target, (Map) id);
+                return iDataAccessObjects.stream().findFirst().orElse(null);
+            }
+            Map<String, Prepare.Result> map = beauty.prepare(id);
+            return null;
         }
     }
 

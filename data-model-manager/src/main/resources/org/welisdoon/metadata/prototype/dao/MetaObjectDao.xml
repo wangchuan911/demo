@@ -33,6 +33,9 @@
             <if test="data.id!=null">
                 and id=#{data.id,jdbcType=NUMERIC}
             </if>
+            <if test="query=='FIND_EXTEND_OBJECT'">
+                and parent_id is null
+            </if>
         </where>
 
     </select>

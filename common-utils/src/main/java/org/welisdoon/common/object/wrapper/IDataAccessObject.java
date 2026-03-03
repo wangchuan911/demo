@@ -248,6 +248,7 @@ public interface IDataAccessObject {
         final protected Class<?> target;
         final protected DataAccessObjectInfo parent;
         protected Map<String, Method> methodMap;
+        final SqlMapper.MainTable table;
 
         public DataAccessObjectInfo(Class<?> target, DataAccessObjectInfo parent) {
             this.target = target;
@@ -258,6 +259,7 @@ public interface IDataAccessObject {
                 if (column == null) return;
                 methodMap.put(column.name(), method);
             });
+            table = this.sql(new SqlMapper());
         }
 
         public Method getMethod(String name) {
@@ -281,6 +283,13 @@ public interface IDataAccessObject {
             }).map(Model.TableVO::new).forEach(tableList::add);
         }
 
+        public List<IDataAccessObject> query(Map<String, Object> params) {
+            return table.prepare(target,params);
+        }
+
+        public IDataAccessObject query(Object id) {
+            return table.prepare(target,id);
+        }
 
     }
 
@@ -292,9 +301,7 @@ public interface IDataAccessObject {
         initialization(aClass);
         DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return Collections.emptyList();
-        SqlMapper mapper = new SqlMapper();
-        SqlMapper.MainTable table = dataAccessObjectInfo.sql(mapper);
-        mapper.build(table, params);
+        dataAccessObjectInfo.query(params);
 //        System.out.println(mapper.prepare.sql);
         return Collections.emptyList();
     }
@@ -307,9 +314,7 @@ public interface IDataAccessObject {
         initialization(aClass);
         DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return null;
-        SqlMapper mapper = new SqlMapper();
-        SqlMapper.MainTable table = dataAccessObjectInfo.sql(mapper);
-        mapper.build(table, id);
+        dataAccessObjectInfo.query(id);
 //        System.out.println(mapper.prepare.sql);
         return null;
     }
@@ -317,9 +322,7 @@ public interface IDataAccessObject {
     static int count(Class<? extends IDataAccessObject> aClass, Map<String, Object> params, BaseCondition.Page page) {
         DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return 0;
-        SqlMapper mapper = new SqlMapper();
-        SqlMapper.MainTable table = dataAccessObjectInfo.sql(mapper);
-        mapper.build(table, params);
+        dataAccessObjectInfo.query(params);
 
         return 1;
     }

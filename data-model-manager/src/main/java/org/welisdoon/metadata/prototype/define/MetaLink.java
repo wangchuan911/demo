@@ -343,7 +343,7 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         }
     }
 
-    public static class VirtualLink extends MetaLink {
+    /*public static class VirtualLink extends MetaLink {
         @Override
         public int save() {
             return 0;
@@ -353,5 +353,5 @@ public class MetaLink extends MetaPrototype implements ISequenceEntity, ITypeEnt
         public int remove() {
             return 0;
         }
-    }
+    }*/
 }

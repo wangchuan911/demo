@@ -12,6 +12,7 @@ import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.ChronoLocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -83,6 +84,7 @@ public class Prepare {
         protected Map<Part, List<SqlMapper.BaseColumn.RelColumnInfo>> conditionLinks = new HashMap<>();
         final int index;
         final Map<Parameter, Map<String, Object>> paramLocal = new HashMap<>();
+        String sql;
 
         public Part(int index, IDataAccessObject.TableRel rel) {
             this.index = index;
@@ -103,7 +105,7 @@ public class Prepare {
 
         abstract public void load(Parameter parameter);
 
-        public void query(Parameter parameter) {
+        public void loads(Parameter parameter) {
             if (!parameter.loaded.contains(this)) {
                 parameter.loaded.add(this);
                 if (!paramLocal.containsKey(parameter))
@@ -113,7 +115,7 @@ public class Prepare {
             }
 
             for (Part part : parts) {
-                part.query(parameter);
+                part.loads(parameter);
             }
         }
 
@@ -198,7 +200,7 @@ public class Prepare {
             return parent != null ? parent.getRootPart() : this;
         }
 
-        public void merge() {
+        protected void prepares() {
             if (parent != null) {
                 List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = new LinkedList<>();
                 List<Part> parentParts = new LinkedList<>();
@@ -208,17 +210,26 @@ public class Prepare {
                         throw new IllegalStateException(relColumnInfos.stream().map(relColumnInfo -> relColumnInfo.toSql()).collect(Collectors.joining(",")) + "没有匹配到对端");
                 }
             }
+            prepare();
             for (Part part : List.copyOf(parts)) {
-                part.merge();
+                part.prepares();
             }
         }
 
+        protected void prepare() {
+            this.sql = toSql();
+        }
+
         String toSql() {
+            return toSql(0);
+        }
+
+        String toSql(int offset) {
             return Beauty.BODY
-                    .replace(Beauty.COLUMN, tables.stream().flatMap(table -> Arrays.stream(table.getColumns()).map(column -> MessageFormat.format(Beauty.COLUMN_AS, column.toSql(), column.objectAlias))).collect(Collectors.joining(",")))
-                    .replace(Beauty.TABLE, tables.get(0).toSql())
+                    .replace(Beauty.COLUMN, tables.stream().skip(offset).flatMap(table -> Arrays.stream(table.getColumns()).map(column -> MessageFormat.format(Beauty.COLUMN_AS, column.toSql(), column.objectAlias))).collect(Collectors.joining(",")))
+                    .replace(Beauty.TABLE, tables.get(offset).toSql())
                     .replace(Beauty.JOIN,
-                            tables.stream().skip(1)
+                            tables.stream().skip(1 + offset)
                                     .map(table -> Beauty.JION_ON
                                             .replace(Beauty.TABLE, table.toSql())
                                             .replace(Beauty.WHERE,
@@ -259,7 +270,7 @@ public class Prepare {
             runnable.run();
         }
 
-        void query(String sql, Map<String, Object> map) {
+        void query(Map<String, Object> map) {
             List<Object> params = new LinkedList<>();
             Map<String, String> format = new HashMap<>();
 //            Map<String, String> format2 = new HashMap<>();
@@ -294,24 +305,69 @@ public class Prepare {
 
     public static class MainPart extends Part {
 
-        public MainPart(int index, IDataAccessObject.TableRel rel) {
-            super(index, rel);
+        public MainPart(Beauty beauty) {
+            super(0, IDataAccessObject.TableRel.Strong);
+            find(this, beauty.mainTable, new AtomicInteger(1));
+            this.prepares();
         }
+
+        static void find(Prepare.Part part, SqlMapper.AbstractTable<?> table, AtomicInteger index) {
+            if (table instanceof SqlMapper.GroupTable) {
+                for (int i = 0; i < ((SqlMapper.GroupTable) table).tables.length; i++) {
+                    if (i == 0 && table.rel != IDataAccessObject.TableRel.Strong) {
+                        Prepare.Part part1 = newPart(index, table.rel);
+                        part.add(part1);
+                        part = part1;
+                    }
+                    SqlMapper.AbstractTable<?> abstractTable = ((SqlMapper.GroupTable) table).tables[i];
+                    if (abstractTable instanceof SqlMapper.GroupTable) {
+                        find(part, abstractTable, index);
+                        continue;
+                    }
+                    if (abstractTable.rel == IDataAccessObject.TableRel.Strong) {
+                        part.add((SqlMapper.BaseTable) abstractTable);
+                    } else {
+                        part.add(newPart(index, abstractTable.getRel()).add((SqlMapper.BaseTable) abstractTable));
+                    }
+                }
+            } else {
+                part.add((SqlMapper.BaseTable) table);
+            }
+        }
+
+        static Prepare.Part newPart(AtomicInteger index, IDataAccessObject.TableRel rel) {
+            switch (rel) {
+                case Multi:
+                    return new Prepare.LeafMultiPart(index.getAndIncrement(), rel);
+                default:
+                    return new Prepare.LeafSinglePart(index.getAndIncrement(), rel);
+            }
+        }
+
 
         public void load(Parameter parameter) {
-            this.query(toSql().replace(Beauty.WHERE, MessageFormat.format(Beauty.EQUAL_PARAM, tables.get(0).columns[0].toSql(), tables.get(0).columns[0].objectAlias)), parameter);
+            this.query(parameter);
         }
 
-        void query(String sql, Parameter parameter) {
-            query(sql, paramLocal.get(parameter));
+        @Override
+        protected void prepare() {
+            super.prepare();
+            this.sql = sql.replace(Beauty.WHERE, MessageFormat.format(Beauty.EQUAL_PARAM, tables.get(0).columns[0].toSql(), tables.get(0).columns[0].objectAlias));
+        }
+
+        void query(Parameter parameter) {
+            query(paramLocal.get(parameter));
             tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
                 parameter.values.put(column.objectAlias, new Value(column.objectAlias + "_Val", column.dataType));
             }));
         }
 
+
     }
 
     public static abstract class AbstractLeafPart extends Part {
+
+        final Map<Part, Collection<SqlMapper.BaseColumn>> relMappers = new HashMap<>();
 
         String getParentNode(String value) {
             return value.substring(0, value.lastIndexOf(SPLITTER));
@@ -327,15 +383,28 @@ public class Prepare {
 
         @Override
         public void load(Parameter parameter) {
+            relMappers.forEach((conditionLink, baseColumns) -> {
+                if (!parameter.loaded.contains(conditionLink)) {
+                    System.out.println("加载未加载sql:" + conditionLink.index);
+                    conditionLink.loads(parameter);
+                }
+                for (SqlMapper.BaseColumn baseColumn : baseColumns) {
+                    System.out.println(this + "-->" + baseColumn.objectAlias);
+                    setSqlParam(baseColumn, parameter);
+                }
+            });
+            this.query(parameter);
+        }
+
+        @Override
+        protected void prepare() {
+            super.prepare();
+            sql = toSql().replace(Beauty.AND + Beauty.WHERE, "");
             List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = getOutRelCol();
 
             for (Map.Entry<Part, List<SqlMapper.BaseColumn.RelColumnInfo>> partListEntry : conditionLinks.entrySet()) {
                 Part conditionLink = partListEntry.getKey();
                 List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfo1s = partListEntry.getValue();
-                if (!parameter.loaded.contains(conditionLink)) {
-                    System.out.println("加载未加载sql:" + conditionLink.index);
-                    conditionLink.query(parameter);
-                }
 
                 Collection<SqlMapper.BaseColumn> baseColumns = new HashSet<>();
                 for (SqlMapper.BaseTable table : conditionLink.tables) {
@@ -349,15 +418,11 @@ public class Prepare {
                 }
 
                 if (baseColumns.isEmpty()) throw new IllegalStateException("没有找到关联");
-                for (SqlMapper.BaseColumn baseColumn : baseColumns) {
-                    System.out.println(this + "-->" + baseColumn.objectAlias);
-                    setSqlParam(baseColumn, parameter);
-                }
+                relMappers.put(conditionLink, baseColumns);
             }
-            this.query(toSql().replace(Beauty.AND + Beauty.WHERE, ""), parameter);
         }
 
-        void query(String sql, Parameter parameter) {
+        void query(Parameter parameter) {
             Map<String, Object> map2 = new HashMap<>();
             Map<String, Object> params = paramLocal.get(parameter);
             params.remove("@@");
@@ -370,10 +435,10 @@ public class Prepare {
                     map2.put(entry.getKey(), entry.getValue());
                 }
             }
-            query(sql, parameter, map2, valueEntry);
+            query(parameter, map2, valueEntry);
         }
 
-        abstract void query(String sql, Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams);
+        abstract void query(Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams);
 
 
         void setSqlParam(SqlMapper.BaseColumn baseColumn, Parameter parameter) {
@@ -416,34 +481,34 @@ public class Prepare {
             super(index, rel);
         }
 
-        void query(String sql, Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams) {
+        void query(Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams) {
             SqlMapper.BaseColumn baseColumn = tables.get(0).columns[0];
             if (baseColumn.objectAlias.contains(SPLITTER)) {
                 String parentNode = getParentNode(baseColumn.objectAlias);
                 if (multiParams != null)
                     for (Map.Entry<Result, Object> valueObjectEntry : multiParams.getValue().entrySet()) {
                         singleParams.put(multiParams.getKey(), valueObjectEntry.getValue());
-                        query(sql, singleParams, (Values) valueObjectEntry.getKey());
+                        query(singleParams, (Values) valueObjectEntry.getKey());
                     }
                 else {
                     parameter.getLowerValue(parentNode).forEach(result -> {
-                        query(sql, singleParams, (Values) result);
+                        query(singleParams, (Values) result);
                     });
                 }
             } else {
                 if (multiParams != null) {
                     for (Map.Entry<Result, Object> valueObjectEntry : multiParams.getValue().entrySet()) {
                         singleParams.put(multiParams.getKey(), valueObjectEntry.getValue());
-                        query(sql, singleParams, ((Values) valueObjectEntry.getKey()));
+                        query(singleParams, ((Values) valueObjectEntry.getKey()));
                     }
                 } else {
-                    query(sql, singleParams, parameter.values);
+                    query(singleParams, parameter.values);
                 }
             }
         }
 
-        void query(String sql, Map<String, Object> singleParams, Values values) {
-            query(sql, singleParams);
+        void query(Map<String, Object> singleParams, Values values) {
+            query(singleParams);
             tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
                 values.put(column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), new Value(column.objectAlias + "_Val", column.dataType));
             }));
@@ -486,7 +551,7 @@ public class Prepare {
             return count;
         }
 
-        void query(String sql, Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams) {
+        void query(Parameter parameter, Map<String, Object> singleParams, Map.Entry<String, Map<Result, Object>> multiParams) {
             SqlMapper.BaseColumn baseColumn = tables.get(0).columns[0];
             String parentNode = getParentNode(baseColumn.objectAlias);
             String node = getMultiNodeName(baseColumn.objectAlias);
@@ -495,20 +560,21 @@ public class Prepare {
                     singleParams.put(multiParams.getKey(), valueObjectEntry.getValue());
                     MultiValues multiValues = new MultiValues();
                     ((Values) valueObjectEntry.getKey()).put(node, multiValues);
-                    query(sql, singleParams, multiValues);
+                    query(singleParams, multiValues);
                 }
             else {
                 parameter.getLowerValue(parentNode).forEach(result -> {
                     MultiValues multiValues = new MultiValues();
                     ((Values) result).put(node, multiValues);
-                    query(sql, singleParams, multiValues);
+                    query(singleParams, multiValues);
                 });
             }
         }
 
-        void query(String sql, Map<String, Object> map, MultiValues values) {
-            query(sql, map);
+        void query(Map<String, Object> map, MultiValues values) {
+            query(map);
             for (int i = 0; i < 2; i++) {
+                System.out.println(this + "第" + i + "条");
                 Values values1 = new Values();
                 int finalI = i;
                 tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {

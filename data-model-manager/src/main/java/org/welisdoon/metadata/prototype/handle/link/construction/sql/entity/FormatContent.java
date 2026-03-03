@@ -1,12 +1,15 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
-import org.springframework.util.Assert;
 import org.welisdoon.common.object.wrapper.IDataAccessObject;
 import org.welisdoon.common.object.wrapper.SqlMapper;
+import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
-import org.welisdoon.metadata.prototype.define.MetaPrototype;
-import org.welisdoon.metadata.prototype.entity.DataObject;
+import org.welisdoon.metadata.prototype.consts.MetaUtils;
+import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
+import org.welisdoon.metadata.prototype.define.MetaObject;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,32 @@ import java.util.Map;
  * @Date 15:15
  */
 public class FormatContent implements IDataAccessObject.ObjectScanner {
+    public static class FormatContentObject {
+        final protected Long target;
+        final protected FormatContentObject parent;
+        final SqlMapper.MainTable table;
+        final static Map<Long, FormatContentObject> CONTENT_OBJECT_MAP = new HashMap<>();
+        public final String show;
+
+        FormatContentObject(FormatContentObject parent, SqlContent sqlContent) {
+            this.target = sqlContent.metaObject.getId();
+            this.parent = parent;
+            FormatContent formatContent = new FormatContent();
+            this.show = sqlContent.format(formatContent);
+            SqlMapper mapper = new SqlMapper();
+            table = formatContent.sql(mapper);
+        }
+
+        public static FormatContentObject getObject(MetaObject metaObject) {
+            if (metaObject == null) return null;
+            if (CONTENT_OBJECT_MAP.containsKey(metaObject.getId())) {
+                return CONTENT_OBJECT_MAP.get(metaObject.getId());
+            }
+            FormatContent.initialization(metaObject.getParent().getType() == ObjectMetaType.Object ? getObject(metaObject.getParent()) : null, metaObject);
+            return CONTENT_OBJECT_MAP.get(metaObject.getId());
+        }
+    }
+
     /*final protected VirtualPart tablePart;
     private LinkedList<Part> current = new LinkedList<>();
     protected int count = 0;
@@ -190,11 +219,32 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
         return list;
     }
 
-    protected SqlMapper toMapper(Map<String, Object> params) {
-        SqlMapper mapper = new SqlMapper();
-        SqlMapper.MainTable table = sql(mapper);
-        mapper.build(table, params);
-        return mapper;
+    protected static boolean initialization(FormatContentObject parent, MetaObject metaObject) {
+        if (FormatContentObject.CONTENT_OBJECT_MAP.containsKey(metaObject.getId())) {
+            return false;
+        }
+        FormatContentObject formatContentObject = new FormatContentObject(parent, new SqlContent(metaObject));
+        FormatContentObject.CONTENT_OBJECT_MAP.put(metaObject.getId(), formatContentObject);
+        MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition()
+                .<MetaObjectCondition>setQuery("FIND_EXTEND_OBJECT")
+                .setData(new MetaObject()
+                        .<MetaObject>setTypeId(ObjectMetaType.Object.getId())
+                        .setParentId(metaObject.getId())))
+                .forEach(metaObject1 -> {
+                    FormatContent formatContent = new FormatContent();
+                    formatContent.initialization(formatContentObject, metaObject1);
+                });
+        return true;
+    }
+
+    public static void initialization() {
+        MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition()
+                .<MetaObjectCondition>setData(new MetaObject()
+                        .setTypeId(ObjectMetaType.Object.getId()))
+                .setQuery("FIND_BASE_OBJECT")).forEach(metaObject -> {
+            FormatContent formatContent = new FormatContent();
+            formatContent.initialization(null, metaObject);
+        });
     }
 
     @Override
