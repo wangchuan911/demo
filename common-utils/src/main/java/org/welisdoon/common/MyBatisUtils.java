@@ -1,6 +1,7 @@
 package org.welisdoon.common;
 
 import com.alibaba.fastjson.util.TypeUtils;
+import org.welisdoon.common.object.wrapper.Prepare;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -9,6 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.*;
 import java.text.MessageFormat;
+import java.time.LocalDate;
+import java.time.chrono.ChronoLocalDate;
+import java.time.chrono.ChronoLocalDateTime;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -114,6 +118,36 @@ public interface MyBatisUtils {
             }
         }
         return preparedStatement;
+    }
+
+    static PreparedStatement prepared(Connection connection, Prepare prepare) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(prepare.sql);
+        Object value;
+        for (int i = 0; i < prepare.params.size(); i++) {
+            value = prepare.params.get(i);
+            try {
+                setVal(preparedStatement, i + 1, guessSqlType(value), value);
+            } catch (NoSuchFieldException e) {
+                throw new SQLException(MessageFormat.format("位置{0}不支持的数据类型{1}", i + 1, value == null ? "NULL" : value.getClass().getSimpleName()), e);
+            }
+        }
+        return preparedStatement;
+    }
+
+    static String guessSqlType(Object v) {
+        if (v == null) {
+            return "NULL";
+        } else if (v instanceof java.util.Date || v instanceof Calendar || v instanceof ChronoLocalDate || v instanceof ChronoLocalDateTime) {
+            return "TIMESTAMP";
+        } else if (v instanceof Boolean) {
+            return "BOOLEAN";
+        } else if (v instanceof Byte) {
+            return "BIT";
+        } else if (v instanceof Number) {
+            return "NUMERIC";
+        } else {
+            return "VARCHAR";
+        }
     }
 
     static Object setVal(PreparedStatement preparedStatement, int i, String type, Object value) throws SQLException, NoSuchFieldException {

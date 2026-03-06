@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;*/
 import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.vertx.verticle.WorkerVerticle;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
  * @Date 12:02
  */
 @Component
+@Deprecated
 public class VertxSqlDataBasePool {
 //    static Map<String, Mappers> MAPPERS = new HashMap<>();
 
@@ -101,18 +103,6 @@ public class VertxSqlDataBasePool {
                 }
             }
         }
-    }
-
-
-    protected enum Model {
-        DATASOURCE(8000), URL(8001), FTP(8002), UNKNOWN(null);
-
-        Integer typeId;
-
-        Model(Integer typeId) {
-            this.typeId = typeId;
-        }
-
     }
 
 
