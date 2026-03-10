@@ -168,6 +168,7 @@ public class SqlJoiner extends Sql {
                         template = " {3} join {0} {1} on {2} ";
                         args[3] = isWeakRelation(this) ? "left" : "";
                     }
+                    addCache(format);
                     return MessageFormat.format(template, args);
                 default:
                     throw new IllegalStateException("不支持的操作：" + getType().name());
@@ -239,4 +240,19 @@ public class SqlJoiner extends Sql {
         }
         return "";
     }
+
+    protected void addCache(FormatContent format) {
+        List<Object> cache = format.get(this);
+        String value1 = this.getPrefix();
+        for (DataObject.Field input : this.findInputs()) {
+            Sql last = SqlItem.format(input);
+            String value = last.getPrefix();
+            if (Objects.equals(value1, value)) {
+                cache.add(new IDataAccessObject.Model.TableVO.ColumnVO(
+                        MessageFormat.format("{0}.{1}", value, last.getAttribute().getCode()),
+                        input.getCode(), null, IDataAccessObject.ColumnType.Simple, String.class));
+            }
+        }
+    }
+
 }

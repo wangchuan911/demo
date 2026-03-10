@@ -7,7 +7,9 @@ import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.common.object.PageIterator;
 
 import java.lang.annotation.*;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -35,7 +37,7 @@ public interface IDataAccessObject {
     }
 
     static Class<?> initialization(Class<?> aClass) {
-        if (!IDataAccessObject.class.isAssignableFrom(aClass)) return null;
+        if (!IDataAccessObject.class.isAssignableFrom(aClass) || aClass == AbstractDataAccessObject.class) return null;
         if (CLASS_METHOD.containsKey(aClass)) return aClass;
         Class<?> parent = initialization(aClass.getSuperclass());
         if (Arrays.stream(aClass.getInterfaces()).anyMatch(IDataAccessObject.class::isAssignableFrom)) {
@@ -45,6 +47,8 @@ public interface IDataAccessObject {
         }
         return parent;
     }
+
+    void initialization(Map<String, Prepare.Result> values);
 
     default <T> T getValue(String key) {
         if (isLazy()) {
@@ -126,18 +130,31 @@ public interface IDataAccessObject {
         PrimaryKeu, Simple, Virtual, ForeignKey;
     }
 
-    @Target({ElementType.METHOD})
+    /*@Target({ElementType.METHOD})
     @Retention(RetentionPolicy.RUNTIME)
     @interface Field {
         String name();
 
-        String[] columns();
+        String column();
 
-        Class<Function> handler();
+        Class<?> type();
+    }
 
-        Class<?>[] type();
+    @interface Foreign {
+        String name();
 
-        String localFieldName() default "";
+        String[] column();
+
+        Class<?> type();
+
+        Class<? extends ObjectValueSupplier<?>> get();
+
+        boolean isArray();
+    }*/
+
+    @FunctionalInterface
+    interface ObjectValueSupplier<T> {
+        List<T> get(IDataAccessObject object, Map<String, Object> params);
     }
 
     enum TableRel {
@@ -247,28 +264,29 @@ public interface IDataAccessObject {
     class DataAccessObjectInfo implements ObjectScanner {
         final protected Class<?> target;
         final protected DataAccessObjectInfo parent;
-        protected Map<String, Method> methodMap;
-        final SqlMapper.MainTable table;
+        //        protected Map<String, Method> methodMap;
+        protected SqlMapper mapper;
 
         public DataAccessObjectInfo(Class<?> target, DataAccessObjectInfo parent) {
             this.target = target;
             this.parent = parent;
-            this.methodMap = new HashMap<>();
-            Arrays.stream(this.target.getInterfaces()).filter(IDataAccessObject.class::isAssignableFrom).flatMap(aClass -> Arrays.stream(aClass.getMethods())).forEach(method -> {
-                Field column = method.getAnnotation(Field.class);
-                if (column == null) return;
-                methodMap.put(column.name(), method);
-            });
-            table = this.sql(new SqlMapper());
+//            this.methodMap = new HashMap<>();
+//            Arrays.stream(this.target.getInterfaces()).filter(IDataAccessObject.class::isAssignableFrom).flatMap(aClass -> Arrays.stream(aClass.getMethods())).forEach(method -> {
+//                Field column = method.getAnnotation(Field.class);
+//                if (column == null) return;
+//                methodMap.put(column.name(), method);
+//            });
+            mapper = new SqlMapper(this);
+
         }
 
-        public Method getMethod(String name) {
-            Method method = methodMap.get(name);
-            if (method == null && parent != null) {
-                return parent.getMethod(name);
-            }
-            return method;
-        }
+//        public Method getMethod(String name) {
+//            Method method = methodMap.get(name);
+//            if (method == null && parent != null) {
+//                return parent.getMethod(name);
+//            }
+//            return method;
+//        }
 
         public void scanTableAnnotation(List<Model.TableVO> tableList) {
             if (parent != null) {
@@ -284,11 +302,20 @@ public interface IDataAccessObject {
         }
 
         public List<IDataAccessObject> query(Map<String, Object> params) {
-            return table.prepare(target,params);
+            return mapper.beauty.query(params).stream().map(this::query).collect(Collectors.toList());
         }
 
         public IDataAccessObject query(Object id) {
-            return table.prepare(target,id);
+            Map<String, Prepare.Result> map = mapper.beauty.query(id);
+//            throw new IllegalStateException("开发中");
+            IDataAccessObject iDataAccessObject = null;
+            try {
+                iDataAccessObject = (IDataAccessObject) target.getConstructor().newInstance();
+                iDataAccessObject.initialization(map);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+            return iDataAccessObject;
         }
 
     }

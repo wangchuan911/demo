@@ -16,6 +16,7 @@ import org.welisdoon.common.data.BaseCondition;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -38,33 +39,27 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
 //        data.generateData(this);
         BaseCondition.Page page = new BaseCondition.Page(1, Math.max(MapUtils.getInteger(attributes, "size", 100), 100));
         AtomicLong index = new AtomicLong(0);
-        Database.DataSouceConnect connect = Database.getDataBaseSync(this);
+        Database.DataSourceConnect connect = Database.getDataBaseSync(this);
+        Database.DataSourceTemplate template = connect.getTemplate();
         DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
         String sql = connectPool.toPageSql(getScript(data));
-        PreparedStatement preparedStatement = connect.prepare(sql, data);
-        String pageInfo = connectPool.setPage(preparedStatement, page);
-        connectPool.log("", connect.sqlTemplate.log1.toString());
-        connectPool.log("", connect.sqlTemplate.log2.toString() + "," + pageInfo);
+        PreparedStatement preparedStatement = template.prepare(sql, data);
         List<Map<String, Object>> list = new LinkedList<>();
+        List<SubQuery> queryList = getChild(SubQuery.class);
         try {
             do {
                 list.clear();
-                ResultSet row = preparedStatement.executeQuery();
-                ResultSetMetaData metaData = row.getMetaData();
-                Map<String, Object> map;
-                while (row.next()) {
-                    map = new HashMap<>(metaData.getColumnCount(), 1.0F);
-                    for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                        if (row.getObject(i) == null) continue;
-                        map.put(metaData.getColumnName(i), row.getObject(i));
-                    }
-                    list.add(map);
+                connectPool.log("", template.sqlTemplate.log1.toString());
+                connectPool.log("", template.sqlTemplate.log2.toString() + "," + connectPool.setPage(preparedStatement, page));
+                try (ResultSet row = preparedStatement.executeQuery()) {
+                    toMap(row, list);
                 }
-                row.close();
                 if (!("tetris".equals(attributes.get("mode")))) page.nextPage();
-                connectPool.log("", connect.sqlTemplate.log1.toString());
-                connectPool.log("", connect.sqlTemplate.log2.toString() + "," + connectPool.setPage(preparedStatement, page));
                 for (Map<String, Object> row1 : list) {
+                    for (SubQuery subQuery : queryList) {
+                        data.setValue(row1);
+                        subQuery.startSync(data);
+                    }
                     try {
                         this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
                     } catch (Break.SkipOneLoopThrowable e) {
@@ -78,6 +73,19 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         }
         this.await(data);
         connect.close();
+    }
+
+    protected void toMap(ResultSet row, List<Map<String, Object>> list) throws SQLException {
+        ResultSetMetaData metaData = row.getMetaData();
+        Map<String, Object> map;
+        while (row.next()) {
+            map = new HashMap<>(metaData.getColumnCount(), 1.0F);
+            for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                if (row.getObject(i) == null) continue;
+                map.put(metaData.getColumnName(i), row.getObject(i));
+            }
+            list.add(map);
+        }
     }
 
     @Override
@@ -195,7 +203,8 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
     }
 
     @Tag(value = "sub-query", parentTagTypes = {Executable.class}, desc = "sql查询")
-    @Attr(name = "list", desc = "是否返回list")
+    @Attr(name = "is-list", desc = "是否返回list")
+    @Attr(name = "name", desc = "名称")
     public static class SubQuery extends Select {
         @Override
         protected Future<Object> start(TaskSession data, Object preUnitResult) {
@@ -215,6 +224,27 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
                 return (Future) super.subQuery(data, rows);
             }
             return super.subQuery(data, rows).compose(maps -> Future.succeededFuture(maps.stream().findFirst().orElse(Collections.emptyMap())));
+        }
+
+        boolean isList() {
+            return "true".equalsIgnoreCase(attributes.get("is-list"));
+        }
+
+        @Override
+        protected void startSync(TaskSession data) throws Throwable {
+            Database.DataSourceConnect connect = Database.getDataBaseSync(this);
+            DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
+            Database.DataSourceTemplate template = connect.getTemplate();
+            String sql = connectPool.toPageSql(getScript(data));
+            PreparedStatement preparedStatement = template.prepare(sql, data);
+            preparedStatement.executeQuery();
+            connectPool.log("", template.sqlTemplate.log1.toString());
+            connectPool.log("", template.sqlTemplate.log2.toString());
+            List<Map<String, Object>> list = new LinkedList<>();
+            try (ResultSet row = preparedStatement.executeQuery()) {
+                toMap(row, list);
+            }
+            ((Map) data.value).put(attributes.get("name"), !isList() ? list.stream().findFirst().orElse(new HashMap<>()) : list);
         }
     }
 

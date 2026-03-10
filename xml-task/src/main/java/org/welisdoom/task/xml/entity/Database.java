@@ -43,6 +43,7 @@ import java.util.function.Function;
 public class Database extends Unit {
     static volatile Map<String, DataBaseConnectPool> MAP = new HashMap<>();
     static volatile Map<String, DataSource> MAP_SYNC = new HashMap<>();
+    static volatile Map<String, DataSourceConnect> MAP_SYNC2 = new HashMap<>();
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
@@ -226,44 +227,43 @@ public class Database extends Unit {
         return Database.getDatabase(unit.attributes.get("link"));
     }
 
-    protected static DataSouceConnect getDataBaseSync(Unit unit) throws SQLException {
-        DataSouceConnect p = unit.getParents(Transactional.class).stream().filter(transactional -> Objects.equals(unit.attributes.get("link"), transactional.attributes.get("link"))).findFirst().map(transactional -> {
-            return new DataSouceConnect(unit.attributes.get("link"), transactional.connection, true);
-        }).orElse(null);
-        if (p == null)
-            p = new DataSouceConnect(unit.attributes.get("link"), Database.getDatabaseSync(unit.attributes.get("link")).getConnection(), false);
+    protected static DataSourceConnect getDataBaseSync(Unit unit) throws SQLException {
+        DataSourceConnect p = unit.getParents(Transactional.class).stream().filter(transactional -> Objects.equals(unit.attributes.get("link"), transactional.attributes.get("link"))).findFirst().map(transactional -> {
+            return transactional.connection;
+        }).orElse(MAP_SYNC2.get(unit.attributes.get("link")));
+        if (p == null || p.connection.isClosed()) {
+            p = new DataSourceConnect(unit.attributes.get("link"), Database.getDatabaseSync(unit.attributes.get("link")).getConnection(), false);
+            MAP_SYNC2.put(unit.attributes.get("link"), p);
+        }
         return p;
     }
 
-    public static class DataSouceConnect {
-        final String name;
-        final Connection connection;
-        final boolean transaction;
+    public static class DataSourceTemplate {
+        DataSourceConnect dataSourceConnect;
         PreparedStatement preparedStatement;
-        DatasouceConnectManager.SqlTemplate sqlTemplate;
 
-        public DataSouceConnect(String name, Connection connection, boolean transaction) {
-            this.name = name;
-            this.connection = connection;
-            this.transaction = transaction;
+        DataSourceTemplate(DataSourceConnect dataSourceConnect) {
+            this.dataSourceConnect = dataSourceConnect;
         }
+
+        DatasouceConnectManager.SqlTemplate sqlTemplate;
 
         public PreparedStatement prepare(final String sql, TaskSession data) throws SQLException {
             if (preparedStatement == null || sqlTemplate == null || !Objects.equals(sql, sqlTemplate.sql)) {
                 this.sqlTemplate = new DatasouceConnectManager.SqlTemplate(sql, new LinkedList<>());
                 MyBatisUtils.readSqlTemplate(sql, (s1, jdbcType) -> {
-                    JdbcType sqlType = Optional.ofNullable(JdbcType.valueOf(jdbcType)).orElse(JdbcType.VARCHAR);
+                    JdbcType sqlType = Optional.ofNullable(jdbcType).map(JdbcType::valueOf).orElse(JdbcType.VARCHAR);
                     this.sqlTemplate.getTypes().add(Map.entry(s1, sqlType));
                 });
                 String sql2 = sql.replaceAll(MyBatisUtils.PATTERN_STRING, "?");
-                preparedStatement = connection.prepareStatement(sql2);
+                preparedStatement = dataSourceConnect.connection.prepareStatement(sql2);
                 this.sqlTemplate.log1.setLength(0);
                 this.sqlTemplate.log1.append("sql   :").append(sql2);
             }
             this.sqlTemplate.log2.setLength(0);
             this.sqlTemplate.log2.append("params:");
-            for (int i = 0; i < this.sqlTemplate.getTypes().size(); i++) {
-                Map.Entry<String, JdbcType> entry = this.sqlTemplate.getTypes().get(i);
+            for (int i = 1; i <= this.sqlTemplate.getTypes().size(); i++) {
+                Map.Entry<String, JdbcType> entry = this.sqlTemplate.getTypes().get(i - 1);
                 Object value = OgnlUtils.getValue(entry.getKey(), data.getOgnlContext(), data.getBus(), Object.class);
                 switch (entry.getValue()) {
                     case BLOB:
@@ -319,6 +319,20 @@ public class Database extends Unit {
             return preparedStatement;
         }
 
+    }
+
+    public static class DataSourceConnect {
+        final String name;
+        final Connection connection;
+        final boolean transaction;
+
+        public DataSourceConnect(String name, Connection connection, boolean transaction) {
+            this.name = name;
+            this.connection = connection;
+            this.transaction = transaction;
+        }
+
+
         public void commit() throws SQLException {
             connection.commit();
         }
@@ -326,6 +340,10 @@ public class Database extends Unit {
         public void close() throws SQLException {
             if (!transaction)
                 connection.close();
+        }
+
+        public DataSourceTemplate getTemplate() {
+            return new DataSourceTemplate(this);
         }
 
         public DatasouceConnectManager getDatasouceConnectPool() {

@@ -28,6 +28,7 @@ import org.welisdoon.metadata.prototype.entity.DataObject;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.TemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.XmlTemplateFormatContent;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity.QueryTemplateInstance;
+import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity.SqlDataBasePool;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.content.xml.entity.VertxSqlDataBasePool;
 import org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.FormatContent;
 import org.welisdoon.web.vertx.annotation.VertxConfiguration;
@@ -56,7 +57,7 @@ public class QueryManagerRouter {
     MetaLinkDao metaLinkDao;
     MetaAttributeDao metaAttributeDao;
     TransactionTemplate transactionTemplate;
-    VertxSqlDataBasePool vertxSqlDataBasePool;
+    SqlDataBasePool dataBasePool;
 //    @Value("${md.lazy:false}")
 //    boolean lazy = false;
 
@@ -64,12 +65,12 @@ public class QueryManagerRouter {
 //    public void setSqlBuilderHandler(SqlBuilderHandler sqlBuilderHandler) {
 //        this.sqlBuilderHandler = sqlBuilderHandler;
 //    }
-    public QueryManagerRouter(MetaUtils metaUtils, TransactionTemplate transactionTemplate, VertxSqlDataBasePool vertxSqlDataBasePool) {
+    public QueryManagerRouter(MetaUtils metaUtils, TransactionTemplate transactionTemplate, SqlDataBasePool dataBasePool) {
         this.metaObjectDao = metaUtils.getMetaObjectDao();
         this.metaLinkDao = metaUtils.getMetaLinkDao();
         this.metaAttributeDao = metaUtils.getMetaAttributeDao();
         this.transactionTemplate = transactionTemplate;
-        this.vertxSqlDataBasePool = vertxSqlDataBasePool;
+        this.dataBasePool = dataBasePool;
     }
 
     /*@Autowired
@@ -221,7 +222,8 @@ public class QueryManagerRouter {
     public void show(RoutingContextChain chain) {
         chain.blockingHandler(routingContext -> {
             long qid = Long.parseLong(routingContext.pathParam("id"));
-            routingContext.end(FormatContent.FormatContentObject.getObject(MetaUtils.getInstance().getObject(qid)).show);
+//            routingContext.end(new org.welisdoon.metadata.prototype.handle.link.construction.sql.entity.SqlContent(MetaUtils.getInstance().getObject(qid)).format(new FormatContent()));
+            routingContext.end(FormatContent.FormatContentObject.getObject(MetaUtils.getInstance().getObject(qid), true).show);
 //            SqlContent context = new SqlContent();
 //            routingContext.end(Optional.ofNullable(MetaUtils.getInstance().<MetaObject>getObject(qid)).map(MetaObject::getConstruct).map(construct -> {
 //                sqlBuilderHandler.handler(context, construct);
@@ -887,11 +889,13 @@ public class QueryManagerRouter {
                         data.add(Map.of());
                     }
                     QueryTemplateInstance parameter = JSON.parseObject(event.body().asString(), QueryTemplateInstance.class);
-                    vertxSqlDataBasePool.page("query", parameter, (objects, throwable) -> {
-                        Optional.ofNullable(throwable)
-                                .ifPresentOrElse(event::fail, () -> event.end(JSON.toJSONString(objects)));
-                    });
-//                    event.end(JSON.toJSONString(data, SerializerFeature.DisableCircularReferenceDetect));
+//                    parameter.setObject(metaObject);
+//                    dataBasePool.page("query", parameter, (objects, throwable) -> {
+//                        Optional.ofNullable(throwable)
+//                                .ifPresentOrElse(event::fail, () -> event.end(JSON.toJSONString(objects)));
+//                    });
+                    FormatContent.FormatContentObject formatContentObject = FormatContent.FormatContentObject.getObject(MetaUtils.getInstance().getObject(qid), true);
+                    event.end(JSON.toJSONString(formatContentObject.page(Map.of(), parameter.getPager()), SerializerFeature.DisableCircularReferenceDetect));
                     break;
                 case "download":
 //                    TemplateFormatContent templateFormatContent = new XmlTemplateFormatContent(MetaUtils.getInstance().getObject(qid));

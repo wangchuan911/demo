@@ -3,6 +3,7 @@ package org.welisdoon.common.object.wrapper;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.welisdoon.common.data.BaseCondition;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -34,7 +35,7 @@ public class Beauty {
             JOIN = "{JOIN}",
             AND = " and ",
             COLUMN_AS = " {0} AS \"{1}\" ",
-            JION_ON = MessageFormat.format("JOIN {0} ON {1} {2}", TABLE, WHERE, JOIN),
+            JOIN_ON = MessageFormat.format("JOIN {0} ON {1} {2}", TABLE, WHERE, JOIN),
             BODY = MessageFormat.format("select {0} from {1} {2} where {3}", COLUMN, TABLE, JOIN, WHERE),
             BODY_EXISTS = MessageFormat.format(" exists ( select 1 from {0} {1} where {2} )", TABLE, JOIN, WHERE);
 
@@ -59,7 +60,35 @@ public class Beauty {
         part = new Prepare.MainPart(this);
     }
 
-    public List<Object> prepare(Map<String, Object> params) {
+    public List<Object> page(Map<String, Object> params, BaseCondition.Page page) {
+        PagePrepare prepare = pagePrepare(params, page);
+        return query(prepare);
+    }
+
+    public List<Object> query(Prepare prepare) {
+        if (SqlMapper.getDataSource(mainTable) == null) {
+            return List.of(1, 2);
+        }
+        List<Object> list = new LinkedList<>();
+        prepare.query(SqlMapper.getConnect(mainTable), (resultSetMetaData, resultSet) -> {
+            list.add(resultSet.getObject(1));
+            return true;
+        });
+        return list;
+    }
+
+    public List<Object> query(Map<String, Object> params) {
+        Prepare prepare = prepare(params);
+        return query(prepare);
+    }
+
+    public PagePrepare pagePrepare(Map<String, Object> params, BaseCondition.Page page) {
+        PagePrepare pagePrepare = new PagePrepare(prepare(params), PagePrepare.DefaultPageFormat.getFormat(SqlMapper.getDataSource(mainTable)));
+        pagePrepare.log("");
+        return pagePrepare;
+    }
+
+    public Prepare prepare(Map<String, Object> params) {
         System.out.println(params);
         List<SqlMapper.BaseColumn> list = new LinkedList<>();
         for (Map.Entry<String, Object> entry : params.entrySet()) {
@@ -101,7 +130,7 @@ public class Beauty {
                     break;
                 default:
                     existsSql.set(existsSql.get()
-                            .replace(JOIN, JION_ON
+                            .replace(JOIN, JOIN_ON
                                     .replace(TABLE, table.toSql())
                                     .replace(WHERE, orElse(getCondition(table, list), "", ""))
                             )
@@ -110,8 +139,7 @@ public class Beauty {
             }
         });
         Prepare prepare = new Prepare(selectSql.get().replace(WHERE, existsSql.get()).replace(WHERE, getCondition(firstTable.get(), list)).replace(JOIN, ""), params);
-        prepare.log("");
-        return List.of(1, 2);
+        return prepare;
     }
 
     String orElse(String a, String p, String b) {
@@ -173,15 +201,77 @@ public class Beauty {
         }
     }
 
-    public Map<String, Prepare.Result> prepare(Object id) {
+    public Map<String, Prepare.Result> query(Object id) {
         SqlMapper.BaseColumn keyCol = getMainBaseTable().getColumns()[0];
 
         Prepare.Parameter parameter = new Prepare.Parameter();
         part.paramLocal.put(parameter, Map.of(keyCol.objectAlias, TypeUtils.cast(id, keyCol.dataType, ParserConfig.getGlobalInstance())));
-        part.loads(parameter);
+        part.queries(parameter);
         System.out.println(part);
         System.out.println(parameter.values);
         return parameter.values;
+    }
+
+    public LazyValues queryLazy(Object id) {
+        SqlMapper.BaseColumn keyCol = getMainBaseTable().getColumns()[0];
+
+        Prepare.Parameter parameter = new Prepare.Parameter();
+        part.paramLocal.put(parameter, Map.of(keyCol.objectAlias, TypeUtils.cast(id, keyCol.dataType, ParserConfig.getGlobalInstance())));
+
+        part.queries(parameter, false);
+        return new LazyValues(part, parameter);
+    }
+
+    public static class LazyValues implements Prepare.Result {
+
+        final Prepare.MainPart part;
+        final Prepare.Parameter parameter;
+
+        public LazyValues(Prepare.MainPart part, Prepare.Parameter parameter) {
+            this.part = part;
+            this.parameter = parameter;
+        }
+
+        @Override
+        public void findLowerValue(String key, Consumer<Prepare.Result> val) {
+            parameter.values.findLowerValue(key, val);
+        }
+
+        @Override
+        public Object getVal() {
+            return parameter.values;
+        }
+
+        public Prepare.Result getVal(String key) {
+            return getVal(part, key);
+        }
+
+        protected Prepare.Result getVal(Prepare.Part part, String key) {
+            AtomicReference<Prepare.Result> resultAtomicReference = new AtomicReference<>();
+            findLowerValue(key, resultAtomicReference::set);
+            if (resultAtomicReference.get() != null)
+                return resultAtomicReference.get();
+            for (SqlMapper.BaseTable table : part.tables) {
+                for (SqlMapper.BaseColumn column : table.columns) {
+                    if (column.objectAlias.equals(key)) {
+                        part.queries(parameter, false);
+                    }
+                }
+            }
+            findLowerValue(key, resultAtomicReference::set);
+            return resultAtomicReference.get();
+        }
+
+        protected void reset() {
+            for (String s : new ArrayList<>(parameter.values.keySet())) {
+                Prepare.Result result = parameter.values.get(s);
+                if (result instanceof Prepare.Value && ((Prepare.Value) result).index == 1) {
+                    continue;
+                }
+                parameter.values.remove(s);
+            }
+            parameter.loaded.removeIf(part1 -> !(part1 instanceof Prepare.MainPart));
+        }
     }
 
 
@@ -193,6 +283,7 @@ public class Beauty {
         while (main instanceof SqlMapper.GroupTable);
         return (SqlMapper.BaseTable) main;
     }
+
 
     public abstract static class Ends<T> {
         final T tA;

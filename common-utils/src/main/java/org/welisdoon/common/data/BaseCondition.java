@@ -17,6 +17,7 @@ public abstract class BaseCondition<ID, D> {
     Map<String, Object> condition;
     String query;
     Page page;
+    int total;
 
     public <T extends BaseCondition> T setPage(Page page) {
         this.page = page;
@@ -123,5 +124,9 @@ public abstract class BaseCondition<ID, D> {
 
     public String getQuery() {
         return query;
+    }
+
+    public int getTotal() {
+        return total;
     }
 }

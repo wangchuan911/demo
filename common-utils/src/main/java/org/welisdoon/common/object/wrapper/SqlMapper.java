@@ -2,10 +2,10 @@ package org.welisdoon.common.object.wrapper;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -16,6 +16,13 @@ import java.util.stream.Collectors;
  * @Date 18:32
  */
 public class SqlMapper {
+    public static final Map<String, DataSource> DATA_SOURCE_MAP = new HashMap<>();
+    final Beauty beauty;
+
+    public SqlMapper(IDataAccessObject.ObjectScanner objectScanner) {
+        SqlMapper.MainTable table = objectScanner.sql(this);
+        beauty = new Beauty(table);
+    }
 
     public static class ColumnArg {
         String columnName;
@@ -28,6 +35,38 @@ public class SqlMapper {
             this.objectAlias = objectAlias;
             this.linkColumn = linkColumn;
             this.dataType = dataType;
+        }
+    }
+
+    public Beauty getBeauty() {
+        return beauty;
+    }
+
+    public static DataSource getDataSource(SqlMapper.AbstractTable<?> table1) {
+        SqlMapper.AbstractTable<?> table = table1;
+        while (table instanceof SqlMapper.GroupTable) {
+            table = ((SqlMapper.GroupTable) table).tables[0];
+        }
+        return getDataSource(((SqlMapper.BaseTable) table).tableName.split("\\s+")[0]);
+    }
+
+    public static DataSource getDataSource(String name) {
+        return DATA_SOURCE_MAP.get(name);
+    }
+
+    public static Connection getConnect(String name) {
+        try {
+            return getDataSource(name).getConnection();
+        } catch (SQLException e) {
+            throw new IllegalStateException(e.getMessage(), e);
+        }
+    }
+
+    public static Connection getConnect(AbstractTable<?> table) {
+        try {
+            return SqlMapper.getDataSource(table).getConnection();
+        } catch (SQLException e) {
+            throw new IllegalStateException(e.getMessage(), e);
         }
     }
 
@@ -166,27 +205,9 @@ public class SqlMapper {
     }
 
     public static class MainTable extends GroupTable {
-        Beauty beauty;
 
         public MainTable(String name, AbstractTable[] iTables, IDataAccessObject.TableRel rel) {
             super(name, iTables, rel);
-            beauty = new Beauty(this);
-        }
-
-
-        public List<IDataAccessObject> prepare(Class<?> target, Map<String, Object> params) {
-            return beauty.prepare(params).stream().map(o -> {
-                return prepare(target, o);
-            }).collect(Collectors.toList());
-        }
-
-        public IDataAccessObject prepare(Class<?> target, Object id) {
-            if (id instanceof Map) {
-                List<IDataAccessObject> iDataAccessObjects = prepare(target, (Map) id);
-                return iDataAccessObjects.stream().findFirst().orElse(null);
-            }
-            Map<String, Prepare.Result> map = beauty.prepare(id);
-            return null;
         }
     }
 

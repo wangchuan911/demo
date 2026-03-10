@@ -5,15 +5,18 @@ import com.alibaba.fastjson.util.TypeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.welisdoon.common.MyBatisUtils;
 
+import javax.sql.DataSource;
 import java.lang.reflect.Type;
+import java.sql.*;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.time.chrono.ChronoLocalDate;
-import java.time.chrono.ChronoLocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +31,7 @@ public class Prepare {
     static final String logFormat = "%s==> %-6s ==>: %-6s [ %s ] %n";
     final public String sql;
     final public List<Object> params;
+    PreparedStatement preparedStatement;
 
     Prepare(String sql, List<Object> params) {
         this.sql = sql.replace(Beauty.MARK_1, "").replace(Beauty.MARK_2, "");
@@ -49,6 +53,28 @@ public class Prepare {
             }
             this.params.add(value);
         });
+    }
+
+
+    public void query(Connection connection, SqlResult consumer) {
+        try {
+            if (preparedStatement == null || preparedStatement.isClosed())
+                preparedStatement = connection.prepareStatement(sql);
+            MyBatisUtils.setVal(preparedStatement, params);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                while (resultSet.next()) {
+                    if (!consumer.apply(metaData, resultSet)) break;
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException(e.getMessage(), e);
+        }
+    }
+
+    @FunctionalInterface
+    public interface SqlResult {
+        boolean apply(ResultSetMetaData resultSetMetaData, ResultSet resultSet) throws SQLException;
     }
 
     static String valToSql(Object o) {
@@ -77,6 +103,7 @@ public class Prepare {
     }
 
     public static abstract class Part {
+        protected boolean loaded = false;
         protected final IDataAccessObject.TableRel rel;
         protected Part parent;
         protected List<SqlMapper.BaseTable> tables = new LinkedList<>();
@@ -103,21 +130,15 @@ public class Prepare {
             return this;
         }
 
-        abstract public void load(Parameter parameter);
-
-        public void loads(Parameter parameter) {
-            if (!parameter.loaded.contains(this)) {
-                parameter.loaded.add(this);
-                if (!paramLocal.containsKey(parameter))
-                    paramLocal.put(parameter, new HashMap<>());
-                load(parameter);
-                paramLocal.remove(parameter);
+        /*protected void loads() {
+            if (!this.loaded) {
+                load();
+                this.loaded = true;
             }
-
             for (Part part : parts) {
-                part.loads(parameter);
+                part.loads();
             }
-        }
+        }*/
 
         public List<SqlMapper.BaseColumn.RelColumnInfo> getOutRelCol() {
             List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = new LinkedList<>();
@@ -201,36 +222,39 @@ public class Prepare {
         }
 
         protected void prepares() {
-            if (parent != null) {
-                List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = new LinkedList<>();
-                List<Part> parentParts = new LinkedList<>();
-                if (!matchedInPrev(relColumnInfos, parentParts)) {
-                    List<Part> inner = findInnerParts(relColumnInfos, parentParts);
-                    if (!relColumnInfos.isEmpty())
-                        throw new IllegalStateException(relColumnInfos.stream().map(relColumnInfo -> relColumnInfo.toSql()).collect(Collectors.joining(",")) + "没有匹配到对端");
+            if (!this.loaded) {
+                if (parent != null) {
+                    List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = new LinkedList<>();
+                    List<Part> parentParts = new LinkedList<>();
+                    if (!matchedInPrev(relColumnInfos, parentParts)) {
+                        List<Part> inner = findInnerParts(relColumnInfos, parentParts);
+                        if (!relColumnInfos.isEmpty())
+                            throw new IllegalStateException(relColumnInfos.stream().map(relColumnInfo -> relColumnInfo.toSql()).collect(Collectors.joining(",")) + "没有匹配到对端");
+                    }
                 }
+                this.sql = toSql();
+                prepare();
+                this.loaded = true;
             }
-            prepare();
             for (Part part : List.copyOf(parts)) {
                 part.prepares();
             }
         }
 
-        protected void prepare() {
-            this.sql = toSql();
-        }
+        abstract protected void prepare();
 
         String toSql() {
             return toSql(0);
         }
 
         String toSql(int offset) {
+            List<SqlMapper.BaseColumn> list2 = tables.stream().flatMap(table -> Arrays.stream(table.columns).filter(column -> column.relColumn != null)).collect(Collectors.toList());
             return Beauty.BODY
                     .replace(Beauty.COLUMN, tables.stream().skip(offset).flatMap(table -> Arrays.stream(table.getColumns()).map(column -> MessageFormat.format(Beauty.COLUMN_AS, column.toSql(), column.objectAlias))).collect(Collectors.joining(",")))
                     .replace(Beauty.TABLE, tables.get(offset).toSql())
                     .replace(Beauty.JOIN,
                             tables.stream().skip(1 + offset)
-                                    .map(table -> Beauty.JION_ON
+                                    .map(table -> Beauty.JOIN_ON
                                             .replace(Beauty.TABLE, table.toSql())
                                             .replace(Beauty.WHERE,
                                                     Stream.of(
@@ -245,15 +269,17 @@ public class Prepare {
                             Stream.of(conditionLinks
                                             .entrySet()
                                             .stream()
-                                            .map(entry ->
-                                                    entry.getKey().tables.stream()
-                                                            .flatMap(table -> Arrays.stream(table.columns)
-                                                                    .filter(column -> entry.getValue().stream().anyMatch(relColumnInfo -> column.columnName.equals(relColumnInfo.columnName) && column.getTable().tableAlias.equals(relColumnInfo.tableAlias))))
-                                                            .map(column ->
-                                                                    MessageFormat.format(Beauty.EQUAL_PARAM,
-                                                                            column.toSql(),
-                                                                            column.objectAlias
-                                                                    )).collect(Collectors.joining(Beauty.AND))
+                                            .map(entry -> {
+                                                        List<SqlMapper.BaseColumn> list1 = entry.getKey().tables.stream().flatMap(table -> Arrays.stream(table.columns)).collect(Collectors.toList());
+                                                        return entry.getValue().stream()
+                                                                .map(relColumnInfo ->
+
+                                                                        list1.stream().filter(column -> column.columnName.equals(relColumnInfo.columnName) && column.getTable().tableAlias.equals(relColumnInfo.tableAlias))
+                                                                                .map(column -> MessageFormat.format(Beauty.EQUAL_PARAM,
+                                                                                        list2.stream().filter(column1 -> column1.relColumn == relColumnInfo).map(SqlMapper.BaseColumn::toSql).findFirst().orElseThrow(() -> new IllegalStateException("缺失关联")),
+                                                                                        column.objectAlias
+                                                                                )).collect(Collectors.joining(Beauty.AND))).collect(Collectors.joining(Beauty.AND));
+                                                    }
 
                                             )
                                             .collect(Collectors.joining(Beauty.AND))
@@ -266,11 +292,7 @@ public class Prepare {
             return String.format("%-15s[%2d]", getClass().getSimpleName(), index);
         }
 
-        public void load(Runnable runnable) {
-            runnable.run();
-        }
-
-        void query(Map<String, Object> map) {
+        Prepare query(Map<String, Object> map) {
             List<Object> params = new LinkedList<>();
             Map<String, String> format = new HashMap<>();
 //            Map<String, String> format2 = new HashMap<>();
@@ -292,15 +314,32 @@ public class Prepare {
             }
             Prepare prepare = new Prepare(sql2, params);
             prepare.log(this);
-            /*sql2 = sql;
-            for (Map.Entry<String, String> entry : format2.entrySet()) {
-                sql2 = sql2.replace(entry.getKey(), entry.getValue());
-            }
-            sql2 = sql2.replace(Beauty.MARK_1, "").replace(Beauty.MARK_2, "");
-            System.out.printf(logFormat, this, "TO LOG", "SQL", sql2);*/
+            return prepare;
         }
 
+        abstract protected void query(Parameter parameter);
 
+        public void queries(Parameter parameter) {
+            queries(parameter, true);
+        }
+
+        public void queries(Parameter parameter, boolean loadChildren) {
+            if (!parameter.loaded.contains(this)) {
+                parameter.loaded.add(this);
+                if (!paramLocal.containsKey(parameter))
+                    paramLocal.put(parameter, new HashMap<>());
+                query(parameter);
+                paramLocal.remove(parameter);
+            }
+            if (!loadChildren) return;
+            for (Part part : parts) {
+                part.queries(parameter);
+            }
+        }
+
+        protected void setValues(Values values, String key, Supplier<Value> supplier) {
+            values.put(key, supplier.get());
+        }
     }
 
     public static class MainPart extends Part {
@@ -344,22 +383,39 @@ public class Prepare {
             }
         }
 
-
-        public void load(Parameter parameter) {
-            this.query(parameter);
+        @Override
+        String toSql() {
+            return super.toSql().replace(Beauty.WHERE, MessageFormat.format(Beauty.EQUAL_PARAM, tables.get(0).columns[0].toSql(), tables.get(0).columns[0].objectAlias));
         }
 
         @Override
         protected void prepare() {
-            super.prepare();
-            this.sql = sql.replace(Beauty.WHERE, MessageFormat.format(Beauty.EQUAL_PARAM, tables.get(0).columns[0].toSql(), tables.get(0).columns[0].objectAlias));
+
         }
 
-        void query(Parameter parameter) {
-            query(paramLocal.get(parameter));
-            tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
-                parameter.values.put(column.objectAlias, new Value(column.objectAlias + "_Val", column.dataType));
-            }));
+
+        protected void query(Parameter parameter) {
+            Prepare prepare = query(paramLocal.get(parameter));
+
+            Connection connection = null;
+            List<SqlMapper.BaseColumn> list = tables.stream().flatMap(table -> Arrays.stream(table.columns)).collect(Collectors.toList());
+            if (connection != null) {
+                prepare.query(connection, (resultSetMetaData, resultSet) -> {
+                    list.forEach(column -> {
+                        setValues(parameter.values, column.objectAlias, () -> {
+                            try {
+                                return new Value(resultSet.getObject(column.objectAlias), column.dataType, index);
+                            } catch (SQLException throwables) {
+                                throw new IllegalArgumentException(throwables.getMessage(), throwables);
+                            }
+                        });
+                    });
+                    return true;
+                });
+            } else
+                tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
+                    setValues(parameter.values, column.objectAlias, () -> new Value(column.objectAlias + "_Val", column.dataType, index));
+                }));
         }
 
 
@@ -382,24 +438,12 @@ public class Prepare {
         }
 
         @Override
-        public void load(Parameter parameter) {
-            relMappers.forEach((conditionLink, baseColumns) -> {
-                if (!parameter.loaded.contains(conditionLink)) {
-                    System.out.println("加载未加载sql:" + conditionLink.index);
-                    conditionLink.loads(parameter);
-                }
-                for (SqlMapper.BaseColumn baseColumn : baseColumns) {
-                    System.out.println(this + "-->" + baseColumn.objectAlias);
-                    setSqlParam(baseColumn, parameter);
-                }
-            });
-            this.query(parameter);
+        String toSql() {
+            return super.toSql().replace(Beauty.AND + Beauty.WHERE, "");
         }
 
         @Override
         protected void prepare() {
-            super.prepare();
-            sql = toSql().replace(Beauty.AND + Beauty.WHERE, "");
             List<SqlMapper.BaseColumn.RelColumnInfo> relColumnInfos = getOutRelCol();
 
             for (Map.Entry<Part, List<SqlMapper.BaseColumn.RelColumnInfo>> partListEntry : conditionLinks.entrySet()) {
@@ -420,9 +464,26 @@ public class Prepare {
                 if (baseColumns.isEmpty()) throw new IllegalStateException("没有找到关联");
                 relMappers.put(conditionLink, baseColumns);
             }
+
+            relMappers.forEach((conditionLink, baseColumns) -> {
+                if (!conditionLink.loaded) {
+                    System.out.println("加载未加载sql:" + conditionLink.index);
+                    conditionLink.prepares();
+                }
+            });
         }
 
-        void query(Parameter parameter) {
+        protected void query(Parameter parameter) {
+            relMappers.forEach((conditionLink, baseColumns) -> {
+                if (!parameter.loaded.contains(conditionLink)) {
+                    System.out.println("加载未加载sql:" + conditionLink.index);
+                    conditionLink.queries(parameter, false);
+                }
+                for (SqlMapper.BaseColumn baseColumn : baseColumns) {
+                    System.out.println(this + "-->" + baseColumn.objectAlias);
+                    setSqlParam(baseColumn, parameter);
+                }
+            });
             Map<String, Object> map2 = new HashMap<>();
             Map<String, Object> params = paramLocal.get(parameter);
             params.remove("@@");
@@ -473,6 +534,19 @@ public class Prepare {
             }
             map.put(baseColumn.objectAlias, parameter.getLowerValue(baseColumn.objectAlias).stream().map(Result::getVal).collect(Collectors.toList()));
         }
+
+
+        protected void setValues(List<SqlMapper.BaseColumn> list, Values values, ResultSet resultSet) {
+            list.forEach(column -> {
+                setValues(values, column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), () -> {
+                    try {
+                        return new Value(resultSet.getObject(column.objectAlias), column.dataType, index);
+                    } catch (SQLException throwables) {
+                        throw new IllegalArgumentException(throwables.getMessage(), throwables);
+                    }
+                });
+            });
+        }
     }
 
     public static class LeafSinglePart extends AbstractLeafPart {
@@ -508,11 +582,30 @@ public class Prepare {
         }
 
         void query(Map<String, Object> singleParams, Values values) {
-            query(singleParams);
-            tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
-                values.put(column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), new Value(column.objectAlias + "_Val", column.dataType));
-            }));
+            Prepare prepare = query(singleParams);
+            DataSource dataSource = SqlMapper.getDataSource(tables.get(0));
+            List<SqlMapper.BaseColumn> list = tables.stream().flatMap(table -> Arrays.stream(table.columns)).collect(Collectors.toList());
+            if (dataSource != null) {
+                Connection connection = SqlMapper.getConnect(tables.get(0));
+                prepare.query(connection, (resultSetMetaData, resultSet) -> {
+                    /*list.forEach(column -> {
+                        setValues(values, column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), () -> {
+                            try {
+                                return new Value(resultSet.getObject(column.objectAlias), column.dataType, index);
+                            } catch (SQLException throwables) {
+                                throw new IllegalArgumentException(throwables.getMessage(), throwables);
+                            }
+                        });
+                    });*/
+                    setValues(list, values, resultSet);
+                    return false;
+                });
+            } else
+                list.forEach(column -> {
+                    setValues(values, column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), () -> new Value(column.objectAlias + "_Val", column.dataType, index));
+                });
         }
+
     }
 
     public static class LeafMultiPart extends AbstractLeafPart {
@@ -572,16 +665,38 @@ public class Prepare {
         }
 
         void query(Map<String, Object> map, MultiValues values) {
-            query(map);
-            for (int i = 0; i < 2; i++) {
-                System.out.println(this + "第" + i + "条");
-                Values values1 = new Values();
-                int finalI = i;
-                tables.forEach(table -> Arrays.stream(table.columns).forEach(column -> {
-                    values1.put(column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), new Value(column.objectAlias + "_Val_" + finalI, column.dataType));
-                }));
-                values.add(values1);
-            }
+            Prepare prepare = query(map);
+            DataSource dataSource = SqlMapper.getDataSource(tables.get(0));
+            PagePrepare pagePrepare = new PagePrepare(prepare, PagePrepare.DefaultPageFormat.getFormat(dataSource));
+            values.setPrepare(pagePrepare);
+            List<SqlMapper.BaseColumn> list = tables.stream().flatMap(table -> Arrays.stream(table.columns)).collect(Collectors.toList());
+
+            if (dataSource != null) {
+                prepare.query(SqlMapper.getConnect(tables.get(0)), (resultSetMetaData, resultSet) -> {
+                    Values values1 = new Values();
+                    /*list.forEach(column -> {
+                        setValues(values1, column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), () -> {
+                            try {
+                                return new Value(resultSet.getObject(column.objectAlias), column.dataType, index);
+                            } catch (SQLException throwables) {
+                                throw new IllegalArgumentException(throwables.getMessage(), throwables);
+                            }
+                        });
+                    });*/
+                    setValues(list, values1, resultSet);
+                    values.add(values1);
+                    return true;
+                });
+            } else
+                for (int i = 0; i < 2; i++) {
+                    System.out.println(this + "第" + i + "条");
+                    Values values1 = new Values();
+                    int finalI = i;
+                    list.forEach(column -> {
+                        setValues(values1, column.objectAlias.substring(column.objectAlias.lastIndexOf(SPLITTER) + SPLITTER.length()), () -> new Value(column.objectAlias + "_Val_" + finalI, column.dataType, index));
+                    });
+                    values.add(values1);
+                }
         }
 
     }
@@ -601,7 +716,7 @@ public class Prepare {
         }
     }
 
-    interface Result {
+    public interface Result {
         void findLowerValue(String key, Consumer<Result> val);
 
         default String[] getKeyAndSuffix(String key) {
@@ -644,6 +759,11 @@ public class Prepare {
 
     public static class MultiValues implements Result {
         List<Values> values = new LinkedList<>();
+        PagePrepare prepare;
+
+        protected void setPrepare(PagePrepare prepare) {
+            this.prepare = prepare;
+        }
 
         @Override
         public void findLowerValue(String key, Consumer<Result> val) {
@@ -696,10 +816,12 @@ public class Prepare {
     public static class Value implements Result {
         final Object val;
         final Class<?> type;
+        final int index;
 
-        public Value(Object val, Class<?> type) {
+        public Value(Object val, Class<?> type, int index) {
             this.type = type;
             this.val = val;
+            this.index = index;
         }
 
         public Object getVal() {

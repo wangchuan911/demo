@@ -122,16 +122,20 @@ public interface MyBatisUtils {
 
     static PreparedStatement prepared(Connection connection, Prepare prepare) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(prepare.sql);
+        setVal(preparedStatement, prepare.params);
+        return preparedStatement;
+    }
+
+    static void setVal(PreparedStatement preparedStatement, List<Object> params) throws SQLException {
         Object value;
-        for (int i = 0; i < prepare.params.size(); i++) {
-            value = prepare.params.get(i);
+        for (int i = 0, index = 1; i < params.size(); i++, index++) {
+            value = params.get(i);
             try {
-                setVal(preparedStatement, i + 1, guessSqlType(value), value);
+                setVal(preparedStatement, index, guessSqlType(value), value);
             } catch (NoSuchFieldException e) {
-                throw new SQLException(MessageFormat.format("位置{0}不支持的数据类型{1}", i + 1, value == null ? "NULL" : value.getClass().getSimpleName()), e);
+                throw new SQLException(MessageFormat.format("位置{0}不支持的数据类型{1}", index, value == null ? "NULL" : value.getClass().getSimpleName()), e);
             }
         }
-        return preparedStatement;
     }
 
     static String guessSqlType(Object v) {

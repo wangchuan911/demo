@@ -40,12 +40,13 @@ public class Insert extends Unit implements Script<TaskSession>, Copyable {
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
-        Database.DataSouceConnect connect = Database.getDataBaseSync(this);
+        Database.DataSourceConnect connect = Database.getDataBaseSync(this);
         DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
+        Database.DataSourceTemplate template = connect.getTemplate();
         String sql = getScript(data);
-        PreparedStatement preparedStatement = connect.prepare(sql, data);
-        connectPool.log("", connect.sqlTemplate.log1.toString());
-        connectPool.log("", connect.sqlTemplate.log2.toString());
+        PreparedStatement preparedStatement = template.prepare(sql, data);
+        connectPool.log("", template.sqlTemplate.log1.toString());
+        connectPool.log("", template.sqlTemplate.log2.toString());
         data.setResult(this, preparedStatement.executeUpdate());
         connect.close();
     }

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.fastjson.parser.DefaultJSONParser;
 import com.alibaba.fastjson.parser.JSONToken;
 import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
+import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.metadata.prototype.condition.Page;
 import org.welisdoon.metadata.prototype.consts.MetaUtils;
 import org.welisdoon.metadata.prototype.define.MetaObject;
@@ -27,7 +28,7 @@ public class QueryTemplateInstance {
     List<QParam> params;
     List<QInput> input;
     List<QColumn> column;
-    Page pager;
+    BaseCondition.Page pager;
     Long objectId;
 
     public SqlParameter getSqlParameter() {
@@ -43,6 +44,10 @@ public class QueryTemplateInstance {
     }
 
     public QueryTemplateInstance(MetaObject metaObject) {
+        setObject(metaObject);
+    }
+
+    public void setObject(MetaObject metaObject) {
         database = "demo";
         nameSpace = metaObject.getCode();
         this.objectId = metaObject.getId();
@@ -96,11 +101,11 @@ public class QueryTemplateInstance {
         this.column = column;
     }
 
-    public Page getPager() {
+    public BaseCondition.Page getPager() {
         return pager;
     }
 
-    public void setPager(Page pager) {
+    public void setPager(BaseCondition.Page pager) {
         this.pager = pager;
     }
 

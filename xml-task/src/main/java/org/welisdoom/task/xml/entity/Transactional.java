@@ -28,22 +28,22 @@ import java.util.stream.Collectors;
 @Attr(name = "link", desc = "database的Id")
 public class Transactional extends Unit implements Executable {
     //    Map<TaskRequest, Map.Entry<SqlConnection, Transaction>> MAP = new HashMap<>();
-    Connection connection;
+    Database.DataSourceConnect connection;
 
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
-        connection = Database.getDataSource(attributes.get("link")).getConnection();
+        connection = new Database.DataSourceConnect(attributes.get("link"), Database.getDataSource(attributes.get("link")).getConnection(), true);
         try {
             super.startSync(data);
         } catch (Break.BreakLoopThrowable | Break.SkipOneLoopThrowable e) {
-            connection.commit();
+            connection.connection.commit();
         } catch (Throwable e) {
-            connection.rollback();
+            connection.connection.rollback();
             throw e;
         }
-        if (!connection.isClosed())
-            connection.close();
+        if (!connection.connection.isClosed())
+            connection.connection.close();
         connection = null;
     }
 
@@ -186,11 +186,11 @@ public class Transactional extends Unit implements Executable {
     @Override
     protected void hookSync(TaskSession taskSession) {
         try {
-            if (connection != null && !connection.isClosed()) {
-                connection.rollback();
+            if (connection != null && !connection.connection.isClosed()) {
+                connection.connection.rollback();
                 log(LogUtils.styleString("", 31, 1, "事务终止"));
-                if (!connection.isClosed())
-                    connection.close();
+                if (!connection.connection.isClosed())
+                    connection.connection.close();
                 log(LogUtils.styleString("", 31, 1, "连接终止"));
             }
         } catch (SQLException e) {

@@ -1,6 +1,9 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
+import org.apache.commons.lang3.StringUtils;
+import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.common.object.wrapper.IDataAccessObject;
+import org.welisdoon.common.object.wrapper.Prepare;
 import org.welisdoon.common.object.wrapper.SqlMapper;
 import org.welisdoon.metadata.prototype.condition.MetaObjectCondition;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
@@ -8,11 +11,8 @@ import org.welisdoon.metadata.prototype.consts.MetaUtils;
 import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Classname FormatContent
@@ -24,7 +24,7 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
     public static class FormatContentObject {
         final protected Long target;
         final protected FormatContentObject parent;
-        final SqlMapper.MainTable table;
+        final SqlMapper mapper;
         final static Map<Long, FormatContentObject> CONTENT_OBJECT_MAP = new HashMap<>();
         public final String show;
 
@@ -33,8 +33,7 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
             this.parent = parent;
             FormatContent formatContent = new FormatContent();
             this.show = sqlContent.format(formatContent);
-            SqlMapper mapper = new SqlMapper();
-            table = formatContent.sql(mapper);
+            mapper = new SqlMapper(formatContent);
         }
 
         public static FormatContentObject getObject(MetaObject metaObject) {
@@ -44,6 +43,66 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
             }
             FormatContent.initialization(metaObject.getParent().getType() == ObjectMetaType.Object ? getObject(metaObject.getParent()) : null, metaObject);
             return CONTENT_OBJECT_MAP.get(metaObject.getId());
+        }
+
+        public static FormatContentObject getObject(MetaObject metaObject, boolean reload) {
+            if (reload && metaObject != null) {
+                FormatContent.initialization(metaObject.getParent().getType() == ObjectMetaType.Object ? getObject(metaObject.getParent()) : null, metaObject, true);
+                return CONTENT_OBJECT_MAP.get(metaObject.getId());
+            }
+            return getObject(metaObject);
+        }
+
+
+        public List<Result> query(Map<String, Object> params) {
+            return mapper.getBeauty().query(params).stream().map(this::query).collect(Collectors.toList());
+        }
+
+        public List<Result> page(Map<String, Object> params, BaseCondition.Page page) {
+            return mapper.getBeauty().page(params, page).stream().map(this::query).collect(Collectors.toList());
+        }
+
+        public Result query(Object id) {
+            return new Result(mapper.getBeauty().query(id));
+        }
+
+        public static class Result {
+            Map<String, Prepare.Result> map;
+
+            public Result(Map<String, Prepare.Result> map) {
+                this.map = map;
+            }
+
+            public Map<String, Object> getVal() {
+                return getVal(map, "");
+            }
+
+            protected Map<String, Object> getVal(Map<String, Prepare.Result> map, String prefix) {
+                Map<String, Object> map1 = new HashMap<>();
+                map.forEach((s, result) -> {
+                    if (result instanceof Prepare.Value) {
+                        map1.put(s, result.getVal());
+                    } else if (result instanceof Prepare.Values) {
+                        map1.put(s, getVal((Map<String, Prepare.Result>) result, append(prefix, s)));
+                    } else if (result instanceof Prepare.MultiValues) {
+                        List<Object> list = new LinkedList<>();
+                        ListIterator<Prepare.Values> iterator = ((List<Prepare.Values>) result.getVal()).listIterator();
+                        Prepare.Values values;
+                        int idx;
+                        while (iterator.hasNext()) {
+                            idx = iterator.nextIndex();
+                            values = iterator.next();
+                            list.add(this.getVal(values, append(prefix, s, "[" + idx + "]")));
+                        }
+                        map1.put(s, list);
+                    }
+                });
+                return map1;
+            }
+
+            protected String append(String... keys) {
+                return Arrays.stream(keys).filter(StringUtils::isNotEmpty).collect(Collectors.joining("."));
+            }
         }
     }
 
@@ -220,10 +279,18 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
     }
 
     protected static boolean initialization(FormatContentObject parent, MetaObject metaObject) {
-        if (FormatContentObject.CONTENT_OBJECT_MAP.containsKey(metaObject.getId())) {
-            return false;
+        return initialization(parent, metaObject, false);
+    }
+
+    protected synchronized static boolean initialization(FormatContentObject parent, MetaObject metaObject, boolean reload) {
+        FormatContentObject content = FormatContentObject.CONTENT_OBJECT_MAP.get(metaObject.getId());
+        if (content != null && !reload) {
+            return true;
         }
         FormatContentObject formatContentObject = new FormatContentObject(parent, new SqlContent(metaObject));
+        if (content != null && reload && Objects.equals(formatContentObject.show, content.show)) {
+            return true;
+        }
         FormatContentObject.CONTENT_OBJECT_MAP.put(metaObject.getId(), formatContentObject);
         MetaUtils.getInstance().getMetaObjectDao().list(new MetaObjectCondition()
                 .<MetaObjectCondition>setQuery("FIND_EXTEND_OBJECT")
@@ -232,7 +299,7 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
                         .setParentId(metaObject.getId())))
                 .forEach(metaObject1 -> {
                     FormatContent formatContent = new FormatContent();
-                    formatContent.initialization(formatContentObject, metaObject1);
+                    formatContent.initialization(formatContentObject, metaObject1, reload);
                 });
         return true;
     }
@@ -254,15 +321,17 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
             IDataAccessObject.TableRel rel;
             switch (sqlJoiner.getType()) {
                 case SqlToJoinOfWeakRel:
-                case SqlToJoinOfMultiDataRel:
                     rel = IDataAccessObject.TableRel.Weak;
+                    break;
+                case SqlToJoinOfMultiDataRel:
+                    rel = IDataAccessObject.TableRel.Multi;
                     break;
                 default:
                     rel = IDataAccessObject.TableRel.Strong;
                     break;
             }
             if (sqlJoiner.table.getAlias().matches("T\\d+(\\_1)*") && sqlJoiner.getParent() instanceof SqlJoiner) {
-                rel = sqlJoiner.getParent().getType() == LinkMetaType.SqlToJoinOfStrongRel || sqlJoiner.getParent().getType() == LinkMetaType.ObjConstructor ? IDataAccessObject.TableRel.Strong : IDataAccessObject.TableRel.Weak;
+                rel = sqlJoiner.getParent().getType() == LinkMetaType.SqlToJoinOfStrongRel || sqlJoiner.getParent().getType() == LinkMetaType.ObjConstructor ? IDataAccessObject.TableRel.Strong : rel;
             }
             return new IDataAccessObject.Model.TableVO(
                     entry.getValue().stream().filter(o -> o instanceof IDataAccessObject.Model.TableVO.ColumnVO).map(o -> (IDataAccessObject.Model.TableVO.ColumnVO) o).toArray(IDataAccessObject.Model.TableVO.ColumnVO[]::new),
