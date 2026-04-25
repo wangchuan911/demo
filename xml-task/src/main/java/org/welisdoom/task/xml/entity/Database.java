@@ -227,15 +227,21 @@ public class Database extends Unit {
         return Database.getDatabase(unit.attributes.get("link"));
     }
 
-    protected static DataSourceConnect getDataBaseSync(Unit unit) throws SQLException {
+    protected static void execute(Unit unit, ConnectExecute execute) throws Throwable {
         DataSourceConnect p = unit.getParents(Transactional.class).stream().filter(transactional -> Objects.equals(unit.attributes.get("link"), transactional.attributes.get("link"))).findFirst().map(transactional -> {
             return transactional.connection;
         }).orElse(MAP_SYNC2.get(unit.attributes.get("link")));
         if (p == null || p.connection.isClosed()) {
-            p = new DataSourceConnect(unit.attributes.get("link"), Database.getDatabaseSync(unit.attributes.get("link")).getConnection(), false);
+            p = new DataSourceConnect(unit.attributes.get("link"), Database.getDatabaseSync(unit.attributes.get("link")).getConnection());
             MAP_SYNC2.put(unit.attributes.get("link"), p);
         }
-        return p;
+        try {
+            p.count++;
+            execute.exe(p);
+        } finally {
+            p.count--;
+            p.close();
+        }
     }
 
     public static class DataSourceTemplate {
@@ -324,12 +330,11 @@ public class Database extends Unit {
     public static class DataSourceConnect {
         final String name;
         final Connection connection;
-        final boolean transaction;
+        volatile int count = 1;
 
-        public DataSourceConnect(String name, Connection connection, boolean transaction) {
+        public DataSourceConnect(String name, Connection connection) {
             this.name = name;
             this.connection = connection;
-            this.transaction = transaction;
         }
 
 
@@ -338,9 +343,11 @@ public class Database extends Unit {
         }
 
         public void close() throws SQLException {
-            if (!transaction)
+            if (!connection.isClosed()) return;
+            if (count == 0)
                 connection.close();
         }
+
 
         public DataSourceTemplate getTemplate() {
             return new DataSourceTemplate(this);
@@ -349,5 +356,18 @@ public class Database extends Unit {
         public DatasouceConnectManager getDatasouceConnectPool() {
             return Database.getDatasouceConnectPool(this.name);
         }
+
+        public void rollback() throws SQLException {
+            connection.rollback();
+        }
+
+        public boolean isClosed() throws SQLException {
+            return connection.isClosed();
+        }
+    }
+
+    @FunctionalInterface
+    interface ConnectExecute<E extends Throwable> {
+        void exe(DataSourceConnect connect) throws E;
     }
 }

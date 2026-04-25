@@ -116,9 +116,8 @@ public class LayersMap<K, V> implements Map<K, V> {
 
     @Override
     public Set<K> keySet() {
-        Set<K> kSet = current.keySet();
-        if (parent != null)
-            kSet.addAll(parent.keySet());
+        Set<K> kSet = parent != null ? parent.keySet() : new HashSet<>();
+        kSet.addAll(current.keySet());
         return kSet;
     }
 
@@ -129,16 +128,8 @@ public class LayersMap<K, V> implements Map<K, V> {
 
     @Override
     public Set<Entry<K, V>> entrySet() {
-        Set<Entry<K, V>> entries = new HashSet<>(current.entrySet());
-        if (parent != null) {
-            Set<K> kSet = current.keySet();
-            for (Entry<K, V> kvEntry : parent.entrySet()) {
-                if (!kSet.contains(kvEntry.getKey())) {
-                    entries.add(kvEntry);
-                }
-            }
-        }
+        Set<Entry<K, V>> entries = parent != null ? parent.entrySet() : new HashSet<>();
+        entries.addAll(current.entrySet());
         return entries;
     }
-
 }

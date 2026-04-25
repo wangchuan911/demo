@@ -1,18 +1,11 @@
 package org.welisdoon.common;
 
-import com.alibaba.fastjson.util.TypeUtils;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
 import java.lang.reflect.*;
-import java.sql.JDBCType;
-import java.sql.SQLType;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.*;
 import java.util.stream.Collectors;
 
 /**
@@ -125,7 +118,7 @@ public class ObjectUtils {
 
     public static void main(String[] args) throws ClassNotFoundException {
 //        SpringApplication.run(WebserverApplication.class, args);
-        Arrays.stream(ObjectUtils.class.getMethods()).filter(method -> method.getName().equals("a")).forEach(method -> {
+        /*Arrays.stream(ObjectUtils.class.getMethods()).filter(method -> method.getName().equals("a")).forEach(method -> {
             System.out.println(method.getName());
             System.out.println(Arrays.stream(method.getGenericParameterTypes()).map(Type::getTypeName).collect(Collectors.joining("\n")));
             System.out.println("#");
@@ -136,15 +129,12 @@ public class ObjectUtils {
                 System.out.println(new ObjectDefineInfo(type).toString());
                 System.out.println();
             });
+        });*/
+        List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20);
+        arrangement(list, 3, integers -> {
+            System.out.println(integers);
+            return true;
         });
-    }
-
-    public void a(List<Map<String, Object>> a, List<Function<Object, Character>> b, List<List<List[][]>[][]>[][] c, List l, Map m, Map<String, ?> ma,
-                  List<Character>[] c1, Object[] v, ObjectDefineType c2, Object aa, List aaa, AA AAA, char ac, Character ac1) {
-    }
-
-
-    abstract class AA {
     }
 
     public static class ObjectDefineInfo {
@@ -292,5 +282,61 @@ public class ObjectUtils {
     }
 
 
+    public static <T> void arrangement(List<T> datas, int count, Function<List<T>, Boolean> consumer) {
+        arrangement(datas, new LinkedList<>(), count, 0, 0, consumer);
+    }
 
+    protected static <T> boolean arrangement(List<T> datas, List<T> ts, int count, int offset, int index, Function<List<T>, Boolean> consumer) {
+        boolean flag;
+        for (int i = index; i < datas.size() - count + offset + 1; i++) {
+            if (ts.size() >= offset + 1) {
+                ts.set(offset, datas.get(i));
+            } else {
+                ts.add(datas.get(i));
+            }
+            if (offset + 1 == count) {
+                flag = consumer.apply(ts);
+            } else {
+                flag = arrangement(datas, ts, count, offset + 1, i + 1, consumer);
+            }
+            if (!flag) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static <T> boolean find(Iterator<T> datas, Function<Node<T>, Iterator<T>> childrenIterator, Function<Node<T>, Boolean> resultConsumer) {
+        return find(null, datas, childrenIterator, resultConsumer);
+    }
+
+    public static <T> boolean find(Node<T> parent, Iterator<T> datas, Function<Node<T>, Iterator<T>> childrenIterator, Function<Node<T>, Boolean> resultConsumer) {
+        T data;
+        Node<T> tNode;
+        while (datas.hasNext()) {
+            data = datas.next();
+            tNode = new Node<>(data, childrenIterator, parent);
+            if (!resultConsumer.apply(tNode) || !tNode.childrenIterator.hasNext() || !find(tNode, tNode.childrenIterator, childrenIterator, resultConsumer)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    public static class Node<T> {
+        final T val;
+        final Iterator<T> childrenIterator;
+        final Node<T> parent;
+
+        public Node(T val, Function<Node<T>, Iterator<T>> childrenIterator) {
+            this(val, childrenIterator, null);
+        }
+
+        public Node(T val, Function<Node<T>, Iterator<T>> childrenIterator, Node<T> parent) {
+            this.val = val;
+            this.parent = parent;
+            this.childrenIterator = childrenIterator.apply(this);
+        }
+    }
 }

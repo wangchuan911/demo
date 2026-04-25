@@ -39,40 +39,40 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
 //        data.generateData(this);
         BaseCondition.Page page = new BaseCondition.Page(1, Math.max(MapUtils.getInteger(attributes, "size", 100), 100));
         AtomicLong index = new AtomicLong(0);
-        Database.DataSourceConnect connect = Database.getDataBaseSync(this);
-        Database.DataSourceTemplate template = connect.getTemplate();
-        DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
-        String sql = connectPool.toPageSql(getScript(data));
-        PreparedStatement preparedStatement = template.prepare(sql, data);
-        List<Map<String, Object>> list = new LinkedList<>();
-        List<SubQuery> queryList = getChild(SubQuery.class);
-        try {
-            do {
-                list.clear();
-                connectPool.log("", template.sqlTemplate.log1.toString());
-                connectPool.log("", template.sqlTemplate.log2.toString() + "," + connectPool.setPage(preparedStatement, page));
-                try (ResultSet row = preparedStatement.executeQuery()) {
-                    toMap(row, list);
-                }
-                if (!("tetris".equals(attributes.get("mode")))) page.nextPage();
-                for (Map<String, Object> row1 : list) {
-                    for (SubQuery subQuery : queryList) {
-                        data.setValue(row1);
-                        subQuery.startSync(data);
+        Database.execute(this, connect -> {
+            Database.DataSourceTemplate template = connect.getTemplate();
+            DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
+            String sql = connectPool.toPageSql(getScript(data));
+            PreparedStatement preparedStatement = template.prepare(sql, data);
+            List<Map<String, Object>> list = new LinkedList<>();
+            List<SubQuery> queryList = getChild(SubQuery.class);
+            try {
+                do {
+                    list.clear();
+                    connectPool.log("", template.sqlTemplate.log1.toString());
+                    connectPool.log("", template.sqlTemplate.log2.toString() + "," + connectPool.setPage(preparedStatement, page));
+                    try (ResultSet row = preparedStatement.executeQuery()) {
+                        toMap(row, list);
                     }
-                    try {
-                        this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
-                    } catch (Break.SkipOneLoopThrowable e) {
-                        continue;
+                    if (!("tetris".equals(attributes.get("mode")))) page.nextPage();
+                    for (Map<String, Object> row1 : list) {
+                        for (SubQuery subQuery : queryList) {
+                            data.setValue(row1);
+                            subQuery.startSync(data);
+                        }
+                        try {
+                            this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
+                        } catch (Break.SkipOneLoopThrowable e) {
+                            continue;
+                        }
                     }
-                }
-            } while (!list.isEmpty());
-        } catch (Break.BreakLoopThrowable e) {
-            Break.onBreak(e);
-            log(e.getMessage());
-        }
-        this.await(data);
-        connect.close();
+                } while (!list.isEmpty() && list.size() == page.getPageSize());
+            } catch (Break.BreakLoopThrowable e) {
+                Break.onBreak(e);
+                log(e.getMessage());
+            }
+            this.await(data);
+        });
     }
 
     protected void toMap(ResultSet row, List<Map<String, Object>> list) throws SQLException {
@@ -232,19 +232,20 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
 
         @Override
         protected void startSync(TaskSession data) throws Throwable {
-            Database.DataSourceConnect connect = Database.getDataBaseSync(this);
-            DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
-            Database.DataSourceTemplate template = connect.getTemplate();
-            String sql = connectPool.toPageSql(getScript(data));
-            PreparedStatement preparedStatement = template.prepare(sql, data);
-            preparedStatement.executeQuery();
-            connectPool.log("", template.sqlTemplate.log1.toString());
-            connectPool.log("", template.sqlTemplate.log2.toString());
-            List<Map<String, Object>> list = new LinkedList<>();
-            try (ResultSet row = preparedStatement.executeQuery()) {
-                toMap(row, list);
-            }
-            ((Map) data.value).put(attributes.get("name"), !isList() ? list.stream().findFirst().orElse(new HashMap<>()) : list);
+            Database.execute(this, connect -> {
+                DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
+                Database.DataSourceTemplate template = connect.getTemplate();
+                String sql = connectPool.toPageSql(getScript(data));
+                PreparedStatement preparedStatement = template.prepare(sql, data);
+                preparedStatement.executeQuery();
+                connectPool.log("", template.sqlTemplate.log1.toString());
+                connectPool.log("", template.sqlTemplate.log2.toString());
+                List<Map<String, Object>> list = new LinkedList<>();
+                try (ResultSet row = preparedStatement.executeQuery()) {
+                    toMap(row, list);
+                }
+                ((Map) data.value).put(attributes.get("name"), !isList() ? list.stream().findFirst().orElse(new HashMap<>()) : list);
+            });
         }
     }
 

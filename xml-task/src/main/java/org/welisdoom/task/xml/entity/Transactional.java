@@ -33,18 +33,20 @@ public class Transactional extends Unit implements Executable {
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
-        connection = new Database.DataSourceConnect(attributes.get("link"), Database.getDataSource(attributes.get("link")).getConnection(), true);
+        connection = new Database.DataSourceConnect(attributes.get("link"), Database.getDataSource(attributes.get("link")).getConnection());
+        connection.count++;
         try {
             super.startSync(data);
         } catch (Break.BreakLoopThrowable | Break.SkipOneLoopThrowable e) {
-            connection.connection.commit();
+            connection.commit();
         } catch (Throwable e) {
-            connection.connection.rollback();
+            connection.rollback();
             throw e;
+        } finally {
+            connection.count--;
+            connection.close();
+            connection = null;
         }
-        if (!connection.connection.isClosed())
-            connection.connection.close();
-        connection = null;
     }
 
     @Override
