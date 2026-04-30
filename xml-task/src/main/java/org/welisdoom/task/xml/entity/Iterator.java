@@ -1,6 +1,7 @@
 package org.welisdoom.task.xml.entity;
 
 
+import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import org.apache.commons.collections4.MapUtils;
@@ -12,10 +13,7 @@ import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
 import org.xml.sax.Attributes;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
@@ -31,7 +29,7 @@ import java.util.stream.Collectors;
 @Tag(value = "iterator", parentTagTypes = Iterable.class, desc = "遍历器，遍历查询结果，文件等")
 public class Iterator extends Unit implements Executable {
     protected String itemName = "item", itemIndex = "index";
-    AbstractThreadInfo abstractThreadInfo;
+    volatile AbstractThreadInfo abstractThreadInfo;
 
     /*protected void execute(TaskRequest data, Map<String, Object> item) throws Throwable {
         Map map = data.getBus(parent.id);
@@ -49,9 +47,11 @@ public class Iterator extends Unit implements Executable {
                 executeSync(data, item);
                 break;
             default:
-                if (abstractThreadInfo == null) {
-                    abstractThreadInfo = new ThreadInfoSync(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES")));
-                }
+                if (abstractThreadInfo == null)
+                    synchronized (this) {
+                        if (abstractThreadInfo == null)
+                            abstractThreadInfo = new ThreadInfoSync2(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES")));
+                    }
                 log("并发-线程中");
                 Thread current = Thread.currentThread();
                 abstractThreadInfo.run(taskRequest -> {
@@ -104,6 +104,7 @@ public class Iterator extends Unit implements Executable {
             data.setValue(GCUtils.release(item));
         }
         try {
+            log((JSON.toJSONString(data.getBus())));
             super.startSync(data);
         } finally {
             synchronized (map) {
@@ -287,7 +288,6 @@ public class Iterator extends Unit implements Executable {
     @Deprecated
     public static class ThreadInfoSync2 extends AbstractThreadInfo {
         final LinkedList<TaskSession> idles = new LinkedList<>();
-        final ExecutorService pool;
 
         ThreadInfoSync2(TaskSession taskSession, int threadCount, Long wait, TimeUnit unit) {
             super(taskSession, threadCount, wait, unit);

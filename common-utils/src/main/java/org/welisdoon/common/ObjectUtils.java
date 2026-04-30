@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
  */
 public class ObjectUtils {
     @FunctionalInterface
-    public interface IfNull<T> {
-        T get() throws Throwable;
+    public interface IfNull<T, E extends Throwable> {
+        T get() throws E;
     }
 
     final static ReentrantLock REENTRANT_LOCK = new ReentrantLock();
 
-    public static <K, V> V getMapValueOrNewSafe(Map<K, V> map, K key, IfNull<V> function) throws Throwable {
+    public static <K, V, E extends Throwable> V getMapValueOrNewSafe(Map<K, V> map, K key, IfNull<V, E> function) throws E {
         if (!map.containsKey(key)) {
             synchronized (map) {
                 if (!map.containsKey(key)) {

@@ -47,7 +47,7 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
         return (T) cache.get(unit);
     }
 
-    public <T> T cache(Unit unit, ObjectUtils.IfNull<T> function) throws Throwable {
+    public <T, E extends Throwable> T cache(Unit unit, ObjectUtils.IfNull<T, E> function) throws E {
         return (T) ObjectUtils.getMapValueOrNewSafe(cache, unit, (ObjectUtils.IfNull) function);
     }
 
