@@ -96,6 +96,12 @@ public class Command extends Unit implements Executable {
 
     @Override
     protected Future<Void> destroy(TaskSession taskSession) {
+        destroySync(taskSession);
+        return super.destroy(taskSession);
+    }
+
+    @Override
+    protected void destroySync(TaskSession taskSession) {
         Process process = taskSession.cache(this);
         if (Objects.nonNull(process)) {
             long pId = process.pid();
@@ -110,6 +116,5 @@ public class Command extends Unit implements Executable {
                 }
             }
         }
-        return super.destroy(taskSession);
     }
 }

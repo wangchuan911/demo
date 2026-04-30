@@ -170,7 +170,6 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
 
     public void destroySync() {
         for (Map.Entry<Unit, Object> entry : cache.entrySet()) {
-            entry.getKey().destroySync(this);
             getBus().clear();
             for (TaskSession taskSession : childrenSession) {
                 taskSession.destroySync();

@@ -40,7 +40,7 @@ public class Insert extends Unit implements Script<TaskSession>, Copyable {
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
-        Database.execute(this, connect -> {
+        Database.execute(data, this, connect -> {
             DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
             Database.DataSourceTemplate template = connect.getTemplate();
             String sql = getScript(data);

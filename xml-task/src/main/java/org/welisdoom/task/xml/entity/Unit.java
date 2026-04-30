@@ -105,22 +105,13 @@ public class Unit implements BaseUnit<Unit> {
     }
 
     protected void destroySync(TaskSession taskSession) {
-        log("释放");
         taskSession.clearCache(this);
+        for (TaskSession session : taskSession.childrenSession) {
+            destroySync(session);
+        }
     }
 
-    protected void hookSync(TaskSession taskSession) {
-        this.destroySync(taskSession);
-        Optional.ofNullable(taskSession.getChildrenRequest())
-                .ifPresent(taskInstances -> {
-                    for (TaskSession instance : taskSession.getChildrenRequest()) {
-                        try {
-                            this.hookSync(instance);
-                        } catch (Throwable e) {
-                            log(LogUtils.styleString("", 41, 3, "hook异常:" + e.getMessage()));
-                        }
-                    }
-                });
+    protected void hookSync() {
     }
 
     public <T extends Unit> List<T> getChild(Class<T> tClass) {

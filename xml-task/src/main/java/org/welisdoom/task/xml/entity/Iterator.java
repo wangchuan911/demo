@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 @Tag(value = "iterator", parentTagTypes = Iterable.class, desc = "遍历器，遍历查询结果，文件等")
 public class Iterator extends Unit implements Executable {
     protected String itemName = "item", itemIndex = "index";
-    volatile AbstractThreadInfo abstractThreadInfo;
 
     /*protected void execute(TaskRequest data, Map<String, Object> item) throws Throwable {
         Map map = data.getBus(parent.id);
@@ -47,11 +46,7 @@ public class Iterator extends Unit implements Executable {
                 executeSync(data, item);
                 break;
             default:
-                if (abstractThreadInfo == null)
-                    synchronized (this) {
-                        if (abstractThreadInfo == null)
-                            abstractThreadInfo = new ThreadInfoSync2(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES")));
-                    }
+                AbstractThreadInfo abstractThreadInfo = data.cache(this, () -> new ThreadInfoSync2(data, threadCount(), Long.parseLong(attributes.getOrDefault("timeout", "1")), TimeUnit.valueOf(attributes.getOrDefault("time-unit", "MINUTES"))));
                 log("并发-线程中");
                 Thread current = Thread.currentThread();
                 abstractThreadInfo.run(taskRequest -> {
@@ -104,7 +99,7 @@ public class Iterator extends Unit implements Executable {
             data.setValue(GCUtils.release(item));
         }
         try {
-            log((JSON.toJSONString(data.getBus())));
+//            log((JSON.toJSONString(data.getBus())));
             super.startSync(data);
         } finally {
             synchronized (map) {
@@ -376,7 +371,10 @@ public class Iterator extends Unit implements Executable {
 
     @Override
     protected void destroySync(TaskSession taskSession) {
-        if (abstractThreadInfo != null) abstractThreadInfo.destroy();
+        AbstractThreadInfo abstractThreadInfo = taskSession.cache(this);
+        if (abstractThreadInfo != null) {
+            abstractThreadInfo.destroy();
+        }
         super.destroySync(taskSession);
     }
 
@@ -390,12 +388,9 @@ public class Iterator extends Unit implements Executable {
     }
 
     public void await(TaskSession data) throws InterruptedException {
-        try {
-            if (abstractThreadInfo != null) {
-                abstractThreadInfo.await();
-            }
-        } finally {
-            abstractThreadInfo = null;
+        AbstractThreadInfo abstractThreadInfo = data.cache(this);
+        if (abstractThreadInfo != null) {
+            abstractThreadInfo.await();
         }
     }
 

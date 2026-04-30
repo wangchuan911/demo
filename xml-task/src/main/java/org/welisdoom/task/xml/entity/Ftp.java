@@ -187,4 +187,13 @@ public class Ftp extends StreamUnit<Stream.Writer> implements Executable, Copyab
     protected Future<Void> destroy(TaskSession data) {
         return disconnectFtp(data).transform(objectAsyncResult -> super.destroy(data));
     }
+
+    @Override
+    protected void destroySync(TaskSession taskSession) {
+        try {
+            disconnectFtpSync(taskSession);
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+    }
 }

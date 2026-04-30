@@ -30,7 +30,7 @@ public class SubTask extends Unit implements Executable {
         runSync(name, config, null);
     }
 
-    public static Task createTask(SubTask.Config config) throws IOException, SAXException, ParserConfigurationException {
+    public static Task createTask(SubTask.Config config) throws Throwable {
         Task task;
         switch (config.getMode()) {
             case classpath:
@@ -40,7 +40,7 @@ public class SubTask extends Unit implements Executable {
                 task = XmlParserHandler.loadTask(new File(config.getPath()));
                 break;
             case db:
-                task = XmlParserHandler.loadTask(new ByteArrayInputStream(ApplicationContextProvider.getApplicationContext().getBean(ConfigDao.class).getTaskXML(Long.valueOf(config.getPath())).getBytes("utf-8")));
+                task = XmlParserHandler.loadTask(Long.parseLong(config.getPath()));
                 break;
             default:
                 throw new RuntimeException("未知的操作");

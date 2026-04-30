@@ -249,7 +249,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
     @Override
     public void destroySync(TaskSession taskSession) {
         java.io.Writer writer = taskSession.clearCache(this);
-        super.destroy(taskSession);
+        super.destroySync(taskSession);
         try (writer) {
 
         } catch (IOException e) {

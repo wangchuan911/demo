@@ -5,13 +5,17 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.springframework.util.Assert;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.handler.XmlParserHandler;
 import org.welisdoom.task.xml.intf.type.Root;
+import org.welisdoon.common.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -56,21 +60,27 @@ public class Task extends Unit implements Root {
             throw e;
         } finally {
             tasks.remove(data);
-            for (Map.Entry<Unit, Object> unitObjectEntry : data.cache.entrySet()) {
-                unitObjectEntry.getKey().log("开始释放");
+            doAndChildrenDo(this, (unit) -> {
                 try {
-                    unitObjectEntry.getKey().destroySync(data);
-                    unitObjectEntry.getKey().log("释放完成");
+                    unit.destroySync(data);
                 } catch (Throwable e) {
-                    unitObjectEntry.getKey().log("释放失败:");
                     e.printStackTrace();
                 }
-            }
+            });
             if (tasks.size() == 0) {
                 timer.cancel();
             }
         }
+    }
 
+    protected static void doAndChildrenDo(Unit unit, Consumer<Unit> consumer) {
+        ObjectUtils.find(
+                unit,
+                unit1 -> unit1.children,
+                unit1 -> {
+                    consumer.accept(unit1);
+                    return true;
+                });
     }
 
     public static void runSync(Map<String, SubTask.Config> taskList) {
@@ -157,20 +167,9 @@ public class Task extends Unit implements Root {
             @Override
             public void run() {
                 if (sync.get()) {
-                    for (TaskSession taskRequest : tasks) {
-                        tasks.remove(taskRequest);
-                        for (Map.Entry<Unit, Object> unitObjectEntry : taskRequest.cache.entrySet()) {
-                            unitObjectEntry.getKey().log("开始销毁");
-                            try {
-                                unitObjectEntry.getKey()
-                                        .hookSync(taskRequest);
-                                unitObjectEntry.getKey().log("销毁完成");
-                            } catch (Throwable e) {
-                                unitObjectEntry.getKey().log("销毁失败:");
-                                e.printStackTrace();
-                            }
-                        }
-                    }
+                    XmlParserHandler.TASK_MAP.forEach((s, task) -> {
+                        doAndChildrenDo(task, Unit::hookSync);
+                    });
                 } else
                     Future
                             .all(new HashSet<>(tasks).stream()

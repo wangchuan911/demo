@@ -27,13 +27,11 @@ import java.util.stream.Collectors;
 @Attr(name = "id", desc = "唯一标识")
 @Attr(name = "link", desc = "database的Id")
 public class Transactional extends Unit implements Executable {
-    //    Map<TaskRequest, Map.Entry<SqlConnection, Transaction>> MAP = new HashMap<>();
-    Database.DataSourceConnect connection;
 
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
-        connection = new Database.DataSourceConnect(attributes.get("link"), Database.getDataSource(attributes.get("link")).getConnection());
+        Database.DataSourceConnect connection = data.cache(this, () -> new Database.DataSourceConnect(attributes.get("link"), Database.getDataSource(attributes.get("link")).getConnection()));
         connection.count++;
         try {
             super.startSync(data);
@@ -45,7 +43,6 @@ public class Transactional extends Unit implements Executable {
         } finally {
             connection.count--;
             connection.close();
-            connection = null;
         }
     }
 
@@ -186,8 +183,15 @@ public class Transactional extends Unit implements Executable {
     }
 
     @Override
-    protected void hookSync(TaskSession taskSession) {
+    protected void hookSync() {
+
+        super.hookSync();
+    }
+
+    @Override
+    protected void destroySync(TaskSession taskSession) {
         try {
+            Database.DataSourceConnect connection = taskSession.clearCache(this);
             if (connection != null && !connection.connection.isClosed()) {
                 connection.connection.rollback();
                 log(LogUtils.styleString("", 31, 1, "事务终止"));
@@ -199,8 +203,7 @@ public class Transactional extends Unit implements Executable {
             log(LogUtils.styleString("", 31, 1, "连接终止失败"));
             e.printStackTrace();
         }
-        clearCache(taskSession);
-        super.hookSync(taskSession);
+        super.destroySync(taskSession);
     }
 
     @Deprecated

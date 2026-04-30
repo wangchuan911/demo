@@ -227,9 +227,9 @@ public class Database extends Unit {
         return Database.getDatabase(unit.attributes.get("link"));
     }
 
-    protected static void execute(Unit unit, ConnectExecute execute) throws Throwable {
+    protected static void execute(TaskSession data, Unit unit, ConnectExecute execute) throws Throwable {
         DataSourceConnect p = unit.getParents(Transactional.class).stream().filter(transactional -> Objects.equals(unit.attributes.get("link"), transactional.attributes.get("link"))).findFirst().map(transactional -> {
-            return transactional.connection;
+            return (Database.DataSourceConnect) data.cache(transactional);
         }).orElse(MAP_SYNC2.get(unit.attributes.get("link")));
         if (p == null || p.connection.isClosed()) {
             p = new DataSourceConnect(unit.attributes.get("link"), Database.getDatabaseSync(unit.attributes.get("link")).getConnection());

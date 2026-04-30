@@ -39,7 +39,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
 //        data.generateData(this);
         BaseCondition.Page page = new BaseCondition.Page(1, Math.max(MapUtils.getInteger(attributes, "size", 100), 100));
         AtomicLong index = new AtomicLong(0);
-        Database.execute(this, connect -> {
+        Database.execute(data, this, connect -> {
             Database.DataSourceTemplate template = connect.getTemplate();
             DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
             String sql = connectPool.toPageSql(getScript(data));
@@ -232,7 +232,7 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
 
         @Override
         protected void startSync(TaskSession data) throws Throwable {
-            Database.execute(this, connect -> {
+            Database.execute(data, this, connect -> {
                 DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
                 Database.DataSourceTemplate template = connect.getTemplate();
                 String sql = connectPool.toPageSql(getScript(data));

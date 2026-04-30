@@ -1,26 +1,26 @@
 package org.welisdoom.task.xml.handler;
 
 import org.apache.commons.lang3.StringUtils;
-import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.dao.ConfigDao;
 import org.welisdoom.task.xml.entity.Content;
 import org.welisdoom.task.xml.entity.Instance;
 import org.welisdoom.task.xml.entity.Task;
 import org.welisdoom.task.xml.entity.Unit;
+import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoom.task.xml.intf.type.Root;
+import org.welisdoon.common.ObjectUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Classname SAXParserHandler
@@ -29,6 +29,7 @@ import java.util.Objects;
  * @Date 17:40
  */
 public class XmlParserHandler extends SAXParserHandler<Unit> {
+    public static final Map<String, Task> TASK_MAP = new HashMap<>();
 
     public static Class<? extends Unit> getTag(Unit parent, String name) {
         return getTag(parent, name, Unit.class, Reflections.getInstance());
@@ -81,21 +82,27 @@ public class XmlParserHandler extends SAXParserHandler<Unit> {
 
         XmlParserHandler handler = new XmlParserHandler();
         getSaxParser().parse(uri, handler);
-        return (Task) handler.root;
+        Task task = (Task) handler.root;
+        TASK_MAP.put(uri, task);
+        return task;
     }
 
-    public static Task loadTask(File file) throws ParserConfigurationException, SAXException, IOException {
-
-        XmlParserHandler handler = new XmlParserHandler();
-        getSaxParser().parse(file, handler);
-        return (Task) handler.root;
+    public static Task loadTask(File file) throws Throwable {
+        return ObjectUtils.getMapValueOrNewSafe(TASK_MAP, file.getAbsolutePath(), () -> {
+            XmlParserHandler handler = new XmlParserHandler();
+            getSaxParser().parse(file, handler);
+            return (Task) handler.root;
+        });
     }
 
     public static Task loadTask(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {
-
         XmlParserHandler handler = new XmlParserHandler();
         getSaxParser().parse(inputStream, handler);
         return (Task) handler.root;
+    }
+
+    public static Task loadTask(Long id) throws Throwable {
+        return ObjectUtils.getMapValueOrNewSafe(TASK_MAP, "DB:" + id, () -> loadTask(new ByteArrayInputStream(ApplicationContextProvider.getApplicationContext().getBean(ConfigDao.class).getTaskXML(id).getBytes("utf-8"))));
     }
 
     protected static SAXParser getSaxParser() throws ParserConfigurationException, SAXException {

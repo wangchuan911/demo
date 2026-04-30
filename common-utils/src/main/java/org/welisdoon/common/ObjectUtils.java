@@ -306,6 +306,16 @@ public class ObjectUtils {
         return true;
     }
 
+    public static <T> boolean find(T data, Function<T, List<T>> function, Function<T, Boolean> resultConsumer) {
+        for (T t : function.apply(data)) {
+            if (!find(t, function, resultConsumer)) {
+                return false;
+            }
+        }
+        resultConsumer.apply(data);
+        return true;
+    }
+
     public static <T> boolean find(Iterator<T> datas, Function<Node<T>, Iterator<T>> childrenIterator, Function<Node<T>, Boolean> resultConsumer) {
         return find(null, datas, childrenIterator, resultConsumer);
     }
@@ -316,7 +326,7 @@ public class ObjectUtils {
         while (datas.hasNext()) {
             data = datas.next();
             tNode = new Node<>(data, childrenIterator, parent);
-            if (!resultConsumer.apply(tNode) || !tNode.childrenIterator.hasNext() || !find(tNode, tNode.childrenIterator, childrenIterator, resultConsumer)) {
+            if (!resultConsumer.apply(tNode) || !find(tNode, tNode.childrenIterator, childrenIterator, resultConsumer)) {
                 return false;
             }
         }
@@ -325,9 +335,9 @@ public class ObjectUtils {
 
 
     public static class Node<T> {
-        final T val;
-        final Iterator<T> childrenIterator;
-        final Node<T> parent;
+        final public T val;
+        final public Iterator<T> childrenIterator;
+        final public Node<T> parent;
 
         public Node(T val, Function<Node<T>, Iterator<T>> childrenIterator) {
             this(val, childrenIterator, null);
