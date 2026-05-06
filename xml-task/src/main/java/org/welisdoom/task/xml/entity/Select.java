@@ -33,10 +33,12 @@ import java.util.stream.Collectors;
 @Attr(name = "mode", options = {"page", "tetris"}, defaultOption = 0)
 @Attr(name = "size", type = Integer.class)
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
+    Map<String, List<Map<String, Object>>> cache = new HashMap<>();
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
 //        data.generateData(this);
+        final boolean isCache = "true".equalsIgnoreCase(attributes.get("cache"));
         BaseCondition.Page page = new BaseCondition.Page(1, Math.max(MapUtils.getInteger(attributes, "size", 100), 100));
         AtomicLong index = new AtomicLong(0);
         Database.execute(data, this, connect -> {
@@ -45,34 +47,64 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
             String sql = connectPool.toPageSql(getScript(data));
             PreparedStatement preparedStatement = template.prepare(sql, data);
             List<Map<String, Object>> list = new LinkedList<>();
-            List<SubQuery> queryList = getChild(SubQuery.class);
-            try {
-                do {
-                    list.clear();
-                    connectPool.log("", template.sqlTemplate.log1.toString());
-                    connectPool.log("", template.sqlTemplate.log2.toString() + "," + connectPool.setPage(preparedStatement, page));
-                    try (ResultSet row = preparedStatement.executeQuery()) {
-                        toMap(row, list);
-                    }
-                    if (!("tetris".equals(attributes.get("mode")))) page.nextPage();
-                    for (Map<String, Object> row1 : list) {
-                        for (SubQuery subQuery : queryList) {
-                            data.setValue(row1);
-                            subQuery.startSync(data);
-                        }
-                        try {
-                            this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
-                        } catch (Break.SkipOneLoopThrowable e) {
-                            continue;
+
+            if (isCache) {
+                if (!cache.containsKey(template.sqlTemplate.log2.toString())) {
+                    synchronized (this) {
+                        if (!cache.containsKey(template.sqlTemplate.log2.toString())) {
+                            cache.put(template.sqlTemplate.log2.toString(), new LinkedList<>());
+                            this.iterator(list, data, index, isCache, connectPool, template, preparedStatement, page);
+                            return;
                         }
                     }
-                } while (!list.isEmpty() && list.size() == page.getPageSize());
-            } catch (Break.BreakLoopThrowable e) {
-                Break.onBreak(e);
-                log(e.getMessage());
-            }
-            this.await(data);
+                }
+                this.iterator(cache.get(template.sqlTemplate.log2.toString()), data, index);
+            } else
+                this.iterator(list, data, index, isCache, connectPool, template, preparedStatement, page);
         });
+    }
+
+    protected void iterator(List<Map<String, Object>> list, TaskSession data, AtomicLong index, boolean isCache, DatasouceConnectManager connectPool, Database.DataSourceTemplate template, PreparedStatement preparedStatement, BaseCondition.Page page) throws Throwable {
+        try {
+            do {
+                list.clear();
+                connectPool.log("", template.sqlTemplate.log1.toString());
+                connectPool.log("", template.sqlTemplate.log2.toString() + "," + connectPool.setPage(preparedStatement, page));
+                try (ResultSet row = preparedStatement.executeQuery()) {
+                    toMap(row, list);
+                }
+                if (!("tetris".equals(attributes.get("mode")))) page.nextPage();
+//                    for (Map<String, Object> row1 : list) {
+//                        for (SubQuery subQuery : queryList) {
+//                            data.setValue(row1);
+//                            subQuery.startSync(data);
+//                        }
+//                        try {
+//                            this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
+//                        } catch (Break.SkipOneLoopThrowable e) {
+//                            continue;
+//                        }
+//                    }
+                this.iterator(list, data, index);
+                if (isCache) {
+                    cache.get(template.sqlTemplate.log2).addAll(list);
+                }
+            } while (!list.isEmpty() && list.size() == page.getPageSize());
+        } catch (Break.BreakLoopThrowable e) {
+            Break.onBreak(e);
+            log(e.getMessage());
+        }
+        this.await(data);
+    }
+
+    protected void iterator(List<Map<String, Object>> list, TaskSession data, AtomicLong index) throws Throwable {
+        for (Map<String, Object> row1 : list) {
+            try {
+                this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
+            } catch (Break.SkipOneLoopThrowable e) {
+                continue;
+            }
+        }
     }
 
     protected void toMap(ResultSet row, List<Map<String, Object>> list) throws SQLException {

@@ -5,10 +5,12 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.springframework.util.Assert;
 import org.welisdoom.task.xml.annotations.Tag;
+import org.welisdoom.task.xml.consts.MagicKey;
 import org.welisdoom.task.xml.handler.XmlParserHandler;
 import org.welisdoom.task.xml.intf.type.Root;
 import org.welisdoon.common.ObjectUtils;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -97,7 +99,7 @@ public class Task extends Unit implements Root {
         }
         for (Map.Entry<String, SubTask.Config> entry : taskList.entrySet()) {
             try {
-                SubTask.runSync(entry.getKey(), entry.getValue());
+                runSync(entry.getKey(), entry.getValue());
                 System.out.println("成功：" + entry.getKey());
             } catch (Throwable e) {
                 System.out.println("失败：" + entry.getKey());
@@ -117,6 +119,45 @@ public class Task extends Unit implements Root {
             Task.closeVertx();
             getVertx().undeploy(taskId);
         });
+    }
+
+    public static void runSync(String name, SubTask.Config config) throws Throwable {
+        runSync(name, config, null);
+    }
+
+    public static Task createTask(SubTask.Config config) throws Throwable {
+        Task task;
+        switch (config.getMode()) {
+            case classpath:
+                task = XmlParserHandler.loadTask(config.getPath());
+                break;
+            case path:
+                task = XmlParserHandler.loadTask(new File(config.getPath()));
+                break;
+            case db:
+                task = XmlParserHandler.loadTask(Long.parseLong(config.getPath()));
+                break;
+            default:
+                throw new RuntimeException("未知的操作");
+        }
+        return task;
+    }
+
+    public static void runSync(String name, SubTask.Config config, TaskSession parent) throws Throwable {
+        Task task = createTask(config);
+        if (parent != null) {
+            name = String.format("%s#%s", parent.id, name);
+        }
+        TaskSession taskSession = new TaskSession(name, config.getParams());
+        if (parent != null) {
+            taskSession.getBus().put(MagicKey.PARENT, parent.getBus());
+        }
+        try {
+            task.runSync(taskSession);
+        } finally {
+            taskSession.destroySync();
+        }
+
     }
 
     @Deprecated

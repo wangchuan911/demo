@@ -31,8 +31,11 @@ public class Transactional extends Unit implements Executable {
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
-        Database.DataSourceConnect connection = data.cache(this, () -> new Database.DataSourceConnect(attributes.get("link"), Database.getDataSource(attributes.get("link")).getConnection()));
-        connection.count++;
+        Database.DataSourceConnect connection = data.cache(this, () -> {
+            Connection c = Database.getDataSource(attributes.get("link")).getConnection();
+            c.setAutoCommit(false);
+            return new Database.DataSourceConnect(attributes.get("link"), c, true);
+        });
         try {
             super.startSync(data);
         } catch (Break.BreakLoopThrowable | Break.SkipOneLoopThrowable e) {
@@ -41,7 +44,6 @@ public class Transactional extends Unit implements Executable {
             connection.rollback();
             throw e;
         } finally {
-            connection.count--;
             connection.close();
         }
     }

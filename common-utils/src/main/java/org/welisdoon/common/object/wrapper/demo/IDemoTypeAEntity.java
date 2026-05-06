@@ -60,4 +60,7 @@ import org.welisdoon.common.object.wrapper.IDataAccessObject;
 
 
 public interface IDemoTypeAEntity extends IDataAccessObject {
+
+    @MixColumn(columns = @ColMapper(column = "t4_2.column1", target = "t7.column1"), single = true, dataType = String.class, source = IDemoTypeBEntity.class)
+    String getValueA();
 }

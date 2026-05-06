@@ -126,6 +126,25 @@ public interface IDataAccessObject {
         Class<?> dataType() default String.class;
     }
 
+    @Target({ElementType.TYPE, ElementType.METHOD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface MixColumn {
+        ColMapper[] columns();
+
+        Class<? extends IDataAccessObject> source();
+
+        boolean single();
+
+        Class<?> dataType();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface ColMapper {
+        String target();
+
+        String column();
+    }
+
     enum ColumnType {
         PrimaryKeu, Simple, Virtual, ForeignKey;
     }

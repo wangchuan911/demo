@@ -19,6 +19,10 @@ public abstract class BaseCondition<ID, D> {
     Page page;
     int total;
 
+    public static Page newPage() {
+        return new Page(1, 100);
+    }
+
     public <T extends BaseCondition> T setPage(Page page) {
         this.page = page;
         return (T) this;

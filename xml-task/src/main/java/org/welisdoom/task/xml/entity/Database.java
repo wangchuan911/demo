@@ -43,7 +43,6 @@ import java.util.function.Function;
 public class Database extends Unit {
     static volatile Map<String, DataBaseConnectPool> MAP = new HashMap<>();
     static volatile Map<String, DataSource> MAP_SYNC = new HashMap<>();
-    static volatile Map<String, DataSourceConnect> MAP_SYNC2 = new HashMap<>();
 
     @Override
     protected void startSync(TaskSession data) throws Throwable {
@@ -230,18 +229,21 @@ public class Database extends Unit {
     protected static void execute(TaskSession data, Unit unit, ConnectExecute execute) throws Throwable {
         DataSourceConnect p = unit.getParents(Transactional.class).stream().filter(transactional -> Objects.equals(unit.attributes.get("link"), transactional.attributes.get("link"))).findFirst().map(transactional -> {
             return (Database.DataSourceConnect) data.cache(transactional);
-        }).orElse(MAP_SYNC2.get(unit.attributes.get("link")));
+        }).orElseGet(() -> {
+            return data.cache(getDatabaseNode(unit, unit.attributes.get("link")));
+        });
         if (p == null || p.connection.isClosed()) {
-            p = new DataSourceConnect(unit.attributes.get("link"), Database.getDatabaseSync(unit.attributes.get("link")).getConnection());
-            MAP_SYNC2.put(unit.attributes.get("link"), p);
+            Connection c = Database.getDatabaseSync(unit.attributes.get("link")).getConnection();
+            c.setAutoCommit(false);
+            p = new DataSourceConnect(unit.attributes.get("link"), c, false);
+            data.cache(getDatabaseNode(unit, unit.attributes.get("link")), p);
         }
-        try {
-            p.count++;
-            execute.exe(p);
-        } finally {
-            p.count--;
-            p.close();
-        }
+        execute.exe2(p);
+    }
+
+    protected static Database getDatabaseNode(Unit unit, String name) {
+        Task task = unit.getParent(Task.class);
+        return task.getChildren(Database.class).stream().filter(database -> Objects.equals(database.getId(), name)).findFirst().get();
     }
 
     public static class DataSourceTemplate {
@@ -327,14 +329,29 @@ public class Database extends Unit {
 
     }
 
+    @Override
+    protected void destroySync(TaskSession taskSession) {
+        super.destroySync(taskSession);
+        Map<String, DataSourceConnect> map = taskSession.cache(this);
+        if (map == null) return;
+        map.forEach((s, connect) -> {
+            try {
+                connect.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
+    }
+
     public static class DataSourceConnect {
         final String name;
         final Connection connection;
-        volatile int count = 1;
+        final boolean transactional;
 
-        public DataSourceConnect(String name, Connection connection) {
+        public DataSourceConnect(String name, Connection connection, boolean transactional) {
             this.name = name;
             this.connection = connection;
+            this.transactional = transactional;
         }
 
 
@@ -344,8 +361,7 @@ public class Database extends Unit {
 
         public void close() throws SQLException {
             if (!connection.isClosed()) return;
-            if (count == 0)
-                connection.close();
+            connection.close();
         }
 
 
@@ -369,5 +385,10 @@ public class Database extends Unit {
     @FunctionalInterface
     interface ConnectExecute<E extends Throwable> {
         void exe(DataSourceConnect connect) throws E;
+
+        default void exe2(DataSourceConnect p) throws E, SQLException {
+            exe(p);
+            if (!p.transactional) p.commit();
+        }
     }
 }

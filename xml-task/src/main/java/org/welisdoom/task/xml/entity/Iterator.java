@@ -100,7 +100,15 @@ public class Iterator extends Unit implements Executable {
         }
         try {
 //            log((JSON.toJSONString(data.getBus())));
+            if (parent instanceof Select) {
+                for (Unit child : parent.children) {
+                    if (child instanceof Select.SubQuery)
+                        child.startSync(data);
+                }
+            }
+
             super.startSync(data);
+
         } finally {
             synchronized (map) {
                 map.clear();

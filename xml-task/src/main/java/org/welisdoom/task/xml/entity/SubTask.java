@@ -4,16 +4,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.consts.MagicKey;
-import org.welisdoom.task.xml.dao.ConfigDao;
-import org.welisdoom.task.xml.handler.XmlParserHandler;
-import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoom.task.xml.intf.type.Executable;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,45 +17,20 @@ import java.util.Map;
  */
 @Tag(value = "sub-task", parentTagTypes = Executable.class, desc = "任务子执行")
 public class SubTask extends Unit implements Executable {
-
-    public static void runSync(String name, SubTask.Config config) throws Throwable {
-        runSync(name, config, null);
+    @Override
+    protected void startSync(TaskSession data) throws Throwable {
+        super.startSync(data);
+        SubTask.Config config = new SubTask.Config();
+        SubTask.Mode mode = SubTask.Mode.valueOf(attributes.get("mode"));
+        config.setMode(mode).setPath(attributes.get("mode"));
+        for (String s : attributes.keySet()) {
+            if (s.startsWith("params-")) {
+                config.getParams().put(s.substring(7), attributes.get(s));
+            }
+        }
+        Task.runSync(String.format("sub-task-%d-%d", System.currentTimeMillis(), (int) (Math.random() * 100)), config, data);
     }
 
-    public static Task createTask(SubTask.Config config) throws Throwable {
-        Task task;
-        switch (config.getMode()) {
-            case classpath:
-                task = XmlParserHandler.loadTask(config.getPath());
-                break;
-            case path:
-                task = XmlParserHandler.loadTask(new File(config.getPath()));
-                break;
-            case db:
-                task = XmlParserHandler.loadTask(Long.parseLong(config.getPath()));
-                break;
-            default:
-                throw new RuntimeException("未知的操作");
-        }
-        return task;
-    }
-
-    public static void runSync(String name, SubTask.Config config, TaskSession parent) throws Throwable {
-        Task task = createTask(config);
-        if (parent != null) {
-            name = String.format("%s#%s", parent.id, name);
-        }
-        TaskSession taskSession = new TaskSession(name, config.getParams());
-        if (parent != null) {
-            taskSession.getBus().put(MagicKey.PARENT, parent.getBus());
-        }
-        try {
-            task.runSync(taskSession);
-        } finally {
-            taskSession.destroySync();
-        }
-
-    }
 
     @Deprecated
     public static Future<Object> run(String name, SubTask.Config config) {
@@ -75,7 +42,7 @@ public class SubTask extends Unit implements Executable {
         Promise<Object> promise = Promise.promise();
         Task task;
         try {
-            task = createTask(config);
+            task = Task.createTask(config);
             if (parent != null) {
                 name = String.format("%s#%s", parent.id, name);
             }
