@@ -3,6 +3,7 @@ package org.welisdoom.task.xml.entity;
 import com.alibaba.fastjson.util.TypeUtils;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.SqlConnection;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.type.JdbcType;
 import org.ehcache.impl.internal.concurrent.ConcurrentHashMap;
@@ -16,17 +17,17 @@ import org.welisdoom.task.xml.handler.OgnlUtils;
 import org.welisdoom.task.xml.intf.ApplicationContextProvider;
 import org.welisdoon.common.MyBatisUtils;
 import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.common.data.BaseCondition;
 
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
+import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -268,8 +269,11 @@ public class Database extends Unit {
                 this.sqlTemplate.log1.setLength(0);
                 this.sqlTemplate.log1.append("sql   :").append(sql2);
             }
+
+
             this.sqlTemplate.log2.setLength(0);
-            this.sqlTemplate.log2.append("params:");
+            this.sqlTemplate.log2.append(this.sqlTemplate.log1);
+
             for (int i = 1; i <= this.sqlTemplate.getTypes().size(); i++) {
                 Map.Entry<String, JdbcType> entry = this.sqlTemplate.getTypes().get(i - 1);
                 Object value = OgnlUtils.getValue(entry.getKey(), data.getOgnlContext(), data.getBus(), Object.class);
@@ -319,10 +323,21 @@ public class Database extends Unit {
                     default:
                         throw new IllegalArgumentException("不支持的jdbc" + entry.getValue());
                 }
-                this.sqlTemplate.log2.append(value);
-                if (value != null) {
-                    this.sqlTemplate.log2.append("/*").append(value.getClass().getSimpleName()).append("*/");
-                }
+                int offset = this.sqlTemplate.log2.indexOf("?");
+                this.sqlTemplate.log2.replace(offset, offset + 1,
+                        MessageFormat.format("/*{0}*/ {1}", entry.getKey(),
+                                Optional.ofNullable(value).map(o -> {
+                                    if (o instanceof CharSequence) {
+                                        return "'" + o + "'";
+                                    } else if (o instanceof java.util.Date) {
+                                        return "to_date('yyyy-mm-dd hh24:mi:ss','" + new SimpleDateFormat("yyyy-MM-dd HH:mm::ss").format(o) + "')";
+                                    } else if (o instanceof BigDecimal) {
+                                        return ((BigDecimal) o).toPlainString();
+                                    } else {
+                                        return o;
+                                    }
+                                }).orElse("null")));
+
             }
             return preparedStatement;
         }
@@ -389,6 +404,94 @@ public class Database extends Unit {
         default void exe2(DataSourceConnect p) throws E, SQLException {
             exe(p);
             if (!p.transactional) p.commit();
+        }
+    }
+
+    public static class SqlContent {
+        Database.DataSourceTemplate template;
+        DatasouceConnectManager connectPool;
+        protected String sql;
+        PreparedStatement preparedStatement;
+
+        public SqlContent(TaskSession data, DataSourceConnect connect, String sqlTemplate) throws SQLException {
+            this.template = connect.getTemplate();
+            this.connectPool = connect.getDatasouceConnectPool();
+            this.sql = templateToSql(sqlTemplate);
+            this.preparedStatement = template.prepare(sql, data);
+        }
+
+        protected String templateToSql(String sqlTemplate) {
+            return sqlTemplate;
+        }
+
+        public ResultSet executeQuery() throws SQLException {
+            return preparedStatement.executeQuery();
+        }
+
+        public int executeQueryToMap(List<Map<String, Object>> list) throws SQLException {
+            ResultSet row = this.executeQuery();
+            ResultSetMetaData metaData = row.getMetaData();
+            Map<String, Object> map;
+            int start = list.size();
+            while (row.next()) {
+                map = new HashMap<>(metaData.getColumnCount(), 1.0F);
+                for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                    if (row.getObject(i) == null) continue;
+                    map.put(metaData.getColumnName(i), row.getObject(i));
+                }
+                list.add(map);
+            }
+            return list.size() - start;
+        }
+
+        public String getRealSql() {
+            return template.sqlTemplate.log2.toString();
+        }
+
+
+    }
+
+    public static class PageSqlContent extends SqlContent {
+        BaseCondition.Page page;
+        boolean autoNextPage;
+        boolean noMore = false;
+
+        public PageSqlContent(TaskSession data, DataSourceConnect connect, String sqlTemplate, int pageSize, boolean autoNextPage) throws SQLException {
+            super(data, connect, sqlTemplate);
+            this.page = new BaseCondition.Page(1, Math.max(pageSize, 100));
+            this.autoNextPage = autoNextPage;
+        }
+
+        @Override
+        protected String templateToSql(String sqlTemplate) {
+            return connectPool.toPageSql(sqlTemplate);
+        }
+
+        public ResultSet executeQuery() throws SQLException {
+            connectPool.log("sql", this.setPage(page));
+            ResultSet resultSet = super.executeQuery();
+            if (autoNextPage) page.nextPage();
+            return resultSet;
+        }
+
+        public String setPage(BaseCondition.Page page) throws SQLException {
+            StringBuilder sql1 = new StringBuilder(template.sqlTemplate.log2.toString());
+            for (long l : connectPool.setPage(preparedStatement, page)) {
+                int offset = sql1.indexOf("?");
+                sql1.replace(offset, offset + 1, String.valueOf(l));
+            }
+            return sql1.toString();
+        }
+
+        @Override
+        public int executeQueryToMap(List<Map<String, Object>> list) throws SQLException {
+            int onePageItemCount = super.executeQueryToMap(list);
+            if (onePageItemCount < page.getPageSize()) noMore = true;
+            return onePageItemCount;
+        }
+
+        public boolean hasNextPage() {
+            return !noMore;
         }
     }
 }

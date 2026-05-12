@@ -150,7 +150,7 @@ public class Random extends Unit implements Executable, Iterable<String> {
                     }
                     log("{}", text.substring(0, length + i));
 
-                    try {
+                    /*try {
                         this.iteratorSync(data, Item.of(Math.abs(itemIndex.incrementAndGet().longValue()), text.substring(0, length + i)));
                     } catch (Break.SkipOneLoopThrowable e) {
                         Break.onContinue(e);
@@ -158,7 +158,10 @@ public class Random extends Unit implements Executable, Iterable<String> {
                         Break.onBreak(e);
                         log(e.getMessage());
                         break;
-                    }
+                    }*/
+                    Iterator.loop(List.of(i).iterator(), integer -> {
+                        this.iteratorSync(data, Item.of(Math.abs(itemIndex.incrementAndGet().longValue()), text.substring(0, length + integer)));
+                    });
                     await(data);
                 }
             }

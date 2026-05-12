@@ -14,6 +14,7 @@ import org.welisdoon.common.data.IData;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +28,7 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
     List<TaskSession> childrenSession = new LinkedList<>();
     final TaskSession parentSession;
     Object value;
+    String id;
 
 //    Object lastUnitResult;
 
@@ -91,18 +93,14 @@ public class TaskSession extends Context implements DataBaseConnectPool.IToken, 
         return (T) getBus().get(key);
     }
 
+    public synchronized <T> T getBusOrNew(String key, Supplier<T> value) {
+        return (T) ObjectUtils.getMapValueOrNewSafe(getBus(), key, value::get);
+    }
+
     public TaskSession(@NotNull String id, Object o) {
         this(id);
         getBus().put(MagicKey.INPUTS, o);
     }
-
-
-    public synchronized void generateData(Unit unit) {
-        if (StringUtils.isEmpty(unit.id)) return;
-        getBus().put(unit.id, new HashMap<>());
-    }
-
-    String id;
 
     public String getId() {
         return id;

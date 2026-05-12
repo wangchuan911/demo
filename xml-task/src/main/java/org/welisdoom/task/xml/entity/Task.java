@@ -81,7 +81,7 @@ public class Task extends Unit implements Root {
                 unit1 -> unit1.children,
                 unit1 -> {
                     consumer.accept(unit1);
-                    return true;
+                    return ObjectUtils.LoopState.Continue;
                 });
     }
 

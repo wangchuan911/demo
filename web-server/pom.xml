@@ -201,7 +201,7 @@
                     <annotationProcessors>
                         <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
                         <annotationProcessor>org.welisdoon.common.generator.ObjectClassGeneratorProcessor</annotationProcessor>
-<!--                        <annotationProcessor>org.welisdoon.common.annotations.process.ThrowMessageAnnotationProcessor</annotationProcessor>-->
+                        <annotationProcessor>org.welisdoon.common.object.wrapper.execute.ExecuteWrapperProcessor</annotationProcessor>
                     </annotationProcessors>
                 </configuration>
             </plugin>

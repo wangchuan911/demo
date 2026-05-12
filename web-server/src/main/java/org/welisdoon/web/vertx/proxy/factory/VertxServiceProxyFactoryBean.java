@@ -13,6 +13,9 @@ import org.welisdoon.web.common.ApplicationContextProvider;
 import org.welisdoon.web.common.web.AsyncProxyUtils;
 import org.welisdoon.web.vertx.annotation.VertxServiceProxy;
 import org.welisdoon.web.vertx.proxy.IVertxInvoker;
+import org.welisdoon.web.vertx.proxy.meta.ClassData;
+import org.welisdoon.web.vertx.proxy.meta.MethodData;
+import org.welisdoon.web.vertx.proxy.meta.ThreadLocalData;
 import org.welisdoon.web.vertx.verticle.MainWebVerticle;
 
 import java.lang.reflect.Method;
@@ -165,7 +168,7 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
         return b.length == 0 ? false : Arrays.stream(b).anyMatch(aClass -> aClass == a);
     }*/
 
-    static class MethodInfo {
+    /*static class MethodInfo {
         final Class[] paramTypes;
         final String paramTypesStr;
         final ObjectUtils.ObjectDefineInfo returnType;
@@ -179,16 +182,19 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
         }
     }
 
-    final static Map<Method, MethodInfo> METHDO_INFO_MAP = new HashMap<>();
+    final static Map<Method, MethodInfo> METHDO_INFO_MAP = new HashMap<>();*/
 
     @Override
-
     public Future invoke(Object o, Method method, Object[] objects) throws Throwable {
         if (this.iVertxInvoker == null) {
-            this.initInvoker();
+            synchronized (this) {
+                if (this.iVertxInvoker == null) {
+                    this.initInvoker();
+                }
+            }
         }
-        MethodInfo methdoInfo = ObjectUtils.getMapValueOrNewSafe(METHDO_INFO_MAP, method, () -> new MethodInfo(method));
-        return this.iVertxInvoker.invoke(
+        /* MethodInfo methdoInfo = ObjectUtils.getMapValueOrNewSafe(METHDO_INFO_MAP, method, () -> new MethodInfo(method));
+       return this.iVertxInvoker.invoke(
                 tagetClass.getTypeName(),
                 method.getName(),
                 methdoInfo.paramTypesStr,
@@ -207,7 +213,14 @@ public class VertxServiceProxyFactoryBean<T> implements FactoryBean<T>, Invocati
                     } finally {
 
                     }
-                });
+                });*/
+        return this.iVertxInvoker.apply(new ClassData(tagetClass), new MethodData(method, objects), new ThreadLocalData()).compose(returnData -> {
+            try {
+                return Future.succeededFuture(returnData.toVal());
+            } catch (Throwable e) {
+                return Future.failedFuture(e);
+            }
+        });
     }
 
     Object toJavaObject(Object object, Class<?> tagetClass) {

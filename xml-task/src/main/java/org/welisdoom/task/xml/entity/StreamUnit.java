@@ -4,13 +4,17 @@ import io.vertx.core.Future;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.intf.Copyable;
 import org.welisdoom.task.xml.intf.type.Executable;
+import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Stream;
 import org.welisdoom.task.xml.intf.type.BaseUnit;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @Classname StreamUnit
@@ -26,7 +30,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
     protected void startSync(TaskSession data) throws Throwable {
         /*data.cache(this, preUnitResult);*/
         this.cols = getChild(Col.class).stream().toArray(Col[]::new);
-        data.generateData(this);
+        data.getBusOrNew(this.getId(), HashMap::new).clear();
         operationSync(data);
     }
 
@@ -58,7 +62,7 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
         try {
             /*data.cache(this, preUnitResult);*/
             this.cols = getChild(Col.class).stream().toArray(Col[]::new);
-            data.generateData(this);
+            data.getBusOrNew(this.getId(), HashMap::new).clear();
             return operation(data, preUnitResult);
 
         } catch (Throwable throwable) {
@@ -119,6 +123,14 @@ public abstract class StreamUnit<T extends Stream.Writer> extends Unit implement
                         log(e.getMessage());
                     }
                 });
+    }
+
+    static <T> void loop(Reader<T> supplier, Iterable.Looper<T, Throwable> runner) throws Throwable {
+        Iterable.loop(supplier::read, runner);
+    }
+
+    interface Reader<T> {
+        T read() throws Throwable;
     }
 
     @Tag(value = "write-line", parentTagTypes = {Executable.class}, desc = "写入单行数据")

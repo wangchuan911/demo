@@ -13,6 +13,10 @@ import org.springframework.cglib.reflect.FastMethod;
 import org.springframework.stereotype.Component;
 import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.web.common.ApplicationContextProvider;
+import org.welisdoon.web.vertx.proxy.meta.ClassData;
+import org.welisdoon.web.vertx.proxy.meta.MethodData;
+import org.welisdoon.web.vertx.proxy.meta.ReturnData;
+import org.welisdoon.web.vertx.proxy.meta.ThreadLocalData;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -155,6 +159,28 @@ public class VertxInvoker implements IVertxInvoker {
                 promise.complete();
             } catch (Throwable e) {
                 promise.fail(e);
+            }
+        });
+    }
+
+
+    @Override
+    public Future<ReturnData> apply(ClassData classData, MethodData methodMetaData, ThreadLocalData threadParams) {
+        return Future.future(promise -> {
+            try {
+                promise.complete(methodMetaData.apply(classData));
+            } catch (InvocationTargetException e) {
+                Throwable t = e.getCause();
+                logger.error(t.getMessage(), t);
+                if (t instanceof NullPointerException) {
+                    t = new RuntimeException("空数据异常", t);
+                }
+                promise.fail(t);
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+                promise.fail(e);
+            } finally {
+
             }
         });
     }

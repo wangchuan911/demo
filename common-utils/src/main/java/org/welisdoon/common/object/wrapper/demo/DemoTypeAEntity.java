@@ -52,9 +52,4 @@ public class DemoTypeAEntity extends AbstractDataAccessObject implements IDemoTy
 
 
     }
-
-    @Override
-    public String getValueA() {
-        return null;
-    }
 }

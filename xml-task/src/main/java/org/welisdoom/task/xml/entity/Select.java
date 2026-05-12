@@ -8,15 +8,11 @@ import org.apache.commons.collections4.MapUtils;
 import org.welisdoom.task.xml.annotations.Attr;
 import org.welisdoom.task.xml.annotations.Tag;
 import org.welisdoom.task.xml.connect.DataBaseConnectPool;
-import org.welisdoom.task.xml.connect.sync.DatasouceConnectManager;
 import org.welisdoom.task.xml.intf.type.Executable;
 import org.welisdoom.task.xml.intf.type.Iterable;
+import org.welisdoon.common.ObjectUtils;
 import org.welisdoon.common.data.BaseCondition;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -35,94 +31,77 @@ import java.util.stream.Collectors;
 public class Select extends Unit implements Executable, Iterable<Map<String, Object>> {
     Map<String, List<Map<String, Object>>> cache = new HashMap<>();
 
-    @Override
-    protected void startSync(TaskSession data) throws Throwable {
-//        data.generateData(this);
-        final boolean isCache = "true".equalsIgnoreCase(attributes.get("cache"));
-        BaseCondition.Page page = new BaseCondition.Page(1, Math.max(MapUtils.getInteger(attributes, "size", 100), 100));
-        AtomicLong index = new AtomicLong(0);
-        Database.execute(data, this, connect -> {
-            Database.DataSourceTemplate template = connect.getTemplate();
-            DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
-            String sql = connectPool.toPageSql(getScript(data));
-            PreparedStatement preparedStatement = template.prepare(sql, data);
-            List<Map<String, Object>> list = new LinkedList<>();
-
-            if (isCache) {
-                if (!cache.containsKey(template.sqlTemplate.log2.toString())) {
-                    synchronized (this) {
-                        if (!cache.containsKey(template.sqlTemplate.log2.toString())) {
-                            cache.put(template.sqlTemplate.log2.toString(), new LinkedList<>());
-                            this.iterator(list, data, index, isCache, connectPool, template, preparedStatement, page);
-                            return;
-                        }
-                    }
-                }
-                this.iterator(cache.get(template.sqlTemplate.log2.toString()), data, index);
-            } else
-                this.iterator(list, data, index, isCache, connectPool, template, preparedStatement, page);
-        });
+    boolean isCacheMode() {
+        return "page".equals(getPageMode()) && "true".equalsIgnoreCase(attributes.get("cache"));
     }
 
-    protected void iterator(List<Map<String, Object>> list, TaskSession data, AtomicLong index, boolean isCache, DatasouceConnectManager connectPool, Database.DataSourceTemplate template, PreparedStatement preparedStatement, BaseCondition.Page page) throws Throwable {
-        try {
-            do {
-                list.clear();
-                connectPool.log("", template.sqlTemplate.log1.toString());
-                connectPool.log("", template.sqlTemplate.log2.toString() + "," + connectPool.setPage(preparedStatement, page));
-                try (ResultSet row = preparedStatement.executeQuery()) {
-                    toMap(row, list);
-                }
-                if (!("tetris".equals(attributes.get("mode")))) page.nextPage();
-//                    for (Map<String, Object> row1 : list) {
-//                        for (SubQuery subQuery : queryList) {
-//                            data.setValue(row1);
-//                            subQuery.startSync(data);
-//                        }
-//                        try {
-//                            this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
-//                        } catch (Break.SkipOneLoopThrowable e) {
-//                            continue;
-//                        }
-//                    }
-                this.iterator(list, data, index);
-                if (isCache) {
-                    cache.get(template.sqlTemplate.log2).addAll(list);
-                }
-            } while (!list.isEmpty() && list.size() == page.getPageSize());
-        } catch (Break.BreakLoopThrowable e) {
-            Break.onBreak(e);
-            log(e.getMessage());
+    protected String getPageMode() {
+        return attributes.getOrDefault("mode", "page");
+    }
+
+    protected List<Map<String, Object>> getList(String sql) {
+        if (isCacheMode()) {
+            return ObjectUtils.getMapValueOrNewSafe(cache, sql, LinkedList::new);
         }
-        this.await(data);
+        List<Map<String, Object>> list = ObjectUtils.getMapValueOrNewSafe(cache, "default", LinkedList::new);
+        list.clear();
+        return list;
     }
 
-    protected void iterator(List<Map<String, Object>> list, TaskSession data, AtomicLong index) throws Throwable {
-        for (Map<String, Object> row1 : list) {
+    protected void forEach(List<Map<String, Object>> list, List<SubQuery> queryList, TaskSession data, AtomicLong index) throws Throwable {
+        /*for (Map<String, Object> row1 : list) {
+            for (SubQuery subQuery : queryList) {
+                data.setValue(row1);
+                subQuery.startSync(data);
+            }
             try {
                 this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
             } catch (Break.SkipOneLoopThrowable e) {
-                continue;
+                log(e.getMessage());
             }
-        }
+        }*/
+        Iterator.loop(list.iterator(), row1 -> {
+            for (SubQuery subQuery : queryList) {
+                data.setValue(row1);
+                subQuery.startSync(data);
+            }
+            this.iteratorSync(data, Item.of(index.incrementAndGet(), row1));
+        });
     }
 
-    protected void toMap(ResultSet row, List<Map<String, Object>> list) throws SQLException {
-        ResultSetMetaData metaData = row.getMetaData();
-        Map<String, Object> map;
-        while (row.next()) {
-            map = new HashMap<>(metaData.getColumnCount(), 1.0F);
-            for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                if (row.getObject(i) == null) continue;
-                map.put(metaData.getColumnName(i), row.getObject(i));
+
+    @Override
+    protected void startSync(TaskSession data) throws Throwable {
+//        data.generateData(this);
+        AtomicLong index = new AtomicLong(0);
+        Database.execute(data, this, connect -> {
+            Database.PageSqlContent sqlContent = new Database.PageSqlContent(data, connect, getScript(data), MapUtils.getInteger(attributes, "size", 100), !"tetris".equals(getPageMode()));
+            List<Map<String, Object>> list = null;
+            List<SubQuery> queryList = getChild(SubQuery.class);
+            boolean cache = isCacheMode();
+            try {
+                do {
+                    list = getList(sqlContent.getRealSql());
+                    sqlContent.executeQueryToMap(list);
+                    if (cache) continue;
+                    forEach(list, queryList, data, index);
+
+                } while (sqlContent.hasNextPage());
+
+                if (cache) {
+                    forEach(list, queryList, data, index);
+                }
+            } finally {
+                this.await(data);
             }
-            list.add(map);
-        }
+
+        });
     }
+
 
     @Override
     protected Future<Object> start(TaskSession data, Object preUnitResult) {
-        data.generateData(this);
+        data.getBusOrNew(this.id, HashMap::new).clear();
         BaseCondition.Page page = new BaseCondition.Page(1, 100);
         AtomicLong index = new AtomicLong(0);
         DataBaseConnectPool pool = Database.getDataBase(this);
@@ -265,17 +244,19 @@ public class Select extends Unit implements Executable, Iterable<Map<String, Obj
         @Override
         protected void startSync(TaskSession data) throws Throwable {
             Database.execute(data, this, connect -> {
-                DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
+                Database.SqlContent sqlContent = new Database.SqlContent(data, connect, getScript(data));
+                /*DatasouceConnectManager connectPool = connect.getDatasouceConnectPool();
                 Database.DataSourceTemplate template = connect.getTemplate();
                 String sql = connectPool.toPageSql(getScript(data));
                 PreparedStatement preparedStatement = template.prepare(sql, data);
                 preparedStatement.executeQuery();
                 connectPool.log("", template.sqlTemplate.log1.toString());
-                connectPool.log("", template.sqlTemplate.log2.toString());
+                connectPool.log("", template.sqlTemplate.log2.toString());*/
                 List<Map<String, Object>> list = new LinkedList<>();
-                try (ResultSet row = preparedStatement.executeQuery()) {
+                /*try (ResultSet row = preparedStatement.executeQuery()) {
                     toMap(row, list);
-                }
+                }*/
+                sqlContent.executeQueryToMap(list);
                 ((Map) data.value).put(attributes.get("name"), !isList() ? list.stream().findFirst().orElse(new HashMap<>()) : list);
             });
         }

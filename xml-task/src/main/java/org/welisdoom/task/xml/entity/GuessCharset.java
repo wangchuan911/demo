@@ -37,8 +37,8 @@ public class GuessCharset extends Unit implements Executable {
         List<String> list = result.entrySet().stream()
                 .sorted(Comparator.comparingInt(o -> o.getValue().get())).map(Map.Entry::getKey).collect(Collectors.toList());
         String charset = list.stream().findFirst().get();
-        data.generateData(this);
-        Map<String, Object> map = data.getBus(this.id);
+        Map<String, Object> map = data.getBusOrNew(this.id, HashMap::new);;
+        map.clear();
         map.put("charsets", list);
         log("选择的字符集：" + charset);
         map.put("charset", charset);

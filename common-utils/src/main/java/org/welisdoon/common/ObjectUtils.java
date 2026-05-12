@@ -283,7 +283,7 @@ public class ObjectUtils {
 
 
     public static <T> void arrangement(List<T> datas, int count, Function<List<T>, Boolean> consumer) {
-        arrangement(datas, new LinkedList<>(), count, 0, 0, consumer);
+        arrangement(datas, new ArrayList<>(count + 1), count, 0, 0, consumer);
     }
 
     protected static <T> boolean arrangement(List<T> datas, List<T> ts, int count, int offset, int index, Function<List<T>, Boolean> consumer) {
@@ -306,14 +306,28 @@ public class ObjectUtils {
         return true;
     }
 
-    public static <T> boolean find(T data, Function<T, List<T>> function, Function<T, Boolean> resultConsumer) {
+    public static <T> LoopState find(T data, Function<T, List<T>> function, Function<T, LoopState> resultConsumer) {
         for (T t : function.apply(data)) {
-            if (!find(t, function, resultConsumer)) {
-                return false;
+            if (find(t, function, resultConsumer) == LoopState.Break) {
+                return LoopState.Break;
             }
         }
         resultConsumer.apply(data);
-        return true;
+        return LoopState.Continue;
+    }
+
+    public static <T> LoopState find(Supplier<T> supplier, Function<T, LoopState> resultConsumer) {
+        T t;
+        while (Objects.nonNull(t = supplier.get())) {
+            if (resultConsumer.apply(t) == LoopState.Break) {
+                return LoopState.Break;
+            }
+        }
+        return LoopState.Continue;
+    }
+
+    public enum LoopState {
+        Continue, Break;
     }
 
     public static <T> boolean find(Iterator<T> datas, Function<Node<T>, Iterator<T>> childrenIterator, Function<Node<T>, Boolean> resultConsumer) {

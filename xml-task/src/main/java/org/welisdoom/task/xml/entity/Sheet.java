@@ -191,11 +191,20 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
         } else {
             headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
         }
-        String[] values;
+//        String[] values;
         AtomicLong index = new AtomicLong(0);
-        AtomicLong complete = new AtomicLong(0);
+//        AtomicLong complete = new AtomicLong(0);
         List<Map.Entry> entries = new LinkedList<>();
-        while ((line = readLine(reader, builder)) != null) {
+        StreamUnit.loop(() -> readLine(reader, builder), (values) -> {
+            entries.clear();
+            for (int i = 0; i < Math.min(values.length, headers.length); i++) {
+                if (StringUtils.isEmpty(values[i]))
+                    values[i] = "";
+                entries.add(Map.entry(headers[i], values[i]));
+            }
+            this.iteratorSync(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries.toArray(Map.Entry[]::new))));
+        });
+        /*while ((line = readLine(reader, builder)) != null) {
             values = line;
             entries.clear();
             for (int i = 0; i < Math.min(values.length, headers.length); i++) {
@@ -212,7 +221,7 @@ public class Sheet extends StreamUnit<StreamUnit.WriteLine> implements Iterable<
                 log(e.getMessage());
                 break;
             }
-        }
+        }*/
         await(data);
 
     }

@@ -63,6 +63,10 @@ public class Iterator extends Unit implements Executable {
         }
     }
 
+    static <T, E extends Throwable> void loop(java.util.Iterator<T> tIterator, Iterable.Looper<T, E> runner) throws E {
+        Iterable.<T, E>loop(() -> tIterator.hasNext() ? tIterator.next() : null, runner);
+    }
+
     @Override
     protected Future<Object> start(TaskSession data, Object preUnitResult) {
         return thread(data, (Iterable.Item) preUnitResult);
@@ -89,32 +93,25 @@ public class Iterator extends Unit implements Executable {
     }
 
     protected void executeSync(TaskSession data, Iterable.Item<?> item) throws Throwable {
-        data.generateData(parent);
-        Map map = data.getBus(parent.id);
-        {
-            log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
-            map.put(itemName, item.getItem());
-            map.put(itemIndex, item.getIndex());
-            item.destroy();
-            data.setValue(GCUtils.release(item));
-        }
-        try {
+        Map map = data.getBusOrNew(parent.id, HashMap::new);
+        map.clear();
+
+        log(LogUtils.styleString("", 42, 3, String.format("<%s:%s>==>循环第%d次", parent.getClass().getSimpleName(), parent.getId(), item.getIndex())));
+        map.put(itemName, item.getItem());
+        map.put(itemIndex, item.getIndex());
+        item.destroy();
+        data.setValue(GCUtils.release(item));
+
+
 //            log((JSON.toJSONString(data.getBus())));
-            if (parent instanceof Select) {
-                for (Unit child : parent.children) {
-                    if (child instanceof Select.SubQuery)
-                        child.startSync(data);
-                }
+        if (parent instanceof Select) {
+            for (Unit child : parent.children) {
+                if (child instanceof Select.SubQuery)
+                    child.startSync(data);
             }
-
-            super.startSync(data);
-
-        } finally {
-            synchronized (map) {
-                map.clear();
-            }
-            data.getBus().remove(parent.id);
         }
+
+        super.startSync(data);
     }
 
     @Deprecated
@@ -406,5 +403,6 @@ public class Iterator extends Unit implements Executable {
     public interface ThreadRunner {
         void run(TaskSession t) throws Throwable;
     }
+
 
 }

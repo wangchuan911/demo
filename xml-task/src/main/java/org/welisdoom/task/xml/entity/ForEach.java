@@ -9,10 +9,12 @@ import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoon.common.GCUtils;
 import org.welisdoon.common.LogUtils;
 
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -44,7 +46,7 @@ public class ForEach extends Iterator {
         } else {
             iterator = ((List) o).stream().iterator();
         }
-        while (iterator.hasNext()) {
+        /*while (iterator.hasNext()) {
             data.setValue(Iterable.Item.of(index.getAndIncrement(), iterator.next()));
             try {
                 ForEach.super.startSync(data);
@@ -54,8 +56,14 @@ public class ForEach extends Iterator {
                 Break.onBreak(e);
                 break;
             }
-        }
+        }*/
+        loop(iterator, o1 -> {
+            data.setValue(Iterable.Item.of(index.getAndIncrement(), o1));
+            ForEach.super.startSync(data);
+        });
     }
+
+
 
     @Override
     protected Future<Object> start(TaskSession data, Object preUnitResult) {
@@ -95,4 +103,6 @@ public class ForEach extends Iterator {
                     }
                 });
     }
+
+
 }

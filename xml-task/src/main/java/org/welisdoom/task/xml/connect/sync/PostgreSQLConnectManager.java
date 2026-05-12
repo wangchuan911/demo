@@ -31,12 +31,12 @@ public class PostgreSQLConnectManager extends DatasouceConnectManager {
     }
 
     @Override
-    public String setPage(PreparedStatement preparedStatement, BaseCondition.Page page) throws SQLException {
+    public long[] setPage(PreparedStatement preparedStatement, BaseCondition.Page page) throws SQLException {
         page.setStartIndex(0);
         int index = preparedStatement.getParameterMetaData().getParameterCount();
         preparedStatement.setLong(index - 1, page.getPageSize());
         preparedStatement.setLong(index, page.getStart());
-        return page.getPageSize() + "," + page.getStart();
+        return new long[]{page.getPageSize(), page.getStart()};
     }
 
     public String sqlFormat(String sql, List<Object> param) {

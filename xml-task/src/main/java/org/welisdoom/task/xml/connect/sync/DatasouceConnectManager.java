@@ -57,7 +57,7 @@ public abstract class DatasouceConnectManager implements IConnectManager<Connect
 
     abstract public String toPageSql(String body);
 
-    abstract public String setPage(PreparedStatement preparedStatement, BaseCondition.Page page) throws SQLException;
+    abstract public long[] setPage(PreparedStatement preparedStatement, BaseCondition.Page page) throws SQLException;
 
     abstract public String sqlFormat(String sql, List<Object> param);
 

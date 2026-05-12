@@ -45,7 +45,7 @@ public class Insert extends Unit implements Script<TaskSession>, Copyable {
             Database.DataSourceTemplate template = connect.getTemplate();
             String sql = getScript(data);
             PreparedStatement preparedStatement = template.prepare(sql, data);
-            connectPool.log("", template.sqlTemplate.log1.toString());
+//            connectPool.log("", template.sqlTemplate.log1.toString());
             connectPool.log("", template.sqlTemplate.log2.toString());
             data.setResult(this, preparedStatement.executeUpdate());
         });

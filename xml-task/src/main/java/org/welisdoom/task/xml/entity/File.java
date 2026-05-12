@@ -11,7 +11,6 @@ import org.welisdoom.task.xml.intf.type.Iterable;
 import org.welisdoom.task.xml.intf.type.Stream;
 
 import java.io.*;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -87,9 +86,9 @@ public class File extends StreamUnit<Stream.Writer> implements Executable, Copya
                 break;
             case "readline":
                 BufferedReader inputStream = new BufferedReader(new FileReader(file));
-                String text;
+//                String text;
                 AtomicLong index = new AtomicLong(0);
-                while (Objects.nonNull(text = inputStream.readLine())) {
+                /*while (Objects.nonNull(text = inputStream.readLine())) {
                     try {
                         this.iteratorSync(request, Item.of(index.incrementAndGet(), text));
                     } catch (Break.SkipOneLoopThrowable e) {
@@ -99,7 +98,10 @@ public class File extends StreamUnit<Stream.Writer> implements Executable, Copya
                         log(e.getMessage());
                         break;
                     }
-                }
+                }*/
+                StreamUnit.loop(() -> inputStream.readLine(), text -> {
+                    this.iteratorSync(request, Item.of(index.incrementAndGet(), text));
+                });
                 await(request);
                 break;
             case "byte":

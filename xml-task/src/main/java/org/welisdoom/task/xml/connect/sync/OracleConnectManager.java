@@ -26,11 +26,11 @@ public class OracleConnectManager extends DatasouceConnectManager {
     }
 
     @Override
-    public String setPage(PreparedStatement preparedStatement, BaseCondition.Page page) throws SQLException {
+    public long[] setPage(PreparedStatement preparedStatement, BaseCondition.Page page) throws SQLException {
         int index = preparedStatement.getParameterMetaData().getParameterCount();
         preparedStatement.setLong(index, page.getEnd());
         preparedStatement.setLong(index + 1, page.getStart());
-        return page.getEnd() + "," + page.getStart();
+        return new long[]{page.getEnd() , page.getStart()};
     }
 
     @Override

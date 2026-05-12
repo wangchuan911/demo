@@ -1,5 +1,6 @@
 package org.welisdoom.task.xml.handler;
 
+import com.alibaba.fastjson.JSON;
 import ognl.Ognl;
 import ognl.OgnlException;
 import org.apache.ibatis.builder.BuilderException;
@@ -23,7 +24,7 @@ public class OgnlUtils {
         try {
             return (T) Ognl.getValue(parseExpression(expression), context, root, type);
         } catch (Throwable e) {
-            throw new BuilderException("Error evaluating expression '" + expression + "'. Cause: " + e, e);
+            throw new BuilderException("Value:" + JSON.toJSONString(root) + "\nError evaluating expression '" + expression + "'. \nCause: " + e, e);
         }
     }
 
@@ -38,3 +39,4 @@ public class OgnlUtils {
         return node;
     }
 }
+ 

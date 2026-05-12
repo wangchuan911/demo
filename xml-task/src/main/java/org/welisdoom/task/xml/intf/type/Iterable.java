@@ -1,13 +1,16 @@
 package org.welisdoom.task.xml.intf.type;
 
 import io.vertx.core.Future;
+import org.welisdoom.task.xml.entity.Break;
 import org.welisdoom.task.xml.entity.Iterator;
 import org.welisdoom.task.xml.entity.TaskSession;
 import org.welisdoom.task.xml.entity.Unit;
 import org.welisdoon.common.GCUtils;
+import org.welisdoon.common.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -97,9 +100,9 @@ public interface Iterable<T> {
     }
 
     default void await(TaskSession data) throws InterruptedException {
-        List<Object> list = ((BaseUnit) this).getChild(BaseUnit.typeMatched(Iterator.class));
-        for (Object o : list) {
-            if (o instanceof Iterator) ((Iterator) o).await(data);
+        List<Iterator> list = ((BaseUnit) this).getChild(BaseUnit.typeMatched(Iterator.class));
+        for (Iterator o : list) {
+            o.await(data);
         }
     }
 
@@ -148,4 +151,23 @@ public interface Iterable<T> {
         }
         return aLong.get();
     }*/
+
+    public static <T, E extends Throwable> void loop(ObjectUtils.IfNull<T, E> supplier, Looper<T, E> resultConsumer) throws E {
+        T t;
+        while (Objects.nonNull(t = supplier.get())) {
+            try {
+                resultConsumer.step(t);
+            } catch (Break.SkipOneLoopThrowable e) {
+                Break.onContinue(e);
+            } catch (Break.BreakLoopThrowable e) {
+                Break.onBreak(e);
+                break;
+            }
+        }
+    }
+
+    @FunctionalInterface
+    interface Looper<T, E1 extends Throwable> {
+        void step(T t) throws E1;
+    }
 }

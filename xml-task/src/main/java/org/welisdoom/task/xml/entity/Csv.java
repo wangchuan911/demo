@@ -222,9 +222,18 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
             headers = Arrays.stream(cols).map(col -> col.getCode()).toArray(String[]::new);
         }
         List<Map.Entry> entries = new LinkedList<>();
-        String[] values;
+//        String[] values;
         AtomicLong index = new AtomicLong(0);
-        while (iterator.hasNext()) {
+        org.welisdoom.task.xml.entity.Iterator.loop(iterator, values -> {
+            entries.clear();
+            for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
+                if (StringUtils.isEmpty(values[i]))
+                    values[i] = "";
+                entries.add(Map.entry(headers[i], values[i]));
+            }
+            this.iteratorSync(data, Item.of(index.incrementAndGet(), Map.ofEntries(entries.toArray(Map.Entry[]::new))));
+        });
+        /*while (iterator.hasNext()) {
             values = iterator.next();
             entries.clear();
             for (int i = 0, len = Math.min(headers.length, values.length); i < len; i++) {
@@ -241,7 +250,7 @@ public class Csv extends Sheet implements Iterable<Map<String, Object>> {
                 log(e.getMessage());
                 break;
             }
-        }
+        }*/
 
         await(data);
     }

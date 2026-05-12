@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.welisdoon.web.MySpringApplication;
 import org.welisdoon.web.WebserverApplication;
+import org.welisdoon.web.config.condition.BeanRemoveProcessor;
 import org.welisdoon.web.vertx.proxy.factory.VertxServiceProxyScan;
 
 @SpringBootApplication
@@ -16,7 +17,7 @@ import org.welisdoon.web.vertx.proxy.factory.VertxServiceProxyScan;
 @ComponentScan(
         basePackageClasses = {WebserverApplication.class, MetaObjectApplication.class},
         excludeFilters = {
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {WebserverApplication.class})
+                @ComponentScan.Filter(type = FilterType.CUSTOM, classes = BeanRemoveProcessor.class)
         }
 )
 //@EnableAspectJAutoProxy(proxyTargetClass = true)
