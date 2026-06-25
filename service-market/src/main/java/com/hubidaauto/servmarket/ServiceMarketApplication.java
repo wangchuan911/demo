@@ -29,7 +29,7 @@ import org.welisdoon.web.vertx.proxy.factory.VertxServiceProxyScan;
 public class ServiceMarketApplication extends MySpringApplication {
 
     public static void main(String[] args) {
-        new SpringProxyProcessor(BaseOrderService.class);
+//        new SpringProxyProcessor(BaseOrderService.class);
         MySpringApplication.run(ServiceMarketApplication.class, args);
     }
 

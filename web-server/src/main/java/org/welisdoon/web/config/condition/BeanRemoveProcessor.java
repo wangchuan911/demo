@@ -1,5 +1,7 @@
 package org.welisdoon.web.config.condition;
 
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.ClassMetadata;
@@ -9,11 +11,12 @@ import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.stereotype.Component;
 import org.welisdoon.common.object.wrapper.execute.BaseProxyProcessor;
 import org.welisdoon.common.object.wrapper.execute.ExecuteWrapper;
-import org.welisdoon.common.object.wrapper.execute.ExecuteWrapperProcessor;
 import org.welisdoon.web.MySpringApplication;
-import org.welisdoon.web.vertx.proxy.meta.ClassData;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @Classname ExecuteWrapperBeanProcessor
@@ -23,6 +26,7 @@ import java.io.IOException;
  */
 @Component
 public class BeanRemoveProcessor implements TypeFilter {
+    List<Class<? extends Annotation>> annotations = List.of(SpringBootApplication.class, SpringBootConfiguration.class, EnableAutoConfiguration.class);
 
     @Override
     public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
@@ -32,7 +36,7 @@ public class BeanRemoveProcessor implements TypeFilter {
             if (annotationMetadata.getAnnotationTypes().stream().noneMatch(s -> s.startsWith("org.springframework")))
                 return false;
 
-            if (annotationMetadata.getAnnotationTypes().contains(SpringBootApplication.class.getName())) {
+            if (annotationMetadata.getAnnotationTypes().stream().anyMatch(s -> annotations.stream().anyMatch(aClass -> Objects.equals(s, aClass.getName())))) {
                 return !MySpringApplication.getAppClass().getName().equals(classMetadata.getClassName());
             }
 

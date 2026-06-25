@@ -1,27 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<flow>
-    <step id="xxx">
-        <race winer="3">
-            <step id="xxx" api=""></step>
-            <step id="xxx" api=""></step>
-            <step id="xxx" api=""></step>
-            <step id="xxx" api=""></step>
-            <step id="xxx" api=""></step>
-        </race>
-        <switch id="xxx">
-            <case id="xxx" when="">
-                <step id="xxx" api=""></step>
-                <step id="xxx" api=""></step>
-                <step id="xxx" api=""></step>
-                <step id="xxx" api=""></step>
-            </case>
-            <case id="xxx" when=""></case>
-            <case id="xxx" when=""></case>
-            <case id="xxx" when=""></case>
-            <case id="xxx" when=""></case>
-            <default>
-                <virtual></virtual>
-            </default>
-        </switch>
-    </step>
+<flow id="flow1">
+    <any id="1" count="3">
+        <doing id="1-1" api=""></doing>
+        <doing id="1-2" api=""></doing>
+        <doing id="1-3" api=""></doing>
+    </any>
+    <all id="2">
+        <doing id="2-1" api=""></doing>
+        <doing id="2-2" api=""></doing>
+        <doing id="2-3" api=""></doing>
+    </all>
+    <if id="3" test="false"></if>
+    <else id="4"></else>
+    <if id="6" test="true"></if>
+    <else-if id="7" test="true"></else-if>
 </flow>

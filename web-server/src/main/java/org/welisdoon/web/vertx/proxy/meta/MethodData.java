@@ -50,7 +50,7 @@ public class MethodData {
         return new JsonObject().put("method", methodName).put("paramType", parameterTypes).put("params", params);
     }
 
-    public ReturnData apply(ClassData classData) throws InvocationTargetException {
+    public ReturnData apply(ClassData classData) throws Throwable {
         classData = ClassData.getData(classData);
         String key = toKey();
         Executor executor = classData.getExecutor();

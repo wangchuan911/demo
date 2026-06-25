@@ -194,7 +194,7 @@ public class BaseProxyProcessor {
         if (parent != null) {
             parent.toJava(stringStringBiConsumer);
         }
-        StringBuilder builder1 = new StringBuilder("    public Object _apply001(String key, Object o, Object[] o1) { \n"), builder2 = new StringBuilder("    public Class<?>[] _apply002(String key) { \n");
+        StringBuilder builder1 = new StringBuilder("    public Object _apply001(String key, Object o, Object[] o1) throws Throwable { \n"), builder2 = new StringBuilder("    public Class<?>[] _apply002(String key) { \n");
         append("        ", builder1, builder2);
 
         String packageName = className.substring(0, className.lastIndexOf("."));
