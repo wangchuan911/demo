@@ -12,6 +12,7 @@ import org.welisdoon.metadata.prototype.consts.ObjectMetaType;
 import org.welisdoon.metadata.prototype.define.MetaObject;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -20,7 +21,10 @@ import java.util.stream.Collectors;
  * @Author Septem
  * @Date 15:15
  */
-public class FormatContent implements IDataAccessObject.ObjectScanner {
+public class FormatContent implements SqlMapper.ObjectScanner {
+    protected SqlMapper.MainTable table;
+
+
     public static class FormatContentObject {
         final protected Long target;
         final protected FormatContentObject parent;
@@ -63,7 +67,7 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
         }
 
         public Result query(Object id) {
-            return new Result(mapper.getBeauty().query(id));
+            return new Result(mapper.getBeauty().query(id, null));
         }
 
         public static class Result {
@@ -314,8 +318,7 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
         });
     }
 
-    @Override
-    public void scanTableAnnotation(List<IDataAccessObject.Model.TableVO> tableList) {
+    public void scanTableAnnotation(List<SqlMapper.Model.TableVO> tableList) {
         cache.stream().map(entry -> {
             SqlJoiner sqlJoiner = entry.getKey();
             IDataAccessObject.TableRel rel;
@@ -333,13 +336,28 @@ public class FormatContent implements IDataAccessObject.ObjectScanner {
             if (sqlJoiner.table.getAlias().matches("T\\d+(\\_1)*") && sqlJoiner.getParent() instanceof SqlJoiner) {
                 rel = sqlJoiner.getParent().getType() == LinkMetaType.SqlToJoinOfStrongRel || sqlJoiner.getParent().getType() == LinkMetaType.ObjConstructor ? IDataAccessObject.TableRel.Strong : rel;
             }
-            return new IDataAccessObject.Model.TableVO(
-                    entry.getValue().stream().filter(o -> o instanceof IDataAccessObject.Model.TableVO.ColumnVO).map(o -> (IDataAccessObject.Model.TableVO.ColumnVO) o).toArray(IDataAccessObject.Model.TableVO.ColumnVO[]::new),
+            return new SqlMapper.Model.TableVO(
+                    entry.getValue().stream().filter(o -> o instanceof SqlMapper.Model.TableVO.ColumnVO).map(o -> (SqlMapper.Model.TableVO.ColumnVO) o).toArray(SqlMapper.Model.TableVO.ColumnVO[]::new),
                     String.format("%s.%s %s", "this", sqlJoiner.table.getTarget(), sqlJoiner.table.getAlias()),
                     "datasource",
                     entry.getValue().stream().filter(o -> o instanceof String).map(o -> (String) o).toArray(String[]::new),
                     sqlJoiner.table.getAlias().matches("T\\d+") ? null : sqlJoiner.table.getAlias().substring(0, sqlJoiner.table.getAlias().lastIndexOf("_")),
                     rel);
         }).forEach(tableList::add);
+    }
+
+    @Override
+    public SqlMapper.MainTable getTable() {
+        return table;
+    }
+
+    @Override
+    public void setTable(SqlMapper.MainTable mainTable) {
+        table = mainTable;
+    }
+
+    @Override
+    public SqlMapper.GroupTable sql(String group, List<SqlMapper.Model.TableVO> iterator, AtomicInteger index) {
+        return null;
     }
 }

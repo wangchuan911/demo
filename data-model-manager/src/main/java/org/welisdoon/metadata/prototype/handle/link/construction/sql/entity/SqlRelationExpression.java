@@ -1,12 +1,11 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
 import org.welisdoon.common.object.wrapper.IDataAccessObject;
+import org.welisdoon.common.object.wrapper.SqlMapper;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
-import org.welisdoon.metadata.prototype.entity.DataObject;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @Classname SqlJoiner
@@ -42,7 +41,7 @@ public class SqlRelationExpression extends Sql {
     protected void addCache(FormatContent format, SqlItem a, SqlItem b) {
         SqlJoiner sqlJoiner = this.findParent(SqlJoiner.class);
         List<Object> cache = format.get(sqlJoiner);
-        cache.add(new IDataAccessObject.Model.TableVO.ColumnVO(a.format(format), sqlJoiner.getPropertyPrefix() + a.sqlAlias.alias, b.format(format), IDataAccessObject.ColumnType.Simple, String.class));
+        cache.add(new SqlMapper.Model.TableVO.ColumnVO(a.format(format), sqlJoiner.getPropertyPrefix() + a.sqlAlias.alias, b.format(format), IDataAccessObject.ColumnType.Simple, String.class));
 
     }
 

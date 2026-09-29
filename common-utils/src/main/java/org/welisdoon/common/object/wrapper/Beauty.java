@@ -83,7 +83,7 @@ public class Beauty {
     }
 
     public PagePrepare pagePrepare(Map<String, Object> params, BaseCondition.Page page) {
-        PagePrepare pagePrepare = new PagePrepare(prepare(params), PagePrepare.DefaultPageFormat.getFormat(SqlMapper.getDataSource(mainTable)));
+        PagePrepare pagePrepare = new PagePrepare(prepare(params), PagePrepare.DefaultPageFormat.getFormat(SqlMapper.getDataSource(mainTable)), page);
         pagePrepare.log("");
         return pagePrepare;
     }
@@ -201,11 +201,24 @@ public class Beauty {
         }
     }
 
-    public Map<String, Prepare.Result> query(Object id) {
+    public Map<String, Prepare.Result> query(Object id, Map<String, Object> condition) {
         SqlMapper.BaseColumn keyCol = getMainBaseTable().getColumns()[0];
 
         Prepare.Parameter parameter = new Prepare.Parameter();
-        part.paramLocal.put(parameter, Map.of(keyCol.objectAlias, TypeUtils.cast(id, keyCol.dataType, ParserConfig.getGlobalInstance())));
+        Map<String, Object> map;
+        if (condition == null || condition.isEmpty()) {
+            map = Map.of(keyCol.objectAlias, TypeUtils.cast(id, keyCol.dataType, ParserConfig.getGlobalInstance()));
+        } else {
+            Map.Entry<String, Object>[] entries = new Map.Entry[condition.size() + 1];
+            int i = 0;
+            for (Map.Entry<String, Object> entry : condition.entrySet()) {
+                entries[i++] = entry;
+            }
+            entries[i] = Map.entry(keyCol.objectAlias, TypeUtils.cast(id, keyCol.dataType, ParserConfig.getGlobalInstance()));
+            map = Map.ofEntries(entries);
+        }
+
+        part.paramLocal.put(parameter, map);
         part.queries(parameter);
         System.out.println(part);
         System.out.println(parameter.values);

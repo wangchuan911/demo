@@ -1,8 +1,8 @@
 package org.welisdoon.metadata.prototype.handle.link.construction.sql.entity;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.Assert;
 import org.welisdoon.common.object.wrapper.IDataAccessObject;
+import org.welisdoon.common.object.wrapper.SqlMapper;
 import org.welisdoon.metadata.prototype.consts.LinkMetaType;
 import org.welisdoon.metadata.prototype.define.MetaLink;
 import org.welisdoon.metadata.prototype.define.MetaObject;
@@ -10,7 +10,9 @@ import org.welisdoon.metadata.prototype.entity.DataBaseTable;
 import org.welisdoon.metadata.prototype.entity.DataObject;
 
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -248,7 +250,7 @@ public class SqlJoiner extends Sql {
             Sql last = SqlItem.format(input);
             String value = last.getPrefix();
             if (Objects.equals(value1, value)) {
-                cache.add(new IDataAccessObject.Model.TableVO.ColumnVO(
+                cache.add(new SqlMapper.Model.TableVO.ColumnVO(
                         MessageFormat.format("{0}.{1}", value, last.getAttribute().getCode()),
                         input.getCode(), null, IDataAccessObject.ColumnType.Simple, String.class));
             }

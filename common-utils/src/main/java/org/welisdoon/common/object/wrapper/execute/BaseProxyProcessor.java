@@ -277,7 +277,12 @@ public class BaseProxyProcessor {
     }
 
     public static String getExecutorName(String className) {
-        return className + "ProxyExecutor";
+        final String key = "ProxyExecutor$";
+        if (className.contains(".")) {
+            int index = className.lastIndexOf(".") + 1;
+            return className.substring(0, index) + key + className.substring(index);
+        }
+        return key + className;
     }
 
     @Override

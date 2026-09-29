@@ -63,7 +63,15 @@ public abstract class BaseCondition<ID, D> {
         }
 
         public Page nextPage() {
-            this.page++;
+            return nextPage(1);
+        }
+
+        public Page lastPage() {
+            return nextPage(-1);
+        }
+
+        public Page nextPage(int page) {
+            this.page += page;
             compute();
             return this;
         }

@@ -1,22 +1,14 @@
 package org.welisdoon.common.object.wrapper;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
 import org.welisdoon.common.data.BaseCondition;
 import org.welisdoon.common.object.PageIterator;
 
 import java.lang.annotation.*;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.sql.Connection;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @Classname IObject
@@ -26,7 +18,7 @@ import java.util.stream.Stream;
  */
 public interface IDataAccessObject {
 
-    Map<Class<?>, DataAccessObjectInfo> CLASS_METHOD = new HashMap<>();
+    Map<Class<?>, IDataAccessObject.BaseObjectInfo> CLASS_METHOD = new HashMap<>();
 
     static void initialization(Reflections reflections) {
         initialization((Collection) reflections.getTypesAnnotatedWith(DataFuture.class));
@@ -41,7 +33,7 @@ public interface IDataAccessObject {
         if (CLASS_METHOD.containsKey(aClass)) return aClass;
         Class<?> parent = initialization(aClass.getSuperclass());
         if (Arrays.stream(aClass.getInterfaces()).anyMatch(IDataAccessObject.class::isAssignableFrom)) {
-            DataAccessObjectInfo map = new DataAccessObjectInfo(aClass, CLASS_METHOD.get(parent));
+            IDataAccessObject.BaseObjectInfo map = new SqlMapper.DataAccessObjectInfo(aClass, (SqlMapper.DataAccessObjectInfo) CLASS_METHOD.get(parent));
             CLASS_METHOD.put(aClass, map);
             return aClass;
         }
@@ -84,7 +76,15 @@ public interface IDataAccessObject {
     @interface DataFuture {
         String name();
 
-        String[] filter();
+        FutureExpress[] filter();
+    }
+
+    @Target({ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface FutureExpress {
+        String property();
+
+        String[] values();
     }
 
     @Target({ElementType.TYPE})
@@ -134,7 +134,7 @@ public interface IDataAccessObject {
     }
 
     enum ColumnType {
-        PrimaryKeu, Simple, Virtual, ForeignKey;
+        PrimaryKey, Simple, Virtual, ForeignKey;
     }
 
     /*@Target({ElementType.METHOD})
@@ -168,163 +168,41 @@ public interface IDataAccessObject {
         Strong, Weak, Multi;
     }
 
-    class Model {
-        public static class TableVO {
-            final ColumnVO[] columns;
-            final String table;
-            final String datasource;
-            final String[] filter;
-            final String group;
-            final TableRel rel;
-
-            public TableVO(ColumnVO[] columns, String table, String datasource, String[] filter, String group, TableRel rel) {
-                this.columns = columns;
-                this.table = table;
-                this.datasource = datasource;
-                this.filter = filter;
-                this.group = group;
-                this.rel = rel;
-            }
-
-            public TableVO(Table table) {
-                this(Arrays.stream(table.columns()).map(ColumnVO::new).toArray(ColumnVO[]::new), table.table(), table.datasource(), table.filter(), table.group(), table.rel());
-            }
-
-            public static class ColumnVO {
-                final String column;
-                final String property;
-                final String linkColumn;
-                final ColumnType type;
-                final Class<?> dataType;
-
-                public ColumnVO(String column, String property, String linkColumn, ColumnType type, Class<?> dataType) {
-                    this.column = column;
-                    this.property = property;
-                    this.linkColumn = linkColumn;
-                    this.type = type;
-                    this.dataType = dataType;
-                }
-
-                ColumnVO(Column column) {
-                    this(column.column(), column.property(), column.linkColumn(), column.type(), column.dataType());
-                }
-            }
-        }
-    }
-
     interface ObjectScanner {
         Pattern COLUMN = Pattern.compile("(\\w+)\\.(\\w+)");
         Pattern TABLE = Pattern.compile("(\\w+\\.\\w+)\\s+(\\w+)");
 
-        default SqlMapper.GroupTable sql(SqlMapper mapper, String group, List<Model.TableVO> iterator, AtomicInteger index) {
-            List<SqlMapper.AbstractTable> iTables = new LinkedList<>();
-            TableRel rel = null;
-            for (int i = 0; iterator.size() > index.get(); index.incrementAndGet(), i++) {
-                Model.TableVO tableAnnotation = iterator.get(index.get());
-                if (StringUtils.isEmpty(tableAnnotation.group) || tableAnnotation.group.equals(group)) {
-                    Matcher tableMatcher = TABLE.matcher(tableAnnotation.table);
-                    tableMatcher.find();
-                    boolean changeRel = i == 0 && StringUtils.isNotEmpty(tableAnnotation.group);
-                    if (changeRel) rel = tableAnnotation.rel;
-                    List<SqlMapper.ColumnArg> columns = Arrays.stream(tableAnnotation.columns).map(column -> {
-                        Matcher matcher = COLUMN.matcher(column.column);
-                        if (!matcher.find()) {
-                            return null;
-                        }
-                        return new SqlMapper.ColumnArg(matcher.group(2), column.property, column.linkColumn, column.dataType);
-                    }).filter(Objects::nonNull).collect(Collectors.toList());
-                    SqlMapper.BaseTable LeafTable = new SqlMapper.BaseTable(
-                            tableMatcher.group(1),
-                            tableMatcher.group(2),
-                            columns,
-                            tableAnnotation.filter,
-                            changeRel ? TableRel.Strong : tableAnnotation.rel);
-                    iTables.add(LeafTable);
-                } else if (group == null || tableAnnotation.group.startsWith(group)) {
-                    SqlMapper.AbstractTable table = sql(mapper, tableAnnotation.group, iterator, index);
-                    index.decrementAndGet();
-                    iTables.add(table);
-                } else {
-                    break;
-                }
-            }
-            if (CollectionUtils.isEmpty(iTables)) return null;
-            rel = rel != null ? rel : TableRel.Strong;
-            SqlMapper.AbstractTable[] tables = iTables.toArray(SqlMapper.AbstractTable[]::new);
-            if (group == null)
-                return new SqlMapper.MainTable("ROOT", tables, rel);
-            else
-                return new SqlMapper.GroupTable(group, tables, rel);
+        void scanTableAnnotation();
+
+        static Matcher getColumnMatcher(String express) {
+            Matcher matcher = IDataAccessObject.ObjectScanner.COLUMN.matcher(express);
+            matcher.find();
+            return matcher;
         }
 
-        void scanTableAnnotation(List<Model.TableVO> tableList);
-
-        default SqlMapper.MainTable sql(SqlMapper mapper) {
-            List<Model.TableVO> tables = new LinkedList<>();
-            scanTableAnnotation(tables);
-            SqlMapper.MainTable table = (SqlMapper.MainTable) sql(mapper, null, tables, new AtomicInteger(0));
-            if (table == null) return null;
-            return table;
+        static Matcher getTableMatcher(String express) {
+            Matcher tableMatcher = IDataAccessObject.ObjectScanner.TABLE.matcher(express);
+            tableMatcher.find();
+            return tableMatcher;
         }
     }
 
-    class DataAccessObjectInfo implements ObjectScanner {
-        final protected Class<?> target;
-        final protected DataAccessObjectInfo parent;
-        //        protected Map<String, Method> methodMap;
-        protected SqlMapper mapper;
+    abstract class BaseObjectInfo<T extends BaseObjectInfo> {
+        final protected Class<?> wrapper;
+        final protected Class<? extends IDataAccessObject> target;
+        final protected T parent;
 
-        public DataAccessObjectInfo(Class<?> target, DataAccessObjectInfo parent) {
-            this.target = target;
+        public BaseObjectInfo(Class<?> wrapper, T parent) {
+            this.wrapper = wrapper;
+            this.target = (Class<? extends IDataAccessObject>) Arrays.stream(wrapper.getInterfaces()).filter(IDataAccessObject.class::isAssignableFrom).findFirst().orElseThrow(() -> new IllegalStateException("没有继承[IDataAccessObject]接口"));
             this.parent = parent;
-//            this.methodMap = new HashMap<>();
-//            Arrays.stream(this.target.getInterfaces()).filter(IDataAccessObject.class::isAssignableFrom).flatMap(aClass -> Arrays.stream(aClass.getMethods())).forEach(method -> {
-//                Field column = method.getAnnotation(Field.class);
-//                if (column == null) return;
-//                methodMap.put(column.name(), method);
-//            });
-            mapper = new SqlMapper(this);
-
         }
 
-//        public Method getMethod(String name) {
-//            Method method = methodMap.get(name);
-//            if (method == null && parent != null) {
-//                return parent.getMethod(name);
-//            }
-//            return method;
-//        }
+        abstract List<IDataAccessObject> query(Map<String, Object> params);
 
-        public void scanTableAnnotation(List<Model.TableVO> tableList) {
-            if (parent != null) {
-                parent.scanTableAnnotation(tableList);
-            }
-            Arrays.stream(target.getInterfaces()).filter(IDataAccessObject.class::isAssignableFrom).flatMap(aClass -> {
-                Table table = aClass.getAnnotation(Table.class);
-                if (table != null) return Stream.of(table);
-                Tables tables = aClass.getAnnotation(Tables.class);
-                if (tables != null) return Arrays.stream(tables.value());
-                return Stream.of();
-            }).map(Model.TableVO::new).forEach(tableList::add);
-        }
+        abstract List<IDataAccessObject> page(Map<String, Object> params, BaseCondition.Page page);
 
-        public List<IDataAccessObject> query(Map<String, Object> params) {
-            return mapper.beauty.query(params).stream().map(this::query).collect(Collectors.toList());
-        }
-
-        public IDataAccessObject query(Object id) {
-            Map<String, Prepare.Result> map = mapper.beauty.query(id);
-//            throw new IllegalStateException("开发中");
-            IDataAccessObject iDataAccessObject = null;
-            try {
-                iDataAccessObject = (IDataAccessObject) target.getConstructor().newInstance();
-                iDataAccessObject.initialization(map);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-            return iDataAccessObject;
-        }
-
+        abstract IDataAccessObject query(Object id);
     }
 
     default ValuesIterator find(Map<String, Object> params) {
@@ -333,11 +211,9 @@ public interface IDataAccessObject {
 
     static List<IDataAccessObject> page(Class<? extends IDataAccessObject> aClass, Map<String, Object> params, BaseCondition.Page page) {
         initialization(aClass);
-        DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
+        BaseObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return Collections.emptyList();
-        dataAccessObjectInfo.query(params);
-//        System.out.println(mapper.prepare.sql);
-        return Collections.emptyList();
+        return dataAccessObjectInfo.page(params, page);
     }
 
     static <O extends IDataAccessObject> Optional<O> getOrDefault(Class<? extends IDataAccessObject> aClass, Object id) {
@@ -346,15 +222,13 @@ public interface IDataAccessObject {
 
     static <O extends IDataAccessObject> O get(Class<? extends IDataAccessObject> aClass, Object id) {
         initialization(aClass);
-        DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
+        BaseObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return null;
-        dataAccessObjectInfo.query(id);
-//        System.out.println(mapper.prepare.sql);
-        return null;
+        return (O) dataAccessObjectInfo.query(id);
     }
 
     static int count(Class<? extends IDataAccessObject> aClass, Map<String, Object> params, BaseCondition.Page page) {
-        DataAccessObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
+        BaseObjectInfo dataAccessObjectInfo = CLASS_METHOD.get(aClass);
         if (dataAccessObjectInfo == null) return 0;
         dataAccessObjectInfo.query(params);
 

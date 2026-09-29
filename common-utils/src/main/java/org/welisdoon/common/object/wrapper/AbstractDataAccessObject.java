@@ -17,12 +17,20 @@ public abstract class AbstractDataAccessObject implements IDataAccessObject {
     }
 
     public void initialization(Map<String, Prepare.Result> values) {
+        if (this.state == State.INITIAL) {
+            throw new IllegalStateException("object is initial");
+        }
+        this.state = State.INITIAL;
+        this.clear();
+        this.values = values;
+        state = values == null || values.isEmpty() ? State.EMPTY : State.LOADED;
+    }
+
+    protected void clear() {
         if (this.values != null) {
             this.values.clear();
             this.values = null;
         }
-        this.values = values;
-        state = values == null ? State.EMPTY : State.LOADED;
     }
 
     public AbstractDataAccessObject() {
@@ -30,6 +38,6 @@ public abstract class AbstractDataAccessObject implements IDataAccessObject {
     }
 
     public enum State {
-        LOADED, EMPTY
+        LOADED, EMPTY, INITIAL
     }
 }

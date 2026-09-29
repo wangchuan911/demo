@@ -8,22 +8,22 @@ import org.welisdoon.common.object.wrapper.IDataAccessObject;
  * @Author Septem
  * @Date 10:58
  */
-@IDataAccessObject.DataFuture(name = "TypeB", filter = {})
+@IDataAccessObject.DataFuture(name = "TypeB", filter = {@IDataAccessObject.FutureExpress(property = "t5_1column1", values = "string:t5_1column1_Val")})
 @IDataAccessObject.Table(table = "user5.table5 t5_1", group = "t5", datasource = "db1", rel = IDataAccessObject.TableRel.Weak, columns = {
-        @IDataAccessObject.Column(column = "t5_1.column1", property = "t5_1column1", linkColumn = "t1.column1", type = IDataAccessObject.ColumnType.PrimaryKeu),
+        @IDataAccessObject.Column(column = "t5_1.column1", property = "t5_1column1", linkColumn = "t1.column1", type = IDataAccessObject.ColumnType.PrimaryKey),
         @IDataAccessObject.Column(column = "t5_1.column2", property = "t5_1column2"),
 })
 @IDataAccessObject.Table(table = "user2.table6 t5_2", group = "t5", datasource = "db1", rel = IDataAccessObject.TableRel.Strong, columns = {
-        @IDataAccessObject.Column(column = "t5_2.column1", property = "t5_2column1", linkColumn = "t1.column1", type = IDataAccessObject.ColumnType.PrimaryKeu),
+        @IDataAccessObject.Column(column = "t5_2.column1", property = "t5_2column1", linkColumn = "t1.column1", type = IDataAccessObject.ColumnType.PrimaryKey),
         @IDataAccessObject.Column(column = "t5_2.column2", property = "t5_2column2"),
 })
 @IDataAccessObject.Table(table = "user6.table7 t5_3", group = "t5", datasource = "db1", rel = IDataAccessObject.TableRel.Weak, columns = {
         @IDataAccessObject.Column(column = "t5_3.column1", property = "t5_3column1", linkColumn = "t1.column1"),
-        @IDataAccessObject.Column(column = "t5_3.column2", property = "t5_3column2", type = IDataAccessObject.ColumnType.PrimaryKeu),
+        @IDataAccessObject.Column(column = "t5_3.column2", property = "t5_3column2", type = IDataAccessObject.ColumnType.PrimaryKey),
 })
 @IDataAccessObject.Table(table = "user7.table8 t5_2_1", group = "t5_2", datasource = "db1", rel = IDataAccessObject.TableRel.Weak, columns = {
         @IDataAccessObject.Column(column = "t5_2_1.column1", property = "t5_2_1column1", linkColumn = "t5_2.column1"),
-        @IDataAccessObject.Column(column = "t5_2_1.column2", property = "t5_2_1column2", type = IDataAccessObject.ColumnType.PrimaryKeu),
+        @IDataAccessObject.Column(column = "t5_2_1.column2", property = "t5_2_1column2", type = IDataAccessObject.ColumnType.PrimaryKey),
 })
 @IDataAccessObject.Table(table = "user7.table9 t5_2_2", group = "t5_2", datasource = "db1", rel = IDataAccessObject.TableRel.Weak, columns = {
         @IDataAccessObject.Column(column = "t5_2_2.column1", property = "t5_2_2column1", linkColumn = "t5_2_1.column1"),

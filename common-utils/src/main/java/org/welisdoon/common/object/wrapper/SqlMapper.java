@@ -1,13 +1,21 @@
 package org.welisdoon.common.object.wrapper;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.welisdoon.common.ObjectUtils;
+import org.welisdoon.common.OgnlUtils;
+import org.welisdoon.common.data.BaseCondition;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @Classname SqlMapper
@@ -16,12 +24,12 @@ import java.util.stream.Collectors;
  * @Date 18:32
  */
 public class SqlMapper {
-    public static final Map<String, DataSource> DATA_SOURCE_MAP = new HashMap<>();
+    public static final ThreadLocal<Map<String, DataSource>> DATA_SOURCE_MAP = new ThreadLocal<>();
     final Beauty beauty;
 
-    public SqlMapper(IDataAccessObject.ObjectScanner objectScanner) {
-        SqlMapper.MainTable table = objectScanner.sql(this);
-        beauty = new Beauty(table);
+    public SqlMapper(ObjectScanner objectScanner) {
+        objectScanner.scanTableAnnotation();
+        beauty = new Beauty(objectScanner.getTable());
     }
 
     public static class ColumnArg {
@@ -47,11 +55,28 @@ public class SqlMapper {
         while (table instanceof SqlMapper.GroupTable) {
             table = ((SqlMapper.GroupTable) table).tables[0];
         }
-        return getDataSource(((SqlMapper.BaseTable) table).tableName.split("\\s+")[0]);
+        return getDataSource(((SqlMapper.BaseTable) table).tableName.split("\\s+")[0].split("\\.")[0]);
     }
 
     public static DataSource getDataSource(String name) {
-        return DATA_SOURCE_MAP.get(name);
+        initDataSourcePool(name);
+        return DATA_SOURCE_MAP.get().get(name);
+    }
+
+    public static void initDataSourcePool() {
+        ObjectUtils.synchronizedGet(DATA_SOURCE_MAP, mapThreadLocal -> DATA_SOURCE_MAP.get(), mapThreadLocal -> {
+            Map<String, DataSource> map = new ConcurrentHashMap<>();
+            mapThreadLocal.set(map);
+            return map;
+        });
+    }
+
+    public static void initDataSourcePool(String name) {
+        initDataSourcePool();
+    }
+
+    public static void destroyDataSourcePool() {
+        DATA_SOURCE_MAP.remove();
     }
 
     public static Connection getConnect(String name) {
@@ -415,5 +440,251 @@ public class SqlMapper {
         public String toString() {
             return "BC[" + getTable().tableAlias + "." + columnName + "]";
         }
+    }
+
+    public static class Model {
+        public static class TableVO {
+            final ColumnVO[] columns;
+            final String table;
+            final String datasource;
+            final String[] filter;
+            final String group;
+            final IDataAccessObject.TableRel rel;
+
+            public TableVO(ColumnVO[] columns, String table, String datasource, String[] filter, String group, IDataAccessObject.TableRel rel) {
+                this.columns = columns;
+                this.table = table;
+                this.datasource = datasource;
+                this.filter = filter;
+                this.group = group;
+                this.rel = rel;
+            }
+
+            public TableVO(IDataAccessObject.Table table) {
+                this(Arrays.stream(table.columns()).map(ColumnVO::new).toArray(ColumnVO[]::new), table.table(), table.datasource(), table.filter(), table.group(), table.rel());
+            }
+
+            public static class ColumnVO {
+                final String column;
+                final String property;
+                final String linkColumn;
+                final IDataAccessObject.ColumnType type;
+                final Class<?> dataType;
+
+                public ColumnVO(String column, String property, String linkColumn, IDataAccessObject.ColumnType type, Class<?> dataType) {
+                    this.column = column;
+                    this.property = property;
+                    this.linkColumn = linkColumn;
+                    this.type = type;
+                    this.dataType = dataType;
+                }
+
+                ColumnVO(IDataAccessObject.Column column) {
+                    this(column.column(), column.property(), column.linkColumn(), column.type(), column.dataType());
+                }
+            }
+        }
+    }
+
+    public static class DataAccessObjectInfo extends IDataAccessObject.BaseObjectInfo<DataAccessObjectInfo> implements ObjectScanner {
+        //        protected Map<String, Method> methodMap;
+        protected SqlMapper mapper;
+        SqlMapper.MainTable table;
+
+        @Override
+        public SqlMapper.MainTable getTable() {
+            return table;
+        }
+
+        @Override
+        public void setTable(SqlMapper.MainTable mainTable) {
+            table = mainTable;
+        }
+
+        public DataAccessObjectInfo(Class<?> wrapper, DataAccessObjectInfo parent) {
+            super(wrapper, parent);
+//            this.methodMap = new HashMap<>();
+//            Arrays.stream(this.target.getInterfaces()).filter(IDataAccessObject.class::isAssignableFrom).flatMap(aClass -> Arrays.stream(aClass.getMethods())).forEach(method -> {
+//                Field column = method.getAnnotation(Field.class);
+//                if (column == null) return;
+//                methodMap.put(column.name(), method);
+//            });
+            mapper = new SqlMapper(this);
+        }
+
+        public GroupTable sql(String group, List<Model.TableVO> iterator, AtomicInteger index) {
+            List<AbstractTable> iTables = new LinkedList<>();
+            IDataAccessObject.TableRel rel = null;
+            for (int i = 0; iterator.size() > index.get(); index.incrementAndGet(), i++) {
+                Model.TableVO tableAnnotation = iterator.get(index.get());
+                if (StringUtils.isEmpty(tableAnnotation.group) || tableAnnotation.group.equals(group)) {
+                    Matcher tableMatcher = TABLE.matcher(tableAnnotation.table);
+                    tableMatcher.find();
+                    boolean changeRel = i == 0 && StringUtils.isNotEmpty(tableAnnotation.group);
+                    if (changeRel) rel = tableAnnotation.rel;
+                    List<ColumnArg> columns = Arrays.stream(tableAnnotation.columns).map(column -> {
+                        Matcher matcher = COLUMN.matcher(column.column);
+                        if (!matcher.find()) {
+                            return null;
+                        }
+                        return new ColumnArg(matcher.group(2), column.property, column.linkColumn, column.dataType);
+                    }).filter(Objects::nonNull).collect(Collectors.toList());
+                    BaseTable LeafTable = new BaseTable(
+                            tableMatcher.group(1),
+                            tableMatcher.group(2),
+                            columns,
+                            tableAnnotation.filter,
+                            changeRel ? IDataAccessObject.TableRel.Strong : tableAnnotation.rel);
+                    iTables.add(LeafTable);
+                } else if (group == null || tableAnnotation.group.startsWith(group)) {
+                    AbstractTable table = sql(tableAnnotation.group, iterator, index);
+                    index.decrementAndGet();
+                    iTables.add(table);
+                } else {
+                    break;
+                }
+            }
+            if (CollectionUtils.isEmpty(iTables)) return null;
+            rel = rel != null ? rel : IDataAccessObject.TableRel.Strong;
+            AbstractTable[] tables = iTables.toArray(AbstractTable[]::new);
+            if (group == null)
+                return new MainTable("ROOT", tables, rel);
+            else
+                return new GroupTable(group, tables, rel);
+        }
+
+//        public Method getMethod(String name) {
+//            Method method = methodMap.get(name);
+//            if (method == null && parent != null) {
+//                return parent.getMethod(name);
+//            }
+//            return method;
+//        }
+
+        public void scanTableAnnotation(List<Model.TableVO> tableList) {
+            if (parent != null) {
+                parent.scanTableAnnotation(tableList);
+            }
+            IDataAccessObject.Table table = target.getAnnotation(IDataAccessObject.Table.class);
+            if (table != null) {
+                Stream.of(table).map(Model.TableVO::new).forEach(tableList::add);
+                return;
+            }
+            IDataAccessObject.Tables tables = target.getAnnotation(IDataAccessObject.Tables.class);
+            if (tables != null) {
+                Arrays.stream(tables.value()).map(Model.TableVO::new).forEach(tableList::add);
+                return;
+            }
+        }
+
+        public List<IDataAccessObject> query(Map<String, Object> params) {
+            return mapper.beauty.query(params).stream().map(this::query).collect(Collectors.toList());
+        }
+
+        public List<IDataAccessObject> page(Map<String, Object> params, BaseCondition.Page page) {
+            return mapper.beauty.page(params, page).stream().map(this::query).collect(Collectors.toList());
+        }
+
+        static String translation(IDataAccessObject.FutureExpress futureExpress) {
+            String split = " or ";
+            String operator = " == ";
+            StringJoiner joiner = new StringJoiner(split);
+            Arrays.stream(getValue(futureExpress)).forEach(s -> {
+                joiner.add(futureExpress.property() + operator + s);
+            });
+            return joiner.toString();
+        }
+
+        protected static Class<? extends IDataAccessObject> findAccessObject(Map<String, Prepare.Result> map, DataAccessObjectInfo info) {
+            IDataAccessObject.FutureExpress[] futureExpresses = info.target.getAnnotation(IDataAccessObject.DataFuture.class).filter();
+            boolean matched = true;
+            if (futureExpresses.length > 0) {
+                StringJoiner builder = new StringJoiner(" and ");
+                Map<String, Object> map1 = new HashMap<>();
+                for (IDataAccessObject.FutureExpress futureExpress : futureExpresses) {
+                    builder.add(" ( " + translation(futureExpress) + " ) ");
+                    System.out.println(builder.toString());
+                    if (map.get(futureExpress.property()) == null) {
+                        return null;
+                    }
+                    map1.put(futureExpress.property(), map.get(futureExpress.property()).getVal());
+                }
+//                System.out.println(builder.toString());
+//                System.out.println(map1);
+                matched = OgnlUtils.getValue(builder.toString(), OgnlUtils.getContent(), map1, Boolean.class);
+            }
+            if (matched) {
+                Class<? extends IDataAccessObject> aClass;
+                for (IDataAccessObject.BaseObjectInfo value : IDataAccessObject.CLASS_METHOD.values()) {
+                    if (value.parent != info) continue;
+                    aClass = findAccessObject(map, (DataAccessObjectInfo) value);
+                    if (aClass == null) continue;
+                    return aClass;
+                }
+                return (Class<? extends IDataAccessObject>) info.wrapper;
+            }
+            return null;
+        }
+
+        public static Object[] getValue(IDataAccessObject.FutureExpress futureExpress) {
+            return Arrays.stream(futureExpress.values()).map(String::trim).map(s -> {
+                String val = s;
+                if (s.matches("^\\w+\\:.+")) {
+                    val = s.substring(s.indexOf(":") + 1);
+                    switch (s.substring(0, s.indexOf(":"))) {
+                        case "int":
+                            return Integer.parseInt(val);
+                        case "long":
+                            return Long.parseLong(val);
+                        case "numeric":
+                            return new BigDecimal(val);
+                        case "string":
+                            return "'" + val + "'";
+                        default:
+                            return val;
+                    }
+                }
+                return val;
+            }).toArray();
+        }
+
+        public IDataAccessObject query(Object id) {
+            Map<String, Object> condition;
+            IDataAccessObject.FutureExpress[] futureExpresses = target.getAnnotation(IDataAccessObject.DataFuture.class).filter();
+            if (futureExpresses.length == 0) {
+                condition = Map.of();
+            } else {
+                condition = Map.ofEntries(Arrays.stream(futureExpresses).map(futureExpress -> Map.entry(futureExpress.property(), getValue(futureExpress))).toArray(Map.Entry[]::new));
+            }
+            Map<String, Prepare.Result> map = mapper.beauty.query(id, condition);
+//            throw new IllegalStateException("开发中");
+            IDataAccessObject iDataAccessObject = null;
+            try {
+                iDataAccessObject = findAccessObject(map, this).getConstructor().newInstance();
+                iDataAccessObject.initialization(map);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+            return iDataAccessObject;
+        }
+
+
+    }
+
+    public interface ObjectScanner extends IDataAccessObject.ObjectScanner {
+        void scanTableAnnotation(List<Model.TableVO> tableList);
+
+        MainTable getTable();
+
+        void setTable(SqlMapper.MainTable mainTable);
+
+        default void scanTableAnnotation() {
+            List<Model.TableVO> tables = new LinkedList<>();
+            scanTableAnnotation(tables);
+            setTable((SqlMapper.MainTable) this.sql(null, tables, new AtomicInteger(0)));
+        }
+
+        GroupTable sql(String group, List<Model.TableVO> iterator, AtomicInteger index);
+
     }
 }
