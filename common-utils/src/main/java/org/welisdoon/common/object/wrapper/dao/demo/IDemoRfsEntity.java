@@ -12,14 +12,14 @@ import java.math.BigDecimal;
  * @Date 11:06
  */
 @Database.Extra(
-        feature = @Database.Feature(alias = "rfs", express = "true=true"),
+        feature = @Database.Feature(alias = "rfs", express = {}),
         parts = {})
 @Database.Relation(target = IDemoRfsEntity.Rfs2Entity.class, rel = @Database.AttrToAttr(self = "id", target = "serviceId"), alias = "res", one2More = true)
 public interface IDemoRfsEntity extends IDemoServiceEntity {
 
     @Database.Main(
             id = "id",
-            feature = @Database.Feature(alias = "res", express = "true=true"),
+            feature = @Database.Feature(alias = "res", express = {}),
             parts = {
                     @Database.Part(
                             name = "res.rr_service_entity t1",
@@ -30,14 +30,9 @@ public interface IDemoRfsEntity extends IDemoServiceEntity {
                                     @Database.Attr(name = "comp_id", alias = "compId", desc = "字段2")
                             })
             })
-    @Database.Relation2(
-            alias = "entity",
-            selfAttr = "entityId",
-            rel = {
-                    @Database.AttrToAttr2(targetAttr = "id", targetType = IDemoLinkEntity.class),
-                    @Database.AttrToAttr2(targetAttr = "id", targetType = IDemoDeviceEntity.class)
-            }
-    )
+
+    @Database.Relation(alias = "entity", target = IDemoLinkEntity.class, rel = @Database.AttrToAttr(self = "entityId", target = "id"))
+    @Database.Relation(alias = "entity", target = IDemoDeviceEntity.class, rel = @Database.AttrToAttr(self = "entityId", target = "id"))
     interface Rfs2Entity extends IEntity<BigDecimal> {
 
     }

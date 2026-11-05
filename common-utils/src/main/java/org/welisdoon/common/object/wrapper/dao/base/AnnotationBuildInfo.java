@@ -1,14 +1,16 @@
 package org.welisdoon.common.object.wrapper.dao.base;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.welisdoon.common.object.wrapper.dao.demo.IDemoRfsEntity;
-import org.welisdoon.common.object.wrapper.database.SqlBuilder;
+import org.welisdoon.common.object.PageList;
 import org.welisdoon.common.object.wrapper.dao.annotation.Database;
 import org.welisdoon.common.object.wrapper.dao.demo.IDemoLinkEntity;
+import org.welisdoon.common.object.wrapper.dao.demo.IDemoRfsEntity;
+import org.welisdoon.common.object.wrapper.database.SqlBuilder;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -22,13 +24,19 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
     static final Pattern TABLE = Pattern.compile("(\\w+\\.\\w+)\\s+(\\w+)");
     static final Map<Class<? extends IEntity>, List<AnnotationBuildInfo>> cache = new HashMap<>();
 
-    Class<? extends IEntity> type;
-    String name;
-    AnnotationBuildInfo parent;
-    List<AnnotationBuildInfo> children = new LinkedList<>();
-    Database.Part[] parts;
+    final Class<? extends IEntity> type;
+    final Class<? extends IEntity> wrapType = null;
+    final String name;
+    final AnnotationBuildInfo parent;
+    final List<AnnotationBuildInfo> children = new LinkedList<>();
+    final Database.Part[] parts;
+    final Database.Feature feature;
+    final Map<String, List<Database.Relation>> relations;
+    final SqlBuilder.SelectGroup selectGroup;
+    final String id;
 
     protected AnnotationBuildInfo(Class<? extends IEntity> aClass) {
+        AnnotationBuildInfo parent = null;
         type = aClass;
         if (!aClass.isInterface()) throw new IllegalStateException("只支持interface");
         for (Class<?> anInterface : aClass.getInterfaces()) {
@@ -43,17 +51,24 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
             buildInfos.add(this);
             return buildInfos;
         });
-        List<SqlBuilder.Select> selects = new LinkedList<>();
         if (parent == null) {
             Database.Main main = aClass.getAnnotation(Database.Main.class);
             this.name = main.feature().alias();
-            parts = main.parts();
+            this.parts = main.parts();
+            this.feature = main.feature();
+            this.id = main.id();
         } else {
             Database.Extra extra = aClass.getAnnotation(Database.Extra.class);
             this.name = extra.feature().alias();
-            parts = extra.parts();
+            this.parts = extra.parts();
+            this.feature = extra.feature();
+            this.id = parent.id;
         }
+        this.parent = parent;
+        this.relations = Arrays.stream(type.getAnnotationsByType(Database.Relation.class)).collect(Collectors.groupingBy(Database.Relation::alias));
+        this.selectGroup = new SqlBuilder.SelectGroup();
     }
+
 
     static Matcher readTableInfo(String express) {
         Matcher tableMatcher = TABLE.matcher(express);
@@ -65,6 +80,51 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
         Matcher tableMatcher = COLUMN.matcher(express);
         tableMatcher.find();
         return tableMatcher;
+    }
+
+    public IEntity toEntity(LazyEntityPageList.LazyEntity entity) {
+        Set<String> keys = new HashSet<>();
+        String key;
+        for (SqlBuilder.SelectGroup.Member member : this.selectGroup) {
+            if (member.query instanceof AnnotationBuildInfo.SimpleQuery) {
+                for (SqlBuilder.Property column : ((AnnotationBuildInfo.SimpleQuery) member.query).select.columns) {
+                    key = column.name;
+                    if (entity.data().containsKey(key)) continue;
+                    entity.data().put(key, member.query);
+                    keys.add(key);
+                }
+            } else if (member.query instanceof AnnotationBuildInfo.LazyQuery) {
+                key = ((AnnotationBuildInfo.LazyQuery) member.query).name;
+                if (entity.data().containsKey(key)) continue;
+                entity.data().put(key, member.query);
+                keys.add(key);
+            }
+        }
+        if (this.feature.express().length == 0 || Arrays.stream(this.feature.express()).allMatch(express -> {
+            if (express.value().length == 0) return false;
+            switch (express.operation()) {
+                case Equal:
+                    String value = Objects.toString(entity.value(express.attr()));
+                    return Arrays.stream(express.value()).anyMatch(value::equals);
+            }
+            return false;
+        })) {
+            for (AnnotationBuildInfo child : children) {
+                IEntity entity1 = child.toEntity(entity);
+                if (entity1 != null) {
+                    return entity1;
+                }
+            }
+            try {
+                return wrapType.getConstructor(Map.class).newInstance(entity.data());
+            } catch (Throwable e) {
+                throw new IllegalStateException(e.getMessage(), e);
+            }
+        }
+        for (String s : keys) {
+            entity.data().remove(s);
+        }
+        return null;
     }
 
     public static class QueryParameter {
@@ -157,6 +217,28 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
     //         where t1.col1=t2.col1
     //   )
     // 只返回id
+    protected void setFeatureCondition(SqlBuilder.Select select) {
+        if (feature.express().length == 0) return;
+        SqlBuilder.Property property;
+        for (Database.Express express : feature.express()) {
+            property = select.findProperty(express.attr());
+            if (property != null) break;
+            for (SqlBuilder.Join join : select.joins) {
+                property = join.findProperty(express.attr());
+                if (property != null) break;
+            }
+            if (property != null) break;
+            for (SqlBuilder.Condition condition : select.conditions) {
+                if (!(condition instanceof SqlBuilder.Exists)) continue;
+                property = ((SqlBuilder.Exists) condition).findProperty(express.attr());
+                if (property != null) break;
+            }
+            if (property == null) throw new IllegalStateException("没有找到对应的字段" + express.attr());
+            property.column.join.conditions.add(new SqlBuilder.ConstCondition(property.column, "=", express.value()));
+        }
+
+    }
+
     protected void buildQuerySelect(QueryParameter cache) {
         final SqlBuilder.Select select;
         Database.Part part;
@@ -191,25 +273,42 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
 
         if (parts.hasNext()) throw new IllegalStateException("存在未关联的对象" + parts.next().name());
 
-        Iterator<Database.Relation> iterator = Arrays.stream(type.getAnnotationsByType(Database.Relation.class)).iterator();
-        Database.Relation relation;
-        while (iterator.hasNext()) {
-            relation = iterator.next();
-            if (!hasParams(relation, cache.condition)) continue;
-            AnnotationBuildInfo annotationBuildInfo = AnnotationBuildInfo.get(relation.target());
-            QueryParameter cache1 = cache.subParameter(relation.alias());
-            annotationBuildInfo.buildQuerySelect(cache1);
-            SqlBuilder.Select select1 = cache1.main;
-            SqlBuilder.WithAs.As as = select.withAs.add(cache.prefix + select1.alias + "_" + select.withAs.size(), select1);
-            Map<Database.AttrToAttr, SqlBuilder.Property> attrToAttrPropertyMap = new HashMap<>();
-            SqlBuilder.Join join1 = withAsFindJoin(select, relation, attrToAttrPropertyMap);
-            if (join1 == null) throw new IllegalStateException(as + "没有跟当前表有关联");
-            attrToAttrPropertyMap.forEach((attrToAttr, property) -> {
-                initWithAsCondition(attrToAttr, property, as, join1);
-            });
+        ;
+        for (Map.Entry<String, List<Database.Relation>> stringListEntry : relations.entrySet()) {
+            if (stringListEntry.getValue().size() == 1) {
+                Database.Relation relation = stringListEntry.getValue().get(0);
+                if (!hasParams(relation, cache.condition)) continue;
+                AnnotationBuildInfo annotationBuildInfo = AnnotationBuildInfo.get(relation.target());
+                QueryParameter cache1 = cache.subParameter(relation.alias());
+                annotationBuildInfo.buildQuerySelect(cache1);
+                SqlBuilder.Select select1 = cache1.main;
+                SqlBuilder.WithAs.SelectAs as = select.addWithAs(cache.prefix, select1);
+                Map<Database.AttrToAttr, SqlBuilder.Property> attrToAttrPropertyMap = new HashMap<>();
+                SqlBuilder.Join join1 = withAsFindJoin(select, relation, attrToAttrPropertyMap);
+                if (join1 == null) throw new IllegalStateException(as + "没有跟当前表有关联");
+                attrToAttrPropertyMap.forEach((attrToAttr, property) -> {
+                    initWithAsCondition(attrToAttr, property, as, join1);
+                });
+            } else {
+                Set<String> selfAttr = getSelfAttr(stringListEntry.getValue());
+                SqlBuilder.UnionExists exists = new SqlBuilder.UnionExists(false);
+                SqlBuilder.Join join1 = Stream.of(Stream.of(cache.main), cache.main.joins.stream()).flatMap(stream -> stream).filter(join -> join.columns.stream().anyMatch(property -> selfAttr.contains(property.name))).reduce((join, join2) -> join2).orElseThrow(() -> new IllegalStateException("没有找到对应的属性:" + selfAttr));
+                for (Database.Relation relation : stringListEntry.getValue()) {
+                    AnnotationBuildInfo annotationBuildInfo = AnnotationBuildInfo.get(relation.target());
+                    QueryParameter cache1 = cache.subParameter(relation.alias());
+                    annotationBuildInfo.buildQuerySelect(cache1);
+                    SqlBuilder.Select select1 = cache1.main;
+                    exists.add(select1);
+                    for (Database.AttrToAttr attrToAttr : relation.rel()) {
+                        select1.conditions.add(new SqlBuilder.EqualCondition(select1.findProperty(attrToAttr.target()).column, join1.findProperty(attrToAttr.self()).column));
+                    }
+                }
+                join1.conditions.add(exists);
+            }
 
         }
-        System.out.println(type.getAnnotationsByType(Database.Relations2.class));
+        setFeatureCondition(select);
+        /*System.out.println(type.getAnnotationsByType(Database.Relations2.class));
         Iterator<Database.Relation2> iterator2 = Arrays.stream(type.getAnnotationsByType(Database.Relation2.class)).iterator();
         while (iterator2.hasNext()) {
             Database.Relation2 relation2 = iterator2.next();
@@ -225,7 +324,17 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
                 select1.conditions.add(new SqlBuilder.EqualCondition(select1.findProperty(attrToAttr2.targetAttr()).column, join1.findProperty(relation2.selfAttr()).column));
             }
             join1.conditions.add(exists);
+        }*/
+    }
+
+    public Set<String> getSelfAttr(List<Database.Relation> value) {
+        Iterator<String[]> iterator = value.stream().map(relation -> Arrays.stream(relation.rel()).map(Database.AttrToAttr::self).toArray(String[]::new)).iterator();
+        String[] strings = iterator.next();
+        while (iterator.hasNext()) {
+            if (Arrays.equals(strings, iterator.next())) continue;
+            throw new IllegalStateException("组合的方式的 Relation self要一致");
         }
+        return Arrays.stream(strings).collect(Collectors.toSet());
     }
 
 
@@ -241,7 +350,7 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
                 }
             }
         }
-        for (Database.Relation2 relation : type.getAnnotationsByType(Database.Relation2.class)) {
+        /*for (Database.Relation2 relation : type.getAnnotationsByType(Database.Relation2.class)) {
             for (Database.AttrToAttr2 attrToAttr2 : relation.rel()) {
                 String key = relation.alias() + "." + attrToAttr2.targetAttr();
                 if (condition.containsKey(key)) {
@@ -250,7 +359,7 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
                     condition.put(key2, condition.remove(key));
                 }
             }
-        }
+        }*/
     }
 
     protected SqlBuilder.Join withAsFindJoin(SqlBuilder.Select select, Database.Relation relation, Map<Database.AttrToAttr, SqlBuilder.Property> attrToAttrPropertyMap) {
@@ -279,7 +388,7 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
         return join1;
     }
 
-    protected void initWithAsCondition(Database.AttrToAttr attrToAttr, SqlBuilder.Property property, SqlBuilder.WithAs.As as, SqlBuilder.Join join) {
+    protected void initWithAsCondition(Database.AttrToAttr attrToAttr, SqlBuilder.Property property, SqlBuilder.WithAs.SelectAs as, SqlBuilder.Join join) {
         SqlBuilder.Exists exists = as.toExists(as.name, false);
         exists.conditions.add(new SqlBuilder.EqualCondition(property.column, Optional.ofNullable(exists.findProperty(attrToAttr.target())).orElseThrow(() -> new IllegalStateException("没有找到字段:" + attrToAttr.target())).column));
         join.conditions.add(exists);
@@ -322,7 +431,7 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
             Database.Relation relation = iterator.next();
             AnnotationBuildInfo annotationBuildInfo = get(relation.target());
             SqlBuilder.SelectGroup.Member member = new SqlBuilder.SelectGroup.Member();
-            SqlBuilder.SelectGroup.Query query = new LazyQuery(annotationBuildInfo, relation);
+            SqlBuilder.SelectGroup.Query query = relation.one2More() ? new LazyQuery2(annotationBuildInfo, relation) : new LazyQuery(annotationBuildInfo, relation);
             member.level = relation.one2More() ? SqlBuilder.SelectGroup.Level.Multi : SqlBuilder.SelectGroup.Level.Weak;
             member.query = query;
             selectGroup.add(member);
@@ -332,18 +441,23 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
 
     public static <T extends IEntity> List<T> query(Class<T> type, Map<String, Object> params) {
         AnnotationBuildInfo annotationBuildInfo = AnnotationBuildInfo.get(type);
-        QueryParameter queryParameter = new QueryParameter(params);
-        annotationBuildInfo.buildQuerySelect(queryParameter);
-        SqlBuilder.Select select = queryParameter.main;
-        System.out.println(select);
-        SqlBuilder.SelectGroup selectGroup = new SqlBuilder.SelectGroup();
-        annotationBuildInfo.buildQuerySelect(selectGroup);
-        System.out.println(selectGroup);
-        return List.of();
+        return annotationBuildInfo.query(params);
     }
 
-    public IEntity get(Object id) {
-        return null;
+    public static <T extends IEntity> int count(Class<T> type, Map<String, Object> params) {
+        AnnotationBuildInfo annotationBuildInfo = AnnotationBuildInfo.get(type);
+        return annotationBuildInfo.count(params);
+    }
+
+    public static <T extends IEntity> T get(Class<T> type, Object id) {
+        AnnotationBuildInfo annotationBuildInfo = AnnotationBuildInfo.get(type);
+        return annotationBuildInfo.get(id);
+    }
+
+    public <T extends IEntity> T get(Object id) {
+        Map<String, Object> map = new HashMap<>();
+        map.put(this.id, id);
+        return new LazyEntityPageList.LazyEntity(this, map).build();
     }
 
     protected void toJoin(Database.Part part, QueryParameter cache, SqlBuilder.Select select) {
@@ -380,7 +494,7 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
         return false;
     }
 
-    protected boolean hasParams(Database.Relation2 relation, Map<String, Object> params) {
+    /*protected boolean hasParams(Database.Relation2 relation, Map<String, Object> params) {
         String key = relation.alias() + ".";
         for (String s : params.keySet()) {
             if (s.startsWith(key)) {
@@ -388,7 +502,7 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
             }
         }
         return false;
-    }
+    }*/
 
 
     protected void initCondition(SqlBuilder.Join join, List<Database.Attr> attrs, Map<String, SqlBuilder.Column> rel) {
@@ -458,80 +572,136 @@ class AnnotationBuildInfo implements IEntity.BuildInfo {
 
     public static class SimpleQuery implements SqlBuilder.SelectGroup.Query {
         public SqlBuilder.Select select;
-        Map<String, Object> result;
-        public Map<String, SqlBuilder.Property> relCols = new HashMap<>();
+        public Set<String> relCols = new HashSet<>();
 
         protected SimpleQuery(SqlBuilder.Select select, String idKey) {
             this.select = select;
-            relCols.put(idKey, select.columns.stream().filter(property -> property.name.equals(idKey)).findFirst().orElseThrow(() -> new IllegalStateException("没有找到对应的属性:" + idKey)));
+            SqlBuilder.Property property = Optional.ofNullable(select.findProperty(idKey)).orElseThrow(() -> new IllegalStateException("没有找到对应的属性:" + idKey));
+            this.select.conditions.add(new SqlBuilder.EqualCondition(property.column, new SqlBuilder.Input(property.name, property.type)));
+            relCols.add(idKey);
         }
 
         protected SimpleQuery(SqlBuilder.Select select, Database.Attr[] attrs) {
             this.select = select;
             for (Database.Attr attr : attrs) {
                 if (attr.relAttr().isEmpty()) continue;
-                relCols.put(attr.relAttr(), select.columns.stream().filter(property -> property.name.equals(attr.alias())).findFirst().orElseThrow(() -> new IllegalStateException("没有找到对应的属性:" + attr.alias())));
+                SqlBuilder.Property property = Optional.ofNullable(select.findProperty(attr.alias())).orElseThrow(() -> new IllegalStateException("没有找到对应的属性:" + attr.alias()));
+                this.select.conditions.add(new SqlBuilder.EqualCondition(property.column, new SqlBuilder.Input(attr.relAttr(), property.type)));
+                relCols.add(property.name);
             }
         }
 
 
         @Override
-        public boolean propertyMatched(String s) {
-            return select.findProperty(s) != null;
+        public void load(String s, Map<String, Object> map) {
+            relCols.forEach(s1 -> {
+                if (map.get(s1) instanceof SqlBuilder.SelectGroup.Query)
+                    ((SqlBuilder.SelectGroup.Query) map.get(s1)).load(s, map);
+            });
+            System.out.println(select);
+            if (select.columns.stream().anyMatch(property -> property.name.equals(s)))
+                for (SqlBuilder.Property column : select.columns) {
+                    map.put(column.name, column.name);
+                }
+            for (SqlBuilder.Join join : this.select.joins) {
+                if (join.columns.stream().anyMatch(property -> property.name.equals(s)))
+                    for (SqlBuilder.Property column : join.columns) {
+                        map.put(column.name, column.name);
+                    }
+            }
         }
 
-        public Object load(String s) {
-            return new Object();
+        @Override
+        public String toString() {
+            return "\n简单加载:" + select + "\n";
         }
-
-
     }
 
     public static class LazyQuery implements SqlBuilder.SelectGroup.Query {
-        boolean one2More;
         public String name;
         public AnnotationBuildInfo buildInfo;
-        SqlBuilder.SelectGroup group;
         public Map<String, String> relCols = new HashMap<>();
 
         protected LazyQuery(AnnotationBuildInfo buildInfo, Database.Relation relation) {
             this.buildInfo = buildInfo;
             this.name = relation.alias() + ".";
-            this.one2More = relation.one2More();
             for (Database.AttrToAttr attrToAttr : relation.rel()) {
                 relCols.put(attrToAttr.self(), attrToAttr.target());
             }
         }
 
+        protected Map<String, Object> toMap(Map<String, Object> map) {
+            Map<String, Object> map1 = new HashMap<>();
+            relCols.forEach((s1, s2) -> {
+                map1.put(s2, map.get(s1));
+            });
+            return map1;
+        }
+
         @Override
-        public boolean propertyMatched(String s) {
-            return s.startsWith(name);
+        public void load(String s, Map<String, Object> map) {
+            Map<String, Object> map1 = toMap(map);
+            map.put(name.substring(0, name.indexOf(".")), buildInfo.query(map1).stream().findFirst().orElse(null));
         }
 
-        public Object load(String s) {
-            initGroup();
-            for (SqlBuilder.SelectGroup.Member member : group) {
-                if (member.query.propertyMatched(s)) {
-                    return member.query.load(s);
-                }
-            }
-            return null;
+        @Override
+        public String toString() {
+            return "\n懒加载[" + name + "]==>" + buildInfo.type + "\n";
+        }
+    }
+
+    public static class LazyQuery2 extends LazyQuery {
+
+        protected LazyQuery2(AnnotationBuildInfo buildInfo, Database.Relation relation) {
+            super(buildInfo, relation);
         }
 
-        protected void initGroup() {
-            if (group == null) {
-                synchronized (this) {
-                    if (group == null) {
-                        group = new SqlBuilder.SelectGroup();
-                        buildInfo.buildQuerySelect(group);
-                    }
+        @Override
+        public void load(String s, Map<String, Object> map) {
+            Map<String, Object> map1 = toMap(map);
+            String key = name.substring(0, name.indexOf("."));
+            map.put(key, buildInfo.query(map1));
+        }
+    }
+
+    protected <T extends IEntity> List<T> query(Map<String, Object> map1) {
+        QueryParameter queryParameter = new QueryParameter(map1);
+        buildQuerySelect(queryParameter);
+        SqlBuilder.Select select = queryParameter.main;
+        System.out.println(select);
+        if (selectGroup.size() == 0) {
+            synchronized (this) {
+                if (selectGroup.size() == 0) {
+                    buildQuerySelect(selectGroup);
+                    System.out.println(selectGroup);
                 }
             }
         }
+        return new LazyEntityPageList<T>(new PageList<LazyEntityPageList.LazyEntity>(page -> {
+            return List.of();
+        }, () -> {
+            try {
+                select.count = true;
+            } finally {
+                select.count = false;
+            }
+            return 0;
+        }));
+    }
+
+    protected int count(Map<String, Object> map1) {
+        QueryParameter queryParameter = new QueryParameter(map1);
+        buildQuerySelect(queryParameter);
+        SqlBuilder.Select select = queryParameter.main;
+        select.count = true;
+        System.out.println(select);
+        return 0;
     }
 
     public static void main(String[] args) {
         query(IDemoLinkEntity.class, Map.of("id", 1, "link2Parent.link.code", 3, "link2Children.link.code", 4));
         query(IDemoRfsEntity.class, Map.of("id", 1, "res.entity.code", 3));
+        count(IDemoLinkEntity.class, Map.of("id", 1, "link2Parent.link.code", 3, "link2Children.link.code", 4));
+        count(IDemoRfsEntity.class, Map.of("id", 1, "res.entity.code", 3));
     }
 }

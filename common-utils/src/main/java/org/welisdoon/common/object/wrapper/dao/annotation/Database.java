@@ -58,7 +58,23 @@ public interface Database {
         //对象名
         String alias();
 
-        String express();
+        Express[] express();
+    }
+
+    @Target({ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Express {
+        //属性名
+        String attr();
+
+        String[] value();
+
+        Operation operation() default Operation.Equal;
+
+    }
+
+    enum Operation {
+        Equal
     }
 
     //字段
@@ -113,7 +129,7 @@ public interface Database {
         Relation[] value();
     }
 
-    @Target({ElementType.TYPE})
+   /* @Target({ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     @Repeatable(Relations2.class)
     @interface Relation2 {
@@ -136,5 +152,5 @@ public interface Database {
         Class<? extends IEntity> targetType();
 
         String targetAttr();
-    }
+    }*/
 }

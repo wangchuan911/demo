@@ -1,5 +1,7 @@
 package org.welisdoon.common.object.wrapper.database;
 
+import org.welisdoon.common.data.BaseCondition;
+
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Predicate;
@@ -52,19 +54,22 @@ public class SqlBuilder {
             return builder.toString();
         }
 
-        public As add(String name, Select select) {
-            As as = new As(name, select);
+        public SelectAs add(String name, Select select) {
+            SelectAs as = new SelectAs(name, select);
             if (super.add(as)) {
                 return as;
             }
             throw new IllegalStateException("写入with as 失败");
         }
 
-        public static class As {
+        public interface As {
+        }
+
+        public static class SelectAs implements As {
             public Select select;
             public String name;
 
-            public As(String name, Select select1) {
+            public SelectAs(String name, Select select1) {
                 this.name = name.replaceAll("\\.", "_");
                 this.select = select1;
 
@@ -109,9 +114,11 @@ public class SqlBuilder {
     }
 
     public static class Select extends Join {
+        BaseCondition.Page page;
         public WithAs withAs = new WithAs();
         public List<Join> joins = new LinkedList<>();
         public boolean distinct = false;
+        public boolean count = false;
         public Predicate<Property> propertyFilter = property -> true;
 
         public Select() {
@@ -135,16 +142,52 @@ public class SqlBuilder {
             return this;
         }
 
+        public WithAs.SelectAs addWithAs(String prefix, Select select1) {
+            return withAs.add(prefix + select1.alias + "_" + this.withAs.size(), select1);
+        }
+
+        protected Iterator<Join> getAllJoins() {
+            List<Join> joins = new LinkedList<>();
+            joins.add(this);
+            joins.addAll(this.joins);
+            for (Condition condition : this.conditions) {
+                if (!(condition instanceof Exists)) continue;
+                joins.add((Join) condition);
+                joins.addAll(((Exists) condition).joins);
+            }
+            return joins.iterator();
+        }
+
+        public Select addCondition(String name, String name2) {
+            Property p1 = null, p2 = null, last = null, column;
+            Iterator<? extends Join> iterator = getAllJoins();
+            while (iterator.hasNext()) {
+                Join join = iterator.next();
+                if (p1 == null && (column = join.findProperty(name)) != null) {
+                    p1 = last = column;
+                }
+                if (p2 == null && (column = join.findProperty(name2)) != null) {
+                    p2 = last = column;
+                }
+                if (p1 != null && p2 != null) break;
+            }
+            if (p1 == null) throw new IllegalStateException("没有找到字段:" + name);
+            if (p2 == null) throw new IllegalStateException("没有找到字段:" + name2);
+            last.column.join.conditions.add(new EqualCondition(p1.column, p2.column));
+            return this;
+        }
+
         @Override
         public String toString() {
-            return MessageFormat.format("{6}SELECT{5}{4} \n  FROM {0} AS {1} {2} \n WHERE {3}",
+            return MessageFormat.format("{6}SELECT{5}{4} \n  FROM {0} AS {1} {2} \n WHERE {3}{7}",
                     table,
                     alias,
                     joins.stream().map(Join::toString).collect(Collectors.joining(" ")),
                     conditions.stream().map(Object::toString).collect(Collectors.joining("\n   AND ")),
-                    Stream.of(columns.stream().filter(propertyFilter), joins.stream().flatMap(join -> join.columns.stream().filter(propertyFilter))).flatMap(propertyStream -> propertyStream.map(Property::toString)).collect(Collectors.joining(",")),
-                    distinct ? " distinct " : " ",
-                    withAs
+                    count ? "count(1) AS \"count\"" : Stream.of(columns.stream().filter(propertyFilter), joins.stream().flatMap(join -> join.columns.stream().filter(propertyFilter))).flatMap(propertyStream -> propertyStream.map(Property::toString)).collect(Collectors.joining(",")),
+                    !count && distinct ? " distinct " : " ",
+                    withAs,
+                    page == null ? "" : MessageFormat.format(" limit {0} offset {1}", new Input("_page.pageSize", Number.class), new Input("_page.start", Number.class))
             );
         }
     }
@@ -342,14 +385,10 @@ public class SqlBuilder {
         }
     }
 
-    public static class UnionExists extends LinkedList<Select> implements Condition {
-        boolean isNot;
+    public static class UnionSelect extends LinkedList<Select> {
+        boolean distinct;
 
-        public UnionExists(boolean isNot) {
-            this.isNot = isNot;
-        }
-
-        public UnionExists add(String table, String alias, Condition... conditions) {
+        public UnionSelect add(String table, String alias, Condition... conditions) {
             Select select = new Select(table, alias);
             for (Condition condition : conditions) {
                 select.conditions.add(condition);
@@ -360,18 +399,36 @@ public class SqlBuilder {
 
         @Override
         public String toString() {
+            return this.stream().map(select1 -> {
+                return MessageFormat.format(
+                        "{4}SELECT 1 \n  FROM {0} AS {1} {2} \n WHERE {3}",
+                        select1.table,
+                        select1.alias,
+                        select1.joins.stream().map(Join::toString).collect(Collectors.joining(" ")),
+                        select1.conditions.stream().map(Object::toString).collect(Collectors.joining("\n   AND ")),
+                        select1.withAs
+                );
+            }).collect(Collectors.joining("\n UNION" + (distinct ? "\n" : " ALL\n")));
+        }
+    }
+
+    public static class UnionExists extends UnionSelect implements Condition {
+        boolean isNot;
+
+        public UnionExists(boolean isNot) {
+            this.isNot = isNot;
+        }
+
+        public UnionExists add(String table, String alias, Condition... conditions) {
+            super.add(table, alias, conditions);
+            return this;
+        }
+
+        @Override
+        public String toString() {
             return MessageFormat.format("{0} (\n{1}\n)",
                     isNot ? "NOT EXISTS" : "EXISTS",
-                    this.stream().map(select1 -> {
-                        return MessageFormat.format(
-                                "{4}SELECT 1 \n  FROM {0} AS {1} {2} \n WHERE {3}",
-                                select1.table,
-                                select1.alias,
-                                select1.joins.stream().map(Join::toString).collect(Collectors.joining(" ")),
-                                select1.conditions.stream().map(Object::toString).collect(Collectors.joining("\n   AND ")),
-                                select1.withAs
-                        );
-                    }).collect(Collectors.joining("\n UNION ALL\n")));
+                    super.toString());
         }
     }
 
@@ -404,17 +461,49 @@ public class SqlBuilder {
         public static class Member {
             public Query query;
             public Level level;
+
+            @Override
+            public String toString() {
+                return Objects.toString(query);
+            }
         }
 
         public interface Query {
-            boolean propertyMatched(String s);
+//            boolean containProperty(String s);
 
-            Object load(String s);
+            void load(String s, Map<String, Object> map);
         }
 
 
         public enum Level {
             Strong, Weak, Multi;
+        }
+    }
+
+    public static class ConstCondition implements Condition {
+        Column aColumn;
+        String[] value;
+        String operation;
+
+        public ConstCondition(Column aColumn, String operation, String... value) {
+            this.aColumn = aColumn;
+            this.value = value;
+            this.operation = operation;
+        }
+
+        @Override
+        public String toString() {
+            if (value.length == 0) {
+                return aColumn + " = null";
+            }
+            if (value.length > 1) {
+                if (operation.equals("=")) {
+                    return aColumn + "in ( " + Arrays.stream(value).map(s -> "'" + s + "'").collect(Collectors.joining(" , ")) + " )";
+                } else if (operation.equals("!=")) {
+                    return aColumn + "NOT IN ( " + Arrays.stream(value).map(s -> "'" + s + "'").collect(Collectors.joining(" , ")) + " )";
+                }
+            }
+            return aColumn + operation + "'" + value[0] + "'";
         }
     }
 }

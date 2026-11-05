@@ -5,6 +5,7 @@ import org.welisdoon.common.data.BaseCondition;
 import javax.naming.OperationNotSupportedException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -16,17 +17,20 @@ import java.util.stream.StreamSupport;
  */
 public class PageList<T> implements List<T> {
     final Function<BaseCondition.Page, List<T>> queryFunction;
+    final Supplier<Integer> countSupplier;
     final BaseCondition.Page page;
-    int size = 0;
+    int size;
     List<T> list;
 
-    public PageList(BaseCondition.Page page, Function<BaseCondition.Page, List<T>> queryFunction) {
+    public PageList(BaseCondition.Page page, Function<BaseCondition.Page, List<T>> queryFunction, Supplier<Integer> countSupplier) {
         this.page = page;
         this.queryFunction = queryFunction;
+        this.countSupplier = countSupplier;
+        int size = countSupplier.get();
     }
 
-    public PageList(Function<BaseCondition.Page, List<T>> queryFunction) {
-        this(new BaseCondition.Page(1, 100), queryFunction);
+    public PageList(Function<BaseCondition.Page, List<T>> queryFunction, Supplier<Integer> supplier) {
+        this(new BaseCondition.Page(1, 100), queryFunction, supplier);
     }
 
     @Override
@@ -170,7 +174,7 @@ public class PageList<T> implements List<T> {
 
     @Override
     public ListIterator<T> listIterator() {
-        return null;
+        return listIterator(0);
     }
 
     @Override

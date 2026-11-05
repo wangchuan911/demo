@@ -13,7 +13,7 @@ import java.math.BigDecimal;
  */
 @Database.Main(
         id = "id",
-        feature = @Database.Feature(alias = "link", express = "true=true"),
+        feature = @Database.Feature(alias = "link", express = {}),
         parts = {
                 @Database.Part(
                         name = "res.cm_link t1",
@@ -45,7 +45,7 @@ public interface IDemoLinkEntity extends IEntity {
     }
 
     @Database.Main(
-            feature = @Database.Feature(alias = "rel3", express = ""),
+            feature = @Database.Feature(alias = "rel3", express = {}),
             id = "id",
             parts = {
                     @Database.Part(
@@ -64,7 +64,7 @@ public interface IDemoLinkEntity extends IEntity {
     }
 
     @Database.Main(
-            feature = @Database.Feature(alias = "rel3", express = ""),
+            feature = @Database.Feature(alias = "rel3", express = {}),
             id = "id",
             parts = {
                     @Database.Part(

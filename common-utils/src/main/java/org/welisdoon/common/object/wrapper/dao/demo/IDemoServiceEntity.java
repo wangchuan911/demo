@@ -13,7 +13,7 @@ import java.math.BigDecimal;
  */
 @Database.Main(
         id = "id",
-        feature = @Database.Feature(alias = "service", express = "true=true"),
+        feature = @Database.Feature(alias = "service", express = {}),
         parts = {
                 @Database.Part(
                         name = "res.rm_service t1",
